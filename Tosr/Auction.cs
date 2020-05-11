@@ -11,6 +11,12 @@ namespace Tosr
         private int currentBiddingRound;
         private readonly Dictionary<int, Dictionary<Player, Bid>> bids = new Dictionary<int, Dictionary<Player, Bid>>();
 
+        public string GetBids(Player player)
+        {
+            return bids.Aggregate(string.Empty, (current, biddingRound) => current + biddingRound.Value[player]);
+        }
+
+
         public Auction()
         {
             InitializeComponent();

@@ -58,6 +58,7 @@ std::vector<std::tuple<int, int>> SQLiteCppWrapper::GetRules(const HandCharacter
         AND (IsBalanced IS NULL or IsBalanced = ?)
         AND (IsReverse IS NULL or IsReverse = ?)
         AND (Shortage IS NULL or Shortage = ?)
+        AND (IsThreeSuiter IS NULL or IsThreeSuiter = ?)
         AND (bidId > ?))");
 
         // Bind parameters
@@ -77,7 +78,8 @@ std::vector<std::tuple<int, int>> SQLiteCppWrapper::GetRules(const HandCharacter
         query.bind(13, hand.isBalanced);
         query.bind(14, hand.isReverse);
         query.bind(15, ConvertShortage(hand.shortage));
-        query.bind(16, lastBidId);
+        query.bind(16, hand.isThreeSuiter);
+        query.bind(17, lastBidId);
 
         // Loop to execute the query step by step, to get rows of result
         while (query.executeStep())

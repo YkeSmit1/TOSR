@@ -17,11 +17,13 @@ struct HandCharacteristic
 	int Controls;
 	bool isBalanced;
 	bool isReverse;
+	bool isThreeSuiter;
 	Shortage shortage;
 
 	static bool CalcuateIsReverse(const std::map<int, size_t>& suitLength, bool isBalanced);
 	static Shortage CalculateShortage(const std::map<int, size_t>& suitLength);
 	static int CalculateControls(const std::string& hand);
+	static bool CalcuateIsThreeSuiter(const std::map<int, size_t>& suitLength);
 	explicit HandCharacteristic(const std::string& hand);
 	
 };

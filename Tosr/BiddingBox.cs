@@ -24,7 +24,7 @@ namespace Tosr
             BiddingBoxClick += eventHandler;
             InitializeComponent();
             Name = "BiddingBox";
-            Size = new Size(600, 800);
+            Size = new Size(200, 210);
 
             foreach (Suit suit in Enum.GetValues(typeof(Suit)))
             {
@@ -34,7 +34,7 @@ namespace Tosr
                     {
                         Width = defaultButtonWidth,
                         Left = (4 - (int) suit) * defaultButtonWidth,
-                        Top = level * defaultButtonHeight,
+                        Top = (level - 1) * defaultButtonHeight,
                         Parent = this,
                         Text = Convert.ToString(level) + Common.GetSuitDescription(suit),
                         ForeColor = suit == Suit.Diamonds || suit == Suit.Hearts ? Color.Red : Color.Black
@@ -55,7 +55,7 @@ namespace Tosr
             var button = new BiddingBoxButton(new Bid(bidType))
             {
                 Width = buttonWidth,
-                Top = defaultButtonHeight * 8,
+                Top = defaultButtonHeight * 7,
                 Left = buttonLeft,
                 Parent = this,
                 Text = buttonText

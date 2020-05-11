@@ -44,5 +44,12 @@ TEST(EngineTest, TestShortage)
   EXPECT_EQ(HandCharacteristic{"AQJ765,A2,KJ4,85"}.shortage, Shortage::EqualOne);
   // Three suiter
   EXPECT_EQ(HandCharacteristic{"AQJ5,A542,KJ64,5"}.shortage, Shortage::Unknown);
+}
 
+TEST(EngineTest, TestIsThreeSuiter)
+{
+  EXPECT_EQ(HandCharacteristic{"A,KJ54,AQJ7,8653"}.isThreeSuiter, true);
+  EXPECT_EQ(HandCharacteristic{"AQJ6,KJ54,A,8653"}.isThreeSuiter, true);
+
+  EXPECT_EQ(HandCharacteristic{"A,KJ54,AQJ76,853"}.isThreeSuiter, false);
 }

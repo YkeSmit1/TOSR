@@ -25,6 +25,7 @@ HandCharacteristic::HandCharacteristic(const std::string& hand)
     isReverse = CalcuateIsReverse(suitLength, isBalanced);
     shortage = CalculateShortage(suitLength);
     Controls = CalculateControls(hand);
+    isThreeSuiter = CalcuateIsThreeSuiter(suitLength);
 }
 
 bool HandCharacteristic::CalcuateIsReverse(const std::map<int, size_t>& suitLength, bool isBalanced)
@@ -77,4 +78,9 @@ int HandCharacteristic::CalculateControls(const std::string& hand)
     auto aces = (int)std::count_if(hand.begin(), hand.end(), [] (char c) {return c == 'A';});
     auto kings = (int)std::count_if(hand.begin(), hand.end(), [] (char c) {return c == 'K';});
     return aces * 2 + kings;
+}
+
+bool HandCharacteristic::CalcuateIsThreeSuiter(const std::map<int, size_t>& suitLength)
+{
+    return std::count_if(suitLength.begin(), suitLength.end(), [] (const auto &pair) {return pair.second > 3;}) == 3;
 }
