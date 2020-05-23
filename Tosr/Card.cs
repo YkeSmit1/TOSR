@@ -9,6 +9,27 @@ using System.Windows.Forms;
 namespace Tosr
 {
 	/// <summary>
+	/// enumeration that represents back bitmaps available in cards.dll of Windows 2K or XP 
+	/// </summary>
+	public enum Back
+	{
+		Crosshatch,
+		Sky,
+		Mineral,
+		Fish,
+		Frog,
+		MoonFlower,
+		Island,
+		Squares,
+		Magenta, 
+		Moonland,
+		Space,
+		Lines,
+		Toycars,
+		X=14,
+		O,
+	}
+	/// <summary>
 	/// Summary description for UserControl1.
 	/// </summary>
 	public class Card : UserControl

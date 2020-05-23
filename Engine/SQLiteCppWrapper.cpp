@@ -24,10 +24,16 @@ std::string SQLiteCppWrapper::ConvertShortage(Shortage shortage)
     case Shortage::HighOne: return "H1";
     case Shortage::MiddleOne: return "M1";
     case Shortage::LowOne: return "L1";
+    case Shortage::EqualHighOne: return "EH1";
+    case Shortage::EqualMiddleOne: return "EM1";
+    case Shortage::EqualLowOne: return "EL1";
     case Shortage::EqualOne: return "E1";
     case Shortage::HighTwo: return "H2";
     case Shortage::LowTwo: return "L2";
     case Shortage::EqualTwo: return "E2";
+    case Shortage::High55Two: return "55H2";
+    case Shortage::Low55Two: return "55L2";
+    case Shortage::Equal55Two: return "55E2";
     default:
         return "";
     }
@@ -59,6 +65,7 @@ std::vector<std::tuple<int, int>> SQLiteCppWrapper::GetRules(const HandCharacter
         AND (IsReverse IS NULL or IsReverse = ?)
         AND (Shortage IS NULL or Shortage = ?)
         AND (IsThreeSuiter IS NULL or IsThreeSuiter = ?)
+        AND (Is65Reverse IS NULL or Is65Reverse = ?)
         AND (bidId > ?))");
 
         // Bind parameters
@@ -79,7 +86,8 @@ std::vector<std::tuple<int, int>> SQLiteCppWrapper::GetRules(const HandCharacter
         query.bind(14, hand.isReverse);
         query.bind(15, ConvertShortage(hand.shortage));
         query.bind(16, hand.isThreeSuiter);
-        query.bind(17, lastBidId);
+        query.bind(17, hand.is65Reverse);
+        query.bind(18, lastBidId);
 
         // Loop to execute the query step by step, to get rows of result
         while (query.executeStep())

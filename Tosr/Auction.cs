@@ -21,6 +21,7 @@ namespace Tosr
         {
             InitializeComponent();
             Clear();
+            ReDraw();
         }
 
 
@@ -29,17 +30,19 @@ namespace Tosr
             bids.Clear();
             currentPlayer = Player.West;
             currentBiddingRound = 1;
-            ReDraw();
         }
 
-        public void AddBid(Bid bid)
+        public void AddBid(Bid bid, bool updateUi)
         {
             if (!bids.ContainsKey(currentBiddingRound))
             {
                 bids[currentBiddingRound] = new Dictionary<Player, Bid>();
             }
             bids[currentBiddingRound][currentPlayer] = bid;
-            ReDraw();
+            if (updateUi)
+            {
+                ReDraw();
+            }
 
             if (currentPlayer == Player.South)
             {
@@ -53,7 +56,7 @@ namespace Tosr
 
         }
 
-        private void ReDraw()
+        public void ReDraw()
         {
             textBox1.Clear();
             textBox1.AppendText("West\tNorth\tEast\tSouth");

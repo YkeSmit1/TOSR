@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web.Script.Serialization;
@@ -11,11 +13,12 @@ namespace Tosr
     {
         readonly BiddingBox biddingBox;
         private readonly Auction auction;
-        private Card[] unOrderedCards;
-        private string handsString;
+        private CardDto[] unOrderedCards;
 
         private readonly Dictionary<string, List<string>> auctionPerHand = new Dictionary<string, List<string>>();
         private readonly Dictionary<string, List<string>> handPerauction = new Dictionary<string, List<string>>();
+        private string[] hands;
+        private int batchSize;
 
         public Form1()
         {
@@ -24,7 +27,7 @@ namespace Tosr
             biddingBox = new BiddingBox((x, y) =>
             {
                 var biddingBoxButton = (BiddingBoxButton) x;
-                auction.AddBid(biddingBoxButton.bid);
+                auction.AddBid(biddingBoxButton.bid, true);
                 biddingBox.UpdateButtons(biddingBoxButton.bid, auction.currentPlayer);
             });
             biddingBox.Parent = this;
@@ -56,14 +59,28 @@ namespace Tosr
                 card.Hide();
             }
 
-            unOrderedCards = Shuffling.RandomizeDeck(13, Back.Crosshatch, false);
-            var left = 20 * 13;
-            foreach (var card in unOrderedCards.OrderBy(x => x.Suit, new Card.GuiSuitComparer())
-                .ThenBy(c => c.Face, new Card.FaceComparer()).ToArray())
+            string handLength;
+            if (checkBox1.Checked)
+                do
+                {
+                    unOrderedCards = Shuffling.RandomizeDeck(13);
+                    var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new Card.FaceComparer());
+                    var handsString = GetDeckAsString(orderedCards);
+                    handLength = string.Join("", handsString.Split(',').Select(x => x.Length));
+                } while (handLength != textBox1.Text);
+            else
             {
-                card.Left = left;
-                card.Top = 20;
-                card.Parent = this;
+                unOrderedCards = Shuffling.RandomizeDeck(13);
+            }
+
+            var left = 20 * 13;
+            var cardDtos = unOrderedCards.OrderBy(x => x.Suit, new Card.GuiSuitComparer()).ThenBy(c => c.Face, new Card.FaceComparer()).ToArray();
+            foreach (var cardDto in cardDtos) 
+            {
+                var card = new Card(cardDto.Face, cardDto.Suit, Back.Crosshatch, false, false)
+                {
+                    Left = left, Top = 20, Parent = this
+                };
                 card.Show();
                 left -= 20;
             }
@@ -72,15 +89,12 @@ namespace Tosr
         private void buttonClearAuctionClick(object sender, EventArgs e)
         {
             auction.Clear();
+            auction.ReDraw();
             biddingBox.Clear();
         }
 
-        private void GetAuctionFromRules()
+        private void GetAuctionFromRules(string handsString, bool updateUi)
         {
-            var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new Card.FaceComparer());
-            handsString = GetDeckAsString(orderedCards);
-            if (handsString.Length != 16)
-                return;
             auction.Clear();
 
             int faseId = 1;
@@ -95,17 +109,17 @@ namespace Tosr
                 {
                     case Player.West:
                     case Player.East:
-                        auction.AddBid(Bid.PassBid);
+                        auction.AddBid(Bid.PassBid, updateUi);
                         break;
                     case Player.North:
                         currentBid = Common.NextBid(currentBid);
-                        auction.AddBid(currentBid);
+                        auction.AddBid(currentBid, updateUi);
                         lastBidId = Common.GetBidId(currentBid);
                         break;
                     case Player.South:
                         bidId = Pinvoke.GetBidFromRule(faseId, handsString, lastBidId);
                         currentBid = Common.GetBid(bidId);
-                        auction.AddBid(currentBid);
+                        auction.AddBid(currentBid, updateUi);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -118,56 +132,100 @@ namespace Tosr
             while (bidId != 0);
         }
 
-        private string GetDeckAsString(IEnumerable<Card> cards)
+        private string GetDeckAsString(IEnumerable<CardDto> orderedCards)
         {
-            string res = string.Empty;
-            var currentSuit = Suit.Spades;
+            var listCards = orderedCards.ToList();
+            var suitAsString = SuitAsString(listCards, Suit.Spades) + "," + 
+                               SuitAsString(listCards, Suit.Hearts) + "," + 
+                               SuitAsString(listCards, Suit.Diamonds) + "," + 
+                               SuitAsString(listCards, Suit.Clubs);
+            return suitAsString;
+        }
 
-            foreach (var card in cards)
-            {
-                if (card.Suit != currentSuit)
-                {
-                    res += ",";
-                    currentSuit = card.Suit;
-                }
-
-                res += Common.GetFaceDescription(card.Face);
-            }
-            return res;
+        private static string SuitAsString(List<CardDto> listCards, Suit suit)
+        {
+            return listCards.Where(c => c.Suit == suit).Aggregate("", (x, y) => x + Common.GetFaceDescription(y.Face));
         }
 
         private void buttonGetAuctionClick(object sender, EventArgs e)
         {
-            GetAuctionFromRules();
+            var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new Card.FaceComparer());
+            var handsString = GetDeckAsString(orderedCards);
+            GetAuctionFromRules(handsString, true);
         }
 
         private void buttonBatchBiddingClick(object sender, EventArgs e)
         {
+            var oldCursor = Cursor.Current;
             try
             {
+                Cursor.Current = Cursors.WaitCursor;
+
                 listBox1.Items.Clear();
-                for (int i = (int) (numericUpDown1.Value - 1); i >= 0; i--)
-                {
-                    Shuffle();
-                    GetAuctionFromRules();
-                    var bids = auction.GetBids(Player.South);
-                    AddHandAndAuction(handsString, bids.Substring(0, bids.Length - 4));
-                }
+                auctionPerHand.Clear();
+                handPerauction.Clear();
 
-                File.WriteAllText("HandPerAuction.txt", new JavaScriptSerializer().Serialize(handPerauction));
-                File.WriteAllText("AuctionPerHand.txt", new JavaScriptSerializer().Serialize(auctionPerHand));
-
-                MessageBox.Show("Done");
+                BatchBidding();
+                SaveAuctions();
             }
             catch (Exception exception)
             {
                 listBox1.Items.Add(exception.Message);
             }
+            finally
+            {
+                Cursor.Current = oldCursor;
+            }
+        }
+
+        private void SaveAuctions()
+        {
+            var multiHandPerAuction = handPerauction.Where(x => x.Value.Count > 1).ToDictionary(x => x.Key, x => x.Value);
+            var javaScriptSerializer = new JavaScriptSerializer();
+            File.WriteAllText("HandPerAuction.txt", javaScriptSerializer.Serialize(multiHandPerAuction));
+        }
+
+        private bool IsFreakHand(string handLength)
+        {
+            var handPattern = new string(handLength.OrderByDescending(y => y).ToArray());
+            return handPattern == "7321" || handPattern[0] == '8' || handPattern[0] == '9' || 
+                   (handPattern[0] == '7' && handPattern[1] == '5') ||
+                    (handPattern[0] == '6' && handPattern[1] == '6') ||
+                    (handPattern[0] == '7' && handPattern[1] == '6');
+        }
+
+        private string[] GenerateHandStrings()
+        {
+            hands = new string[batchSize];
+
+            for (int i = 0; i < batchSize; ++i)
+            {
+                unOrderedCards = Shuffling.RandomizeDeck(13);
+                var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new Card.FaceComparer());
+                hands[i] = GetDeckAsString(orderedCards);
+            }
+
+            return hands;
+        }
+
+        private void BatchBidding()
+        {
+            var stopwatch = Stopwatch.StartNew();
+            for (int i = 0; i < batchSize; ++i)
+            {
+                GetAuctionFromRules(hands[i], false);
+                var bids = auction.GetBids(Player.South);
+                AddHandAndAuction(hands[i], bids.Substring(0, bids.Length - 4));
+            }
+            MessageBox.Show(stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture));
         }
 
         private void AddHandAndAuction(string strHand, string strAuction)
         {
             var str = string.Join("", strHand.Split(',').Select(x => x.Length));
+
+            if (IsFreakHand(str))
+                return;
 
             if (!auctionPerHand.ContainsKey(str))
                 auctionPerHand[str] = new List<string>();
@@ -178,6 +236,21 @@ namespace Tosr
                 handPerauction[strAuction] = new List<string>();
             if (!handPerauction[strAuction].Contains(str))
                 handPerauction[strAuction].Add(str);
+        }
+
+        private void buttonGenerateHandsClick(object sender, EventArgs e)
+        {
+            batchSize = (int) numericUpDown1.Value;
+            var oldCursor = Cursor.Current;
+            try
+            {
+                Cursor.Current = Cursors.WaitCursor;
+                hands = GenerateHandStrings();
+            }
+            finally
+            {
+                Cursor.Current = oldCursor;
+            }
         }
     }
 }

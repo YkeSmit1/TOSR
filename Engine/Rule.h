@@ -2,7 +2,23 @@
 #include <string>
 #include <map>
 
-enum class Shortage { Unknown, HighOne, MiddleOne, LowOne, EqualOne, HighTwo, LowTwo, EqualTwo};
+enum class Shortage
+{
+	Unknown,
+	HighOne,
+	MiddleOne,
+	LowOne,
+	EqualHighOne,
+	EqualMiddleOne,
+	EqualLowOne,
+	EqualOne,
+	HighTwo,
+	LowTwo,
+	EqualTwo,
+	High55Two,
+	Low55Two,
+	Equal55Two
+};
 
 enum class Player { West, North, East, South };
 
@@ -17,10 +33,12 @@ struct HandCharacteristic
 	int Controls;
 	bool isBalanced;
 	bool isReverse;
+	bool is65Reverse;
 	bool isThreeSuiter;
 	Shortage shortage;
 
-	static bool CalcuateIsReverse(const std::map<int, size_t>& suitLength, bool isBalanced);
+	static bool CalcuateIsReverse(const std::map<int, size_t>& suitLength);
+	static bool Calcuate65IsReverse(const std::map<int, size_t>& suitLength);
 	static Shortage CalculateShortage(const std::map<int, size_t>& suitLength);
 	static int CalculateControls(const std::string& hand);
 	static bool CalcuateIsThreeSuiter(const std::map<int, size_t>& suitLength);

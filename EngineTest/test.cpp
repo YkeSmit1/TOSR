@@ -41,7 +41,13 @@ TEST(EngineTest, TestShortage)
   EXPECT_EQ(HandCharacteristic{"853,A3,KJ4,AQJ76"}.shortage, Shortage::MiddleOne);
   EXPECT_EQ(HandCharacteristic{"853,KJ4,AQJ76,A2"}.shortage, Shortage::LowOne);
   EXPECT_EQ(HandCharacteristic{"AQJ76,A2,KJ4,853"}.shortage, Shortage::HighOne);
-  EXPECT_EQ(HandCharacteristic{"AQJ765,A2,KJ4,85"}.shortage, Shortage::EqualOne);
+
+  // 6332 7222
+  EXPECT_EQ(HandCharacteristic{"AQJ765,KJ4,A2,85"}.shortage, Shortage::EqualHighOne);
+  EXPECT_EQ(HandCharacteristic{"AQJ765,A2,KJ4,85"}.shortage, Shortage::EqualMiddleOne);
+  EXPECT_EQ(HandCharacteristic{"AQJ765,A2,85,KJ4"}.shortage, Shortage::EqualLowOne);
+  EXPECT_EQ(HandCharacteristic{"AQJ7654,A2,KJ,85"}.shortage, Shortage::EqualOne);
+
   // Three suiter
   EXPECT_EQ(HandCharacteristic{"AQJ5,A542,KJ64,5"}.shortage, Shortage::Unknown);
 }

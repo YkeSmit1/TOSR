@@ -8,6 +8,7 @@
 #include "Rule.h"
 #include <unordered_map>
 #include "SQLiteCppWrapper.h"
+#include <algorithm>
 
 HandCharacteristic GetHandCharacteristic(const std::string& hand)
 {
@@ -24,6 +25,8 @@ int GetBidFromRule(int faseId, const char* hand, int lastBidId)
     auto rules = sqliteWrapper->GetRules(handCharacteristic, faseId, lastBidId);
     if (rules.empty())
         return 0;
+
+    std::sort(rules.begin(), rules.end(), [](auto tuple1, auto tuple2) {return std::get<0>(tuple1) < std::get<0>(tuple2);});
 
     int bidId;
     int nextFaseId;
