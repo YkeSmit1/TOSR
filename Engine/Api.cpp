@@ -12,7 +12,11 @@
 
 HandCharacteristic GetHandCharacteristic(const std::string& hand)
 {
-    HandCharacteristic handCharacteristic {hand};
+    static HandCharacteristic handCharacteristic{};
+    if (hand != handCharacteristic.hand)
+    {
+        handCharacteristic.Initialize(hand);
+    }
     return handCharacteristic;
 }
 

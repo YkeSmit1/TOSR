@@ -1,54 +1,10 @@
 #include "pch.h"
 #include "SQLiteCppWrapper.h"
-#include "SQLiteCpp/SQLiteCpp.h"
 #include <iostream>
 #include "Rule.h"
 
-void SQLiteCppWrapper::GetBid(int bidId, int& rank, int& suit)
-{
-    SQLite::Database db("Tosr.db3");
-    SQLite::Statement query(db, "SELECT Rank, Suit, description FROM bids where id = ?");
-    query.bind(1, bidId);
-
-    if (query.executeStep())
-    {
-        rank = query.getColumn(0);
-        suit = query.getColumn(1);
-    }
-}
-
-std::string SQLiteCppWrapper::ConvertShortage(Shortage shortage)
-{
-    switch (shortage)
-    {
-    case Shortage::HighOne: return "H1";
-    case Shortage::MiddleOne: return "M1";
-    case Shortage::LowOne: return "L1";
-    case Shortage::EqualHighOne: return "EH1";
-    case Shortage::EqualMiddleOne: return "EM1";
-    case Shortage::EqualLowOne: return "EL1";
-    case Shortage::EqualOne: return "E1";
-    case Shortage::HighTwo: return "H2";
-    case Shortage::LowTwo: return "L2";
-    case Shortage::EqualTwo: return "E2";
-    case Shortage::High55Two: return "55H2";
-    case Shortage::Low55Two: return "55L2";
-    case Shortage::Equal55Two: return "55E2";
-    default:
-        return "";
-    }
-}
-
-std::vector<std::tuple<int, int>> SQLiteCppWrapper::GetRules(const HandCharacteristic& hand, int faseId, int lastBidId)
-{
-    try
-    {
-        std::vector<std::tuple<int, int>> res;
-
-        SQLite::Database    db("Tosr.db3");
-
-        // Compile a SQL query, containing one parameter (index 1)
-        SQLite::Statement   query(db, R"(SELECT bidId, nextFaseId FROM Rules 
+SQLite::Database SQLiteCppWrapper::db("Tosr.db3");
+SQLite::Statement SQLiteCppWrapper::query(db, R"(SELECT bidId, nextFaseId FROM Rules 
         WHERE FaseId = ?
         AND MinSpades <= ?
         AND MaxSpades >= ?
@@ -68,7 +24,25 @@ std::vector<std::tuple<int, int>> SQLiteCppWrapper::GetRules(const HandCharacter
         AND (Is65Reverse IS NULL or Is65Reverse = ?)
         AND (bidId > ?))");
 
+void SQLiteCppWrapper::GetBid(int bidId, int& rank, int& suit)
+{
+    SQLite::Statement query(db, "SELECT Rank, Suit, description FROM bids where id = ?");
+    query.bind(1, bidId);
+
+    if (query.executeStep())
+    {
+        rank = query.getColumn(0);
+        suit = query.getColumn(1);
+    }
+}
+
+
+std::vector<std::tuple<int, int>> SQLiteCppWrapper::GetRules(const HandCharacteristic& hand, int faseId, int lastBidId)
+{
+    try
+    {
         // Bind parameters
+        query.reset();
         query.bind(1, faseId);
         query.bind(2, hand.Spades);
         query.bind(3, hand.Spades);
@@ -81,15 +55,16 @@ std::vector<std::tuple<int, int>> SQLiteCppWrapper::GetRules(const HandCharacter
         query.bind(10, hand.Controls);
         query.bind(11, hand.Controls);
 
-        query.bind(12, hand.distribution);
+        query.bindNoCopy(12, hand.distribution);
         query.bind(13, hand.isBalanced);
         query.bind(14, hand.isReverse);
-        query.bind(15, ConvertShortage(hand.shortage));
+        query.bindNoCopy(15, hand.shortageString);
         query.bind(16, hand.isThreeSuiter);
         query.bind(17, hand.is65Reverse);
         query.bind(18, lastBidId);
 
         // Loop to execute the query step by step, to get rows of result
+        std::vector<std::tuple<int, int>> res;
         while (query.executeStep())
         {
             // Demonstrate how to get some typed column value

@@ -5,8 +5,9 @@
 #include <cassert>
 #include <iterator>
 
-HandCharacteristic::HandCharacteristic(const std::string& hand)
+void HandCharacteristic::Initialize(const std::string& hand)
 {
+    this->hand = hand;
     assert(hand.length() == 16);
 
     auto suits = Utils::Split<char>(hand, ',');
@@ -27,6 +28,12 @@ HandCharacteristic::HandCharacteristic(const std::string& hand)
     is65Reverse = !isBalanced && !isThreeSuiter && Calcuate65IsReverse(suitLength);
     shortage = CalculateShortage(suitLength);
     Controls = CalculateControls(hand);
+    shortageString = ConvertShortage(shortage);
+}
+
+HandCharacteristic::HandCharacteristic(const std::string& hand)
+{
+    Initialize(hand);
 }
 
 bool HandCharacteristic::CalcuateIsReverse(const std::map<int, size_t>& suitLength)
@@ -107,4 +114,26 @@ int HandCharacteristic::CalculateControls(const std::string& hand)
 bool HandCharacteristic::CalcuateIsThreeSuiter(const std::map<int, size_t>& suitLength)
 {
     return std::count_if(suitLength.begin(), suitLength.end(), [] (const auto &pair) {return pair.second > 3;}) == 3;
+}
+
+std::string HandCharacteristic::ConvertShortage(Shortage shortage)
+{
+    switch (shortage)
+    {
+    case Shortage::HighOne: return "H1";
+    case Shortage::MiddleOne: return "M1";
+    case Shortage::LowOne: return "L1";
+    case Shortage::EqualHighOne: return "EH1";
+    case Shortage::EqualMiddleOne: return "EM1";
+    case Shortage::EqualLowOne: return "EL1";
+    case Shortage::EqualOne: return "E1";
+    case Shortage::HighTwo: return "H2";
+    case Shortage::LowTwo: return "L2";
+    case Shortage::EqualTwo: return "E2";
+    case Shortage::High55Two: return "55H2";
+    case Shortage::Low55Two: return "55L2";
+    case Shortage::Equal55Two: return "55E2";
+    default:
+        return "";
+    }
 }

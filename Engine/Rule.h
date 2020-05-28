@@ -24,6 +24,8 @@ enum class Player { West, North, East, South };
 
 struct HandCharacteristic
 {
+	std::string hand {};
+	
 	int Spades;
 	int Hearts;
 	int Diamonds;
@@ -36,14 +38,17 @@ struct HandCharacteristic
 	bool is65Reverse;
 	bool isThreeSuiter;
 	Shortage shortage;
+	std::string shortageString;
 
 	static bool CalcuateIsReverse(const std::map<int, size_t>& suitLength);
 	static bool Calcuate65IsReverse(const std::map<int, size_t>& suitLength);
 	static Shortage CalculateShortage(const std::map<int, size_t>& suitLength);
 	static int CalculateControls(const std::string& hand);
 	static bool CalcuateIsThreeSuiter(const std::map<int, size_t>& suitLength);
+	static std::string ConvertShortage(Shortage shortage);
+	void Initialize(const std::string& hand);
 	explicit HandCharacteristic(const std::string& hand);
-	
+	HandCharacteristic() = default;
 };
 
 
