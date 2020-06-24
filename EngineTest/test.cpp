@@ -59,3 +59,27 @@ TEST(EngineTest, TestIsThreeSuiter)
 
   EXPECT_EQ(HandCharacteristic{"A,KJ54,AQJ76,853"}.isThreeSuiter, false);
 }
+
+TEST(EngineTest, TestHcp)
+{
+   EXPECT_EQ(HandCharacteristic{"A,KJ54,AQJ7,8653"}.Hcp, 15);
+   EXPECT_EQ(HandCharacteristic{"AKQ,AKQ,AKQ,AKQJ"}.Hcp, 37);
+   EXPECT_EQ(HandCharacteristic{"32,432,5432,5432"}.Hcp, 0);
+   EXPECT_EQ(HandCharacteristic{"A2,432,K432,5432"}.Hcp, 7);  
+}
+
+TEST(EngineTest, TestControls)
+{
+    EXPECT_EQ(HandCharacteristic{"A,KJ54,AQJ7,8653"}.ControlsSuit, std::vector<int>({1, 2, 0, 2}));
+    EXPECT_EQ(HandCharacteristic{"A,AKJ4,AQJ76,853"}.ControlsSuit, std::vector<int>({2, 3, 0, 2}));
+    EXPECT_EQ(HandCharacteristic{"432,432,432,5432"}.ControlsSuit, std::vector<int>({0, 0, 0, 0}));
+    EXPECT_EQ(HandCharacteristic{"AKQ,AKQ,AKQ,AKQJ"}.ControlsSuit, std::vector<int>({3, 3, 3, 3}));
+}
+
+TEST(EngineTest, TestQueens)
+{
+    EXPECT_EQ(HandCharacteristic{"A,KJ54,AQJ7,8653"}.QueensSuit, std::vector<bool>({false, true, false, false}));
+    EXPECT_EQ(HandCharacteristic{"A,AKJ4,AQJ76,Q53"}.QueensSuit, std::vector<bool>({true, false, true, false}));
+    EXPECT_EQ(HandCharacteristic{"432,432,432,5432"}.QueensSuit, std::vector<bool>({false, false, false, false}));
+    EXPECT_EQ(HandCharacteristic{"AKQ,AKQ,AKQ,AKQJ"}.QueensSuit, std::vector<bool>({true, true, true, true}));
+}

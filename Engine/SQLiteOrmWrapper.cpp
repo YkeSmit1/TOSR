@@ -56,8 +56,7 @@ void SQLiteOrmWrapper::TestUser()
 
 }
 
-// ReSharper disable once CppParameterNeverUsed
-std::vector<std::tuple<int, int>> SQLiteOrmWrapper::GetRules(const HandCharacteristic& handCharacteristic, int faseId, int lastBidId)
+std::tuple<int, bool> SQLiteOrmWrapper::GetRule(const HandCharacteristic& handCharacteristic, const Fase& fase, int lastBidId)
 {
     TestUser();
     auto storage = make_storage("Tosr.db3",
@@ -81,8 +80,8 @@ std::vector<std::tuple<int, int>> SQLiteOrmWrapper::GetRules(const HandCharacter
             ));
     storage.pragma.journal_mode(journal_mode::DELETE);
 
-    auto rows = storage.select(columns(&Rule::bidId, &Rule::nextFaseId),
-        where (c(&Rule::minSpades) <= handCharacteristic.Spades
+    auto rows = storage.select(&Rule::bidId, 
+        where(c(&Rule::minSpades) <= handCharacteristic.Spades
         and c(&Rule::maxSpades) >= handCharacteristic.Spades
         and c(&Rule::minHearts) <= handCharacteristic.Hearts
         and c(&Rule::maxHearts) >= handCharacteristic.Hearts
@@ -93,8 +92,10 @@ std::vector<std::tuple<int, int>> SQLiteOrmWrapper::GetRules(const HandCharacter
         and c(&Rule::minControls) <= handCharacteristic.Controls
         and c(&Rule::maxControls) >= handCharacteristic.Controls
         and (c(&Rule::distribution) == handCharacteristic.distribution or is_null(&Rule::distribution))
-        and (c(&Rule::isBalanced) == handCharacteristic.isBalanced or is_null(&Rule::isBalanced))
-        and c(&Rule::faseId) == faseId));
+        and (c(&Rule::isBalanced) == handCharacteristic.isBalanced or is_null(&Rule::isBalanced))));
     //std::remove_if(rows.begin(), rows.end(), [](std::tuple<int, int, std::string, bool> row){return std::get< row.})
-    return rows;
+
+   std::sort(rows.begin(), rows.end());
+
+    return std::make_pair(rows.front(), false);
 }

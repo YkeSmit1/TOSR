@@ -5,6 +5,11 @@
 #include <cassert>
 #include <iterator>
 
+HandCharacteristic::HandCharacteristic(const std::string& hand)
+{
+    Initialize(hand);
+}
+
 void HandCharacteristic::Initialize(const std::string& hand)
 {
     this->hand = hand;
@@ -29,11 +34,9 @@ void HandCharacteristic::Initialize(const std::string& hand)
     shortage = CalculateShortage(suitLength);
     Controls = CalculateControls(hand);
     shortageString = ConvertShortage(shortage);
-}
-
-HandCharacteristic::HandCharacteristic(const std::string& hand)
-{
-    Initialize(hand);
+    Hcp = CalculateHcp(hand);
+    ControlsSuit = CalculateControlsSuit(suits);
+    QueensSuit = CalculateQueensSuit(suits);
 }
 
 bool HandCharacteristic::CalcuateIsReverse(const std::map<int, size_t>& suitLength)
@@ -136,4 +139,41 @@ std::string HandCharacteristic::ConvertShortage(Shortage shortage)
     default:
         return "";
     }
+}
+
+inline int HandCharacteristic::CalculateHcp(const std::string& hand)
+{
+    auto aces = (int)std::count_if(hand.begin(), hand.end(), [] (char c) {return c == 'A';});
+    auto kings = (int)std::count_if(hand.begin(), hand.end(), [] (char c) {return c == 'K';});
+    auto queens = (int)std::count_if(hand.begin(), hand.end(), [] (char c) {return c == 'Q';});
+    auto jacks = (int)std::count_if(hand.begin(), hand.end(), [] (char c) {return c == 'J';});
+    return aces * 4 + kings * 3 + queens * 2 + jacks;
+
+}
+
+std::vector<int> HandCharacteristic::CalculateControlsSuit(const std::vector<std::string>& suits)
+{
+    std::vector<int> controlsSuit{};
+    controlsSuit.reserve(4);
+    for (int i = 0; i < 4; i++)
+    {
+        auto suit = suits.at(i);
+        const auto numberOfAces = std::count_if(suit.begin(), suit.end(), [](auto card) {return card == 'A'; });
+        const auto numberOfKings = std::count_if(suit.begin(), suit.end(), [](auto card) {return card == 'K'; });
+        controlsSuit.push_back((int)(numberOfAces * 2 + numberOfKings));
+    }
+    return controlsSuit;
+}
+
+std::vector<bool> HandCharacteristic::CalculateQueensSuit(const std::vector<std::string>& suits)
+{
+    std::vector<bool> queensSuit;
+    queensSuit.reserve(4);
+    for (int i = 0; i < 4; i++)
+    {
+        auto suit = suits.at(i);
+        queensSuit.push_back(std::count_if(suit.begin(), suit.end(), [](auto card) {return card == 'Q'; }) == 1);
+    }
+    return queensSuit;
+
 }

@@ -1,15 +1,15 @@
 #pragma once
 
-#include <vector>
-#include <string>
+#include <tuple>
 
 struct HandCharacteristic;
+enum class Fase;
 
-class ISQLiteWrapper
+class ISQLiteWrapper  // NOLINT(hicpp-special-member-functions, cppcoreguidelines-special-member-functions)
 {
 public:
     virtual ~ISQLiteWrapper() = default;
-    virtual std::vector<std::tuple<int, int>> GetRules(const HandCharacteristic& handCharacteristic, int faseId, int lastBidId) = 0;
+    virtual std::tuple<int, bool> GetRule(const HandCharacteristic& handCharacteristic, const Fase& fase, int lastBidId) = 0;
     virtual void GetBid(int bidId, int& rank, int& suit) = 0;
 };
 

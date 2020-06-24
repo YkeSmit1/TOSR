@@ -1,7 +1,5 @@
 #pragma once
-#include <iosfwd>
-#include <tuple>
-#include <vector>
+
 #include <string>
 #include "ISQLiteWrapper.h"
 
@@ -11,10 +9,9 @@ struct HandCharacteristic;
 class SQLiteOrmWrapper : public ISQLiteWrapper
 {
 public:
-	void GetBid(int bidId, int& rank, int& suit)
- override;
+	void GetBid(int bidId, int& rank, int& suit) final override;
 	SQLiteOrmWrapper();
 	void TestUser();
-	std::vector<std::tuple<int, int>> GetRules(const HandCharacteristic& handCharacteristic, int faseId, int lastBidId) override;
+	std::tuple<int, bool> GetRule(const HandCharacteristic& handCharacteristic, const Fase& fase, int lastBidId) final override;
 };
 

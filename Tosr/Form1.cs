@@ -9,13 +9,19 @@ using System.Windows.Forms;
 
 namespace Tosr
 {
+    enum Fase
+    {
+        Shape,
+        Controls,
+        Scanning
+    };
+
     public partial class Form1 : Form
     {
         readonly BiddingBox biddingBox;
         private readonly Auction auction;
         private CardDto[] unOrderedCards;
 
-        private readonly Dictionary<string, List<string>> auctionPerHand = new Dictionary<string, List<string>>();
         private readonly Dictionary<string, List<string>> handPerauction = new Dictionary<string, List<string>>();
         private string[] hands;
         private int batchSize;
@@ -39,9 +45,9 @@ namespace Tosr
             {
                 Parent = this,
                 Left = 350,
-                Top = 150,
+                Top = 120,
                 Width = 200,
-                Height = 100
+                Height = 150
             };
             auction.Show();
             Shuffle();
@@ -54,24 +60,29 @@ namespace Tosr
 
         private void Shuffle()
         {
+            bool HasCorrectControls(string s)
+            {
+                var controls = s.Count(x => x == 'A') * 2 + s.Count(x => x == 'K');
+                return (!checkBox2.Checked && controls >= 1) || controls == numericUpDown2.Value;
+            }
+
+            bool HasCorrectDistribution(string s)
+            {
+                return !checkBox1.Checked || string.Join("", s.Split(',').Select(x => x.Length)) == textBox1.Text;
+            }
+
             foreach (var card in Controls.OfType<Card>())
             {
                 card.Hide();
             }
 
-            string handLength;
-            if (checkBox1.Checked)
-                do
-                {
-                    unOrderedCards = Shuffling.RandomizeDeck(13);
-                    var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new Card.FaceComparer());
-                    var handsString = GetDeckAsString(orderedCards);
-                    handLength = string.Join("", handsString.Split(',').Select(x => x.Length));
-                } while (handLength != textBox1.Text);
-            else
+            string handsString;
+            do
             {
                 unOrderedCards = Shuffling.RandomizeDeck(13);
-            }
+                var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new Card.FaceComparer());
+                handsString = GetDeckAsString(orderedCards);
+            } while (!HasCorrectDistribution(handsString) || !HasCorrectControls(handsString));
 
             var left = 20 * 13;
             var cardDtos = unOrderedCards.OrderBy(x => x.Suit, new Card.GuiSuitComparer()).ThenBy(c => c.Face, new Card.FaceComparer()).ToArray();
@@ -97,11 +108,12 @@ namespace Tosr
         {
             auction.Clear();
 
-            int faseId = 1;
+            var fase = Fase.Shape;
             int lastBidId = 1;
             int bidId = int.MaxValue;
             var currentPlayer = Player.West;
             Bid currentBid = Bid.PassBid;
+            int relayBidIdLastFase = 0;
 
             do
             {
@@ -117,7 +129,19 @@ namespace Tosr
                         lastBidId = Common.GetBidId(currentBid);
                         break;
                     case Player.South:
-                        bidId = Pinvoke.GetBidFromRule(faseId, handsString, lastBidId);
+                        var bidFromRule = Pinvoke.GetBidFromRule(fase, handsString, lastBidId - relayBidIdLastFase, out var nextfase);
+                        bidId = bidFromRule + relayBidIdLastFase;
+                        if (bidFromRule == 0)
+                        {
+                            auction.AddBid(Bid.PassBid, updateUi);
+                            return;
+                        }
+                        if (nextfase != fase)
+                        {
+                            relayBidIdLastFase = bidId + 1;
+                            fase = nextfase;
+                        }
+
                         currentBid = Common.GetBid(bidId);
                         auction.AddBid(currentBid, updateUi);
                         break;
@@ -149,6 +173,7 @@ namespace Tosr
 
         private void buttonGetAuctionClick(object sender, EventArgs e)
         {
+            buttonClearAuctionClick(null, e);
             var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new Card.FaceComparer());
             var handsString = GetDeckAsString(orderedCards);
             GetAuctionFromRules(handsString, true);
@@ -162,7 +187,6 @@ namespace Tosr
                 Cursor.Current = Cursors.WaitCursor;
 
                 listBox1.Items.Clear();
-                auctionPerHand.Clear();
                 handPerauction.Clear();
 
                 BatchBidding();
@@ -200,9 +224,13 @@ namespace Tosr
 
             for (int i = 0; i < batchSize; ++i)
             {
-                unOrderedCards = Shuffling.RandomizeDeck(13);
-                var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new Card.FaceComparer());
-                hands[i] = GetDeckAsString(orderedCards);
+                do
+                {
+                    unOrderedCards = Shuffling.RandomizeDeck(13);
+                    var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit)
+                        .ThenByDescending(c => c.Face, new Card.FaceComparer());
+                    hands[i] = GetDeckAsString(orderedCards);
+                } while (hands[i].Count(x => x == 'A') * 2 + hands[i].Count(x => x == 'K') < 2);
             }
 
             return hands;
@@ -226,11 +254,6 @@ namespace Tosr
 
             if (IsFreakHand(str))
                 return;
-
-            if (!auctionPerHand.ContainsKey(str))
-                auctionPerHand[str] = new List<string>();
-            if (!auctionPerHand[str].Contains(strAuction))
-                auctionPerHand[str].Add(strAuction);
 
             if (!handPerauction.ContainsKey(strAuction))
                 handPerauction[strAuction] = new List<string>();

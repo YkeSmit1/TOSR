@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <map>
+#include <array>
+#include <vector>
 
 enum class Shortage
 {
@@ -40,12 +42,20 @@ struct HandCharacteristic
 	Shortage shortage;
 	std::string shortageString;
 
+	std::vector<int> ControlsSuit;
+	std::vector<bool> QueensSuit;
+
+	int Hcp;
+
 	static bool CalcuateIsReverse(const std::map<int, size_t>& suitLength);
 	static bool Calcuate65IsReverse(const std::map<int, size_t>& suitLength);
 	static Shortage CalculateShortage(const std::map<int, size_t>& suitLength);
 	static int CalculateControls(const std::string& hand);
 	static bool CalcuateIsThreeSuiter(const std::map<int, size_t>& suitLength);
 	static std::string ConvertShortage(Shortage shortage);
+	static int CalculateHcp(const std::string& hand);
+	std::vector<int> CalculateControlsSuit(const std::vector<std::string>& suits);
+	std::vector<bool> CalculateQueensSuit(const std::vector<std::string>& suits);
 	void Initialize(const std::string& hand);
 	explicit HandCharacteristic(const std::string& hand);
 	HandCharacteristic() = default;
