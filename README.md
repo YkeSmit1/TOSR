@@ -6,11 +6,13 @@ The goal of the program will be two-fold:
 2) Get statistical analyses about the system. For example, how often will the relayer be the declarer.
 
 TODO
-- Fix some bugs from the basic system
-- Implement control asking and control scanning
 - Implement teaching mode
 - Create a rules database for the Tarzan system
 - Implement more statistics. 
+- Implement zooming
+
+BUGS
+- 2Nd step in scanning is off by one.
 
 How to build and run it
 
