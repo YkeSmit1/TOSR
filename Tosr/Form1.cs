@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Web.Script.Serialization;
 using System.Windows.Forms;
+using Newtonsoft.Json;
 
 namespace Tosr
 {
@@ -29,7 +29,6 @@ namespace Tosr
         public Form1()
         {
             InitializeComponent();
-            // ReSharper disable once UseObjectOrCollectionInitializer
             biddingBox = new BiddingBox((x, y) =>
             {
                 var biddingBoxButton = (BiddingBoxButton) x;
@@ -46,8 +45,8 @@ namespace Tosr
                 Parent = this,
                 Left = 350,
                 Top = 120,
-                Width = 200,
-                Height = 150
+                Width = 250,
+                Height = 200
             };
             auction.Show();
             Shuffle();
@@ -205,8 +204,7 @@ namespace Tosr
         private void SaveAuctions()
         {
             var multiHandPerAuction = handPerauction.Where(x => x.Value.Count > 1).ToDictionary(x => x.Key, x => x.Value);
-            var javaScriptSerializer = new JavaScriptSerializer();
-            File.WriteAllText("HandPerAuction.txt", javaScriptSerializer.Serialize(multiHandPerAuction));
+            File.WriteAllText("HandPerAuction.txt", JsonConvert.SerializeObject(multiHandPerAuction));
         }
 
         private bool IsFreakHand(string handLength)
