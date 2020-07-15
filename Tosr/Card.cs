@@ -66,7 +66,7 @@ namespace Tosr
 				height = ClientRectangle.Height;
 			if(!cdtInit(ref width ,ref height))
 			{
-				//throw new Exception("cannot initialize dll (\"cards.dll\"");
+				throw new Exception("cannot initialize dll (\"cards.dll\"");
 			}
 			ResizeRedraw = true;
 			this.face = face;

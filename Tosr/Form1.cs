@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 
@@ -19,40 +20,47 @@ namespace Tosr
     public partial class Form1 : Form
     {
         readonly BiddingBox biddingBox;
-        private readonly Auction auction;
+        private readonly AuctionControl auctionControl;
         private CardDto[] unOrderedCards;
 
-        private readonly Dictionary<string, List<string>> handPerauction = new Dictionary<string, List<string>>();
+        private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
         private string[] hands;
         private int batchSize;
+        private readonly ShuffleRestrictions shuffleRestrictions = new ShuffleRestrictions();
 
         public Form1()
         {
             InitializeComponent();
-            biddingBox = new BiddingBox((x, y) =>
+            void handler(object x, EventArgs y)
             {
-                var biddingBoxButton = (BiddingBoxButton) x;
-                auction.AddBid(biddingBoxButton.bid, true);
-                biddingBox.UpdateButtons(biddingBoxButton.bid, auction.currentPlayer);
-            });
-            biddingBox.Parent = this;
-            biddingBox.Left = 40;
-            biddingBox.Top = 130;
-            biddingBox.Show();
-
-            auction = new Auction
+                var biddingBoxButton = (BiddingBoxButton)x;
+                auctionControl.AddBid(biddingBoxButton.bid);
+                biddingBox.UpdateButtons(biddingBoxButton.bid, auctionControl.auction.currentPlayer);
+            }
+            biddingBox = new BiddingBox(handler)
             {
                 Parent = this,
-                Left = 350,
-                Top = 120,
-                Width = 250,
+                Left = 50,
+                Top = 200
+            };
+            biddingBox.Show();
+
+            auctionControl = new AuctionControl
+            {
+                Parent = this,
+                Left = 300,
+                Top = 200,
+                Width = 205,
                 Height = 200
             };
-            auction.Show();
+            auctionControl.Show();
+            // Need to set in code because of a .net core bug
+            numericUpDown1.Maximum = 100_000;
+            numericUpDown1.Value = 1000;
             Shuffle();
         }
 
-        private void buttonShuffleClick(object sender, EventArgs e)
+        private void ButtonShuffleClick(object sender, EventArgs e)
         {
             Shuffle();
         }
@@ -62,12 +70,12 @@ namespace Tosr
             bool HasCorrectControls(string s)
             {
                 var controls = s.Count(x => x == 'A') * 2 + s.Count(x => x == 'K');
-                return (!checkBox2.Checked && controls >= 1) || controls == numericUpDown2.Value;
+                return (!shuffleRestrictions.restrictControls && controls >= 1) || controls == shuffleRestrictions.controls;
             }
 
             bool HasCorrectDistribution(string s)
             {
-                return !checkBox1.Checked || string.Join("", s.Split(',').Select(x => x.Length)) == textBox1.Text;
+                return !shuffleRestrictions.restrictShape || string.Join("", s.Split(',').Select(x => x.Length)) == shuffleRestrictions.shape;
             }
 
             foreach (var card in Controls.OfType<Card>())
@@ -89,21 +97,21 @@ namespace Tosr
             {
                 var card = new Card(cardDto.Face, cardDto.Suit, Back.Crosshatch, false, false)
                 {
-                    Left = left, Top = 20, Parent = this
+                    Left = left, Top = 80, Parent = this
                 };
                 card.Show();
                 left -= 20;
             }
         }
 
-        private void buttonClearAuctionClick(object sender, EventArgs e)
+        private void ClearAuction()
         {
-            auction.Clear();
-            auction.ReDraw();
+            auctionControl.auction.Clear();
+            auctionControl.ReDraw();
             biddingBox.Clear();
         }
 
-        private void GetAuctionFromRules(string handsString, bool updateUi)
+        private void GetAuctionFromRules(string handsString, Auction auction)
         {
             auction.Clear();
 
@@ -120,11 +128,11 @@ namespace Tosr
                 {
                     case Player.West:
                     case Player.East:
-                        auction.AddBid(Bid.PassBid, updateUi);
+                        auction.AddBid(Bid.PassBid);
                         break;
                     case Player.North:
                         currentBid = Common.NextBid(currentBid);
-                        auction.AddBid(currentBid, updateUi);
+                        auction.AddBid(currentBid);
                         lastBidId = Common.GetBidId(currentBid);
                         break;
                     case Player.South:
@@ -132,7 +140,7 @@ namespace Tosr
                         bidId = bidFromRule + relayBidIdLastFase;
                         if (bidFromRule == 0)
                         {
-                            auction.AddBid(Bid.PassBid, updateUi);
+                            auction.AddBid(Bid.PassBid);
                             return;
                         }
                         if (nextfase != fase)
@@ -142,7 +150,7 @@ namespace Tosr
                         }
 
                         currentBid = Common.GetBid(bidId);
-                        auction.AddBid(currentBid, updateUi);
+                        auction.AddBid(currentBid);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -170,30 +178,26 @@ namespace Tosr
             return listCards.Where(c => c.Suit == suit).Aggregate("", (x, y) => x + Common.GetFaceDescription(y.Face));
         }
 
-        private void buttonGetAuctionClick(object sender, EventArgs e)
+        private void ButtonGetAuctionClick(object sender, EventArgs e)
         {
-            buttonClearAuctionClick(null, e);
+            ClearAuction();
             var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new Card.FaceComparer());
             var handsString = GetDeckAsString(orderedCards);
-            GetAuctionFromRules(handsString, true);
+            GetAuctionFromRules(handsString, auctionControl.auction);
+            auctionControl.ReDraw();
         }
 
-        private void buttonBatchBiddingClick(object sender, EventArgs e)
+        private void ButtonBatchBiddingClick(object sender, EventArgs e)
         {
             var oldCursor = Cursor.Current;
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
 
-                listBox1.Items.Clear();
-                handPerauction.Clear();
+                handPerAuction.Clear();
 
                 BatchBidding();
                 SaveAuctions();
-            }
-            catch (Exception exception)
-            {
-                listBox1.Items.Add(exception.Message);
             }
             finally
             {
@@ -203,7 +207,7 @@ namespace Tosr
 
         private void SaveAuctions()
         {
-            var multiHandPerAuction = handPerauction.Where(x => x.Value.Count > 1).ToDictionary(x => x.Key, x => x.Value);
+            var multiHandPerAuction = handPerAuction.Where(x => x.Value.Count > 1).ToDictionary(x => x.Key, x => x.Value);
             File.WriteAllText("HandPerAuction.txt", JsonConvert.SerializeObject(multiHandPerAuction));
         }
 
@@ -237,13 +241,26 @@ namespace Tosr
         private void BatchBidding()
         {
             var stopwatch = Stopwatch.StartNew();
+            var stringbuilder = new StringBuilder();
+
             for (int i = 0; i < batchSize; ++i)
             {
-                GetAuctionFromRules(hands[i], false);
-                var bids = auction.GetBids(Player.South);
-                AddHandAndAuction(hands[i], bids.Substring(0, bids.Length - 4));
+                try
+                {
+                    Auction auction = new Auction();
+                    GetAuctionFromRules(hands[i], auction);
+                    var bids = auction.GetBids(Player.South);
+                    AddHandAndAuction(hands[i], bids[0..^4]);
+                }
+
+                catch (Exception exception)
+                {
+                    stringbuilder.AppendLine(exception.Message);
+                }
+
             }
-            MessageBox.Show(stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture));
+            stringbuilder.AppendLine($"Seconds elapsed: {stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture)}");
+            _ = MessageBox.Show(stringbuilder.ToString());
         }
 
         private void AddHandAndAuction(string strHand, string strAuction)
@@ -253,13 +270,13 @@ namespace Tosr
             if (IsFreakHand(str))
                 return;
 
-            if (!handPerauction.ContainsKey(strAuction))
-                handPerauction[strAuction] = new List<string>();
-            if (!handPerauction[strAuction].Contains(str))
-                handPerauction[strAuction].Add(str);
+            if (!handPerAuction.ContainsKey(strAuction))
+                handPerAuction[strAuction] = new List<string>();
+            if (!handPerAuction[strAuction].Contains(str))
+                handPerAuction[strAuction].Add(str);
         }
 
-        private void buttonGenerateHandsClick(object sender, EventArgs e)
+        private void ButtonGenerateHandsClick(object sender, EventArgs e)
         {
             batchSize = (int) numericUpDown1.Value;
             var oldCursor = Cursor.Current;
@@ -272,6 +289,12 @@ namespace Tosr
             {
                 Cursor.Current = oldCursor;
             }
+        }
+
+        private void ToolStripButton4_Click(object sender, EventArgs e)
+        {
+            ShuffleRestrictionsForm shuffleRestrictionsForm = new ShuffleRestrictionsForm(shuffleRestrictions);
+            _ = shuffleRestrictionsForm.ShowDialog();
         }
     }
 }

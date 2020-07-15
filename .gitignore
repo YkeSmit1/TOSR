@@ -1,0 +1,11 @@
+/.vs
+/packages
+/x64
+/TestResults
+/Tosr/obj
+/Tosr/bin
+/Engine/x64
+/EngineTest/x64
+/TosrGui.Test/obj
+/TosrGui.Test/bin
+/Engine/*.user

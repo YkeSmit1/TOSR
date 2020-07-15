@@ -15,7 +15,6 @@ namespace Tosr
         private readonly List<BiddingBoxButton> buttons = new List<BiddingBoxButton>();
         private const int defaultButtonWidth = 40;
         private const int defaultButtonHeight = 23;
-        private Bid currentBid = new Bid(BidType.pass);
         private BidType currentBidType = BidType.pass;
         private Player currentDeclarer = Player.UnKnown;
 
@@ -67,10 +66,6 @@ namespace Tosr
 
         public void UpdateButtons(Bid bid, Player auctionCurrentPlayer)
         {
-            if (bid.bidType == BidType.bid)
-            {
-                currentBid = bid;
-            }
             currentBidType = bid.bidType;
 
             switch (bid.bidType)
@@ -78,9 +73,17 @@ namespace Tosr
                 case BidType.bid:
                     EnableButtons(new[] {Bid.Dbl});
                     DisableButtons(new[] {Bid.Rdbl});
-                    foreach (var button in buttons.Where(x => x.bid.bidType == BidType.bid && x.bid < bid))
+                    foreach (var button in buttons)
                     {
-                        button.Enabled = false;
+                        Bid localBid = button.bid;
+                        if (localBid.bidType == BidType.bid && button.bid < bid)
+                        {
+                            button.Enabled = false;
+                        }
+                    }
+                    if (currentDeclarer == Player.UnKnown)
+                    {
+                        currentDeclarer = auctionCurrentPlayer;
                     }
                     break;
                 case BidType.pass:

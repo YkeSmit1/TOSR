@@ -10,7 +10,6 @@ TODO
 - Create a rules database for the Tarzan system
 - Implement more statistics. 
 - Implement zooming
-- heart and diamond symbols should be red in the auction
 
 BUGS
 - 2Nd step in scanning is off by one.

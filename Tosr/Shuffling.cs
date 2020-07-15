@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Tosr
 {
-	class Shuffling
+    class Shuffling
     {
         public static CardDto[] RandomizeDeck(int length)
         {
@@ -36,10 +36,4 @@ namespace Tosr
 	        }
         }
     }
-
-	internal class CardDto
-	{
-		public Face Face;
-		public Suit Suit;
-	}
 }
