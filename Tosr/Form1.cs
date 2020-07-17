@@ -28,7 +28,7 @@ namespace Tosr
         private int batchSize;
         private readonly ShuffleRestrictions shuffleRestrictions = new ShuffleRestrictions();
         private string handsString;
-        readonly BiddingState biddingState = new BiddingState();
+        private readonly BiddingState biddingState = new BiddingState();
 
         public Form1()
         {
@@ -53,7 +53,7 @@ namespace Tosr
                 {
                     MessageBox.Show($"The correct bid is {biddingState.currentBid}. Description: {biddingState.currentBid.description}.", "Incorrect bid");
                 }
-                
+
                 auctionControl.AddBid(biddingState.currentBid);
                 BidTillSouth(auctionControl.auction, biddingState);
             }
@@ -149,11 +149,13 @@ namespace Tosr
 
             var left = 20 * 13;
             var cardDtos = unOrderedCards.OrderBy(x => x.Suit, new Card.GuiSuitComparer()).ThenBy(c => c.Face, new Card.FaceComparer()).ToArray();
-            foreach (var cardDto in cardDtos) 
+            foreach (var cardDto in cardDtos)
             {
                 var card = new Card(cardDto.Face, cardDto.Suit, Back.Crosshatch, false, false)
                 {
-                    Left = left, Top = 80, Parent = this
+                    Left = left,
+                    Top = 80,
+                    Parent = this
                 };
                 card.Show();
                 left -= 20;
@@ -243,7 +245,7 @@ namespace Tosr
         private bool IsFreakHand(string handLength)
         {
             var handPattern = new string(handLength.OrderByDescending(y => y).ToArray());
-            return handPattern == "7321" || handPattern[0] == '8' || handPattern[0] == '9' || 
+            return handPattern == "7321" || handPattern[0] == '8' || handPattern[0] == '9' ||
                    (handPattern[0] == '7' && handPattern[1] == '5') ||
                     (handPattern[0] == '6' && handPattern[1] == '6') ||
                     (handPattern[0] == '7' && handPattern[1] == '6');
@@ -305,7 +307,7 @@ namespace Tosr
 
         private void ButtonGenerateHandsClick(object sender, EventArgs e)
         {
-            batchSize = (int) numericUpDown1.Value;
+            batchSize = (int)numericUpDown1.Value;
             var oldCursor = Cursor.Current;
             try
             {
