@@ -51,7 +51,7 @@ namespace Tosr
                 SouthBid(biddingState, handsString, true);
                 if (biddingBoxButton.bid != biddingState.currentBid)
                 {
-                    MessageBox.Show($"Incorrect bid!. The correct bid is {biddingState.currentBid}. Description: {biddingState.currentBid.description}");
+                    MessageBox.Show($"The correct bid is {biddingState.currentBid}. Description: {biddingState.currentBid.description}.", "Incorrect bid");
                 }
                 
                 auctionControl.AddBid(biddingState.currentBid);
@@ -109,6 +109,7 @@ namespace Tosr
             biddingState.bidId = bidFromRule + biddingState.relayBidIdLastFase;
             if (bidFromRule == 0)
             {
+                biddingState.currentBid = Bid.PassBid;
                 biddingState.bidId = 0;
                 return;
             }
@@ -129,6 +130,7 @@ namespace Tosr
             biddingState.Init();
             Clear();
             BidTillSouth(auctionControl.auction, biddingState);
+            biddingBox.Enabled = true;
         }
 
         private void Shuffle()
@@ -186,20 +188,23 @@ namespace Tosr
                         break;
                     case Player.South:
                         SouthBid(biddingState, handsString, requestDescription);
-                        if (biddingState.bidId == 0)
-                            auction.AddBid(Bid.PassBid);
-                        else
-                            auction.AddBid(biddingState.currentBid);
+                        auction.AddBid(biddingState.currentBid);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
 
-                if (currentPlayer == Player.South)
-                    currentPlayer = Player.West;
-                else currentPlayer++;
+                currentPlayer = NextPlayer(currentPlayer);
             }
             while (biddingState.bidId != 0);
+        }
+
+        private static Player NextPlayer(Player currentPlayer)
+        {
+            if (currentPlayer == Player.South)
+                currentPlayer = Player.West;
+            else currentPlayer++;
+            return currentPlayer;
         }
 
         private void ButtonGetAuctionClick(object sender, EventArgs e)
@@ -209,6 +214,7 @@ namespace Tosr
             var handsString = Common.GetDeckAsString(orderedCards);
             GetAuctionFromRules(handsString, auctionControl.auction, true);
             auctionControl.ReDraw();
+            biddingBox.Enabled = false;
         }
 
         private void ButtonBatchBiddingClick(object sender, EventArgs e)
@@ -219,7 +225,6 @@ namespace Tosr
                 Cursor.Current = Cursors.WaitCursor;
 
                 handPerAuction.Clear();
-
                 BatchBidding();
                 SaveAuctions();
             }
@@ -276,12 +281,10 @@ namespace Tosr
                     var bids = auction.GetBids(Player.South);
                     AddHandAndAuction(hands[i], bids[0..^4]);
                 }
-
                 catch (Exception exception)
                 {
                     stringbuilder.AppendLine(exception.Message);
                 }
-
             }
             stringbuilder.AppendLine($"Seconds elapsed: {stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture)}");
             _ = MessageBox.Show(stringbuilder.ToString());

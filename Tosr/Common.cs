@@ -21,9 +21,6 @@ namespace Tosr
         rdbl
     }
 
-    /// <summary>
-    /// enumeration that represents suit values
-    /// </summary>
     public enum Suit
     {
         Clubs = 0,
@@ -33,9 +30,6 @@ namespace Tosr
         NoTrump = 4
     }
 
-    /// <summary>
-    /// enumeration that represents face values
-    /// </summary>
     public enum Face
     {
         Ace,
@@ -98,9 +92,7 @@ namespace Tosr
 
         public static Bid GetBid(int bidId)
         {
-            if (bidId == 0)
-                return Bid.PassBid;
-            return new Bid((bidId - 1) / 5 + 1, (Suit)((bidId - 1) % 5));
+            return bidId == 0 ? Bid.PassBid : new Bid((bidId - 1) / 5 + 1, (Suit)((bidId - 1) % 5));
         }
 
         public static int GetBidId(Bid bid)
@@ -129,103 +121,7 @@ namespace Tosr
 
         public static string SuitAsString(IEnumerable<CardDto> listCards, Suit suit)
         {
-            return listCards.Where(c => c.Suit == suit).Aggregate("", (x, y) => x + Common.GetFaceDescription(y.Face));
-        }
-
-    }
-
-    public class Bid : IEquatable<Bid>, IComparable<Bid>
-    {
-        public static Bid PassBid = new Bid(BidType.pass);
-        public static Bid Dbl = new Bid(BidType.dbl);
-        public static Bid Rdbl = new Bid(BidType.rdbl);
-
-        public readonly BidType bidType;
-        public readonly int rank;
-        public readonly Suit suit;
-        public string description = string.Empty;
-
-        public Bid(int rank, Suit suit)
-        {
-            bidType = BidType.bid;
-            this.suit = suit;
-            this.rank = rank;
-        }
-
-        public Bid(BidType bidType)
-        {
-            this.bidType = bidType;
-            suit = default;
-            rank = default;
-        }
-
-
-        public override string ToString()
-        {
-            return bidType switch
-            {
-                BidType.bid => rank + Common.GetSuitDescription(suit),
-                BidType.pass => "Pass",
-                BidType.dbl => "Dbl",
-                BidType.rdbl => "Rdbl",
-                _ => throw new ArgumentOutOfRangeException(),
-            };
-        }
-
-        public bool Equals(Bid other)
-        {
-            return suit == other.suit && bidType == other.bidType && rank == other.rank;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is Bid other && Equals(other);
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(bidType, rank, suit);
-        }
-
-        public int CompareTo(Bid other)
-        {
-            var bidTypeComparison = bidType.CompareTo(other.bidType);
-            if (bidTypeComparison != 0) return bidTypeComparison;
-
-            var rankComparison = rank.CompareTo(other.rank);
-            if (rankComparison != 0) return rankComparison;
-
-            return suit.CompareTo(other.suit);
-        }
-        public static bool operator <(Bid a, Bid b)
-        {
-            return a.CompareTo(b) < 0;
-        }
-
-        public static bool operator >(Bid a, Bid b)
-        {
-            return a.CompareTo(b) > 0;
-        }
-
-        public static bool operator ==(Bid a, Bid b)
-        {
-            return a.Equals(b);
-        }
-
-        public static bool operator !=(Bid a, Bid b)
-        {
-            return !(a == b);
-        }
-
-        public static bool operator <=(Bid left, Bid right)
-        {
-            return left.CompareTo(right) <= 0;
-        }
-
-        public static bool operator >=(Bid left, Bid right)
-        {
-            return left.CompareTo(right) >= 0;
+            return listCards.Where(c => c.Suit == suit).Aggregate("", (x, y) => x + GetFaceDescription(y.Face));
         }
     }
-
 }
