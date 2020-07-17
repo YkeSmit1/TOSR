@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Tosr
@@ -56,56 +57,36 @@ namespace Tosr
     {
         public static string GetSuitDescription(Suit suit)
         {
-            switch (suit)
+            return suit switch
             {
-                case Suit.Clubs:
-                    return "\u2663";
-                case Suit.Diamonds:
-                    return "\u2666";
-                case Suit.Hearts:
-                    return "\u2665";
-                case Suit.Spades:
-                    return "\u2660";
-                case Suit.NoTrump:
-                    return "NT";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(suit), suit, null);
-            }
+                Suit.Clubs => "\u2663",
+                Suit.Diamonds => "\u2666",
+                Suit.Hearts => "\u2665",
+                Suit.Spades => "\u2660",
+                Suit.NoTrump => "NT",
+                _ => throw new ArgumentOutOfRangeException(nameof(suit), suit, null),
+            };
         }
 
         public static char GetFaceDescription(Face face)
         {
-            switch (face)
+            return face switch
             {
-                case Face.Ace:
-                    return 'A';
-                case Face.Two:
-                    return '2';
-                case Face.Three:
-                    return '3';
-                case Face.Four:
-                    return '4';
-                case Face.Five:
-                    return '5';
-                case Face.Six:
-                    return '6';
-                case Face.Seven:
-                    return '7';
-                case Face.Eight:
-                    return '8';
-                case Face.Nine:
-                    return '9';
-                case Face.Ten:
-                    return 'T';
-                case Face.Jack:
-                    return 'J';
-                case Face.Queen:
-                    return 'Q';
-                case Face.King:
-                    return 'K';
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(face), face, null);
-            }
+                Face.Ace => 'A',
+                Face.Two => '2',
+                Face.Three => '3',
+                Face.Four => '4',
+                Face.Five => '5',
+                Face.Six => '6',
+                Face.Seven => '7',
+                Face.Eight => '8',
+                Face.Nine => '9',
+                Face.Ten => 'T',
+                Face.Jack => 'J',
+                Face.Queen => 'Q',
+                Face.King => 'K',
+                _ => throw new ArgumentOutOfRangeException(nameof(face), face, null),
+            };
         }
 
         public static bool IsSameTeam(Player player1, Player player2)
@@ -136,10 +117,24 @@ namespace Tosr
             return new Bid(bid.rank, bid.suit + 1);
         }
 
+        public static string GetDeckAsString(IEnumerable<CardDto> orderedCards)
+        {
+            var listCards = orderedCards.ToList();
+            var suitAsString = SuitAsString(listCards, Suit.Spades) + "," +
+                               SuitAsString(listCards, Suit.Hearts) + "," +
+                               SuitAsString(listCards, Suit.Diamonds) + "," +
+                               SuitAsString(listCards, Suit.Clubs);
+            return suitAsString;
+        }
+
+        public static string SuitAsString(IEnumerable<CardDto> listCards, Suit suit)
+        {
+            return listCards.Where(c => c.Suit == suit).Aggregate("", (x, y) => x + Common.GetFaceDescription(y.Face));
+        }
 
     }
 
-    public struct Bid : IEquatable<Bid>, IComparable<Bid>
+    public class Bid : IEquatable<Bid>, IComparable<Bid>
     {
         public static Bid PassBid = new Bid(BidType.pass);
         public static Bid Dbl = new Bid(BidType.dbl);
@@ -148,6 +143,7 @@ namespace Tosr
         public readonly BidType bidType;
         public readonly int rank;
         public readonly Suit suit;
+        public string description = string.Empty;
 
         public Bid(int rank, Suit suit)
         {
@@ -166,19 +162,14 @@ namespace Tosr
 
         public override string ToString()
         {
-            switch (bidType)
+            return bidType switch
             {
-                case BidType.bid:
-                    return rank + Common.GetSuitDescription(suit);
-                case BidType.pass:
-                    return "Pass";
-                case BidType.dbl:
-                    return "Dbl";
-                case BidType.rdbl:
-                    return "Rdbl";
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+                BidType.bid => rank + Common.GetSuitDescription(suit),
+                BidType.pass => "Pass",
+                BidType.dbl => "Dbl",
+                BidType.rdbl => "Rdbl",
+                _ => throw new ArgumentOutOfRangeException(),
+            };
         }
 
         public bool Equals(Bid other)
@@ -193,13 +184,7 @@ namespace Tosr
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                var hashCode = (int) bidType;
-                hashCode = (hashCode * 397) ^ rank;
-                hashCode = (hashCode * 397) ^ (int) suit;
-                return hashCode;
-            }
+            return HashCode.Combine(bidType, rank, suit);
         }
 
         public int CompareTo(Bid other)

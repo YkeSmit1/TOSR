@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 
 namespace Tosr
 {
-    enum Fase
+    public enum Fase
     {
         Shape,
         Controls,
@@ -19,23 +19,43 @@ namespace Tosr
 
     public partial class Form1 : Form
     {
-        readonly BiddingBox biddingBox;
-        private readonly AuctionControl auctionControl;
+        private BiddingBox biddingBox;
+        private AuctionControl auctionControl;
         private CardDto[] unOrderedCards;
 
         private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
         private string[] hands;
         private int batchSize;
         private readonly ShuffleRestrictions shuffleRestrictions = new ShuffleRestrictions();
+        private string handsString;
+        readonly BiddingState biddingState = new BiddingState();
 
         public Form1()
         {
             InitializeComponent();
+            ShowBiddingBox();
+            ShowAuction();
+
+            // Need to set in code because of a .net core bug
+            numericUpDown1.Maximum = 100_000;
+            numericUpDown1.Value = 1000;
+            Shuffle();
+            BidTillSouth(auctionControl.auction, biddingState);
+        }
+
+        private void ShowBiddingBox()
+        {
             void handler(object x, EventArgs y)
             {
                 var biddingBoxButton = (BiddingBoxButton)x;
-                auctionControl.AddBid(biddingBoxButton.bid);
-                biddingBox.UpdateButtons(biddingBoxButton.bid, auctionControl.auction.currentPlayer);
+                SouthBid(biddingState, handsString, true);
+                if (biddingBoxButton.bid != biddingState.currentBid)
+                {
+                    MessageBox.Show($"Incorrect bid!. The correct bid is {biddingState.currentBid}. Description: {biddingState.currentBid.description}");
+                }
+                
+                auctionControl.AddBid(biddingState.currentBid);
+                BidTillSouth(auctionControl.auction, biddingState);
             }
             biddingBox = new BiddingBox(handler)
             {
@@ -44,7 +64,10 @@ namespace Tosr
                 Top = 200
             };
             biddingBox.Show();
+        }
 
+        private void ShowAuction()
+        {
             auctionControl = new AuctionControl
             {
                 Parent = this,
@@ -54,42 +77,73 @@ namespace Tosr
                 Height = 200
             };
             auctionControl.Show();
-            // Need to set in code because of a .net core bug
-            numericUpDown1.Maximum = 100_000;
-            numericUpDown1.Value = 1000;
-            Shuffle();
+        }
+
+        private void BidTillSouth(Auction auction, BiddingState biddingState)
+        {
+            // West
+            auction.AddBid(Bid.PassBid);
+            // North
+            NorthBid(biddingState);
+            auction.AddBid(biddingState.currentBid);
+            // East
+            auction.AddBid(Bid.PassBid);
+
+            auctionControl.ReDraw();
+            biddingBox.UpdateButtons(biddingState.currentBid, auctionControl.auction.currentPlayer);
+        }
+
+        private static void NorthBid(BiddingState biddingState)
+        {
+            biddingState.currentBid = Common.NextBid(biddingState.currentBid);
+            biddingState.lastBidId = Common.GetBidId(biddingState.currentBid);
+        }
+
+        private static void SouthBid(BiddingState biddingState, string handsString, bool requestDescription)
+        {
+            var description = new StringBuilder(128);
+
+            var bidFromRule = requestDescription ?
+                    Pinvoke.GetBidFromRuleEx(biddingState.fase, handsString, biddingState.lastBidId - biddingState.relayBidIdLastFase, out Fase nextfase, description) :
+                    Pinvoke.GetBidFromRule(biddingState.fase, handsString, biddingState.lastBidId - biddingState.relayBidIdLastFase, out nextfase);
+            biddingState.bidId = bidFromRule + biddingState.relayBidIdLastFase;
+            if (bidFromRule == 0)
+            {
+                biddingState.bidId = 0;
+                return;
+            }
+            if (nextfase != biddingState.fase)
+            {
+                biddingState.relayBidIdLastFase = biddingState.bidId + 1;
+                biddingState.fase = nextfase;
+            }
+
+            var currentBid = Common.GetBid(biddingState.bidId);
+            currentBid.description = requestDescription ? description.ToString() : string.Empty;
+            biddingState.currentBid = currentBid;
         }
 
         private void ButtonShuffleClick(object sender, EventArgs e)
         {
             Shuffle();
+            biddingState.Init();
+            Clear();
+            BidTillSouth(auctionControl.auction, biddingState);
         }
 
         private void Shuffle()
         {
-            bool HasCorrectControls(string s)
-            {
-                var controls = s.Count(x => x == 'A') * 2 + s.Count(x => x == 'K');
-                return (!shuffleRestrictions.restrictControls && controls >= 1) || controls == shuffleRestrictions.controls;
-            }
-
-            bool HasCorrectDistribution(string s)
-            {
-                return !shuffleRestrictions.restrictShape || string.Join("", s.Split(',').Select(x => x.Length)) == shuffleRestrictions.shape;
-            }
-
             foreach (var card in Controls.OfType<Card>())
             {
                 card.Hide();
             }
 
-            string handsString;
             do
             {
                 unOrderedCards = Shuffling.RandomizeDeck(13);
                 var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new Card.FaceComparer());
-                handsString = GetDeckAsString(orderedCards);
-            } while (!HasCorrectDistribution(handsString) || !HasCorrectControls(handsString));
+                handsString = Common.GetDeckAsString(orderedCards);
+            } while (!shuffleRestrictions.Match(handsString));
 
             var left = 20 * 13;
             var cardDtos = unOrderedCards.OrderBy(x => x.Suit, new Card.GuiSuitComparer()).ThenBy(c => c.Face, new Card.FaceComparer()).ToArray();
@@ -104,23 +158,19 @@ namespace Tosr
             }
         }
 
-        private void ClearAuction()
+        private void Clear()
         {
             auctionControl.auction.Clear();
             auctionControl.ReDraw();
             biddingBox.Clear();
         }
 
-        private void GetAuctionFromRules(string handsString, Auction auction)
+        private static void GetAuctionFromRules(string handsString, Auction auction, bool requestDescription)
         {
             auction.Clear();
 
-            var fase = Fase.Shape;
-            int lastBidId = 1;
-            int bidId = int.MaxValue;
-            var currentPlayer = Player.West;
-            Bid currentBid = Bid.PassBid;
-            int relayBidIdLastFase = 0;
+            BiddingState biddingState = new BiddingState();
+            Player currentPlayer = Player.West;
 
             do
             {
@@ -131,26 +181,15 @@ namespace Tosr
                         auction.AddBid(Bid.PassBid);
                         break;
                     case Player.North:
-                        currentBid = Common.NextBid(currentBid);
-                        auction.AddBid(currentBid);
-                        lastBidId = Common.GetBidId(currentBid);
+                        NorthBid(biddingState);
+                        auction.AddBid(biddingState.currentBid);
                         break;
                     case Player.South:
-                        var bidFromRule = Pinvoke.GetBidFromRule(fase, handsString, lastBidId - relayBidIdLastFase, out var nextfase);
-                        bidId = bidFromRule + relayBidIdLastFase;
-                        if (bidFromRule == 0)
-                        {
+                        SouthBid(biddingState, handsString, requestDescription);
+                        if (biddingState.bidId == 0)
                             auction.AddBid(Bid.PassBid);
-                            return;
-                        }
-                        if (nextfase != fase)
-                        {
-                            relayBidIdLastFase = bidId + 1;
-                            fase = nextfase;
-                        }
-
-                        currentBid = Common.GetBid(bidId);
-                        auction.AddBid(currentBid);
+                        else
+                            auction.AddBid(biddingState.currentBid);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -160,30 +199,15 @@ namespace Tosr
                     currentPlayer = Player.West;
                 else currentPlayer++;
             }
-            while (bidId != 0);
-        }
-
-        private string GetDeckAsString(IEnumerable<CardDto> orderedCards)
-        {
-            var listCards = orderedCards.ToList();
-            var suitAsString = SuitAsString(listCards, Suit.Spades) + "," + 
-                               SuitAsString(listCards, Suit.Hearts) + "," + 
-                               SuitAsString(listCards, Suit.Diamonds) + "," + 
-                               SuitAsString(listCards, Suit.Clubs);
-            return suitAsString;
-        }
-
-        private static string SuitAsString(List<CardDto> listCards, Suit suit)
-        {
-            return listCards.Where(c => c.Suit == suit).Aggregate("", (x, y) => x + Common.GetFaceDescription(y.Face));
+            while (biddingState.bidId != 0);
         }
 
         private void ButtonGetAuctionClick(object sender, EventArgs e)
         {
-            ClearAuction();
+            Clear();
             var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new Card.FaceComparer());
-            var handsString = GetDeckAsString(orderedCards);
-            GetAuctionFromRules(handsString, auctionControl.auction);
+            var handsString = Common.GetDeckAsString(orderedCards);
+            GetAuctionFromRules(handsString, auctionControl.auction, true);
             auctionControl.ReDraw();
         }
 
@@ -231,7 +255,7 @@ namespace Tosr
                     unOrderedCards = Shuffling.RandomizeDeck(13);
                     var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit)
                         .ThenByDescending(c => c.Face, new Card.FaceComparer());
-                    hands[i] = GetDeckAsString(orderedCards);
+                    hands[i] = Common.GetDeckAsString(orderedCards);
                 } while (hands[i].Count(x => x == 'A') * 2 + hands[i].Count(x => x == 'K') < 2);
             }
 
@@ -248,7 +272,7 @@ namespace Tosr
                 try
                 {
                     Auction auction = new Auction();
-                    GetAuctionFromRules(hands[i], auction);
+                    GetAuctionFromRules(hands[i], auction, false);
                     var bids = auction.GetBids(Player.South);
                     AddHandAndAuction(hands[i], bids[0..^4]);
                 }
@@ -291,7 +315,7 @@ namespace Tosr
             }
         }
 
-        private void ToolStripButton4_Click(object sender, EventArgs e)
+        private void ToolStripButton4Click(object sender, EventArgs e)
         {
             ShuffleRestrictionsForm shuffleRestrictionsForm = new ShuffleRestrictionsForm(shuffleRestrictions);
             _ = shuffleRestrictionsForm.ShowDialog();

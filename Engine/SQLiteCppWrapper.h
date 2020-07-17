@@ -12,9 +12,9 @@ class SQLiteCppWrapper : public ISQLiteWrapper
     static SQLite::Statement queryScanning;
 
     void GetBid(int bidId, int& rank, int& suit) final override;
-    std::tuple<int, bool> GetRule(const HandCharacteristic& hand, const Fase& fase, int lastBidId) final override;
-    static std::tuple<int, bool> GetRuleShape(const HandCharacteristic& hand, int lastBidId);
-    static std::tuple<int, bool> GetRuleControls(const HandCharacteristic& hand, int lastBidId);
-    static std::tuple<int, bool> GetRuleScanning(const HandCharacteristic& hand, int lastBidId);
+    std::tuple<int, bool, std::string> GetRule(const HandCharacteristic& hand, const Fase& fase, int lastBidId) final override;
+    static std::tuple<int, bool, std::string> GetRuleShape(const HandCharacteristic& hand, int lastBidId);
+    static std::tuple<int, bool, std::string> GetRuleControls(const HandCharacteristic& hand, int lastBidId);
+    static std::tuple<int, bool, std::string> GetRuleScanning(const HandCharacteristic& hand, int lastBidId);
 };
 

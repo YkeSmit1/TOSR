@@ -3,7 +3,6 @@
 #include <sqlite_orm/sqlite_orm.h>
 #include "Rule.h"
 #include <iostream>
-#include "User.h"
 
 using namespace sqlite_orm;
 using namespace std;
@@ -19,46 +18,8 @@ SQLiteOrmWrapper::SQLiteOrmWrapper()
 {
 }
 
-void SQLiteOrmWrapper::TestUser()
+std::tuple<int, bool, std::string> SQLiteOrmWrapper::GetRule(const HandCharacteristic& handCharacteristic, const Fase& fase, int lastBidId)
 {
-    try
-    {
-        auto storage = make_storage("Example.db",
-                                    make_table("users",
-                                               make_column("id", &User::id, autoincrement(), primary_key()),
-                                               make_column("first_name", &User::firstName),
-                                               make_column("last_name", &User::lastName),
-                                               make_column("birth_date", &User::birthDate),
-                                               make_column("image_url", &User::imageUrl),
-                                               make_column("type_id", &User::typeId)),
-                                    make_table("user_types",
-                                               make_column("id", &UserType::id, autoincrement(), primary_key()),
-                                               make_column("name", &UserType::name, default_value("name_placeholder"))));
-
-        auto cuteConditions = storage.get_all<User>(
-            where((c(&User::firstName) == "John" 
-                or c(&User::firstName) == "Alex") 
-                and c(&User::id) == 4));  //  where (first_name = 'John' or first_name = 'Alex') and id = 4
-        cout << "cuteConditions count = " << cuteConditions.size() << endl; //  cuteConditions count = 1
-        cuteConditions = storage.get_all<User>(
-            where(c(&User::firstName) == "John" 
-                or (c(&User::firstName) == "Alex" and c(&User::id) == 4)));   //  where first_name = 'John' or (first_name = 'Alex' and id = 4)
-        cout << "cuteConditions count = " << cuteConditions.size() << endl; //  cuteConditions count = 2{
-    }
-    catch (std::exception& e)
-    {
-        std::cout <<e.what();
-    }
-    catch (...)
-    {
-        std::cout << "unknown exception";
-    }
-
-}
-
-std::tuple<int, bool> SQLiteOrmWrapper::GetRule(const HandCharacteristic& handCharacteristic, const Fase& fase, int lastBidId)
-{
-    TestUser();
     auto storage = make_storage("Tosr.db3",
         make_table("Rules",
             make_column("Id", &Rule::id, autoincrement(), primary_key()),
@@ -97,5 +58,7 @@ std::tuple<int, bool> SQLiteOrmWrapper::GetRule(const HandCharacteristic& handCh
 
    std::sort(rows.begin(), rows.end());
 
-    return std::make_pair(rows.front(), false);
+   std::string emptystring;
+
+    return std::make_tuple(rows.front(), false, emptystring);
 }

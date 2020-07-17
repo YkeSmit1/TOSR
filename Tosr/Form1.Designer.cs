@@ -107,7 +107,7 @@
             this.toolStripMenuItem10.ShortcutKeys = System.Windows.Forms.Keys.F6;
             this.toolStripMenuItem10.Size = new System.Drawing.Size(185, 22);
             this.toolStripMenuItem10.Text = "Restrictions";
-            this.toolStripMenuItem10.Click += new System.EventHandler(this.ToolStripButton4_Click);
+            this.toolStripMenuItem10.Click += new System.EventHandler(this.ToolStripButton4Click);
             // 
             // toolStripMenuItem6
             // 
@@ -209,7 +209,7 @@
             this.toolStripButton4.Name = "toolStripButton4";
             this.toolStripButton4.Size = new System.Drawing.Size(23, 22);
             this.toolStripButton4.Text = "Restrictions";
-            this.toolStripButton4.Click += new System.EventHandler(this.ToolStripButton4_Click);
+            this.toolStripButton4.Click += new System.EventHandler(this.ToolStripButton4Click);
             // 
             // numericUpDown1
             // 

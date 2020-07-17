@@ -8,7 +8,7 @@
 #include "Api.h"
 
 SQLite::Database SQLiteCppWrapper::db("Tosr.db3");
-SQLite::Statement SQLiteCppWrapper::queryShape(db, R"(SELECT bidId, EndFase, Zoom, Id FROM Rules 
+SQLite::Statement SQLiteCppWrapper::queryShape(db, R"(SELECT bidId, EndFase, Zoom, Id, IFNULL(Description, Distribution) FROM Rules 
         WHERE (bidId > ?)
         AND MinSpades <= ?
         AND MaxSpades >= ?
@@ -26,7 +26,7 @@ SQLite::Statement SQLiteCppWrapper::queryShape(db, R"(SELECT bidId, EndFase, Zoo
         AND (Is65Reverse IS NULL or Is65Reverse = ?)
         ORDER BY bidId ASC)");
 
-SQLite::Statement SQLiteCppWrapper::queryControls(db, R"(SELECT RelBidId, EndFase, Id FROM Controls 
+SQLite::Statement SQLiteCppWrapper::queryControls(db, R"(SELECT RelBidId, EndFase, Id, Description FROM Controls 
         WHERE RelbidId > ?
         AND MinControls <= ?
         AND MaxControls >= ?
@@ -34,7 +34,7 @@ SQLite::Statement SQLiteCppWrapper::queryControls(db, R"(SELECT RelBidId, EndFas
         AND MaxHcp >= ?
         ORDER BY RelBidId ASC)");
 
-SQLite::Statement SQLiteCppWrapper::queryScanning(db, R"(SELECT RelBidId, Id FROM Scanning 
+SQLite::Statement SQLiteCppWrapper::queryScanning(db, R"(SELECT RelBidId, Id, Description FROM Scanning 
         WHERE RelbidId > ?
         AND (Controls1Suit = ? or Controls1Suit is null)
         AND (Controls2Suit = ? or Controls2Suit is null)
@@ -57,7 +57,7 @@ void SQLiteCppWrapper::GetBid(int bidId, int& rank, int& suit)
         suit = query.getColumn(1);
     }
 }
-std::tuple<int, bool> SQLiteCppWrapper::GetRule(const HandCharacteristic& hand, const Fase& fase, int lastBidId)
+std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRule(const HandCharacteristic& hand, const Fase& fase, int lastBidId)
 {
     switch (fase)
     {
@@ -69,7 +69,7 @@ std::tuple<int, bool> SQLiteCppWrapper::GetRule(const HandCharacteristic& hand, 
     }
 }
 
-std::tuple<int, bool> SQLiteCppWrapper::GetRuleShape(const HandCharacteristic& hand, int lastBidId)
+std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleShape(const HandCharacteristic& hand, int lastBidId)
 {
     try
     {
@@ -93,20 +93,24 @@ std::tuple<int, bool> SQLiteCppWrapper::GetRuleShape(const HandCharacteristic& h
         queryShape.bind(15, hand.is65Reverse);
 
         // Loop to execute the query step by step, to get rows of result
-        std::vector<std::tuple<int, bool>> res;
+        std::vector<std::tuple<int, bool, std::string>> res;
         while (queryShape.executeStep())
         {
             // Demonstrate how to get some typed column value
             int bidId = queryShape.getColumn(0);
             bool endfase = queryShape.getColumn(1).getInt();
-            if (res.empty())
-                DBOUT("Shape. Rule Id:" << queryShape.getColumn(3).getInt() << '\n');
-       
-            res.emplace_back(bidId, endfase);
-        }
-        std::sort(res.begin(), res.end());
+            auto id = queryShape.getColumn(3).getInt();
+            auto str = queryShape.getColumn(4).getString();
 
-        return res.empty() ? std::make_pair(0, false) : res.front();
+            if (res.empty())
+                DBOUT("Shape. Rule Id:" << id << '\n');
+
+            res.emplace_back(bidId, endfase, str);
+        }
+        std::sort(res.begin(), res.end(), [&](const auto& x, const auto& y) {return std::get<0>(x) < std::get<0>(y); });
+
+        std::string emptystring;
+        return res.empty() ? std::make_tuple(0, false, emptystring) : res.front();
     }
     catch (std::exception& e)
     {
@@ -116,7 +120,7 @@ std::tuple<int, bool> SQLiteCppWrapper::GetRuleShape(const HandCharacteristic& h
 }
 
 
-std::tuple<int, bool> SQLiteCppWrapper::GetRuleControls(const HandCharacteristic& hand, int lastBidId)
+std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleControls(const HandCharacteristic& hand, int lastBidId)
 {
     try
     {
@@ -132,20 +136,23 @@ std::tuple<int, bool> SQLiteCppWrapper::GetRuleControls(const HandCharacteristic
         queryControls.bind(5, hand.Hcp);
 
         // Loop to execute the query step by step, to get rows of result
-        std::vector<std::tuple<int, bool>> res;
+        std::vector<std::tuple<int, bool, std::string>> res;
         while (queryControls.executeStep())
         {
             // Demonstrate how to get some typed column value
             int bidId = queryControls.getColumn(0);
             bool endFase = queryControls.getColumn(1).getInt();
+            auto id = queryControls.getColumn(2).getInt();
+            auto str = queryControls.getColumn(3).getString();
 
             if (res.empty())
-                DBOUT("Controls. Rule Id:" << queryControls.getColumn(2).getInt() << '\n');
+                DBOUT("Controls. Rule Id:" << id << '\n');
 
-            res.emplace_back(bidId, endFase);
+            res.emplace_back(bidId, endFase, str);
         }
-        std::sort(res.begin(), res.end());
-        return res.empty() ? std::make_pair(0, false) : res.front();
+        std::sort(res.begin(), res.end(), [&](const auto& x, const auto& y) {return std::get<0>(x) < std::get<0>(y); });
+        std::string emptystring;
+        return res.empty() ? std::make_tuple(0, false, emptystring) : res.front();
     }
     catch (std::exception& e)
     {
@@ -154,7 +161,7 @@ std::tuple<int, bool> SQLiteCppWrapper::GetRuleControls(const HandCharacteristic
     }
 }
 
-std::tuple<int, bool> SQLiteCppWrapper::GetRuleScanning(const HandCharacteristic& hand, int lastBidId)
+std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleScanning(const HandCharacteristic& hand, int lastBidId)
 {
     try
     {
@@ -173,19 +180,22 @@ std::tuple<int, bool> SQLiteCppWrapper::GetRuleScanning(const HandCharacteristic
         queryScanning.bind(9, hand.QueensSuit[3]);
 
         // Loop to execute the query step by step, to get rows of result
-        std::vector<std::tuple<int, bool>> res;
+        std::vector<std::tuple<int, bool, std::string>> res;
         while (queryScanning.executeStep())
         {
             int bidId = queryScanning.getColumn(0);
+            auto id = queryScanning.getColumn(1).getInt();
+            auto str = queryScanning.getColumn(2).getString();
 
             if (res.empty())
-                DBOUT("Scanning. Rule Id:" << queryScanning.getColumn(1).getInt() << '\n');
+                DBOUT("Scanning. Rule Id:" << id << '\n');
 
-            res.emplace_back(bidId, false);
+            res.emplace_back(bidId, false, str);
         }
-        std::sort(res.begin(), res.end());
+        std::sort(res.begin(), res.end(), [&](const auto& x, const auto& y) {return std::get<0>(x) < std::get<0>(y); });
 
-        return res.empty() ? std::make_pair(0, false) : res.front();
+        std::string emptystring;
+        return res.empty() ? std::make_tuple(0, false, emptystring) : res.front();
     }
     catch (std::exception& e)
     {

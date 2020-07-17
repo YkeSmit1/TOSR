@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Tosr": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

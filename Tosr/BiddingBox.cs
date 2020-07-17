@@ -76,7 +76,7 @@ namespace Tosr
                     foreach (var button in buttons)
                     {
                         Bid localBid = button.bid;
-                        if (localBid.bidType == BidType.bid && button.bid < bid)
+                        if (localBid.bidType == BidType.bid && button.bid <= bid)
                         {
                             button.Enabled = false;
                         }

@@ -1,8 +1,8 @@
 ﻿namespace Tosr
 {
-    internal class CardDto
-	{
-		public Face Face;
-		public Suit Suit;
-	}
+    public class CardDto
+    {
+        public Face Face;
+        public Suit Suit;
+    }
 }
