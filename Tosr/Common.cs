@@ -53,10 +53,10 @@ namespace Tosr
         {
             return suit switch
             {
-                Suit.Clubs => "\u2663",
-                Suit.Diamonds => "\u2666",
-                Suit.Hearts => "\u2665",
-                Suit.Spades => "\u2660",
+                Suit.Clubs => "♣", // \u2663
+                Suit.Diamonds => "♦", // \u2666
+                Suit.Hearts => "♥", // \u2665
+                Suit.Spades => "♠", // \u2660
                 Suit.NoTrump => "NT",
                 _ => throw new ArgumentOutOfRangeException(nameof(suit), suit, null),
             };
@@ -88,25 +88,6 @@ namespace Tosr
             return player1 == Player.North && player2 == Player.South
                    || player1 == Player.West && player2 == Player.East
                 || player1 == player2 && player1 == Player.UnKnown;
-        }
-
-        public static Bid GetBid(int bidId)
-        {
-            return bidId == 0 ? Bid.PassBid : new Bid((bidId - 1) / 5 + 1, (Suit)((bidId - 1) % 5));
-        }
-
-        public static int GetBidId(Bid bid)
-        {
-            return ((bid.rank - 1) * 5) + (int)bid.suit + 1;
-        }
-
-        public static Bid NextBid(Bid bid)
-        {
-            if (bid == Bid.PassBid)
-                return new Bid(1, Suit.Clubs);
-            if (bid.suit == Suit.NoTrump)
-                return new Bid(bid.rank + 1, Suit.Clubs);
-            return new Bid(bid.rank, bid.suit + 1);
         }
 
         public static string GetDeckAsString(IEnumerable<CardDto> orderedCards)

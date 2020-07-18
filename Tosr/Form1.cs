@@ -23,12 +23,11 @@ namespace Tosr
         private AuctionControl auctionControl;
         private CardDto[] unOrderedCards;
 
-        private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
         private string[] hands;
-        private int batchSize;
         private readonly ShuffleRestrictions shuffleRestrictions = new ShuffleRestrictions();
         private string handsString;
         private readonly BiddingState biddingState = new BiddingState();
+        private IBidGenerator bidGenerator = new BidGenerator();
 
         public Form1()
         {
@@ -48,7 +47,7 @@ namespace Tosr
             void handler(object x, EventArgs y)
             {
                 var biddingBoxButton = (BiddingBoxButton)x;
-                SouthBid(biddingState, handsString, true);
+                BidManager.SouthBid(biddingState, handsString, true, bidGenerator);
                 if (biddingBoxButton.bid != biddingState.currentBid)
                 {
                     MessageBox.Show($"The correct bid is {biddingState.currentBid}. Description: {biddingState.currentBid.description}.", "Incorrect bid");
@@ -84,44 +83,13 @@ namespace Tosr
             // West
             auction.AddBid(Bid.PassBid);
             // North
-            NorthBid(biddingState);
+            BidManager.NorthBid(biddingState);
             auction.AddBid(biddingState.currentBid);
             // East
             auction.AddBid(Bid.PassBid);
 
             auctionControl.ReDraw();
             biddingBox.UpdateButtons(biddingState.currentBid, auctionControl.auction.currentPlayer);
-        }
-
-        private static void NorthBid(BiddingState biddingState)
-        {
-            biddingState.currentBid = Common.NextBid(biddingState.currentBid);
-            biddingState.lastBidId = Common.GetBidId(biddingState.currentBid);
-        }
-
-        private static void SouthBid(BiddingState biddingState, string handsString, bool requestDescription)
-        {
-            var description = new StringBuilder(128);
-
-            var bidFromRule = requestDescription ?
-                    Pinvoke.GetBidFromRuleEx(biddingState.fase, handsString, biddingState.lastBidId - biddingState.relayBidIdLastFase, out Fase nextfase, description) :
-                    Pinvoke.GetBidFromRule(biddingState.fase, handsString, biddingState.lastBidId - biddingState.relayBidIdLastFase, out nextfase);
-            biddingState.bidId = bidFromRule + biddingState.relayBidIdLastFase;
-            if (bidFromRule == 0)
-            {
-                biddingState.currentBid = Bid.PassBid;
-                biddingState.bidId = 0;
-                return;
-            }
-            if (nextfase != biddingState.fase)
-            {
-                biddingState.relayBidIdLastFase = biddingState.bidId + 1;
-                biddingState.fase = nextfase;
-            }
-
-            var currentBid = Common.GetBid(biddingState.bidId);
-            currentBid.description = requestDescription ? description.ToString() : string.Empty;
-            biddingState.currentBid = currentBid;
         }
 
         private void ButtonShuffleClick(object sender, EventArgs e)
@@ -169,52 +137,12 @@ namespace Tosr
             biddingBox.Clear();
         }
 
-        private static void GetAuctionFromRules(string handsString, Auction auction, bool requestDescription)
-        {
-            auction.Clear();
-
-            BiddingState biddingState = new BiddingState();
-            Player currentPlayer = Player.West;
-
-            do
-            {
-                switch (currentPlayer)
-                {
-                    case Player.West:
-                    case Player.East:
-                        auction.AddBid(Bid.PassBid);
-                        break;
-                    case Player.North:
-                        NorthBid(biddingState);
-                        auction.AddBid(biddingState.currentBid);
-                        break;
-                    case Player.South:
-                        SouthBid(biddingState, handsString, requestDescription);
-                        auction.AddBid(biddingState.currentBid);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-                currentPlayer = NextPlayer(currentPlayer);
-            }
-            while (biddingState.bidId != 0);
-        }
-
-        private static Player NextPlayer(Player currentPlayer)
-        {
-            if (currentPlayer == Player.South)
-                currentPlayer = Player.West;
-            else currentPlayer++;
-            return currentPlayer;
-        }
-
         private void ButtonGetAuctionClick(object sender, EventArgs e)
         {
             Clear();
             var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new Card.FaceComparer());
             var handsString = Common.GetDeckAsString(orderedCards);
-            GetAuctionFromRules(handsString, auctionControl.auction, true);
+            BidManager.GetAuction(handsString, auctionControl.auction, true, bidGenerator);
             auctionControl.ReDraw();
             biddingBox.Enabled = false;
         }
@@ -226,9 +154,8 @@ namespace Tosr
             {
                 Cursor.Current = Cursors.WaitCursor;
 
-                handPerAuction.Clear();
-                BatchBidding();
-                SaveAuctions();
+                BatchBidding batchBidding = new BatchBidding(bidGenerator);
+                batchBidding.Execute(hands);
             }
             finally
             {
@@ -236,22 +163,7 @@ namespace Tosr
             }
         }
 
-        private void SaveAuctions()
-        {
-            var multiHandPerAuction = handPerAuction.Where(x => x.Value.Count > 1).ToDictionary(x => x.Key, x => x.Value);
-            File.WriteAllText("HandPerAuction.txt", JsonConvert.SerializeObject(multiHandPerAuction));
-        }
-
-        private bool IsFreakHand(string handLength)
-        {
-            var handPattern = new string(handLength.OrderByDescending(y => y).ToArray());
-            return handPattern == "7321" || handPattern[0] == '8' || handPattern[0] == '9' ||
-                   (handPattern[0] == '7' && handPattern[1] == '5') ||
-                    (handPattern[0] == '6' && handPattern[1] == '6') ||
-                    (handPattern[0] == '7' && handPattern[1] == '6');
-        }
-
-        private string[] GenerateHandStrings()
+        private string[] GenerateHandStrings(int batchSize)
         {
             hands = new string[batchSize];
 
@@ -269,50 +181,14 @@ namespace Tosr
             return hands;
         }
 
-        private void BatchBidding()
-        {
-            var stopwatch = Stopwatch.StartNew();
-            var stringbuilder = new StringBuilder();
-
-            for (int i = 0; i < batchSize; ++i)
-            {
-                try
-                {
-                    Auction auction = new Auction();
-                    GetAuctionFromRules(hands[i], auction, false);
-                    var bids = auction.GetBids(Player.South);
-                    AddHandAndAuction(hands[i], bids[0..^4]);
-                }
-                catch (Exception exception)
-                {
-                    stringbuilder.AppendLine(exception.Message);
-                }
-            }
-            stringbuilder.AppendLine($"Seconds elapsed: {stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture)}");
-            _ = MessageBox.Show(stringbuilder.ToString());
-        }
-
-        private void AddHandAndAuction(string strHand, string strAuction)
-        {
-            var str = string.Join("", strHand.Split(',').Select(x => x.Length));
-
-            if (IsFreakHand(str))
-                return;
-
-            if (!handPerAuction.ContainsKey(strAuction))
-                handPerAuction[strAuction] = new List<string>();
-            if (!handPerAuction[strAuction].Contains(str))
-                handPerAuction[strAuction].Add(str);
-        }
-
         private void ButtonGenerateHandsClick(object sender, EventArgs e)
         {
-            batchSize = (int)numericUpDown1.Value;
+            int batchSize = (int)numericUpDown1.Value;
             var oldCursor = Cursor.Current;
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
-                hands = GenerateHandStrings();
+                hands = GenerateHandStrings(batchSize);
             }
             finally
             {
