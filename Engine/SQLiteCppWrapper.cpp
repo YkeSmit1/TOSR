@@ -107,7 +107,6 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleShape(const HandChar
 
             res.emplace_back(bidId, endfase, str);
         }
-        std::sort(res.begin(), res.end(), [&](const auto& x, const auto& y) {return std::get<0>(x) < std::get<0>(y); });
 
         std::string emptystring;
         return res.empty() ? std::make_tuple(0, false, emptystring) : res.front();
@@ -150,7 +149,6 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleControls(const HandC
 
             res.emplace_back(bidId, endFase, str);
         }
-        std::sort(res.begin(), res.end(), [&](const auto& x, const auto& y) {return std::get<0>(x) < std::get<0>(y); });
         std::string emptystring;
         return res.empty() ? std::make_tuple(0, false, emptystring) : res.front();
     }
@@ -192,7 +190,6 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleScanning(const HandC
 
             res.emplace_back(bidId, false, str);
         }
-        std::sort(res.begin(), res.end(), [&](const auto& x, const auto& y) {return std::get<0>(x) < std::get<0>(y); });
 
         std::string emptystring;
         return res.empty() ? std::make_tuple(0, false, emptystring) : res.front();
