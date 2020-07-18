@@ -12,7 +12,7 @@ namespace Tosr
 {
     public class BatchBidding
     {
-        IBidGenerator bidGenerator;
+        readonly IBidGenerator bidGenerator;
 
         public BatchBidding(IBidGenerator bidGenerator)
         {
