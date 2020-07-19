@@ -26,11 +26,11 @@ jobs:
         cd ..
         git clone https://github.com/Microsoft/vcpkg.git
         cd vcpkg
-        git checkout --force 2020.01
+        git checkout
         .\bootstrap-vcpkg.bat
         .\vcpkg.exe install SQLiteCpp:x64-windows
         .\vcpkg.exe install sqlite_orm:x64-windows
     - name: Build
-      run: msbuild --configuration Release
+      run: msbuild -/t:Build /p:Configuration=Release Tosr.sln
     - name: Test
       run: dotnet test --no-restore --verbosity normal
