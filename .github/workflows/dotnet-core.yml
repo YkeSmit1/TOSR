@@ -21,7 +21,16 @@ jobs:
         dotnet-version: 3.1.101
     - name: Install dependencies
       run: dotnet restore
+    - name: Installing vcpkg (windows)
+      run: |
+        cd ..
+        git clone https://github.com/Microsoft/vcpkg.git
+        cd vcpkg
+        git checkout --force 2020.01
+        .\bootstrap-vcpkg.bat
+        .\vcpkg.exe install SQLiteCpp:x64-windows
+        .\vcpkg.exe install sqlite_orm:x64-windows
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: msbuild --configuration Release
     - name: Test
       run: dotnet test --no-restore --verbosity normal
