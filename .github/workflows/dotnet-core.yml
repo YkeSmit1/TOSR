@@ -36,4 +36,4 @@ jobs:
     - name: Build
       run: msbuild /t:Build /p:Configuration=Release -m Tosr.sln
     - name: Test
-      run: dotnet test --no-restore --verbosity normal .\TosrGui\TosrGui.Test.csproj
+      run: dotnet test --no-restore --verbosity normal .\TosrGui.Test\TosrGui.Test.csproj
