@@ -31,6 +31,6 @@ jobs:
         .\vcpkg.exe install SQLiteCpp:x64-windows
         .\vcpkg.exe install sqlite-orm:x64-windows
     - name: Build
-      run: msbuild -/t:Build /p:Configuration=Release Tosr.sln
+      run: msbuild /t:Build /p:Configuration=Release Tosr.sln
     - name: Test
       run: dotnet test --no-restore --verbosity normal
