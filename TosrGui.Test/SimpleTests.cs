@@ -26,6 +26,7 @@ namespace TosrGui.Test
         {
             Assert.True(Common.IsSameTeam(Player.North, Player.South));
             Assert.True(Common.IsSameTeam(Player.East, Player.West));
+            Assert.True(Common.IsSameTeam(Player.UnKnown, Player.East));
             Assert.False(Common.IsSameTeam(Player.North, Player.West));
         }
 

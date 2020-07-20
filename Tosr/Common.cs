@@ -85,9 +85,9 @@ namespace Tosr
 
         public static bool IsSameTeam(Player player1, Player player2)
         {
-            return player1 == Player.North && player2 == Player.South
-                   || player1 == Player.West && player2 == Player.East
-                || player1 == player2 && player1 == Player.UnKnown;
+            return Math.Abs(player1 - player2) == 2 || 
+                (player1 == player2) || 
+                (player2 == Player.UnKnown || player1 == Player.UnKnown);
         }
 
         public static string GetDeckAsString(IEnumerable<CardDto> orderedCards)

@@ -28,24 +28,24 @@ struct HandCharacteristic
 {
 	std::string hand {};
 	
-	int Spades;
-	int Hearts;
-	int Diamonds;
-	int Clubs;
+	int Spades = 0;
+	int Hearts = 0;
+	int Diamonds = 0;
+	int Clubs = 0;
 
 	std::string distribution;
-	int Controls;
-	bool isBalanced;
-	bool isReverse;
-	bool is65Reverse;
-	bool isThreeSuiter;
-	Shortage shortage;
+	int Controls = 0;
+	bool isBalanced = false;
+	bool isReverse = false;
+	bool is65Reverse = false;
+	bool isThreeSuiter = false;
+	Shortage shortage = Shortage::Unknown;
 	std::string shortageString;
 
 	std::vector<int> ControlsSuit;
 	std::vector<bool> QueensSuit;
 
-	int Hcp;
+	int Hcp = 0;
 
 	static bool CalcuateIsReverse(const std::map<int, size_t>& suitLength);
 	static bool Calcuate65IsReverse(const std::map<int, size_t>& suitLength);

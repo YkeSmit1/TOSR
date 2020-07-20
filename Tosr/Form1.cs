@@ -111,12 +111,12 @@ namespace Tosr
             do
             {
                 unOrderedCards = Shuffling.RandomizeDeck(13);
-                var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new Card.FaceComparer());
+                var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
                 handsString = Common.GetDeckAsString(orderedCards);
             } while (!shuffleRestrictions.Match(handsString));
 
             var left = 20 * 13;
-            var cardDtos = unOrderedCards.OrderBy(x => x.Suit, new Card.GuiSuitComparer()).ThenBy(c => c.Face, new Card.FaceComparer()).ToArray();
+            var cardDtos = unOrderedCards.OrderBy(x => x.Suit, new GuiSuitComparer()).ThenBy(c => c.Face, new FaceComparer()).ToArray();
             foreach (var cardDto in cardDtos)
             {
                 var card = new Card(cardDto.Face, cardDto.Suit, Back.Crosshatch, false, false)
@@ -140,7 +140,7 @@ namespace Tosr
         private void ButtonGetAuctionClick(object sender, EventArgs e)
         {
             Clear();
-            var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new Card.FaceComparer());
+            var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
             var handsString = Common.GetDeckAsString(orderedCards);
             BidManager.GetAuction(handsString, auctionControl.auction, true, bidGenerator);
             auctionControl.ReDraw();
@@ -173,7 +173,7 @@ namespace Tosr
                 {
                     unOrderedCards = Shuffling.RandomizeDeck(13);
                     var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit)
-                        .ThenByDescending(c => c.Face, new Card.FaceComparer());
+                        .ThenByDescending(c => c.Face, new FaceComparer());
                     hands[i] = Common.GetDeckAsString(orderedCards);
                 } while (hands[i].Count(x => x == 'A') * 2 + hands[i].Count(x => x == 'K') < 2);
             }
