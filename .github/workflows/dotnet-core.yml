@@ -21,6 +21,8 @@ jobs:
         dotnet-version: 3.1.101
     - name: Install dependencies
       run: dotnet restore
+    - name: NuGet Restore
+      run: nuget restore Tosr.sln
     - name: Installing vcpkg (windows)
       run: |
         cd ..
@@ -32,6 +34,6 @@ jobs:
         .\vcpkg.exe install sqlite-orm:x64-windows
         .\vcpkg.exe integrate install
     - name: Build
-      run: msbuild /t:Build /p:Configuration=Release Tosr.sln
+      run: msbuild /t:Build /p:Configuration=Release -m Tosr.sln
     - name: Test
       run: dotnet test --no-restore --verbosity normal
