@@ -30,6 +30,7 @@ jobs:
         .\bootstrap-vcpkg.bat
         .\vcpkg.exe install SQLiteCpp:x64-windows
         .\vcpkg.exe install sqlite-orm:x64-windows
+        .\vcpkg.exe integrate install
     - name: Build
       run: msbuild /t:Build /p:Configuration=Release Tosr.sln
     - name: Test
