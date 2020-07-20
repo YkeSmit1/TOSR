@@ -37,3 +37,7 @@ jobs:
       run: msbuild /t:Build /p:Configuration=Release -m Tosr.sln
     - name: Test
       run: dotnet test --no-restore --verbosity normal .\TosrGui.Test\TosrGui.Test.csproj
+    - uses: actions/upload-artifact@v2
+      with:
+        name: distribute
+        path: .\Tosr\bin\Release\netcoreapp3.1\
