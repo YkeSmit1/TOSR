@@ -9,11 +9,11 @@ TODO
 - Create a rules database for the Tarzan system.
 - Implement more statistics. 
 - Implement zooming.
-- Implenet CI/CD. Create integration test.
+- Create integration test.
 
 BUGS
 - 2Nd step in scanning is off by one.
-- 3NT is sometimes a realy when it should not.
+- 3NT is sometimes a relay when it should not.
 
 How to build
 - Clone or download the sources.
@@ -21,6 +21,7 @@ How to build
 - Make sure .Net Core 3.1 is installed.
 - Install nuget packages newtonsoft and xunit.
 
-How to run
+How to run without building
+- Make sure .Net Core 3.1 is installed.
+- Download the artifacts directory from GitHub
 - Download cards.dll and copy it to the outputdirectory.
-- Copy Tosr.db3 to the outputdirectory.
