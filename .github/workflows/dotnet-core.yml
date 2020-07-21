@@ -35,8 +35,10 @@ jobs:
         .\vcpkg.exe integrate install
     - name: Build
       run: msbuild /t:Build /p:Configuration=Release -m Tosr.sln
-    - name: Test
+    - name: Run c# Test
       run: dotnet test --no-restore --verbosity normal .\TosrGui.Test\TosrGui.Test.csproj
+    - name: Run c++ Test
+      run: .\x64\Release\EngineTest.exe
     - uses: actions/upload-artifact@v2
       with:
         name: distribute
