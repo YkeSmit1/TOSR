@@ -68,6 +68,20 @@ namespace Tosr
         public Player currentPlayer;
         private int currentBiddingRound;
         public readonly Dictionary<int, Dictionary<Player, Bid>> bids = new Dictionary<int, Dictionary<Player, Bid>>();
+        public Bid currentContract = Bid.PassBid;
+
+        internal Player GetDeclarer(Suit suit)
+        {
+            foreach (var biddingRoud in bids.Values)
+            {
+                foreach (var bid in biddingRoud)
+                {
+                    if (bid.Value.bidType == BidType.bid && bid.Value.suit == suit)
+                        return bid.Key;
+                }
+            }
+            return Player.UnKnown;
+        }
 
         public void AddBid(Bid bid)
         {
@@ -85,6 +99,10 @@ namespace Tosr
             else
             {
                 ++currentPlayer;
+            }
+            if (bid.bidType == BidType.bid)
+            {
+                currentContract = bid;
             }
         }
 

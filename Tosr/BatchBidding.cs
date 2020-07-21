@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -7,20 +6,52 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Newtonsoft.Json;
 
 namespace Tosr
 {
     public class BatchBidding
     {
+        class Statistics
+        {
+            public Dictionary<Player, int> dealers = new Dictionary<Player, int>();
+            public SortedDictionary<Bid, int> contracts = new SortedDictionary<Bid, int>();
+
+            public void AddOrUpdateDeclarer(Player player)
+            {
+                if (!dealers.ContainsKey(player))
+                {
+                    dealers.Add(player, 1);
+                }
+                else
+                {
+                    dealers[player]++;
+                }
+            }
+
+            public void AddOrUpdateContract(Auction auction)
+            {
+                if (!contracts.ContainsKey(auction.currentContract))
+                {
+                    contracts.Add(auction.currentContract, 1);
+                }
+                else
+                {
+                    contracts[auction.currentContract]++;
+                }
+            }
+        }
+
         readonly IBidGenerator bidGenerator;
+        private readonly Statistics statistics = new Statistics();
+        private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
 
         public BatchBidding(IBidGenerator bidGenerator)
         {
             this.bidGenerator = bidGenerator;
         }
 
-        private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
-        public void Execute(string[] hands)
+        public void Execute(Tuple<string, string>[] hands)
         {
             handPerAuction.Clear();
 
@@ -32,9 +63,8 @@ namespace Tosr
                 try
                 {
                     Auction auction = new Auction();
-                    BidManager.GetAuction(hands[i], auction, false, bidGenerator);
-                    var bids = auction.GetBids(Player.South);
-                    AddHandAndAuction(hands[i], bids[0..^4]);
+                    BidManager.GetAuction(hands[i].Item1, auction, false, bidGenerator);
+                    AddHandAndAuction(hands[i], auction);
                 }
                 catch (Exception exception)
                 {
@@ -44,12 +74,16 @@ namespace Tosr
             stringbuilder.AppendLine($"Seconds elapsed: {stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture)}");
             SaveAuctions();
 
-            _ = MessageBox.Show(stringbuilder.ToString());
+            MessageBox.Show(stringbuilder.ToString());
         }
 
-        private void AddHandAndAuction(string strHand, string strAuction)
+        private void AddHandAndAuction(Tuple<string, string> strHand, Auction auction)
         {
-            var str = string.Join("", strHand.Split(',').Select(x => x.Length));
+            var bids = auction.GetBids(Player.South);
+            var strAuction = bids[0..^4];
+
+            var suitLengthNorth = strHand.Item1.Split(',').Select(x => x.Length);
+            var str = string.Join("", suitLengthNorth);
 
             if (IsFreakHand(str))
                 return;
@@ -58,6 +92,14 @@ namespace Tosr
                 handPerAuction[strAuction] = new List<string>();
             if (!handPerAuction[strAuction].Contains(str))
                 handPerAuction[strAuction].Add(str);
+
+            var suitLengthSouth = strHand.Item2.Split(',').Select(x => x.Length);
+            var suitLengthNS = suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
+
+            var longestSuit = (Suit)(3 - suitLengthNS.ToList().IndexOf(suitLengthNS.Max()));
+
+            statistics.AddOrUpdateDeclarer(auction.GetDeclarer(longestSuit));
+            statistics.AddOrUpdateContract(auction);
         }
 
         private static bool IsFreakHand(string handLength)
@@ -72,7 +114,8 @@ namespace Tosr
         private void SaveAuctions()
         {
             var multiHandPerAuction = handPerAuction.Where(x => x.Value.Count > 1).ToDictionary(x => x.Key, x => x.Value);
-            File.WriteAllText("HandPerAuction.txt", JsonConvert.SerializeObject(multiHandPerAuction));
+            File.WriteAllText("HandPerAuction.txt", JsonConvert.SerializeObject(multiHandPerAuction, Formatting.Indented));
+            File.WriteAllText("Statistics.txt", JsonConvert.SerializeObject(statistics, Formatting.Indented));
         }
     }
 }

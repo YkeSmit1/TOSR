@@ -1,29 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using Newtonsoft.Json;
 
 namespace Tosr
 {
-    public enum Fase
-    {
-        Shape,
-        Controls,
-        Scanning
-    };
-
     public partial class Form1 : Form
     {
         private BiddingBox biddingBox;
         private AuctionControl auctionControl;
-        private CardDto[] unOrderedCards;
+        private IEnumerable<CardDto> unOrderedCards;
 
-        private string[] hands;
+        private Tuple<string, string>[] hands;
         private readonly ShuffleRestrictions shuffleRestrictions = new ShuffleRestrictions();
         private string handsString;
         private readonly BiddingState biddingState = new BiddingState();
@@ -109,11 +100,9 @@ namespace Tosr
             }
 
             do
-            {
-                unOrderedCards = Shuffling.RandomizeDeck(13);
-                var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-                handsString = Common.GetDeckAsString(orderedCards);
-            } while (!shuffleRestrictions.Match(handsString));
+                handsString = ShuffleRandomHand().Item1;
+            while
+                (!shuffleRestrictions.Match(handsString));
 
             var left = 20 * 13;
             var cardDtos = unOrderedCards.OrderBy(x => x.Suit, new GuiSuitComparer()).ThenBy(c => c.Face, new FaceComparer()).ToArray();
@@ -153,7 +142,6 @@ namespace Tosr
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
-
                 BatchBidding batchBidding = new BatchBidding(bidGenerator);
                 batchBidding.Execute(hands);
             }
@@ -163,32 +151,44 @@ namespace Tosr
             }
         }
 
-        private string[] GenerateHandStrings(int batchSize)
+        private Tuple<string, string>[] GenerateHandStrings(int batchSize)
         {
-            hands = new string[batchSize];
+            hands = new Tuple<string, string>[batchSize];
+            var localshuffleRestrictions = new ShuffleRestrictions();
 
             for (int i = 0; i < batchSize; ++i)
             {
                 do
-                {
-                    unOrderedCards = Shuffling.RandomizeDeck(13);
-                    var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit)
-                        .ThenByDescending(c => c.Face, new FaceComparer());
-                    hands[i] = Common.GetDeckAsString(orderedCards);
-                } while (hands[i].Count(x => x == 'A') * 2 + hands[i].Count(x => x == 'K') < 2);
+                    hands[i] = ShuffleRandomHand();
+                while
+                    (!localshuffleRestrictions.Match(hands[i].Item1));
             }
 
             return hands;
         }
 
+        private Tuple<string, string> ShuffleRandomHand()
+        {
+            var cards = Shuffling.FisherYates(26);
+
+            var orderedCardsNorth = cards.Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
+            var handNorth = Common.GetDeckAsString(orderedCardsNorth);
+
+            var orderedCardsSouth = cards.Skip(13).Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
+            var handSouth = Common.GetDeckAsString(orderedCardsNorth);
+
+            unOrderedCards = cards.Take(13);
+
+            return new Tuple<string, string>(handNorth, handSouth);
+        }
+
         private void ButtonGenerateHandsClick(object sender, EventArgs e)
         {
-            int batchSize = (int)numericUpDown1.Value;
             var oldCursor = Cursor.Current;
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
-                hands = GenerateHandStrings(batchSize);
+                hands = GenerateHandStrings((int)numericUpDown1.Value);
             }
             finally
             {
@@ -198,8 +198,8 @@ namespace Tosr
 
         private void ToolStripButton4Click(object sender, EventArgs e)
         {
-            ShuffleRestrictionsForm shuffleRestrictionsForm = new ShuffleRestrictionsForm(shuffleRestrictions);
-            _ = shuffleRestrictionsForm.ShowDialog();
+            using ShuffleRestrictionsForm shuffleRestrictionsForm = new ShuffleRestrictionsForm(shuffleRestrictions);
+            shuffleRestrictionsForm.ShowDialog();
         }
     }
 }

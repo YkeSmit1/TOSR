@@ -47,6 +47,13 @@ namespace Tosr
         King
     }
 
+    public enum Fase
+    {
+        Shape,
+        Controls,
+        Scanning
+    };
+
     public class Common
     {
         public static string GetSuitDescription(Suit suit)
