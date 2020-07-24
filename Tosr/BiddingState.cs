@@ -11,6 +11,7 @@
         public int bidId { get; set; }
         public Bid currentBid { get; set; }
         public int relayBidIdLastFase { get; set; }
+        public int relaysInScanningFase { get; set; }
 
         public void Init()
         {
@@ -19,6 +20,7 @@
             bidId = int.MaxValue;
             currentBid = Bid.PassBid;
             relayBidIdLastFase = 0;
+            relaysInScanningFase = 0;
         }
     }
 }

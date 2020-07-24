@@ -97,6 +97,10 @@ namespace Tosr
         {
             biddingState.currentBid = Common.NextBid(biddingState.currentBid);
             biddingState.lastBidId = Common.GetBidId(biddingState.currentBid);
+            if (biddingState.fase == Fase.Scanning && biddingState.relayBidIdLastFase != biddingState.lastBidId)
+            {
+                biddingState.relaysInScanningFase += 1;
+            }
         }
 
         private static void SouthBid(BiddingState biddingState, string handsString, bool requestDescription)
@@ -104,9 +108,9 @@ namespace Tosr
             var description = new StringBuilder(128);
 
             var bidFromRule = requestDescription ?
-                    Pinvoke.GetBidFromRuleEx(biddingState.fase, handsString, biddingState.lastBidId - biddingState.relayBidIdLastFase, out Fase nextfase, description) :
-                    Pinvoke.GetBidFromRule(biddingState.fase, handsString, biddingState.lastBidId - biddingState.relayBidIdLastFase, out nextfase);
-            biddingState.bidId = bidFromRule + biddingState.relayBidIdLastFase;
+                    Pinvoke.GetBidFromRuleEx(biddingState.fase, handsString, biddingState.lastBidId - biddingState.relayBidIdLastFase - biddingState.relaysInScanningFase, out Fase nextfase, description) :
+                    Pinvoke.GetBidFromRule(biddingState.fase, handsString, biddingState.lastBidId - biddingState.relayBidIdLastFase - biddingState.relaysInScanningFase, out nextfase);
+            biddingState.bidId = bidFromRule + biddingState.relayBidIdLastFase + biddingState.relaysInScanningFase;
             if (bidFromRule == 0)
             {
                 biddingState.currentBid = Bid.PassBid;
