@@ -7,6 +7,9 @@
 #include "Rule.h"
 #include <unordered_map>
 #include "SQLiteCppWrapper.h"
+#include <filesystem>
+
+using std::filesystem::path;
 
 HandCharacteristic GetHandCharacteristic(const std::string& hand)
 {
@@ -18,14 +21,19 @@ HandCharacteristic GetHandCharacteristic(const std::string& hand)
     return handCharacteristic;
 }
 
+ISQLiteWrapper* GetSqliteWrapper()
+{
+    static std::unique_ptr<ISQLiteWrapper> sqliteWrapper = std::make_unique<SQLiteCppWrapper>("Tosr.db3");
+    return sqliteWrapper.get();
+}
+
 int GetBidFromRuleInternal(Fase fase, const char* hand, int lastBidId, Fase* newFase, std::string& description)
 {
     std::cout << "Fase:" << (int)fase << " hand:" << hand << '\n';
 
-    std::unique_ptr<ISQLiteWrapper> sqliteWrapper = std::make_unique<SQLiteCppWrapper>();
     auto handCharacteristic = GetHandCharacteristic(hand);
 
-    auto [bidId, endFase, descr] = sqliteWrapper->GetRule(handCharacteristic, fase, lastBidId);
+    auto [bidId, endFase, descr] = GetSqliteWrapper()->GetRule(handCharacteristic, fase, lastBidId);
     description = descr;
     // Check if the fase has ended
     if (endFase)
@@ -43,7 +51,7 @@ int GetBidFromRule(Fase fase, const char* hand, int lastBidId, Fase* newFase)
     return bidId;
 }
 
-int GetBidFromRuleEx(Fase fase, const char* hand, int lastBidId, Fase* newFase, LPSTR description)
+int GetBidFromRuleEx(Fase fase, const char* hand, int lastBidId, Fase* newFase, char* description)
 {
     std::string descr;
     auto bidId = GetBidFromRuleInternal(fase, hand, lastBidId, newFase, descr);
@@ -52,9 +60,15 @@ int GetBidFromRuleEx(Fase fase, const char* hand, int lastBidId, Fase* newFase, 
     return bidId;
 }
 
+int Setup(const char* database)
+{
+    if (!exists(path(database)))
+        return -1;
+    GetSqliteWrapper()->SetDatabase(database);
+    return 0;
+}
 
 void GetBid(int bidId, int& rank, int& suit)
 {
-    std::unique_ptr<ISQLiteWrapper> sqliteWrapper = std::make_unique<SQLiteCppWrapper>();
-    sqliteWrapper->GetBid(bidId, rank, suit);
+    GetSqliteWrapper()->GetBid(bidId, rank, suit);
 }

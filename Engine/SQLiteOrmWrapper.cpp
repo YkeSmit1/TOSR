@@ -62,3 +62,7 @@ std::tuple<int, bool, std::string> SQLiteOrmWrapper::GetRule(const HandCharacter
 
     return std::make_tuple(rows.front(), false, emptystring);
 }
+
+void SQLiteOrmWrapper::SetDatabase(const std::string& database)
+{
+}

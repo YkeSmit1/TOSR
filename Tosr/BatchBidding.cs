@@ -46,12 +46,12 @@ namespace Tosr
         private readonly Statistics statistics = new Statistics();
         private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
 
-        public BatchBidding(IBidGenerator bidGenerator)
+        public BatchBidding()
         {
-            this.bidGenerator = bidGenerator;
+            this.bidGenerator = new BidGenerator();
         }
 
-        public void Execute(Tuple<string, string>[] hands)
+        public void Execute(HandsNorthSouth[] hands)
         {
             handPerAuction.Clear();
 
@@ -63,7 +63,7 @@ namespace Tosr
                 try
                 {
                     Auction auction = new Auction();
-                    BidManager.GetAuction(hands[i].Item1, auction, false, bidGenerator);
+                    BidManager.GetAuction(hands[i].SouthHand, auction, bidGenerator);
                     AddHandAndAuction(hands[i], auction);
                 }
                 catch (Exception exception)
@@ -77,12 +77,12 @@ namespace Tosr
             MessageBox.Show(stringbuilder.ToString());
         }
 
-        private void AddHandAndAuction(Tuple<string, string> strHand, Auction auction)
+        private void AddHandAndAuction(HandsNorthSouth strHand, Auction auction)
         {
             var bids = auction.GetBids(Player.South);
             var strAuction = bids[0..^4];
 
-            var suitLengthNorth = strHand.Item1.Split(',').Select(x => x.Length);
+            var suitLengthNorth = strHand.NorthHand.Split(',').Select(x => x.Length);
             var str = string.Join("", suitLengthNorth);
 
             if (IsFreakHand(str))
@@ -93,7 +93,7 @@ namespace Tosr
             if (!handPerAuction[strAuction].Contains(str))
                 handPerAuction[strAuction].Add(str);
 
-            var suitLengthSouth = strHand.Item2.Split(',').Select(x => x.Length);
+            var suitLengthSouth = strHand.SouthHand.Split(',').Select(x => x.Length);
             var suitLengthNS = suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
 
             var longestSuit = (Suit)(3 - suitLengthNS.ToList().IndexOf(suitLengthNS.Max()));

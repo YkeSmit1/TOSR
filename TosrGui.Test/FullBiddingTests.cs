@@ -15,7 +15,7 @@ namespace TosrGui.Test
         {
             var bidGenerator = new Mock<IBidGenerator>();
             // 1Sp
-            bidGenerator.SetupSequence(x => x.GetBid(It.IsAny<BiddingState>(), It.IsAny<string>(), It.IsAny<bool>())).
+            bidGenerator.SetupSequence(x => x.GetBid(It.IsAny<BiddingState>(), It.IsAny<string>())).
                // 1Sp
                 Returns(() => (4, Fase.Shape, "")).
                 // 2Di
@@ -30,7 +30,7 @@ namespace TosrGui.Test
                 Returns(() => (0, Fase.Scanning, ""));
 
             var auction = new Auction();
-            BidManager.GetAuction("", auction, true, bidGenerator.Object);
+            BidManager.GetAuction("", auction, bidGenerator.Object);
 
             Assert.Equal("1♣1NT2♥4♣5♦6♥", auction.GetBids(Player.North));
             Assert.Equal("1♠2♦3NT5♣6♦Pass", auction.GetBids(Player.South));

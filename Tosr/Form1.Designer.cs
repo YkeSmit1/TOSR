@@ -32,6 +32,7 @@
             this.buttonGetAuction = new System.Windows.Forms.Button();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem11 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem10 = new System.Windows.Forms.ToolStripMenuItem();
@@ -49,6 +50,7 @@
             this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
@@ -80,9 +82,19 @@
             // 
             // toolStripMenuItem4
             // 
+            this.toolStripMenuItem4.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem11});
             this.toolStripMenuItem4.Name = "toolStripMenuItem4";
             this.toolStripMenuItem4.Size = new System.Drawing.Size(37, 20);
             this.toolStripMenuItem4.Text = "File";
+            // 
+            // toolStripMenuItem11
+            // 
+            this.toolStripMenuItem11.Name = "toolStripMenuItem11";
+            this.toolStripMenuItem11.ShortcutKeys = System.Windows.Forms.Keys.F7;
+            this.toolStripMenuItem11.Size = new System.Drawing.Size(171, 22);
+            this.toolStripMenuItem11.Text = "Rules database";
+            this.toolStripMenuItem11.Click += new System.EventHandler(this.ToolStripMenuItem11Click);
             // 
             // toolStripMenuItem5
             // 
@@ -228,6 +240,11 @@
             this.label1.TabIndex = 17;
             this.label1.Text = "Number of hands to bid";
             // 
+            // openFileDialog1
+            // 
+            this.openFileDialog1.DefaultExt = "db3";
+            this.openFileDialog1.FileName = "Tosr.db3";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -273,6 +290,8 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem10;
         private System.Windows.Forms.NumericUpDown numericUpDown1;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem11;
     }
 }
 

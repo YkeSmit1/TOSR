@@ -8,17 +8,36 @@
         }
         public Fase fase { get; set; }
         public int lastBidId { get; set; }
-        public int bidId { get; set; }
         public Bid currentBid { get; set; }
         public int relayBidIdLastFase { get; set; }
+
+        public bool EndOfBidding { get; set; }
 
         public void Init()
         {
             fase = Fase.Shape;
             lastBidId = 1;
-            bidId = int.MaxValue;
             currentBid = Bid.PassBid;
             relayBidIdLastFase = 0;
+            EndOfBidding = false;
+        }
+        public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, string description)
+        {
+            var bidId = bidIdFromRule + relayBidIdLastFase;
+            if (bidIdFromRule == 0)
+            {
+                currentBid = Bid.PassBid;
+                EndOfBidding = true;
+                return;
+            }
+            if (nextfase != fase)
+            {
+                relayBidIdLastFase = bidId + 1;
+                fase = nextfase;
+            }
+
+            currentBid = BidManager.GetBid(bidId);
+            currentBid.description = description;
         }
     }
 }

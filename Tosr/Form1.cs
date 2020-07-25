@@ -8,17 +8,22 @@ using System.Windows.Forms;
 
 namespace Tosr
 {
+    public struct HandsNorthSouth
+    {
+        public string NorthHand;
+        public string SouthHand;
+    }
     public partial class Form1 : Form
     {
         private BiddingBox biddingBox;
         private AuctionControl auctionControl;
-        private IEnumerable<CardDto> unOrderedCards;
+        private List<CardDto> unOrderedCards;
 
-        private Tuple<string, string>[] hands;
+        private HandsNorthSouth[] hands;
         private readonly ShuffleRestrictions shuffleRestrictions = new ShuffleRestrictions();
         private string handsString;
         private readonly BiddingState biddingState = new BiddingState();
-        private IBidGenerator bidGenerator = new BidGenerator();
+        private IBidGenerator bidGenerator = new BidGeneratorDescription();
 
         public Form1()
         {
@@ -31,6 +36,8 @@ namespace Tosr
             numericUpDown1.Value = 1000;
             Shuffle();
             BidTillSouth(auctionControl.auction, biddingState);
+            Pinvoke.Setup("Tosr.db3");
+            openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
         }
 
         private void ShowBiddingBox()
@@ -38,7 +45,7 @@ namespace Tosr
             void handler(object x, EventArgs y)
             {
                 var biddingBoxButton = (BiddingBoxButton)x;
-                BidManager.SouthBid(biddingState, handsString, true, bidGenerator);
+                BidManager.SouthBid(biddingState, handsString, bidGenerator);
                 if (biddingBoxButton.bid != biddingState.currentBid)
                 {
                     MessageBox.Show($"The correct bid is {biddingState.currentBid}. Description: {biddingState.currentBid.description}.", "Incorrect bid");
@@ -100,7 +107,7 @@ namespace Tosr
             }
 
             do
-                handsString = ShuffleRandomHand().Item1;
+                handsString = ShuffleRandomHand().SouthHand;
             while
                 (!shuffleRestrictions.Match(handsString));
 
@@ -131,7 +138,7 @@ namespace Tosr
             Clear();
             var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
             var handsString = Common.GetDeckAsString(orderedCards);
-            BidManager.GetAuction(handsString, auctionControl.auction, true, bidGenerator);
+            BidManager.GetAuction(handsString, auctionControl.auction, bidGenerator);
             auctionControl.ReDraw();
             biddingBox.Enabled = false;
         }
@@ -142,7 +149,7 @@ namespace Tosr
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
-                BatchBidding batchBidding = new BatchBidding(bidGenerator);
+                BatchBidding batchBidding = new BatchBidding();
                 batchBidding.Execute(hands);
             }
             finally
@@ -151,9 +158,9 @@ namespace Tosr
             }
         }
 
-        private Tuple<string, string>[] GenerateHandStrings(int batchSize)
+        private HandsNorthSouth[] GenerateHandStrings(int batchSize)
         {
-            hands = new Tuple<string, string>[batchSize];
+            hands = new HandsNorthSouth[batchSize];
             var localshuffleRestrictions = new ShuffleRestrictions();
 
             for (int i = 0; i < batchSize; ++i)
@@ -161,25 +168,25 @@ namespace Tosr
                 do
                     hands[i] = ShuffleRandomHand();
                 while
-                    (!localshuffleRestrictions.Match(hands[i].Item1));
+                    (!localshuffleRestrictions.Match(hands[i].SouthHand));
             }
 
             return hands;
         }
 
-        private Tuple<string, string> ShuffleRandomHand()
+        private HandsNorthSouth ShuffleRandomHand()
         {
+            var handsNorthSouth = new HandsNorthSouth();
             var cards = Shuffling.FisherYates(26);
 
             var orderedCardsNorth = cards.Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-            var handNorth = Common.GetDeckAsString(orderedCardsNorth);
+            handsNorthSouth.NorthHand = Common.GetDeckAsString(orderedCardsNorth);
 
-            var orderedCardsSouth = cards.Skip(13).Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-            var handSouth = Common.GetDeckAsString(orderedCardsNorth);
+            unOrderedCards = cards.Take(13).ToList();
+            var orderedCardsSouth = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
+            handsNorthSouth.SouthHand = Common.GetDeckAsString(orderedCardsSouth);
 
-            unOrderedCards = cards.Take(13);
-
-            return new Tuple<string, string>(handNorth, handSouth);
+            return handsNorthSouth;
         }
 
         private void ButtonGenerateHandsClick(object sender, EventArgs e)
@@ -200,6 +207,14 @@ namespace Tosr
         {
             using ShuffleRestrictionsForm shuffleRestrictionsForm = new ShuffleRestrictionsForm(shuffleRestrictions);
             shuffleRestrictionsForm.ShowDialog();
+        }
+
+        private void ToolStripMenuItem11Click(object sender, EventArgs e)
+        {
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                Pinvoke.Setup(openFileDialog1.FileName);
+            }
         }
     }
 }

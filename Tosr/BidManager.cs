@@ -6,7 +6,7 @@ namespace Tosr
 {
     public class BidManager
     {
-        public static void GetAuction(string handsString, Auction auction, bool requestDescription, IBidGenerator bidGenerator)
+        public static void GetAuction(string handsString, Auction auction, IBidGenerator bidGenerator)
         {
             auction.Clear();
 
@@ -26,7 +26,7 @@ namespace Tosr
                         auction.AddBid(biddingState.currentBid);
                         break;
                     case Player.South:
-                        SouthBid(biddingState, handsString, requestDescription, bidGenerator);
+                        SouthBid(biddingState, handsString, bidGenerator);
                         auction.AddBid(biddingState.currentBid);
                         break;
                     default:
@@ -35,7 +35,7 @@ namespace Tosr
 
                 currentPlayer = NextPlayer(currentPlayer);
             }
-            while (biddingState.bidId != 0);
+            while (!biddingState.EndOfBidding);
         }
         private static Player NextPlayer(Player currentPlayer)
         {
@@ -51,34 +51,10 @@ namespace Tosr
             biddingState.lastBidId = GetBidId(biddingState.currentBid);
         }
 
-        public static void SouthBid(BiddingState biddingState, string handsString, bool requestDescription, IBidGenerator bidGenerator)
+        public static void SouthBid(BiddingState biddingState, string handsString, IBidGenerator bidGenerator)
         {
-            var (bidFromRule, nextfase, description) = bidGenerator.GetBid(biddingState, handsString, requestDescription);
-            biddingState.bidId = bidFromRule + biddingState.relayBidIdLastFase;
-            if (bidFromRule == 0)
-            {
-                biddingState.currentBid = Bid.PassBid;
-                biddingState.bidId = 0;
-                return;
-            }
-            if (nextfase != biddingState.fase)
-            {
-                biddingState.relayBidIdLastFase = biddingState.bidId + 1;
-                biddingState.fase = nextfase;
-            }
-
-            var currentBid = GetBid(biddingState.bidId);
-            currentBid.description = requestDescription ? description.ToString() : string.Empty;
-            biddingState.currentBid = currentBid;
-        }
-
-        public static (int, Fase, string) GetBid(BiddingState biddingState, string handsString, bool requestDescription)
-        {
-            var description = new StringBuilder(128);
-            var bidFromRule = requestDescription ?
-                    Pinvoke.GetBidFromRuleEx(biddingState.fase, handsString, biddingState.lastBidId - biddingState.relayBidIdLastFase, out var nextfase, description) :
-                    Pinvoke.GetBidFromRule(biddingState.fase, handsString, biddingState.lastBidId - biddingState.relayBidIdLastFase, out nextfase);
-            return (bidFromRule, nextfase, description.ToString());
+            var (bidIdFromRule, nextfase, description) = bidGenerator.GetBid(biddingState, handsString);
+            biddingState.UpdateBiddingState(bidIdFromRule, nextfase, description);
         }
 
         public static Bid GetBid(int bidId)
@@ -99,6 +75,5 @@ namespace Tosr
                 return new Bid(bid.rank + 1, Suit.Clubs);
             return new Bid(bid.rank, bid.suit + 1);
         }
-
     }
 }
