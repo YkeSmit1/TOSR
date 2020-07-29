@@ -6,9 +6,9 @@ namespace Tosr
 {
     public class BidManager
     {
-        public static void GetAuction(string handsString, Auction auction, IBidGenerator bidGenerator)
+        public static Auction GetAuction(string handsString, IBidGenerator bidGenerator)
         {
-            auction.Clear();
+            Auction auction = new Auction();
 
             BiddingState biddingState = new BiddingState();
             Player currentPlayer = Player.West;
@@ -36,6 +36,7 @@ namespace Tosr
                 currentPlayer = NextPlayer(currentPlayer);
             }
             while (!biddingState.EndOfBidding);
+            return auction;
         }
         private static Player NextPlayer(Player currentPlayer)
         {

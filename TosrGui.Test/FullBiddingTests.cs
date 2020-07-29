@@ -29,8 +29,7 @@ namespace TosrGui.Test
                 // Pass
                 Returns(() => (0, Fase.Scanning, ""));
 
-            var auction = new Auction();
-            BidManager.GetAuction("", auction, bidGenerator.Object);
+            var auction = BidManager.GetAuction("", bidGenerator.Object);
 
             Assert.Equal("1♣1NT2♥4♣5♦6♥", auction.GetBids(Player.North));
             Assert.Equal("1♠2♦3NT5♣6♦Pass", auction.GetBids(Player.South));

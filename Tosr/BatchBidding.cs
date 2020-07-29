@@ -62,8 +62,7 @@ namespace Tosr
             {
                 try
                 {
-                    Auction auction = new Auction();
-                    BidManager.GetAuction(hands[i].SouthHand, auction, bidGenerator);
+                    var auction = BidManager.GetAuction(hands[i].SouthHand, bidGenerator);
                     AddHandAndAuction(hands[i], auction);
                 }
                 catch (Exception exception)
@@ -71,10 +70,12 @@ namespace Tosr
                     stringbuilder.AppendLine(exception.Message);
                 }
             }
-            stringbuilder.AppendLine($"Seconds elapsed: {stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture)}");
+            stringbuilder.AppendLine(@$"Seconds elapsed: {stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture)}
+Duplicate auctions are written to ""HandPerAuction.txt""
+Statistics are written to ""Statistics.txt""");
             SaveAuctions();
 
-            MessageBox.Show(stringbuilder.ToString());
+            MessageBox.Show(stringbuilder.ToString(), "Batch bidding done");
         }
 
         private void AddHandAndAuction(HandsNorthSouth strHand, Auction auction)
@@ -82,8 +83,8 @@ namespace Tosr
             var bids = auction.GetBids(Player.South);
             var strAuction = bids[0..^4];
 
-            var suitLengthNorth = strHand.NorthHand.Split(',').Select(x => x.Length);
-            var str = string.Join("", suitLengthNorth);
+            var suitLengthSouth = strHand.SouthHand.Split(',').Select(x => x.Length);
+            var str = string.Join("", suitLengthSouth);
 
             if (IsFreakHand(str))
                 return;
@@ -93,7 +94,7 @@ namespace Tosr
             if (!handPerAuction[strAuction].Contains(str))
                 handPerAuction[strAuction].Add(str);
 
-            var suitLengthSouth = strHand.SouthHand.Split(',').Select(x => x.Length);
+            var suitLengthNorth = strHand.NorthHand.Split(',').Select(x => x.Length);
             var suitLengthNS = suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
 
             var longestSuit = (Suit)(3 - suitLengthNS.ToList().IndexOf(suitLengthNS.Max()));
@@ -104,11 +105,9 @@ namespace Tosr
 
         private static bool IsFreakHand(string handLength)
         {
-            var handPattern = new string(handLength.OrderByDescending(y => y).ToArray());
-            return handPattern == "7321" || handPattern[0] == '8' || handPattern[0] == '9' ||
-                   (handPattern[0] == '7' && handPattern[1] == '5') ||
-                    (handPattern[0] == '6' && handPattern[1] == '6') ||
-                    (handPattern[0] == '7' && handPattern[1] == '6');
+            var handPattern = string.Concat(handLength.OrderByDescending(y => y));
+            return handPattern == "7321" || Char.GetNumericValue(handPattern[0]) >= 8 ||
+                Char.GetNumericValue(handPattern[0]) + Char.GetNumericValue(handPattern[1]) >= 12;
         }
 
         private void SaveAuctions()

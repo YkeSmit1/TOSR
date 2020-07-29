@@ -138,7 +138,7 @@ namespace Tosr
             Clear();
             var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
             var handsString = Common.GetDeckAsString(orderedCards);
-            BidManager.GetAuction(handsString, auctionControl.auction, bidGenerator);
+            auctionControl.auction = BidManager.GetAuction(handsString, bidGenerator);
             auctionControl.ReDraw();
             biddingBox.Enabled = false;
         }
