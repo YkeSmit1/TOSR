@@ -55,6 +55,10 @@ namespace Tosr
         public static void SouthBid(BiddingState biddingState, string handsString, IBidGenerator bidGenerator)
         {
             var (bidIdFromRule, nextfase, description) = bidGenerator.GetBid(biddingState, handsString);
+            if (Common.IsFaseRelative(biddingState.fase))
+            {
+                biddingState.Offset++;
+            }
             biddingState.UpdateBiddingState(bidIdFromRule, nextfase, description);
         }
 

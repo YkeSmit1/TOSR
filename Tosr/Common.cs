@@ -1,6 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
+using Tosr.Properties;
 
 namespace Tosr
 {
@@ -54,8 +58,15 @@ namespace Tosr
         Scanning
     };
 
+
     public class Common
     {
+        private readonly static Dictionary<Fase, bool> isFaseRelative = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(Resources.IsFaseRelative);
+        public static bool IsFaseRelative(Fase fase)
+        {
+            isFaseRelative.TryGetValue(fase, out bool result);
+            return result;
+        }
         public static string GetSuitDescription(Suit suit)
         {
             return suit switch

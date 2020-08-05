@@ -10,7 +10,7 @@
         public int lastBidId { get; set; }
         public Bid currentBid { get; set; }
         public int relayBidIdLastFase { get; set; }
-
+        public int Offset { get; set; }
         public bool EndOfBidding { get; set; }
 
         public void Init()
@@ -19,6 +19,7 @@
             lastBidId = 1;
             currentBid = Bid.PassBid;
             relayBidIdLastFase = 0;
+            Offset = 0;
             EndOfBidding = false;
         }
         public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, string description)
@@ -34,6 +35,7 @@
             {
                 relayBidIdLastFase = bidId + 1;
                 fase = nextfase;
+                Offset = 0;
             }
 
             currentBid = BidManager.GetBid(bidId);
