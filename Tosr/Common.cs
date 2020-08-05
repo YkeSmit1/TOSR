@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.CompilerServices;
 using Tosr.Properties;
 
 namespace Tosr
@@ -59,12 +60,12 @@ namespace Tosr
     };
 
 
-    public class Common
+    public static class Common
     {
-        private readonly static Dictionary<Fase, bool> isFaseRelative = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(Resources.IsFaseRelative);
-        public static bool IsFaseRelative(Fase fase)
+        private readonly static Dictionary<Fase, bool> FasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(Resources.FasesWithOffset);
+        public static bool HasOffset(this Fase fase)
         {
-            isFaseRelative.TryGetValue(fase, out bool result);
+            FasesWithOffset.TryGetValue(fase, out bool result);
             return result;
         }
         public static string GetSuitDescription(Suit suit)

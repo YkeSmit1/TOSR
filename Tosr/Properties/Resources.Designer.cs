@@ -62,14 +62,14 @@ namespace Tosr.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to {
-        ///    &quot;Shape&quot;: false,
-        ///    &quot;Controls&quot;: false,
-        ///    &quot;Scanning&quot;: true
+        ///	&quot;Shape&quot;: false,
+        ///	&quot;Controls&quot;: false,
+        ///	&quot;Scanning&quot;: true
         ///}.
         /// </summary>
-        public static string IsFaseRelative {
+        public static string FasesWithOffset {
             get {
-                return ResourceManager.GetString("IsFaseRelative", resourceCulture);
+                return ResourceManager.GetString("FasesWithOffset", resourceCulture);
             }
         }
     }
