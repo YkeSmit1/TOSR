@@ -24,7 +24,7 @@
         }
         public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, string description)
         {
-            var bidId = bidIdFromRule + relayBidIdLastFase;
+            var bidId = bidIdFromRule + relayBidIdLastFase + Offset;
             if (bidIdFromRule == 0)
             {
                 currentBid = Bid.PassBid;
@@ -36,6 +36,9 @@
                 relayBidIdLastFase = bidId + 1;
                 fase = nextfase;
                 Offset = 0;
+            } else if (Common.IsFaseRelative(fase))
+            {
+                Offset++;
             }
 
             currentBid = BidManager.GetBid(bidId);

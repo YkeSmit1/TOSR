@@ -9,7 +9,7 @@ namespace Tosr
         public (int, Fase, string) GetBid(BiddingState biddingState, string handsString)
         {
             var bidFromRule = Pinvoke.GetBidFromRule(biddingState.fase, handsString, biddingState.lastBidId - biddingState.relayBidIdLastFase - biddingState.Offset, out var nextfase);
-            return (bidFromRule + biddingState.Offset, nextfase, string.Empty);
+            return (bidFromRule, nextfase, string.Empty);
 
         }
     }
@@ -20,7 +20,7 @@ namespace Tosr
             var description = new StringBuilder(128);
             var bidFromRule = Pinvoke.GetBidFromRuleEx(biddingState.fase, handsString, biddingState.lastBidId - biddingState.relayBidIdLastFase - biddingState.Offset, out var nextfase, description);
             
-            return (bidFromRule + biddingState.Offset, nextfase, description.ToString());
+            return (bidFromRule, nextfase, description.ToString());
 
         }
     }
