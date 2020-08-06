@@ -1,4 +1,3 @@
-using System;
 using Tosr;
 using Xunit;
 
