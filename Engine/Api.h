@@ -2,6 +2,7 @@
 
 enum class Fase
 {
+    UnKnown,
     Shape,
     Controls,
     Scanning

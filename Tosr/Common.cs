@@ -49,6 +49,7 @@ namespace Tosr
 
     public enum Fase
     {
+        Unknown,
         Shape,
         Controls,
         Scanning
