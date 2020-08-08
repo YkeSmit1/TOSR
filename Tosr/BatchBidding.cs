@@ -94,6 +94,8 @@ Statistics are written to ""Statistics.txt""");
 
             var shape = auctions[strAuction];
 
+            var shape = auctions[strAuction];
+
             var suitLengthNorth = strHand.NorthHand.Split(',').Select(x => x.Length);
             var suitLengthNS = suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
 
