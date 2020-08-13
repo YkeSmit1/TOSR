@@ -8,6 +8,9 @@
         }
         public Fase fase { get; set; }
         public int lastBidId { get; set; }
+
+        // The (rel)BidId that is in the database
+        public int relLastBidId { get; set; }
         public Bid currentBid { get; set; }
         public int relayBidIdLastFase { get; set; }
         public int FaseOffset { get; set; }
@@ -24,6 +27,7 @@
         }
         public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, string description)
         {
+            relLastBidId = bidIdFromRule;
             var bidId = bidIdFromRule + relayBidIdLastFase + FaseOffset;
             if (bidIdFromRule == 0)
             {
@@ -38,10 +42,12 @@
 
             if (nextfase != fase)
             {
+                relLastBidId = 0;
                 relayBidIdLastFase = bidId + 1;
                 fase = nextfase;
                 FaseOffset = 0;
-            } else if (fase.HasOffset())
+            }
+            else if (fase.HasOffset())
             {
                 FaseOffset++;
             }

@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
+using System.Resources;
 using System.Runtime.CompilerServices;
-using Tosr.Properties;
+using System.Windows.Forms;
 
 namespace Tosr
 {
@@ -63,9 +65,9 @@ namespace Tosr
 
     public static class Common
     {
-        private readonly static Dictionary<Fase, bool> FasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(Resources.FasesWithOffset);
         public static bool HasOffset(this Fase fase)
         {
+            Dictionary<Fase, bool> FasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
             FasesWithOffset.TryGetValue(fase, out bool result);
             return result;
         }
