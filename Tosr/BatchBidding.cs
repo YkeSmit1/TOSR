@@ -12,7 +12,7 @@ namespace Tosr
 {
     public class BatchBidding
     {
-        class Statistics
+        public class Statistics
         {
             public Dictionary<Player, int> dealers = new Dictionary<Player, int>();
             public SortedDictionary<Bid, int> contracts = new SortedDictionary<Bid, int>();
@@ -43,8 +43,8 @@ namespace Tosr
         }
 
         readonly IBidGenerator bidGenerator;
-        private readonly Statistics statistics = new Statistics();
-        private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
+        public readonly Statistics statistics = new Statistics();
+        public readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
 
         public BatchBidding()
         {
@@ -90,8 +90,7 @@ Statistics are written to ""Statistics.txt""");
 
             if (!handPerAuction.ContainsKey(strAuction))
                 handPerAuction[strAuction] = new List<string>();
-            if (!handPerAuction[strAuction].Contains(str))
-                handPerAuction[strAuction].Add(str);
+            handPerAuction[strAuction].Add(strHand.SouthHand);
 
             var shape = auctions[strAuction];
 
@@ -113,8 +112,8 @@ Statistics are written to ""Statistics.txt""");
 
         private void SaveAuctions()
         {
-            var multiHandPerAuction = handPerAuction.Where(x => x.Value.Count > 1).ToDictionary(x => x.Key, x => x.Value);
-            File.WriteAllText("HandPerAuction.txt", JsonConvert.SerializeObject(multiHandPerAuction, Formatting.Indented));
+            //var multiHandPerAuction = handPerAuction.Where(x => x.Value.Count > 1).ToDictionary(x => x.Key, x => x.Value);
+            File.WriteAllText("HandPerAuction.txt", JsonConvert.SerializeObject(handPerAuction, Formatting.Indented));
             File.WriteAllText("Statistics.txt", JsonConvert.SerializeObject(statistics, Formatting.Indented));
         }
 

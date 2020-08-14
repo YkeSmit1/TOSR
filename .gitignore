@@ -9,4 +9,5 @@
 /TosrGui.Test/obj
 /TosrGui.Test/bin
 /Engine/*.user
-/TosrIntegration.Test/obj/Debug/netcoreapp3.1
+/TosrIntegration.Test/obj
+/TosrIntegration.Test/bin

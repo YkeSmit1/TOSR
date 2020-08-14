@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Tosr
 {
-    class Pinvoke
+    public class Pinvoke
     {
         [DllImport("Engine.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = false)]
         public static extern int GetBidFromRuleEx(Fase fase, string hand, int lastBidId, out Fase newFase, StringBuilder description);

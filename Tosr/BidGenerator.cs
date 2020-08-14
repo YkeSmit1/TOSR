@@ -2,7 +2,7 @@
 
 namespace Tosr
 {
-    class BidGenerator : IBidGenerator
+    public class BidGenerator : IBidGenerator
     {
         public (int, Fase, string) GetBid(BiddingState biddingState, string handsString)
         {
@@ -11,7 +11,7 @@ namespace Tosr
 
         }
     }
-    class BidGeneratorDescription : IBidGenerator
+    public class BidGeneratorDescription : IBidGenerator
     {
         public (int, Fase, string) GetBid(BiddingState biddingState, string handsString)
         {
