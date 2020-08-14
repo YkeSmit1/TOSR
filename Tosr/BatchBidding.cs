@@ -131,7 +131,7 @@ Statistics are written to ""Statistics.txt""");
                         {
                             if (spades + hearts + diamonds + clubs == 13)
                             {
-                                var hand = new string('x', spades) + "," + new string('x', hearts) + ","  + new string('x', diamonds) + "," + new string('x', clubs);
+                                var hand = new string('x', spades) + "," + new string('x', hearts) + "," + new string('x', diamonds) + "," + new string('x', clubs);
                                 var suitLengthSouth = hand.Split(',').Select(x => x.Length);
                                 var str = string.Join("", suitLengthSouth);
 

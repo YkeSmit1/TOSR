@@ -1,12 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace Tosr
@@ -50,10 +46,10 @@ namespace Tosr
 
         public Dictionary<string, T> LoadAuctions<T>(string fileName, Func<Dictionary<string, T>> generateAuctions)
         {
-            Dictionary < string, T> auctions;
+            Dictionary<string, T> auctions;
             if (File.Exists(fileName))
             {
-                auctions = JsonConvert.DeserializeObject< Dictionary<string, T>>(File.ReadAllText(fileName));
+                auctions = JsonConvert.DeserializeObject<Dictionary<string, T>>(File.ReadAllText(fileName));
             }
             else
             {
