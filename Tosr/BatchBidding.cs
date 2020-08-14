@@ -45,13 +45,13 @@ namespace Tosr
         readonly IBidGenerator bidGenerator;
         private readonly Statistics statistics = new Statistics();
         private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
-        private StringBuilder expectedSouthHands = new StringBuilder();
+        private readonly StringBuilder expectedSouthHands = new StringBuilder();
         Dictionary<string, string> shapeAuctions;
         Dictionary<string, List<string>> controlsAuctions;
 
         public BatchBidding()
         {
-            this.bidGenerator = new BidGenerator();
+            bidGenerator = new BidGenerator();
         }
 
         public void Execute(HandsNorthSouth[] hands, Dictionary<string, string> shapeAuctions, Dictionary<string, List<string>> controlsAuctions)
@@ -112,65 +112,63 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
         private string ConstructSouthHand(HandsNorthSouth strHand, Auction auction, string shapeLengthStr)
         {
             string strControls = GetAuctionForControlsWithOffset(auction, new Bid(3, Suit.Diamonds));
-            if (!controlsAuctions.ContainsKey(strControls))
+            if (!controlsAuctions.TryGetValue(strControls, out var possibleControls))
             {
                 return $"Auction not found in controls. controls: {strControls}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
             }
-            var possibleControls = controlsAuctions[strControls];
             var matches = GetMatchesWithNorthHand(shapeLengthStr, possibleControls, strHand.NorthHand);
-            if (matches.Count == 1)
+            switch (matches.Count())
             {
-                string southHandStr = HandWithx(strHand.SouthHand);
-
-                var shapeStr = string.Join(',', matches.First());
-                if (shapeStr == southHandStr)
-                    return $"Match is found: {shapeStr}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
-                else
-                    return $"SouthHand is not equal to expected. Expected: {shapeStr}. Actual {southHandStr}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
-            }
-            else
-            {
-                if (matches.Count == 0)
+                case 0:
                     return $"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
+                case 1:
+                    {
+                        var southHandStr = HandWithx(strHand.SouthHand);
+                        var shapeStr = matches.First();
 
-                return $"Multiple matches found. Matches: {string.Join('|', matches.Select(x => string.Join(',', x)))}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
+                        if (shapeStr == southHandStr)
+                            return $"Match is found: {shapeStr}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
+                        else
+                            return $"SouthHand is not equal to expected. Expected: {shapeStr}. Actual {southHandStr}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
+                    }
+                default:
+                    return $"Multiple matches found. Matches: {string.Join('|', matches)}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
             }
         }
 
         /// <summary>
-        /// Extracts the control and scanning part of the auction and applies an offset of bid
+        /// Extracts the control and scanning part of the auction and applies an offset of offsetBid
         /// </summary>
-        /// <param name="auction"></param>
+        /// <param name="auction">Generated auction </param>
+        /// <param name="offsetBid">Offset used to generate AuctionsByControl.txt</param>
         /// <returns></returns>
         private static string GetAuctionForControlsWithOffset(Auction auction, Bid offsetBid)
         {
-            var bidsShape = auction.GetBids(Player.South, x => x.Value[Player.South].fase == Fase.Shape).ToList();
-            var bidsControls = auction.GetBids(Player.South, x => x.Value[Player.South].fase != Fase.Shape).ToList();
-            var offSet = bidsShape.Last() - offsetBid;
-            bidsControls = bidsControls.Select(b => b -= offSet).ToList();
+            var lastBidShape = auction.GetBids(Player.South, x => x.Value[Player.South].fase == Fase.Shape).Last();
+            var bidsControls = auction.GetBids(Player.South, x => x.Value[Player.South].fase != Fase.Shape);
+            var offSet = lastBidShape - offsetBid;
+            bidsControls = bidsControls.Select(b => b -= offSet);
             var strControls = string.Join("", bidsControls);
             return strControls;
         }
 
-        private List<IEnumerable<string>> GetMatchesWithNorthHand(string shapeLengthStr, List<string> possibleControls, string northHandStr)
+        private IEnumerable<string> GetMatchesWithNorthHand(string shapeLengthStr, List<string> possibleControls, string northHandStr)
         {
             var northHand = northHandStr.Split(',');
-            var matches = new List<IEnumerable<string>>();
             foreach (var controlStr in possibleControls)
             {
                 var controlByShape = MergeControlAndShape(controlStr, shapeLengthStr);
                 if (controlByShape.Count() == 4)
                 {
                     if (Match(controlByShape.ToArray(), northHand))
-                        matches.Add(controlByShape);
+                        yield return string.Join(',', controlByShape);
                 }
             }
-
-            return matches;
         }
 
         /// <summary>
         /// Merges shapes and controls. If controls does not fit, it returns an IEnumarable with length < 4
+        /// TODO This function needs improvement
         /// </summary>
         /// <param name="controlStr">"Axxx,Kxx,Qxx,xxx"</param>
         /// <param name="shapeLengthStr">"3451"</param>
@@ -179,9 +177,10 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
         {
             var controls = controlStr.Split(',').Select(x => x.TrimEnd('x')).ToArray();
             var shapes = shapeLengthStr.ToArray().Select(x => float.Parse(x.ToString())).ToList(); // 3424
+            // This is because there can be two suits with the same length. So we added a small offset to make it unique
             foreach (var suit in Enumerable.Range(0, 4))
             {
-                shapes[suit] += ((float)(4 - suit) / 10);
+                shapes[suit] += (float)(4 - suit) / 10;
             }
 
             var shapesOrdered = shapes.OrderByDescending(x => x).ToList(); // 4432
@@ -261,7 +260,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
                         {
                             if (spades + hearts + diamonds + clubs == 13)
                             {
-                                var hand = new string('x', spades) + "," + new string('x', hearts) + ","  + new string('x', diamonds) + "," + new string('x', clubs);
+                                var hand = new string('x', spades) + "," + new string('x', hearts) + "," + new string('x', diamonds) + "," + new string('x', clubs);
                                 var suitLengthSouth = hand.Split(',').Select(x => x.Length);
                                 var str = string.Join("", suitLengthSouth);
 
