@@ -45,14 +45,20 @@ namespace Tosr
         readonly IBidGenerator bidGenerator;
         private readonly Statistics statistics = new Statistics();
         private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
+        private StringBuilder expectedSouthHands = new StringBuilder();
+        Dictionary<string, string> shapeAuctions;
+        Dictionary<string, List<string>> controlsAuctions;
 
         public BatchBidding()
         {
             this.bidGenerator = new BidGenerator();
         }
 
-        public void Execute(HandsNorthSouth[] hands, Dictionary<string, string> auctions)
+        public void Execute(HandsNorthSouth[] hands, Dictionary<string, string> shapeAuctions, Dictionary<string, List<string>> controlsAuctions)
         {
+            this.shapeAuctions = shapeAuctions;
+            this.controlsAuctions = controlsAuctions;
+
             handPerAuction.Clear();
 
             var stopwatch = Stopwatch.StartNew();
@@ -63,7 +69,7 @@ namespace Tosr
                 try
                 {
                     var auction = BidManager.GetAuction(hands[i].SouthHand, bidGenerator);
-                    AddHandAndAuction(hands[i], auction, auctions);
+                    AddHandAndAuction(hands[i], auction);
                 }
                 catch (Exception exception)
                 {
@@ -72,28 +78,24 @@ namespace Tosr
             }
             stringbuilder.AppendLine(@$"Seconds elapsed: {stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture)}
 Duplicate auctions are written to ""HandPerAuction.txt""
-Statistics are written to ""Statistics.txt""");
+Statistics are written to ""Statistics.txt""
+Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             SaveAuctions();
 
             MessageBox.Show(stringbuilder.ToString(), "Batch bidding done");
         }
 
-        private void AddHandAndAuction(HandsNorthSouth strHand, Auction auction, Dictionary<string, string> auctions)
+        private void AddHandAndAuction(HandsNorthSouth strHand, Auction auction)
         {
-            var strAuction = auction.GetBids(Player.South, x => x.Value[Player.South].fase == Fase.Shape);
-
             var suitLengthSouth = strHand.SouthHand.Split(',').Select(x => x.Length);
             var str = string.Join("", suitLengthSouth);
 
             if (IsFreakHand(str))
                 return;
 
-            if (!handPerAuction.ContainsKey(strAuction))
-                handPerAuction[strAuction] = new List<string>();
-            if (!handPerAuction[strAuction].Contains(str))
-                handPerAuction[strAuction].Add(str);
+            var strAuction = auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase == Fase.Shape);
 
-            var shape = auctions[strAuction];
+            AddHandPerAuction(str, strAuction);
 
             var suitLengthNorth = strHand.NorthHand.Split(',').Select(x => x.Length);
             var suitLengthNS = suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
@@ -102,13 +104,140 @@ Statistics are written to ""Statistics.txt""");
 
             statistics.AddOrUpdateDeclarer(auction.GetDeclarer(longestSuit));
             statistics.AddOrUpdateContract(auction);
+
+            // Start calculating hand
+            expectedSouthHands.AppendLine(ConstructSouthHand(strHand, auction, shapeAuctions[strAuction]));
+        }
+
+        private string ConstructSouthHand(HandsNorthSouth strHand, Auction auction, string shapeLengthStr)
+        {
+            string strControls = GetAuctionForControlsWithOffset(auction, new Bid(3, Suit.Diamonds));
+            if (!controlsAuctions.ContainsKey(strControls))
+            {
+                return $"Auction not found in controls. controls: {strControls}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
+            }
+            var possibleControls = controlsAuctions[strControls];
+            var matches = GetMatchesWithNorthHand(shapeLengthStr, possibleControls, strHand.NorthHand);
+            if (matches.Count == 1)
+            {
+                string southHandStr = HandWithx(strHand.SouthHand);
+
+                var shapeStr = string.Join(',', matches.First());
+                if (shapeStr == southHandStr)
+                    return $"Match is found: {shapeStr}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
+                else
+                    return $"SouthHand is not equal to expected. Expected: {shapeStr}. Actual {southHandStr}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
+            }
+            else
+            {
+                if (matches.Count == 0)
+                    return $"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
+
+                return $"Multiple matches found. Matches: {string.Join('|', matches.Select(x => string.Join(',', x)))}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
+            }
+        }
+
+        /// <summary>
+        /// Extracts the control and scanning part of the auction and applies an offset of bid
+        /// </summary>
+        /// <param name="auction"></param>
+        /// <returns></returns>
+        private static string GetAuctionForControlsWithOffset(Auction auction, Bid offsetBid)
+        {
+            var bidsShape = auction.GetBids(Player.South, x => x.Value[Player.South].fase == Fase.Shape).ToList();
+            var bidsControls = auction.GetBids(Player.South, x => x.Value[Player.South].fase != Fase.Shape).ToList();
+            var offSet = bidsShape.Last() - offsetBid;
+            bidsControls = bidsControls.Select(b => b -= offSet).ToList();
+            var strControls = string.Join("", bidsControls);
+            return strControls;
+        }
+
+        private List<IEnumerable<string>> GetMatchesWithNorthHand(string shapeLengthStr, List<string> possibleControls, string northHandStr)
+        {
+            var northHand = northHandStr.Split(',');
+            var matches = new List<IEnumerable<string>>();
+            foreach (var controlStr in possibleControls)
+            {
+                var controlByShape = MergeControlAndShape(controlStr, shapeLengthStr);
+                if (controlByShape.Count() == 4)
+                {
+                    if (Match(controlByShape.ToArray(), northHand))
+                        matches.Add(controlByShape);
+                }
+            }
+
+            return matches;
+        }
+
+        /// <summary>
+        /// Merges shapes and controls. If controls does not fit, it returns an IEnumarable with length < 4
+        /// </summary>
+        /// <param name="controlStr">"Axxx,Kxx,Qxx,xxx"</param>
+        /// <param name="shapeLengthStr">"3451"</param>
+        /// <returns>"Qxx,Kxxx,Axxxx,x"</returns>
+        public static IEnumerable<string> MergeControlAndShape(string controlStr, string shapeLengthStr)
+        {
+            var controls = controlStr.Split(',').Select(x => x.TrimEnd('x')).ToArray();
+            var shapes = shapeLengthStr.ToArray().Select(x => float.Parse(x.ToString())).ToList(); // 3424
+            foreach (var suit in Enumerable.Range(0, 4))
+            {
+                shapes[suit] += ((float)(4 - suit) / 10);
+            }
+
+            var shapesOrdered = shapes.OrderByDescending(x => x).ToList(); // 4432
+
+            var shapesDic = shapes.ToDictionary(key => shapes.IndexOf(key), value => shapesOrdered.IndexOf(value));
+            foreach (var suit in Enumerable.Range(0, 4))
+            {
+                var shape = shapes[suit];
+                string controlStrSuit = controls[shapesDic[suit]];
+                if (shapes[suit] >= controlStrSuit.Length)
+                    yield return controlStrSuit + new string('x', (int)shapes[suit] - controlStrSuit.Length);
+                else
+                    yield break;
+            }
+        }
+
+        private bool Match(string[] hand1, string[] hand2)
+        {
+            foreach (var suit in Enumerable.Range(0, 4))
+            {
+                foreach (var c in new[] { 'A', 'K', 'Q' })
+                {
+                    if (hand1[suit].Contains(c) && hand2[suit].Contains(c))
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Replaces cards smaller then queen into x's;
+        /// </summary>
+        /// <param name="hand"></param>
+        /// <returns></returns>
+        public static string HandWithx(string hand)
+        {
+            var southHand = new string(hand).ToList();
+            var relevantCards = new[] { 'A', 'K', 'Q', ',' };
+            southHand = southHand.Select(x => x = !relevantCards.Contains(x) ? 'x' : x).ToList();
+            var southHandStr = new string(southHand.ToArray());
+            return southHandStr;
+        }
+
+        private void AddHandPerAuction(string str, string strAuction)
+        {
+            if (!handPerAuction.ContainsKey(strAuction))
+                handPerAuction[strAuction] = new List<string>();
+            if (!handPerAuction[strAuction].Contains(str))
+                handPerAuction[strAuction].Add(str);
         }
 
         private static bool IsFreakHand(string handLength)
         {
             var handPattern = string.Concat(handLength.OrderByDescending(y => y));
-            return handPattern == "7321" || Char.GetNumericValue(handPattern[0]) >= 8 ||
-                Char.GetNumericValue(handPattern[0]) + Char.GetNumericValue(handPattern[1]) >= 12;
+            return handPattern == "7321" || int.Parse(handPattern[0].ToString()) >= 8 ||
+                int.Parse(handPattern[0].ToString()) + int.Parse(handPattern[1].ToString()) >= 12;
         }
 
         private void SaveAuctions()
@@ -116,6 +245,7 @@ Statistics are written to ""Statistics.txt""");
             var multiHandPerAuction = handPerAuction.Where(x => x.Value.Count > 1).ToDictionary(x => x.Key, x => x.Value);
             File.WriteAllText("HandPerAuction.txt", JsonConvert.SerializeObject(multiHandPerAuction, Formatting.Indented));
             File.WriteAllText("Statistics.txt", JsonConvert.SerializeObject(statistics, Formatting.Indented));
+            File.WriteAllText("ExpectedSouthHands.txt", expectedSouthHands.ToString());
         }
 
         public Dictionary<string, string> GenerateAuctionsForShape()
@@ -138,7 +268,7 @@ Statistics are written to ""Statistics.txt""");
                                 if (!IsFreakHand(str))
                                 {
                                     var auction = BidManager.GetAuction(hand, new BidGenerator());
-                                    auctions.Add(auction.GetBids(Player.South, x => x.Value[Player.South].fase == Fase.Shape), str);
+                                    auctions.Add(auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase == Fase.Shape), str);
                                 }
                             }
                         }
@@ -163,9 +293,8 @@ Statistics are written to ""Statistics.txt""");
                         foreach (var clubs in controls)
                         {
                             var c = spade + hearts + diamonds + clubs;
-                            var nrOfKings = c.Count(x => x == 'K');
-                            var nrOfAces = c.Count(x => x == 'A');
-                            if (nrOfAces * 2 + nrOfKings > 1)
+
+                            if (c.Count(x => x == 'A') * 2 + c.Count(x => x == 'K') > 1)
                             {
                                 poss.Add(new string[] { spade, hearts, diamonds, clubs });
                             }
@@ -185,7 +314,7 @@ Statistics are written to ""Statistics.txt""");
                 Debug.Assert(hand.Length == 16);
 
                 var auction = BidManager.GetAuction(hand, new BidGenerator());
-                string key = auction.GetBids(Player.South, x => x.Value[Player.South].fase != Fase.Shape);
+                string key = auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase != Fase.Shape);
                 if (!auctions.ContainsKey(key))
                 {
                     auctions.Add(key, new List<string>());

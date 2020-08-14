@@ -58,7 +58,8 @@ namespace Tosr
             else
             {
                 auctions = generateAuctions();
-                File.WriteAllText(fileName, JsonConvert.SerializeObject(auctions, Formatting.Indented));
+                var sortedAuctions = auctions.ToImmutableSortedDictionary();
+                File.WriteAllText(fileName, JsonConvert.SerializeObject(sortedAuctions, Formatting.Indented));
             }
             return auctions;
         }
@@ -173,7 +174,7 @@ namespace Tosr
             {
                 Cursor.Current = Cursors.WaitCursor;
                 BatchBidding batchBidding = new BatchBidding();
-                batchBidding.Execute(hands, auctionsShape);
+                batchBidding.Execute(hands, auctionsShape, auctionsControls);
             }
             finally
             {
@@ -188,10 +189,15 @@ namespace Tosr
 
             for (int i = 0; i < batchSize; ++i)
             {
+                int hcp;
                 do
+                {
                     hands[i] = ShuffleRandomHand();
+                    var northHand = hands[i].NorthHand;
+                    hcp = northHand.Count(x => x == 'A') * 4 + northHand.Count(x => x == 'K') * 3 + northHand.Count(x => x == 'Q') * 2 + northHand.Count(x => x == 'J');
+                }
                 while
-                    (!localshuffleRestrictions.Match(hands[i].SouthHand));
+                    (!localshuffleRestrictions.Match(hands[i].SouthHand) || hcp < 16);
             }
 
             return hands;
@@ -200,12 +206,12 @@ namespace Tosr
         private HandsNorthSouth ShuffleRandomHand()
         {
             var handsNorthSouth = new HandsNorthSouth();
-            var cards = Shuffling.FisherYates(26);
+            var cards = Shuffling.FisherYates(26).ToList();
 
             var orderedCardsNorth = cards.Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
             handsNorthSouth.NorthHand = Common.GetDeckAsString(orderedCardsNorth);
 
-            unOrderedCards = cards.Take(13).ToList();
+            unOrderedCards = cards.Skip(13).Take(13).ToList();
             var orderedCardsSouth = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
             handsNorthSouth.SouthHand = Common.GetDeckAsString(orderedCardsSouth);
 
