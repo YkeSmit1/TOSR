@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
+using System.Data;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Tosr
@@ -28,7 +32,7 @@ namespace Tosr
                     var button = new BiddingBoxButton(new Bid(level, suit))
                     {
                         Width = defaultButtonWidth,
-                        Left = (4 - (int)suit) * defaultButtonWidth,
+                        Left = (4 - (int) suit) * defaultButtonWidth,
                         Top = (level - 1) * defaultButtonHeight,
                         Parent = this,
                         Text = Convert.ToString(level) + Common.GetSuitDescription(suit),
@@ -67,8 +71,8 @@ namespace Tosr
             switch (bid.bidType)
             {
                 case BidType.bid:
-                    EnableButtons(new[] { Bid.Dbl });
-                    DisableButtons(new[] { Bid.Rdbl });
+                    EnableButtons(new[] {Bid.Dbl});
+                    DisableButtons(new[] {Bid.Rdbl});
                     foreach (var button in buttons)
                     {
                         Bid localBid = button.bid;
@@ -88,11 +92,11 @@ namespace Tosr
                         switch (currentBidType)
                         {
                             case BidType.bid:
-                                EnableButtons(new[] { Bid.Dbl });
-                                DisableButtons(new[] { Bid.Rdbl });
+                                EnableButtons(new[] {Bid.Dbl});
+                                DisableButtons(new[] {Bid.Rdbl});
                                 break;
                             case BidType.dbl:
-                                DisableButtons(new[] { Bid.Dbl, Bid.Rdbl });
+                                DisableButtons(new[] {Bid.Dbl, Bid.Rdbl});
                                 break;
                         }
                     }
@@ -101,22 +105,22 @@ namespace Tosr
                         switch (currentBidType)
                         {
                             case BidType.bid:
-                                DisableButtons(new[] { Bid.Dbl, Bid.Rdbl });
+                                DisableButtons(new[] {Bid.Dbl, Bid.Rdbl});
                                 break;
                             case BidType.dbl:
-                                EnableButtons(new[] { Bid.Rdbl });
-                                DisableButtons(new[] { Bid.Dbl });
+                                EnableButtons(new[] {Bid.Rdbl});
+                                DisableButtons(new[] {Bid.Dbl});
                                 break;
                         }
 
                     }
                     break;
                 case BidType.dbl:
-                    EnableButtons(new[] { Bid.Rdbl });
-                    DisableButtons(new[] { Bid.Dbl });
+                    EnableButtons(new[] {Bid.Rdbl});
+                    DisableButtons(new[] {Bid.Dbl});
                     break;
                 case BidType.rdbl:
-                    DisableButtons(new[] { Bid.Dbl, Bid.Rdbl });
+                    DisableButtons(new[] {Bid.Dbl, Bid.Rdbl});
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

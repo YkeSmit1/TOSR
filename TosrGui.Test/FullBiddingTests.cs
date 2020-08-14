@@ -1,6 +1,10 @@
-﻿using Moq;
+﻿using Xunit;
 using Tosr;
-using Xunit;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using Moq;
+using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 
 namespace TosrGui.Test
 {
@@ -12,7 +16,7 @@ namespace TosrGui.Test
             var bidGenerator = new Mock<IBidGenerator>();
             // 1Sp
             bidGenerator.SetupSequence(x => x.GetBid(It.IsAny<BiddingState>(), It.IsAny<string>())).
-                // 1Sp
+               // 1Sp
                 Returns(() => (4, Fase.Shape, "")).
                 // 2Di
                 Returns(() => (7, Fase.Shape, "")).
