@@ -12,6 +12,7 @@ namespace Tosr
         public readonly int rank;
         public readonly Suit suit;
         public string description = string.Empty;
+        public Fase fase = Fase.Unknown;
 
         public Bid(int rank, Suit suit)
         {

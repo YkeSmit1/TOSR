@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <array>
 #include <vector>
 
@@ -47,13 +47,14 @@ struct HandCharacteristic
 
 	int Hcp = 0;
 
-	static bool CalcuateIsReverse(const std::map<int, size_t>& suitLength);
-	static bool Calcuate65IsReverse(const std::map<int, size_t>& suitLength);
-	static Shortage CalculateShortage(const std::map<int, size_t>& suitLength);
+	static bool CalcuateIsReverse(const std::unordered_map<int, size_t>& suitLength);
+	static bool Calcuate65IsReverse(const std::unordered_map<int, size_t>& suitLength);
+	static Shortage CalculateShortage(const std::unordered_map<int, size_t>& suitLength);
 	static int CalculateControls(const std::string& hand);
-	static bool CalcuateIsThreeSuiter(const std::map<int, size_t>& suitLength);
+	static bool CalcuateIsThreeSuiter(const std::unordered_map<int, size_t>& suitLength);
 	static std::string ConvertShortage(Shortage shortage);
 	static int CalculateHcp(const std::string& hand);
+	static int NumberOfCards(const std::string& hand, char card);
 	std::vector<int> CalculateControlsSuit(const std::vector<std::string>& suits);
 	std::vector<bool> CalculateQueensSuit(const std::vector<std::string>& suits);
 	void Initialize(const std::string& hand);

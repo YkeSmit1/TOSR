@@ -1,5 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -21,6 +26,8 @@ namespace Tosr
         private string handsString;
         private readonly BiddingState biddingState = new BiddingState();
         private IBidGenerator bidGenerator = new BidGeneratorDescription();
+        private readonly Dictionary<string, string> auctionsShape;
+        private readonly Dictionary<string, List<string>> auctionsControls;
 
         public Form1()
         {
@@ -35,6 +42,24 @@ namespace Tosr
             BidTillSouth(auctionControl.auction, biddingState);
             Pinvoke.Setup("Tosr.db3");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
+
+            auctionsShape = LoadAuctions<string>("AuctionsByShape.txt", () => new BatchBidding().GenerateAuctionsForShape());
+            auctionsControls = LoadAuctions<List<string>>("AuctionsByControls.txt", () => new BatchBidding().GenerateAuctionsForControls());
+        }
+
+        public Dictionary<string, T> LoadAuctions<T>(string fileName, Func<Dictionary<string, T>> generateAuctions)
+        {
+            Dictionary < string, T> auctions;
+            if (File.Exists(fileName))
+            {
+                auctions = JsonConvert.DeserializeObject< Dictionary<string, T>>(File.ReadAllText(fileName));
+            }
+            else
+            {
+                auctions = generateAuctions();
+                File.WriteAllText(fileName, JsonConvert.SerializeObject(auctions, Formatting.Indented));
+            }
+            return auctions;
         }
 
         private void ShowBiddingBox()
@@ -147,7 +172,7 @@ namespace Tosr
             {
                 Cursor.Current = Cursors.WaitCursor;
                 BatchBidding batchBidding = new BatchBidding();
-                batchBidding.Execute(hands);
+                batchBidding.Execute(hands, auctionsShape);
             }
             finally
             {

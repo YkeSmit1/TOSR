@@ -30,14 +30,16 @@
                 EndOfBidding = true;
                 return;
             }
+
+            currentBid = BidManager.GetBid(bidId);
+            currentBid.fase = fase;
+            currentBid.description = description;
+
             if (nextfase != fase)
             {
                 relayBidIdLastFase = bidId + 1;
                 fase = nextfase;
             }
-
-            currentBid = BidManager.GetBid(bidId);
-            currentBid.description = description;
         }
     }
 }

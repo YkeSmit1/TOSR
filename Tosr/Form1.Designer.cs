@@ -59,7 +59,7 @@
             // buttonGetAuction
             // 
             this.buttonGetAuction.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonGetAuction.Location = new System.Drawing.Point(30, 417);
+            this.buttonGetAuction.Location = new System.Drawing.Point(30, 438);
             this.buttonGetAuction.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.buttonGetAuction.Name = "buttonGetAuction";
             this.buttonGetAuction.Size = new System.Drawing.Size(105, 27);
@@ -226,15 +226,16 @@
             // numericUpDown1
             // 
             this.numericUpDown1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.numericUpDown1.Location = new System.Drawing.Point(156, 420);
+            this.numericUpDown1.Location = new System.Drawing.Point(156, 441);
             this.numericUpDown1.Name = "numericUpDown1";
             this.numericUpDown1.Size = new System.Drawing.Size(120, 23);
             this.numericUpDown1.TabIndex = 16;
             // 
             // label1
             // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(156, 399);
+            this.label1.Location = new System.Drawing.Point(156, 415);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(134, 15);
             this.label1.TabIndex = 17;
@@ -250,7 +251,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Green;
-            this.ClientSize = new System.Drawing.Size(730, 463);
+            this.ClientSize = new System.Drawing.Size(730, 479);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.numericUpDown1);
             this.Controls.Add(this.toolStrip1);
