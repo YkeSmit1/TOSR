@@ -12,6 +12,7 @@
         public int relayBidIdLastFase { get; set; }
 
         public bool EndOfBidding { get; set; }
+        public int FaseOffset { get; set; }
 
         public void Init()
         {
@@ -20,10 +21,11 @@
             currentBid = Bid.PassBid;
             relayBidIdLastFase = 0;
             EndOfBidding = false;
+            FaseOffset = 0;
         }
         public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, string description)
         {
-            var bidId = bidIdFromRule + relayBidIdLastFase;
+            var bidId = bidIdFromRule + relayBidIdLastFase + FaseOffset;
             if (bidIdFromRule == 0)
             {
                 currentBid = Bid.PassBid;
@@ -39,6 +41,11 @@
             {
                 relayBidIdLastFase = bidId + 1;
                 fase = nextfase;
+                FaseOffset = 0;
+            }
+            else if (fase == Fase.Scanning)
+            {
+                FaseOffset++;
             }
         }
     }

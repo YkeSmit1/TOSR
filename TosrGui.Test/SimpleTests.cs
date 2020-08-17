@@ -30,5 +30,18 @@ namespace TosrGui.Test
             Assert.False(Common.IsSameTeam(Player.North, Player.West));
         }
 
+        [Fact()]
+        public void MergeControlAndShapeTest()
+        {
+            Assert.Equal("Qxx,Kxxx,Axxxx,x", string.Join(',', BatchBidding.MergeControlAndShape("Axxx,Kxx,Qxx,xxx", "3451")));
+            Assert.Equal("Axxxx,Kxxx,Qxx,x", string.Join(',', BatchBidding.MergeControlAndShape("Axxx,Kxx,Qxx,xxx", "5431")));
+            Assert.Equal(",Axxx,Kxxxx,xxxx", string.Join(',', BatchBidding.MergeControlAndShape("Kxxx,Axx,xxx,xxx", "0454")));
+        }
+
+        [Fact()]
+        public void SouthHandWithxTest()
+        {
+            Assert.Equal("Ax,KQxx,Qxxxx,xx", BatchBidding.HandWithx("A5,KQ65,QT987,42"));
+        }
     }
 }
