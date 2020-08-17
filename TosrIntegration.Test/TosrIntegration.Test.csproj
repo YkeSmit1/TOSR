@@ -27,8 +27,4 @@
     <ProjectReference Include="..\Tosr\Tosr.csproj" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="robocopy $(SolutionDir)Tosr\bin\$(Configuration)\netcoreapp3.1\ $(SolutionDir)TosrIntegration.Test\bin\$(Configuration)\netcoreapp3.1\ Engine.dll sqlite3.dll Tosr.db3" />
-  </Target>
-
 </Project>

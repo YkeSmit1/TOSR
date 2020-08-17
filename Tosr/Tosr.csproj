@@ -30,4 +30,8 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="for %25%25f in (&quot;Engine.dll&quot;, &quot;sqlite3.dll&quot;, &quot;Tosr.db3&quot;) do xcopy $(SolutionDir)Tosr\bin\$(Configuration)\netcoreapp3.1\%25%25f $(SolutionDir)TosrIntegration.Test\bin\$(Configuration)\netcoreapp3.1\ /d /y" />
+  </Target>
+
 </Project>
