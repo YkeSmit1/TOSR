@@ -113,14 +113,19 @@ namespace Tosr
             currentBiddingRound = 1;
         }
 
-        public string GetBids(Player player)
+        public string GetBidsAsString(Player player)
         {
             return bids.Aggregate(string.Empty, (current, biddingRound) => current + biddingRound.Value[player]);
         }
 
-        public string GetBids(Player player, Func<KeyValuePair<int, Dictionary<Player, Bid>>, bool> predicate)
+        public string GetBidsAsString(Player player, Func<KeyValuePair<int, Dictionary<Player, Bid>>, bool> predicate)
         {
             return bids.Where(predicate).Aggregate(string.Empty, (current, biddingRound) => current + biddingRound.Value[player]);
+        }
+
+        public IEnumerable<Bid> GetBids(Player player, Func<KeyValuePair<int, Dictionary<Player, Bid>>, bool> predicate)
+        {
+            return bids.Where(predicate).Select(x => x.Value[player]);
         }
     }
 }

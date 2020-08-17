@@ -31,11 +31,11 @@ namespace TosrGui.Test
 
             var auction = BidManager.GetAuction("", bidGenerator.Object);
 
-            Assert.Equal("1♣1NT2♥4♣5♦6♥", auction.GetBids(Player.North));
-            Assert.Equal("1♠2♦3NT5♣6♦Pass", auction.GetBids(Player.South));
-            Assert.Equal("1♠2♦3NT", auction.GetBids(Player.South, x => x.Value[Player.South].fase == Fase.Shape));
-            Assert.Equal("5♣", auction.GetBids(Player.South, x => x.Value[Player.South].fase == Fase.Controls));
-            Assert.Equal("6♦", auction.GetBids(Player.South, x => x.Value[Player.South].fase == Fase.Scanning));
+            Assert.Equal("1♣1NT2♥4♣5♦6♥", auction.GetBidsAsString(Player.North));
+            Assert.Equal("1♠2♦3NT5♣6♦Pass", auction.GetBidsAsString(Player.South));
+            Assert.Equal("1♠2♦3NT", auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase == Fase.Shape));
+            Assert.Equal("5♣", auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase == Fase.Controls));
+            Assert.Equal("6♦", auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase == Fase.Scanning));
         }
     }
 }
