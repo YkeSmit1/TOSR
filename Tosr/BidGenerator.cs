@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Tosr
 {
-    public class BidGenerator : IBidGenerator
+    class BidGenerator : IBidGenerator
     {
         public (int, Fase, string) GetBid(BiddingState biddingState, string handsString)
         {
@@ -13,7 +13,7 @@ namespace Tosr
 
         }
     }
-    public class BidGeneratorDescription : IBidGenerator
+    class BidGeneratorDescription : IBidGenerator
     {
         public (int, Fase, string) GetBid(BiddingState biddingState, string handsString)
         {
