@@ -13,7 +13,6 @@
         public int nextBidIdForRule { get; set; }
         public int FaseOffset { get; set; }
         public bool EndOfBidding { get; set; }
-        public int FaseOffset { get; set; }
 
         public void Init()
         {
@@ -23,6 +22,7 @@
             relayBidIdLastFase = 0;
             EndOfBidding = false;
             FaseOffset = 0;
+            nextBidIdForRule = 0;
         }
         public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, string description)
         {

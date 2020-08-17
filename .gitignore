@@ -9,3 +9,5 @@
 /TosrGui.Test/obj
 /TosrGui.Test/bin
 /Engine/*.user
+/TosrIntegration.Test/bin
+/TosrIntegration.Test/obj
