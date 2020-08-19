@@ -31,7 +31,11 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="for %25%25f in (&quot;Engine.dll&quot;, &quot;sqlite3.dll&quot;, &quot;Tosr.db3&quot;) do xcopy $(ProjectDir)bin\$(Configuration)\netcoreapp3.1\%25%25f $(ProjectDir)..\TosrIntegration.Test\bin\$(Configuration)\netcoreapp3.1\ /d /y" />
+	  <PropertyGroup>
+		  <TosrBuildDirectory>bin\$(Configuration)\netcoreapp3.1</TosrBuildDirectory>
+		  <TosrIntegrationTestBuildDirectory>..\TosrIntegration.Test\bin\$(Configuration)\netcoreapp3.1</TosrIntegrationTestBuildDirectory>
+	  </PropertyGroup>
+	  <Copy SourceFiles="$(TosrBuildDirectory)\Engine.dll;$(TosrBuildDirectory)\sqlite3.dll;$(TosrBuildDirectory)\Tosr.db3" DestinationFolder="$(TosrIntegrationTestBuildDirectory)"/>
   </Target>
 
 </Project>
