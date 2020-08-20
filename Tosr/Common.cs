@@ -1,6 +1,13 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
+using System.Resources;
+using System.Runtime.CompilerServices;
+using System.Windows.Forms;
 
 namespace Tosr
 {
@@ -55,8 +62,15 @@ namespace Tosr
         Scanning
     };
 
-    public class Common
+
+    public static class Common
     {
+        public static bool HasOffset(this Fase fase)
+        {
+            Dictionary<Fase, bool> FasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
+            FasesWithOffset.TryGetValue(fase, out bool result);
+            return result;
+        }
         public static string GetSuitDescription(Suit suit)
         {
             return suit switch
