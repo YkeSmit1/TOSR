@@ -178,7 +178,6 @@
     </ClCompile>
     <ClCompile Include="Rule.cpp" />
     <ClCompile Include="SQLiteCppWrapper.cpp" />
-    <ClCompile Include="SQLiteOrmWrapper.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
