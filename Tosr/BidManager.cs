@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Text;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Tosr
 {
     public class BidManager
     {
-        public static Auction GetAuction(string handsString, IBidGenerator bidGenerator)
+        public static Auction GetAuction(string handsString, IBidGenerator bidGenerator, 
+            Dictionary<Fase, bool> fasesWithOffset)
         {
             Auction auction = new Auction();
 
-            BiddingState biddingState = new BiddingState();
+            BiddingState biddingState = new BiddingState(fasesWithOffset);
             Player currentPlayer = Player.West;
 
             do

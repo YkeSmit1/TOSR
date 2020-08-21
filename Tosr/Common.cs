@@ -65,12 +65,6 @@ namespace Tosr
 
     public static class Common
     {
-        public static bool HasOffset(this Fase fase)
-        {
-            Dictionary<Fase, bool> FasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
-            FasesWithOffset.TryGetValue(fase, out bool result);
-            return result;
-        }
         public static string GetSuitDescription(Suit suit)
         {
             return suit switch

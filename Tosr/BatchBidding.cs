@@ -48,6 +48,7 @@ namespace Tosr
         private readonly StringBuilder expectedSouthHands = new StringBuilder();
         Dictionary<string, string> shapeAuctions;
         Dictionary<string, List<string>> controlsAuctions;
+        Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
 
         public BatchBidding()
         {
@@ -68,7 +69,7 @@ namespace Tosr
             {
                 try
                 {
-                    var auction = BidManager.GetAuction(hands[i].SouthHand, bidGenerator);
+                    var auction = BidManager.GetAuction(hands[i].SouthHand, bidGenerator, fasesWithOffset);
                     AddHandAndAuction(hands[i], auction);
                 }
                 catch (Exception exception)
@@ -266,7 +267,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
 
                                 if (!IsFreakHand(str))
                                 {
-                                    var auction = BidManager.GetAuction(hand, new BidGenerator());
+                                    var auction = BidManager.GetAuction(hand, new BidGenerator(), fasesWithOffset);
                                     auctions.Add(auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase == Fase.Shape), str);
                                 }
                             }
@@ -312,7 +313,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
                     pos[3] + new string('x', 3 - pos[3].Length);
                 Debug.Assert(hand.Length == 16);
 
-                var auction = BidManager.GetAuction(hand, new BidGenerator());
+                var auction = BidManager.GetAuction(hand, new BidGenerator(), fasesWithOffset);
                 string key = auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase != Fase.Shape);
                 if (!auctions.ContainsKey(key))
                 {
