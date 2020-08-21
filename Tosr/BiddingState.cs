@@ -9,7 +9,6 @@ namespace Tosr
             Init();
         }
         public Fase fase { get; set; }
-        public int lastBidId { get; set; }
         public Bid currentBid { get; set; }
         public int relayBidIdLastFase { get; set; }
         public int nextBidIdForRule { get; set; }
@@ -26,7 +25,6 @@ namespace Tosr
         public void Init()
         {
             fase = Fase.Shape;
-            lastBidId = 1;
             currentBid = Bid.PassBid;
             relayBidIdLastFase = 0;
             EndOfBidding = false;

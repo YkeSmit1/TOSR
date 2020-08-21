@@ -51,7 +51,6 @@ namespace Tosr
         public static void NorthBid(BiddingState biddingState)
         {
             biddingState.currentBid = NextBid(biddingState.currentBid);
-            biddingState.lastBidId = GetBidId(biddingState.currentBid);
         }
 
         public static void SouthBid(BiddingState biddingState, string handsString, IBidGenerator bidGenerator)

@@ -62,6 +62,5 @@ namespace Tosr
         public static bool operator >=(Bid a, Bid b) => a.CompareTo(b) >= 0;
         public static int operator -(Bid a, Bid b) => BidManager.GetBidId(a) - BidManager.GetBidId(b);
         public static Bid operator -(Bid a, int i) => a.bidType == BidType.bid ? BidManager.GetBid(BidManager.GetBidId(a) - i) : a;
-
     }
 }
