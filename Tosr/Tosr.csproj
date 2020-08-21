@@ -32,8 +32,8 @@
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
 	  <PropertyGroup>
-		  <TosrBuildDirectory>bin\$(Configuration)\netcoreapp3.1</TosrBuildDirectory>
-		  <TosrIntegrationTestBuildDirectory>..\TosrIntegration.Test\bin\$(Configuration)\netcoreapp3.1</TosrIntegrationTestBuildDirectory>
+		  <TosrBuildDirectory>$(ProjectDir)bin\$(Configuration)\netcoreapp3.1</TosrBuildDirectory>
+		  <TosrIntegrationTestBuildDirectory>$(ProjectDir)..\TosrIntegration.Test\bin\$(Configuration)\netcoreapp3.1</TosrIntegrationTestBuildDirectory>
 	  </PropertyGroup>
 	  <Copy SourceFiles="$(TosrBuildDirectory)\Engine.dll;$(TosrBuildDirectory)\sqlite3.dll;$(TosrBuildDirectory)\Tosr.db3" DestinationFolder="$(TosrIntegrationTestBuildDirectory)"/>
   </Target>
