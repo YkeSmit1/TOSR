@@ -1,6 +1,13 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
+using System.Resources;
+using System.Runtime.CompilerServices;
+using System.Windows.Forms;
 
 namespace Tosr
 {
@@ -55,7 +62,8 @@ namespace Tosr
         Scanning
     };
 
-    public class Common
+
+    public static class Common
     {
         public static string GetSuitDescription(Suit suit)
         {

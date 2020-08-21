@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Text;
 using Moq;
 using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
+using Newtonsoft.Json;
+using System.IO;
 
 namespace TosrGui.Test
 {
@@ -14,6 +16,8 @@ namespace TosrGui.Test
         public void ExecuteTest()
         {
             var bidGenerator = new Mock<IBidGenerator>();
+            var fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
+
             // 1Sp
             bidGenerator.SetupSequence(x => x.GetBid(It.IsAny<BiddingState>(), It.IsAny<string>())).
                // 1Sp
@@ -29,7 +33,7 @@ namespace TosrGui.Test
                 // Pass
                 Returns(() => (0, Fase.Scanning, ""));
 
-            var auction = BidManager.GetAuction("", bidGenerator.Object);
+            var auction = BidManager.GetAuction("", bidGenerator.Object, fasesWithOffset);
 
             Assert.Equal("1♣1NT2♥4♣5♦6♥", auction.GetBidsAsString(Player.North));
             Assert.Equal("1♠2♦3NT5♣6♦Pass", auction.GetBidsAsString(Player.South));

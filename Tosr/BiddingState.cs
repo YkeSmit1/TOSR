@@ -1,4 +1,6 @@
-﻿namespace Tosr
+﻿using System.Collections.Generic;
+
+namespace Tosr
 {
     public class BiddingState
     {
@@ -7,21 +9,27 @@
             Init();
         }
         public Fase fase { get; set; }
-        public int lastBidId { get; set; }
         public Bid currentBid { get; set; }
         public int relayBidIdLastFase { get; set; }
-
-        public bool EndOfBidding { get; set; }
+        public int nextBidIdForRule { get; set; }
         public int FaseOffset { get; set; }
+        public bool EndOfBidding { get; set; }
+        Dictionary<Fase, bool> fasesWithOffset;
+
+        public BiddingState(Dictionary<Fase, bool> fasesWithOffset)
+        {
+            this.fasesWithOffset = fasesWithOffset;
+            Init();
+        }
 
         public void Init()
         {
             fase = Fase.Shape;
-            lastBidId = 1;
             currentBid = Bid.PassBid;
             relayBidIdLastFase = 0;
             EndOfBidding = false;
             FaseOffset = 0;
+            nextBidIdForRule = 0;
         }
         public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, string description)
         {
@@ -42,10 +50,16 @@
                 relayBidIdLastFase = bidId + 1;
                 fase = nextfase;
                 FaseOffset = 0;
+                nextBidIdForRule = 0;
             }
-            else if (fase == Fase.Scanning)
+            else if (fasesWithOffset[fase])
             {
                 FaseOffset++;
+                nextBidIdForRule = bidIdFromRule;
+            }
+            else
+            {
+                nextBidIdForRule = bidIdFromRule + 1;
             }
         }
     }

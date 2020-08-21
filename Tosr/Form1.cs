@@ -29,6 +29,7 @@ namespace Tosr
         private IBidGenerator bidGenerator = new BidGeneratorDescription();
         private readonly Dictionary<string, string> auctionsShape;
         private readonly Dictionary<string, List<string>> auctionsControls;
+        Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
 
         public Form1()
         {
@@ -162,7 +163,7 @@ namespace Tosr
             Clear();
             var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
             var handsString = Common.GetDeckAsString(orderedCards);
-            auctionControl.auction = BidManager.GetAuction(handsString, bidGenerator);
+            auctionControl.auction = BidManager.GetAuction(handsString, bidGenerator, fasesWithOffset);
             auctionControl.ReDraw();
             biddingBox.Enabled = false;
         }

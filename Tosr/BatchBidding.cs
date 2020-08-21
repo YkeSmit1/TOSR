@@ -48,6 +48,7 @@ namespace Tosr
         private readonly StringBuilder expectedSouthHands = new StringBuilder();
         Dictionary<string, string> shapeAuctions;
         Dictionary<string, List<string>> controlsAuctions;
+        Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
 
         public BatchBidding()
         {
@@ -64,12 +65,12 @@ namespace Tosr
             var stopwatch = Stopwatch.StartNew();
             var stringbuilder = new StringBuilder();
 
-            for (int i = 0; i < hands.Length; ++i)
+            foreach (var hand in hands)
             {
                 try
                 {
-                    var auction = BidManager.GetAuction(hands[i].SouthHand, bidGenerator);
-                    AddHandAndAuction(hands[i], auction);
+                    var auction = BidManager.GetAuction(hand.SouthHand, bidGenerator, fasesWithOffset);
+                    AddHandAndAuction(hand, auction);
                 }
                 catch (Exception exception)
                 {
@@ -167,7 +168,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
         }
 
         /// <summary>
-        /// Merges shapes and controls. If controls does not fit, it returns an IEnumarable with length < 4
+        /// Merges shapes and controls. If controls does not fit, it returns an IEnumerable with length < 4
         /// TODO This function needs improvement
         /// </summary>
         /// <param name="controlStr">"Axxx,Kxx,Qxx,xxx"</param>
@@ -190,18 +191,20 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             {
                 var shape = shapes[suit];
                 string controlStrSuit = controls[shapesDic[suit]];
-                if (shapes[suit] >= controlStrSuit.Length)
-                    yield return controlStrSuit + new string('x', (int)shapes[suit] - controlStrSuit.Length);
-                else
+                if (shape < controlStrSuit.Length)
+                {
                     yield break;
             }
+                yield return controlStrSuit + new string('x', (int)shape - controlStrSuit.Length);
+        }
         }
 
         private bool Match(string[] hand1, string[] hand2)
         {
+            var relevantCards = new[] { 'A', 'K', 'Q' };
             foreach (var suit in Enumerable.Range(0, 4))
             {
-                foreach (var c in new[] { 'A', 'K', 'Q' })
+                foreach (var c in relevantCards)
                 {
                     if (hand1[suit].Contains(c) && hand2[suit].Contains(c))
                         return false;
@@ -266,7 +269,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
 
                                 if (!IsFreakHand(str))
                                 {
-                                    var auction = BidManager.GetAuction(hand, new BidGenerator());
+                                    var auction = BidManager.GetAuction(hand, new BidGenerator(), fasesWithOffset);
                                     auctions.Add(auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase == Fase.Shape), str);
                                 }
                             }
@@ -312,7 +315,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
                     pos[3] + new string('x', 3 - pos[3].Length);
                 Debug.Assert(hand.Length == 16);
 
-                var auction = BidManager.GetAuction(hand, new BidGenerator());
+                var auction = BidManager.GetAuction(hand, new BidGenerator(), fasesWithOffset);
                 string key = auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase != Fase.Shape);
                 if (!auctions.ContainsKey(key))
                 {
