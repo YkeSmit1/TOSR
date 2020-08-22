@@ -37,9 +37,10 @@ jobs:
       run: msbuild /t:Build /p:Configuration=Release -m Tosr.sln
     - name: Run c# Test
       run: dotnet test --no-restore --configuration Release --verbosity normal .\TosrGui.Test\TosrGui.Test.csproj
-      run: dotnet test --no-restore --configuration Release --verbosity normal .\TosrIntegration.Test\TosrIntegration.Test.csproj
     - name: Run c++ Test
       run: .\x64\Release\EngineTest.exe
+    - name: Run Integration Test
+      run: dotnet test --no-restore --configuration Release --verbosity normal .\TosrIntegration.Test\TosrIntegration.Test.csproj
     - uses: actions/upload-artifact@v2
       with:
         name: distribute
