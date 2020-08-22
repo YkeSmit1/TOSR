@@ -25,11 +25,11 @@ namespace Tosr
         private HandsNorthSouth[] hands;
         private readonly ShuffleRestrictions shuffleRestrictions = new ShuffleRestrictions();
         private string handsString;
-        private readonly BiddingState biddingState = new BiddingState();
         private IBidGenerator bidGenerator = new BidGeneratorDescription();
         private readonly Dictionary<string, string> auctionsShape;
         private readonly Dictionary<string, List<string>> auctionsControls;
-        Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
+        private readonly static Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
+        private readonly BiddingState biddingState = new BiddingState(fasesWithOffset);
 
         public Form1()
         {

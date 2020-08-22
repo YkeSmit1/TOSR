@@ -4,10 +4,6 @@ namespace Tosr
 {
     public class BiddingState
     {
-        public BiddingState()
-        {
-            Init();
-        }
         public Fase fase { get; set; }
         public Bid currentBid { get; set; }
         public int relayBidIdLastFase { get; set; }
