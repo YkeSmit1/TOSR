@@ -21,4 +21,12 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <PropertyGroup>
+      <TosrBuildDirectory>$(ProjectDir)bin\$(Configuration)\netcoreapp3.1</TosrBuildDirectory>
+      <TosrIntegrationTestBuildDirectory>$(ProjectDir)..\TosrIntegration.Test\bin\$(Configuration)\netcoreapp3.1</TosrIntegrationTestBuildDirectory>
+    </PropertyGroup>
+    <Copy SourceFiles="$(TosrBuildDirectory)\Engine.dll;$(TosrBuildDirectory)\sqlite3.dll" DestinationFolder="$(TosrIntegrationTestBuildDirectory)"/>
+  </Target>
+
 </Project>
