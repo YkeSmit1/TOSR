@@ -1,13 +1,12 @@
 name: .NET Core
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 jobs:
   build:
+  
+    env:
+      CONFIG: Release
 
     runs-on:  windows-latest
 
@@ -34,14 +33,14 @@ jobs:
         .\vcpkg.exe install sqlite-orm:x64-windows
         .\vcpkg.exe integrate install
     - name: Build
-      run: msbuild /t:Build /p:Configuration=Release -m Tosr.sln
+      run: msbuild /t:Build /p:Configuration=$env:CONFIG -m Tosr.sln
     - name: Run c# Test
-      run: dotnet test --no-restore --configuration Release --verbosity normal .\TosrGui.Test\TosrGui.Test.csproj
+      run: dotnet test --no-restore --configuration $env:CONFIG --verbosity normal .\TosrGui.Test\TosrGui.Test.csproj
     - name: Run c++ Test
-      run: .\x64\Release\EngineTest.exe
+      run: . .\x64\$env:CONFIG\EngineTest.exe
     - name: Run Integration Test
-      run: dotnet test --no-restore --configuration Release --verbosity normal .\TosrIntegration.Test\TosrIntegration.Test.csproj
+      run: dotnet test --no-restore --configuration $env:CONFIG --verbosity normal .\TosrIntegration.Test\TosrIntegration.Test.csproj
     - uses: actions/upload-artifact@v2
       with:
         name: distribute
-        path: .\Tosr\bin\Release\netcoreapp3.1\
+        path: .\Tosr\bin\$env:CONFIG\netcoreapp3.1\
