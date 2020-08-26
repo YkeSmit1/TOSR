@@ -17,7 +17,7 @@ namespace TosrGui.Test
     public class FullBiddingTests
     {
         [Fact()]
-        public void ExecuteTest()
+        public void BidManagerTest()
         {
             var bidGenerator = new Mock<IBidGenerator>();
             var pinvoke = new Pinvoke();
@@ -63,7 +63,7 @@ namespace TosrGui.Test
         }
 
         [Fact()]
-        public void OffByOneTest()
+        public void BidGeneratorTest()
         {
             var handString = "AQ32,K32,5432,Q2";
 

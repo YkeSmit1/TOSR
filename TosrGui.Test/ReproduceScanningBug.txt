@@ -1,4 +1,4 @@
-﻿How to reproduce scanning (off by one) bug
+﻿How to reproduce scanning (off by one) bug in Tosr
 
 
 Add variable to Biddingstate
@@ -32,3 +32,6 @@ biddingState.lastBidId = GetBidId(biddingState.currentBid);
 
 replace input variable biddingState.nextBidIdForRule of method GetBid in bidGenerator by (2x)
 biddingState.lastBidId - biddingState.relayBidIdLastFase
+
+
+Now the test FullBiddingTests.BidGeneratorTest should fail
