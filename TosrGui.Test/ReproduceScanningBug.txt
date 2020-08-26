@@ -1,0 +1,34 @@
+﻿How to reproduce scanning (off by one) bug
+
+
+Add variable to Biddingstate
+public int lastBidId { get; set; }
+
+
+Replace BiddingState.UpdateBiddingState by
+public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, string description)
+        {
+            var bidId = bidIdFromRule + relayBidIdLastFase;
+            if (bidIdFromRule == 0)
+            {
+                currentBid = Bid.PassBid;
+                EndOfBidding = true;
+                return;
+            }
+            if (nextfase != fase)
+            {
+                relayBidIdLastFase = bidId + 1;
+                fase = nextfase;
+            }
+
+            currentBid = BidManager.GetBid(bidId);
+            currentBid.description = description;
+        }
+
+
+add line to bidManager.NorthBid
+biddingState.lastBidId = GetBidId(biddingState.currentBid);
+
+
+replace input variable biddingState.nextBidIdForRule of method GetBid in bidGenerator by (2x)
+biddingState.lastBidId - biddingState.relayBidIdLastFase
