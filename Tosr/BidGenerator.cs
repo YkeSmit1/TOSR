@@ -6,19 +6,19 @@ namespace Tosr
 {
     public class BidGenerator : IBidGenerator
     {
-        public (int, Fase, string) GetBid(BiddingState biddingState, string handsString)
+        public (int, Fase, string) GetBid(BiddingState biddingState, string handsString, IPinvoke pinvoke)
         {
-            var bidFromRule = Pinvoke.GetBidFromRule(biddingState.fase, handsString, biddingState.nextBidIdForRule, out var nextfase);
+            var bidFromRule = pinvoke.GetBidFromRule(biddingState.fase, handsString, biddingState.nextBidIdForRule, out var nextfase);
             return (bidFromRule, nextfase, string.Empty);
 
         }
     }
     public class BidGeneratorDescription : IBidGenerator
     {
-        public (int, Fase, string) GetBid(BiddingState biddingState, string handsString)
+        public (int, Fase, string) GetBid(BiddingState biddingState, string handsString, IPinvoke pinvoke)
         {
             var description = new StringBuilder(128);
-            var bidFromRule = Pinvoke.GetBidFromRuleEx(biddingState.fase, handsString, biddingState.nextBidIdForRule, out var nextfase, description);
+            var bidFromRule = pinvoke.GetBidFromRuleEx(biddingState.fase, handsString, biddingState.nextBidIdForRule, out var nextfase, description);
             
             return (bidFromRule, nextfase, description.ToString());
 

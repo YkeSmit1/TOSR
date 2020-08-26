@@ -7,7 +7,7 @@ namespace Tosr
 {
     public class BidManager
     {
-        public static Auction GetAuction(string handsString, IBidGenerator bidGenerator, 
+        public static Auction GetAuction(string handsString, IBidGenerator bidGenerator, IPinvoke pinvoke,
             Dictionary<Fase, bool> fasesWithOffset)
         {
             Auction auction = new Auction();
@@ -28,7 +28,7 @@ namespace Tosr
                         auction.AddBid(biddingState.currentBid);
                         break;
                     case Player.South:
-                        SouthBid(biddingState, handsString, bidGenerator);
+                        SouthBid(biddingState, handsString, bidGenerator, pinvoke);
                         auction.AddBid(biddingState.currentBid);
                         break;
                     default:
@@ -53,9 +53,9 @@ namespace Tosr
             biddingState.currentBid = NextBid(biddingState.currentBid);
         }
 
-        public static void SouthBid(BiddingState biddingState, string handsString, IBidGenerator bidGenerator)
+        public static void SouthBid(BiddingState biddingState, string handsString, IBidGenerator bidGenerator, IPinvoke pinvoke)
         {
-            var (bidIdFromRule, nextfase, description) = bidGenerator.GetBid(biddingState, handsString);
+            var (bidIdFromRule, nextfase, description) = bidGenerator.GetBid(biddingState, handsString, pinvoke);
             biddingState.UpdateBiddingState(bidIdFromRule, nextfase, description);
         }
 

@@ -43,6 +43,7 @@ namespace Tosr
         }
 
         readonly IBidGenerator bidGenerator;
+        readonly IPinvoke pinvoke;
         private readonly Statistics statistics = new Statistics();
         private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
         private readonly StringBuilder expectedSouthHands = new StringBuilder();
@@ -53,6 +54,7 @@ namespace Tosr
         public BatchBidding()
         {
             bidGenerator = new BidGenerator();
+            pinvoke = new Pinvoke();
         }
 
         public void Execute(HandsNorthSouth[] hands, Dictionary<string, string> shapeAuctions, Dictionary<string, List<string>> controlsAuctions)
@@ -69,7 +71,7 @@ namespace Tosr
             {
                 try
                 {
-                    var auction = BidManager.GetAuction(hand.SouthHand, bidGenerator, fasesWithOffset);
+                    var auction = BidManager.GetAuction(hand.SouthHand, bidGenerator, pinvoke, fasesWithOffset);
                     AddHandAndAuction(hand, auction);
                 }
                 catch (Exception exception)
@@ -269,7 +271,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
 
                                 if (!IsFreakHand(str))
                                 {
-                                    var auction = BidManager.GetAuction(hand, new BidGenerator(), fasesWithOffset);
+                                    var auction = BidManager.GetAuction(hand, bidGenerator, pinvoke, fasesWithOffset);
                                     auctions.Add(auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase == Fase.Shape), str);
                                 }
                             }
@@ -315,7 +317,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
                     pos[3] + new string('x', 3 - pos[3].Length);
                 Debug.Assert(hand.Length == 16);
 
-                var auction = BidManager.GetAuction(hand, new BidGenerator(), fasesWithOffset);
+                var auction = BidManager.GetAuction(hand, bidGenerator, pinvoke, fasesWithOffset);
                 string key = auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase != Fase.Shape);
                 if (!auctions.ContainsKey(key))
                 {

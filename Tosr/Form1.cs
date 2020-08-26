@@ -25,7 +25,8 @@ namespace Tosr
         private HandsNorthSouth[] hands;
         private readonly ShuffleRestrictions shuffleRestrictions = new ShuffleRestrictions();
         private string handsString;
-        private IBidGenerator bidGenerator = new BidGeneratorDescription();
+        private readonly IBidGenerator bidGenerator = new BidGeneratorDescription();
+        private readonly IPinvoke pinvoke = new Pinvoke();
         private readonly Dictionary<string, string> auctionsShape;
         private readonly Dictionary<string, List<string>> auctionsControls;
         private readonly static Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
@@ -42,7 +43,7 @@ namespace Tosr
             numericUpDown1.Value = 1000;
             Shuffle();
             BidTillSouth(auctionControl.auction, biddingState);
-            Pinvoke.Setup("Tosr.db3");
+            pinvoke.Setup("Tosr.db3");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
             auctionsShape = LoadAuctions<string>("AuctionsByShape.txt", () => new BatchBidding().GenerateAuctionsForShape());
@@ -70,7 +71,7 @@ namespace Tosr
             void handler(object x, EventArgs y)
             {
                 var biddingBoxButton = (BiddingBoxButton)x;
-                BidManager.SouthBid(biddingState, handsString, bidGenerator);
+                BidManager.SouthBid(biddingState, handsString, bidGenerator, pinvoke);
                 if (biddingBoxButton.bid != biddingState.currentBid)
                 {
                     MessageBox.Show($"The correct bid is {biddingState.currentBid}. Description: {biddingState.currentBid.description}.", "Incorrect bid");
@@ -163,7 +164,7 @@ namespace Tosr
             Clear();
             var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
             var handsString = Common.GetDeckAsString(orderedCards);
-            auctionControl.auction = BidManager.GetAuction(handsString, bidGenerator, fasesWithOffset);
+            auctionControl.auction = BidManager.GetAuction(handsString, bidGenerator, pinvoke, fasesWithOffset);
             auctionControl.ReDraw();
             biddingBox.Enabled = false;
         }
@@ -243,7 +244,7 @@ namespace Tosr
         {
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
-                Pinvoke.Setup(openFileDialog1.FileName);
+                pinvoke.Setup(openFileDialog1.FileName);
             }
         }
     }
