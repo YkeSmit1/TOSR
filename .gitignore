@@ -11,3 +11,5 @@
 /Engine/*.user
 /TosrIntegration.Test/bin
 /TosrIntegration.Test/obj
+/Solver/bin
+/Solver/obj

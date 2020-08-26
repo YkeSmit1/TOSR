@@ -16,6 +16,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TosrGui.Test", "TosrGui.Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TosrIntegration.Test", "TosrIntegration.Test\TosrIntegration.Test.csproj", "{B8DEAB01-5919-4542-8F32-5A83E4F48F15}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Solver", "Solver\Solver.csproj", "{67D3D670-A0F2-4BA6-A393-DBCAA13409DA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -86,6 +88,18 @@ Global
 		{B8DEAB01-5919-4542-8F32-5A83E4F48F15}.Release|x64.Build.0 = Release|Any CPU
 		{B8DEAB01-5919-4542-8F32-5A83E4F48F15}.Release|x86.ActiveCfg = Release|Any CPU
 		{B8DEAB01-5919-4542-8F32-5A83E4F48F15}.Release|x86.Build.0 = Release|Any CPU
+		{67D3D670-A0F2-4BA6-A393-DBCAA13409DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67D3D670-A0F2-4BA6-A393-DBCAA13409DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67D3D670-A0F2-4BA6-A393-DBCAA13409DA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{67D3D670-A0F2-4BA6-A393-DBCAA13409DA}.Debug|x64.Build.0 = Debug|Any CPU
+		{67D3D670-A0F2-4BA6-A393-DBCAA13409DA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{67D3D670-A0F2-4BA6-A393-DBCAA13409DA}.Debug|x86.Build.0 = Debug|Any CPU
+		{67D3D670-A0F2-4BA6-A393-DBCAA13409DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67D3D670-A0F2-4BA6-A393-DBCAA13409DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67D3D670-A0F2-4BA6-A393-DBCAA13409DA}.Release|x64.ActiveCfg = Release|Any CPU
+		{67D3D670-A0F2-4BA6-A393-DBCAA13409DA}.Release|x64.Build.0 = Release|Any CPU
+		{67D3D670-A0F2-4BA6-A393-DBCAA13409DA}.Release|x86.ActiveCfg = Release|Any CPU
+		{67D3D670-A0F2-4BA6-A393-DBCAA13409DA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
