@@ -6,7 +6,7 @@ namespace Solver
     [StructLayout(LayoutKind.Sequential)]
     public struct BoardsPBN
     {
-        public const int MAXNOOFBOARDS = 2;
+        public const int MAXNOOFBOARDS = 200;
 
         public int noOfBoards;
 

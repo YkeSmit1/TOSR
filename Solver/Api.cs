@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace Solver
 {
-    class Api
+    public class Api
     {
-        private static void SolveBoardsST(string hand)
+        public static void SolveBoardsST(string hand)
         {
             Console.WriteLine($"Nr of tricks:{SolveBoardPBN(hand)}");
         }
@@ -19,7 +19,7 @@ namespace Solver
         /// </summary>
         /// <param name="hands">new[] { "N:T984.AK96.KQJ9.4 Q652.QJT53.T3.AT AKJ73.7.752.KJ62 .842.A864.Q98753" ,
         /// "N:KT98.AK96.J964.4 Q652.QJT53.T3.AT AJ743.7.752.KJ62 .842.AKQ8.Q98753"}</param>
-        private static IEnumerable<int> SolveBoardsMT(IEnumerable<string> hands)
+        public static IEnumerable<int> SolveBoardsMT(IEnumerable<string> hands)
         {
             try
             {
@@ -45,9 +45,7 @@ namespace Solver
             var solution = 1; // one solution;
             var mode = 0; // automatic. Fastest;
 
-            var ddsResult = new FutureTricks();
-
-            var res = Pinvoke.SolveBoardPBN(deal, target, solution, mode, ref ddsResult, 0);
+            var res = Pinvoke.SolveBoardPBN(deal, target, solution, mode, out var ddsResult, 0);
             if (res != 1)
             {
                 var line = new StringBuilder(80);
@@ -64,33 +62,26 @@ namespace Solver
         public static IEnumerable<int> SolveAllBoards(IEnumerable<string> hands)
         {
             var nrOfHands = hands.Count();
+
+            var dealsPBN = new DealPbn[BoardsPBN.MAXNOOFBOARDS];
+            for (var i = 0; i < nrOfHands; i++)
+            {
+                dealsPBN[i] = CreateDeal(hands.ElementAt(i));
+            }
+
             var boardsBPN = new BoardsPBN
             {
                 noOfBoards = 2,
-                dealsPBN = hands.Select(CreateDeal).ToArray(),
-                targets = Enumerable.Repeat(-1, nrOfHands).ToArray(),
-                solutions = Enumerable.Repeat(1, nrOfHands).ToArray(),
-                modes = Enumerable.Repeat(0, nrOfHands).ToArray()
+                dealsPBN = dealsPBN,
+                targets = Enumerable.Repeat(-1, BoardsPBN.MAXNOOFBOARDS).ToArray(),
+                solutions = Enumerable.Repeat(1, BoardsPBN.MAXNOOFBOARDS).ToArray(),
+                modes = Enumerable.Repeat(0, BoardsPBN.MAXNOOFBOARDS).ToArray()
             };
-
-            var solvedBoards = new SolvedBoards
-            {
-                noOfBoards = nrOfHands
-            };
-
-            FutureTricks futureTricks1 = new FutureTricks();
-            FutureTricks futureTricks2 = new FutureTricks();
-            var ddsResults = new[] { futureTricks1, futureTricks2 };
-            solvedBoards.solvedBoards = ddsResults;
 
             IntPtr boardsBPNPtr = Marshal.AllocHGlobal(Marshal.SizeOf(boardsBPN));
             Marshal.StructureToPtr(boardsBPN, boardsBPNPtr, false);
 
-            int cb = Marshal.SizeOf(solvedBoards);
-            IntPtr solvedBoardsPtr = Marshal.AllocHGlobal(cb);
-
-            var res = Pinvoke.SolveAllBoards(boardsBPNPtr, solvedBoardsPtr);
-            solvedBoards = Marshal.PtrToStructure<SolvedBoards>(solvedBoardsPtr);
+            var res = Pinvoke.SolveAllBoards(boardsBPNPtr, out var solvedBoards);
 
             if (res != 1)
             {
@@ -98,9 +89,10 @@ namespace Solver
                 Pinvoke.ErrorMessage(res, line);
                 throw new Exception(line.ToString());
             }
-            foreach (var solvedBoard in solvedBoards.solvedBoards)
+
+            for (var i = 0; i < solvedBoards.noOfBoards; i++)
             {
-                yield return solvedBoard.score[0];
+                yield return solvedBoards.solvedBoards[i].score[0];
             }
         }
         private static DealPbn CreateDeal(string hand)
@@ -116,6 +108,5 @@ namespace Solver
             };
             return deal;
         }
-
     }
 }
