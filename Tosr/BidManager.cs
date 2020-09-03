@@ -50,32 +50,13 @@ namespace Tosr
 
         public static void NorthBid(BiddingState biddingState)
         {
-            biddingState.currentBid = NextBid(biddingState.currentBid);
+            biddingState.currentBid = Bid.NextBid(biddingState.currentBid);
         }
 
         public static void SouthBid(BiddingState biddingState, string handsString, IBidGenerator bidGenerator)
         {
             var (bidIdFromRule, nextfase, description) = bidGenerator.GetBid(biddingState, handsString);
             biddingState.UpdateBiddingState(bidIdFromRule, nextfase, description);
-        }
-
-        public static Bid GetBid(int bidId)
-        {
-            return bidId == 0 ? Bid.PassBid : new Bid((bidId - 1) / 5 + 1, (Suit)((bidId - 1) % 5));
-        }
-
-        public static int GetBidId(Bid bid)
-        {
-            return ((bid.rank - 1) * 5) + (int)bid.suit + 1;
-        }
-
-        public static Bid NextBid(Bid bid)
-        {
-            if (bid == Bid.PassBid)
-                return new Bid(1, Suit.Clubs);
-            if (bid.suit == Suit.NoTrump)
-                return new Bid(bid.rank + 1, Suit.Clubs);
-            return new Bid(bid.rank, bid.suit + 1);
         }
     }
 }

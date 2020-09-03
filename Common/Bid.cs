@@ -2,6 +2,14 @@
 
 namespace Tosr
 {
+    public enum BidType
+    {
+        bid,
+        pass,
+        dbl,
+        rdbl
+    }
+
     public class Bid : IEquatable<Bid>, IComparable<Bid>
     {
         public static Bid PassBid = new Bid(BidType.pass);
@@ -40,6 +48,25 @@ namespace Tosr
             };
         }
 
+        public static Bid GetBid(int bidId)
+        {
+            return bidId == 0 ? Bid.PassBid : new Bid((bidId - 1) / 5 + 1, (Suit)((bidId - 1) % 5));
+        }
+
+        public static int GetBidId(Bid bid)
+        {
+            return ((bid.rank - 1) * 5) + (int)bid.suit + 1;
+        }
+
+        public static Bid NextBid(Bid bid)
+        {
+            if (bid == Bid.PassBid)
+                return new Bid(1, Suit.Clubs);
+            if (bid.suit == Suit.NoTrump)
+                return new Bid(bid.rank + 1, Suit.Clubs);
+            return new Bid(bid.rank, bid.suit + 1);
+        }
+
         public bool Equals(Bid other) => suit == other.suit && bidType == other.bidType && rank == other.rank;
         public override bool Equals(object obj) => obj is Bid other && Equals(other);
         public override int GetHashCode() => HashCode.Combine(bidType, rank, suit);
@@ -60,7 +87,7 @@ namespace Tosr
         public static bool operator >(Bid a, Bid b) => a.CompareTo(b) > 0;
         public static bool operator <=(Bid a, Bid b) => a.CompareTo(b) <= 0;
         public static bool operator >=(Bid a, Bid b) => a.CompareTo(b) >= 0;
-        public static int operator -(Bid a, Bid b) => BidManager.GetBidId(a) - BidManager.GetBidId(b);
-        public static Bid operator -(Bid a, int i) => a.bidType == BidType.bid ? BidManager.GetBid(BidManager.GetBidId(a) - i) : a;
+        public static int operator -(Bid a, Bid b) => GetBidId(a) - GetBidId(b);
+        public static Bid operator -(Bid a, int i) => a.bidType == BidType.bid ? GetBid(GetBidId(a) - i) : a;
     }
 }

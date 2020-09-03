@@ -37,7 +37,7 @@ namespace Tosr
                 return;
             }
 
-            currentBid = BidManager.GetBid(bidId);
+            currentBid = Bid.GetBid(bidId);
             currentBid.fase = fase;
             currentBid.description = description;
 
