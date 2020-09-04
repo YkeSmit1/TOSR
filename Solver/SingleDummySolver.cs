@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Tosr;
+using Common;
 
 namespace Solver
 {
@@ -51,7 +51,7 @@ namespace Solver
                     _ => throw new ArgumentException(nameof(player)),
                 };
                 var orderedCards = cardsPlayer.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-                var dealStr = Tosr.Common.GetDeckAsString(orderedCards);
+                var dealStr = Common.Common.GetDeckAsString(orderedCards);
                 yield return (player, dealStr);
             }
         }
@@ -61,7 +61,7 @@ namespace Solver
             for (var suit = 0; suit < hand.Count(); ++suit)
                 foreach (var card in hand[suit])
                 {
-                    yield return new CardDto() { Suit = (Suit)(3 - suit), Face = Tosr.Common.GetFaceFromDescription(card) };
+                    yield return new CardDto() { Suit = (Suit)(3 - suit), Face = Common.Common.GetFaceFromDescription(card) };
                 }
         }
 
@@ -71,13 +71,13 @@ namespace Solver
 
             for (var suit = 0; suit < hand.Count(); ++suit)
             {
-                var remainingCards = Enumerable.Range(1, 10).Where(x => !partnersHand[suit].Contains(Tosr.Common.GetFaceDescription((Face)x))).Select(x => (Face)x).ToList();
+                var remainingCards = Enumerable.Range(1, 10).Where(x => !partnersHand[suit].Contains(Common.Common.GetFaceDescription((Face)x))).Select(x => (Face)x).ToList();
                 foreach (var card in hand[suit])
                 {
                     Face face;
                     if (card != 'x')
                     {
-                        face = Tosr.Common.GetFaceFromDescription(card);
+                        face = Common.Common.GetFaceFromDescription(card);
                     }
                     else
                     {

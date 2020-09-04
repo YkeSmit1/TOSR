@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -8,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Newtonsoft.Json;
+using Common;
 
 namespace Tosr
 {
@@ -162,7 +163,7 @@ namespace Tosr
         {
             Clear();
             var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-            var handsString = Common.GetDeckAsString(orderedCards);
+            var handsString = Common.Common.GetDeckAsString(orderedCards);
             auctionControl.auction = BidManager.GetAuction(handsString, bidGenerator, fasesWithOffset);
             auctionControl.ReDraw();
             biddingBox.Enabled = false;
@@ -210,11 +211,11 @@ namespace Tosr
             var cards = Shuffling.FisherYates(26).ToList();
 
             var orderedCardsNorth = cards.Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-            handsNorthSouth.NorthHand = Common.GetDeckAsString(orderedCardsNorth);
+            handsNorthSouth.NorthHand = Common.Common.GetDeckAsString(orderedCardsNorth);
 
             unOrderedCards = cards.Skip(13).Take(13).ToList();
             var orderedCardsSouth = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-            handsNorthSouth.SouthHand = Common.GetDeckAsString(orderedCardsSouth);
+            handsNorthSouth.SouthHand = Common.Common.GetDeckAsString(orderedCardsSouth);
 
             return handsNorthSouth;
         }

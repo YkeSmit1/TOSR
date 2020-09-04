@@ -7,7 +7,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Resources;
 using System.Runtime.CompilerServices;
 
-namespace Tosr
+namespace Common
 {
     public enum Player
     {

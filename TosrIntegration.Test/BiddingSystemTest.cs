@@ -1,9 +1,10 @@
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Tosr;
+using Newtonsoft.Json;
 using Xunit;
+using Common;
+using Tosr;
 
 namespace TosrIntegration.Test
 {

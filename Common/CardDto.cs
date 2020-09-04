@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Tosr
+namespace Common
 {
     public class CardDto
     {

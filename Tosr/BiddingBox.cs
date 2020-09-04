@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Common;
 
 namespace Tosr
 {
@@ -35,7 +36,7 @@ namespace Tosr
                         Left = (4 - (int) suit) * defaultButtonWidth,
                         Top = (level - 1) * defaultButtonHeight,
                         Parent = this,
-                        Text = Convert.ToString(level) + Common.GetSuitDescription(suit),
+                        Text = Convert.ToString(level) + Common.Common.GetSuitDescription(suit),
                         ForeColor = suit == Suit.Diamonds || suit == Suit.Hearts ? Color.Red : Color.Black
                     };
                     button.Click += BiddingBoxClick;
@@ -87,7 +88,7 @@ namespace Tosr
                     }
                     break;
                 case BidType.pass:
-                    if (Common.IsSameTeam(auctionCurrentPlayer, currentDeclarer))
+                    if (Common.Common.IsSameTeam(auctionCurrentPlayer, currentDeclarer))
                     {
                         switch (currentBidType)
                         {

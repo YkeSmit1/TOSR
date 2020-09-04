@@ -21,7 +21,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Solver\Solver.csproj" />
     <ProjectReference Include="..\Tosr\Tosr.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="dds.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

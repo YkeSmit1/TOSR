@@ -1,5 +1,6 @@
 using Tosr;
 using Xunit;
+using Common;
 
 namespace TosrGui.Test
 {
@@ -23,10 +24,10 @@ namespace TosrGui.Test
         [Fact()]
         public void IsSameTeamTest()
         {
-            Assert.True(Tosr.Common.IsSameTeam(Player.North, Player.South));
-            Assert.True(Tosr.Common.IsSameTeam(Player.East, Player.West));
-            Assert.True(Tosr.Common.IsSameTeam(Player.UnKnown, Player.East));
-            Assert.False(Tosr.Common.IsSameTeam(Player.North, Player.West));
+            Assert.True(Common.Common.IsSameTeam(Player.North, Player.South));
+            Assert.True(Common.Common.IsSameTeam(Player.East, Player.West));
+            Assert.True(Common.Common.IsSameTeam(Player.UnKnown, Player.East));
+            Assert.False(Common.Common.IsSameTeam(Player.North, Player.West));
         }
 
         [Fact()]

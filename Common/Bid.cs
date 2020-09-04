@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Tosr
+namespace Common
 {
     public enum BidType
     {

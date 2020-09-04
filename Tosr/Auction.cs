@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using Common;
 
 namespace Tosr
 {
@@ -51,7 +52,7 @@ namespace Tosr
                     if (bid.Value.suit == Suit.Hearts || bid.Value.suit == Suit.Diamonds)
                     {
                         richTextBox1.AppendText(bid.Value.rank.ToString());
-                        richTextBox1.AppendText(Common.GetSuitDescription(bid.Value.suit), Color.Red);
+                        richTextBox1.AppendText(Common.Common.GetSuitDescription(bid.Value.suit), Color.Red);
                     }
                     else
                     {

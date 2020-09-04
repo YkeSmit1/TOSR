@@ -1,12 +1,13 @@
-﻿using Xunit;
-using Tosr;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
 using Moq;
 using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using Newtonsoft.Json;
-using System.IO;
+using Xunit;
+using Tosr;
+using Common;
 
 namespace TosrGui.Test
 {

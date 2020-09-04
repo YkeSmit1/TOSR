@@ -1,4 +1,6 @@
-﻿namespace Tosr
+﻿using Common;
+
+namespace Tosr
 {
     public interface IBidGenerator
     {
