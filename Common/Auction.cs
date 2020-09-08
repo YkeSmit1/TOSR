@@ -57,17 +57,30 @@ namespace Common
 
         public string GetBidsAsString(Player player)
         {
-            return bids.Aggregate(string.Empty, (current, biddingRound) => current + biddingRound.Value[player]);
+            return bids.Where(x => x.Value.ContainsKey(player)).Aggregate(string.Empty, (current, biddingRound) => current + biddingRound.Value[player]);
         }
 
-        public string GetBidsAsString(Player player, Func<KeyValuePair<int, Dictionary<Player, Bid>>, bool> predicate)
+        public string GetBidsAsString(Fase fase)
         {
-            return bids.Where(predicate).Aggregate(string.Empty, (current, biddingRound) => current + biddingRound.Value[player]);
+            return GetBidsAsString(new Fase[] { fase });
         }
 
-        public IEnumerable<Bid> GetBids(Player player, Func<KeyValuePair<int, Dictionary<Player, Bid>>, bool> predicate)
+        public string GetBidsAsString(Fase[] fases)
         {
-            return bids.Where(predicate).Select(x => x.Value[player]);
+            const Player south = Player.South;
+            return bids.Where(x => x.Value.ContainsKey(south) && fases.Contains(x.Value[south].fase)).
+                Aggregate(string.Empty, (current, biddingRound) => current + biddingRound.Value[south]);
         }
+
+        public IEnumerable<Bid> GetBids(Player player, Fase fase)
+        {
+            return GetBids(player, new Fase[] { fase});
+        }
+
+        public IEnumerable<Bid> GetBids(Player player, Fase[] fases)
+        {
+            return bids.Where(x => x.Value.ContainsKey(player) && fases.Contains(x.Value[player].fase)).Select(x => x.Value[player]);
+        }
+
     }
 }

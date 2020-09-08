@@ -31,7 +31,7 @@ class SQLiteCppWrapper : public ISQLiteWrapper
         AND MaxHcp >= ?
         ORDER BY RelBidId ASC)";
 
-    constexpr static std::string_view scanningSql = R"(SELECT RelBidId, Id, Description FROM Scanning 
+    constexpr static std::string_view scanningSql = R"(SELECT RelBidId, EndFase, Id, Description FROM Scanning 
         WHERE RelbidId > ?
         AND (Controls1Suit = ? or Controls1Suit is null)
         AND (Controls2Suit = ? or Controls2Suit is null)

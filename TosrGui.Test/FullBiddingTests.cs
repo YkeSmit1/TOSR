@@ -34,13 +34,13 @@ namespace TosrGui.Test
                 // Pass
                 Returns(() => (0, Fase.Scanning, ""));
 
-            var auction = BidManager.GetAuction("", bidGenerator.Object, fasesWithOffset);
+            var auction = new BidManager(bidGenerator.Object, fasesWithOffset).GetAuction("", "");
 
             Assert.Equal("1♣1NT2♥4♣5♦6♥", auction.GetBidsAsString(Player.North));
             Assert.Equal("1♠2♦3NT5♣6♦Pass", auction.GetBidsAsString(Player.South));
-            Assert.Equal("1♠2♦3NT", auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase == Fase.Shape));
-            Assert.Equal("5♣", auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase == Fase.Controls));
-            Assert.Equal("6♦", auction.GetBidsAsString(Player.South, x => x.Value[Player.South].fase == Fase.Scanning));
+            Assert.Equal("1♠2♦3NT", auction.GetBidsAsString(Fase.Shape));
+            Assert.Equal("5♣", auction.GetBidsAsString(Fase.Controls));
+            Assert.Equal("6♦", auction.GetBidsAsString(Fase.Scanning));
         }
     }
 }

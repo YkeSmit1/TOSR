@@ -49,7 +49,8 @@ namespace Common
         Unknown,
         Shape,
         Controls,
-        Scanning
+        Scanning,
+        End
     };
 
 
@@ -132,5 +133,23 @@ namespace Common
         {
             return cards.Where(c => c.Suit == suit).Aggregate("", (x, y) => x + GetFaceDescription(y.Face));
         }
+
+        public static int GetLongestSuit(string northHand, string southHand)
+        {
+            var suitLengthNorth = northHand.Split(',').Select(x => x.Length);
+            var suitLengthSouth = southHand.Split(',').Select(x => x.Length);
+            var suitLengthNS = suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
+            var longestSuit = suitLengthNS.ToList().IndexOf(suitLengthNS.Max());
+            return longestSuit;
+        }
+
+        public static bool IsFreakHand(string handLength)
+        {
+            var handPattern = string.Concat(handLength.OrderByDescending(y => y));
+            return handPattern == "7321" || int.Parse(handPattern[0].ToString()) >= 8 ||
+                int.Parse(handPattern[0].ToString()) + int.Parse(handPattern[1].ToString()) >= 12;
+        }
+
+
     }
 }

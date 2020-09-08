@@ -2,7 +2,7 @@
 
 namespace Common
 {
-    public class CardDto
+    public struct CardDto
     {
         public Face Face;
         public Suit Suit;

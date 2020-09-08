@@ -148,13 +148,14 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleScanning(const HandC
         while (queryScanning->executeStep())
         {
             int bidId = queryScanning->getColumn(0);
-            auto id = queryScanning->getColumn(1).getInt();
-            auto str = queryScanning->getColumn(2).getString();
+            bool endFase = queryScanning->getColumn(1).getInt();
+            auto id = queryScanning->getColumn(2).getInt();
+            auto str = queryScanning->getColumn(3).getString();
 
             if (res.empty())
                 DBOUT("Scanning. Rule Id:" << id << '\n');
 
-            res.emplace_back(bidId, false, str);
+            res.emplace_back(bidId, endFase, str);
         }
 
         std::string emptystring;

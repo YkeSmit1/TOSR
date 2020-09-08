@@ -17,16 +17,17 @@ namespace Tosr
         public string NorthHand;
         public string SouthHand;
     }
+
     public partial class Form1 : Form
     {
         private BiddingBox biddingBox;
         private AuctionControl auctionControl;
-        private List<CardDto> unOrderedCards;
 
+        private HandsNorthSouth hand;
         private HandsNorthSouth[] hands;
         private readonly ShuffleRestrictions shuffleRestrictions = new ShuffleRestrictions();
         private string handsString;
-        private IBidGenerator bidGenerator = new BidGeneratorDescription();
+        private BidManager bidManager;
         private readonly Dictionary<string, string> auctionsShape;
         private readonly Dictionary<string, List<string>> auctionsControls;
         private readonly static Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
@@ -41,13 +42,16 @@ namespace Tosr
             // Need to set in code because of a .net core bug
             numericUpDown1.Maximum = 100_000;
             numericUpDown1.Value = 1000;
-            Shuffle();
-            BidTillSouth(auctionControl.auction, biddingState);
             Pinvoke.Setup("Tosr.db3");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
-            auctionsShape = LoadAuctions<string>("AuctionsByShape.txt", () => new BatchBidding().GenerateAuctionsForShape());
-            auctionsControls = LoadAuctions<List<string>>("AuctionsByControls.txt", () => new BatchBidding().GenerateAuctionsForControls());
+            auctionsShape = LoadAuctions<string>("AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
+            auctionsControls = LoadAuctions<List<string>>("AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
+
+            bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, auctionsShape, auctionsControls);
+
+            Shuffle();
+            BidTillSouth(auctionControl.auction, biddingState);
         }
 
         public Dictionary<string, T> LoadAuctions<T>(string fileName, Func<Dictionary<string, T>> generateAuctions)
@@ -71,7 +75,7 @@ namespace Tosr
             void handler(object x, EventArgs y)
             {
                 var biddingBoxButton = (BiddingBoxButton)x;
-                BidManager.SouthBid(biddingState, handsString, bidGenerator);
+                bidManager.SouthBid(biddingState, handsString);
                 if (biddingBoxButton.bid != biddingState.currentBid)
                 {
                     MessageBox.Show($"The correct bid is {biddingState.currentBid}. Description: {biddingState.currentBid.description}.", "Incorrect bid");
@@ -96,7 +100,7 @@ namespace Tosr
                 Parent = this,
                 Left = 300,
                 Top = 200,
-                Width = 205,
+                Width = 220,
                 Height = 200
             };
             auctionControl.Show();
@@ -107,7 +111,7 @@ namespace Tosr
             // West
             auction.AddBid(Bid.PassBid);
             // North
-            BidManager.NorthBid(biddingState);
+            bidManager.NorthBid(biddingState, auction, hand.NorthHand);
             auction.AddBid(biddingState.currentBid);
             // East
             auction.AddBid(Bid.PassBid);
@@ -127,19 +131,22 @@ namespace Tosr
 
         private void Shuffle()
         {
+            IOrderedEnumerable<CardDto> cards;
             foreach (var card in Controls.OfType<Card>())
             {
                 card.Hide();
             }
 
             do
-                handsString = ShuffleRandomHand().SouthHand;
+            {
+                (hand, cards) = ShuffleRandomHand();
+                handsString = hand.SouthHand;
+            }
             while
                 (!shuffleRestrictions.Match(handsString));
 
             var left = 20 * 13;
-            var cardDtos = unOrderedCards.OrderBy(x => x.Suit, new GuiSuitComparer()).ThenBy(c => c.Face, new FaceComparer()).ToArray();
-            foreach (var cardDto in cardDtos)
+            foreach (var cardDto in cards.Reverse())
             {
                 var card = new Card(cardDto.Face, cardDto.Suit, Back.Crosshatch, false, false)
                 {
@@ -162,9 +169,7 @@ namespace Tosr
         private void ButtonGetAuctionClick(object sender, EventArgs e)
         {
             Clear();
-            var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-            var handsString = Common.Common.GetDeckAsString(orderedCards);
-            auctionControl.auction = BidManager.GetAuction(handsString, bidGenerator, fasesWithOffset);
+            auctionControl.auction = bidManager.GetAuction(hand.NorthHand, hand.SouthHand);
             auctionControl.ReDraw();
             biddingBox.Enabled = false;
         }
@@ -175,8 +180,8 @@ namespace Tosr
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
-                BatchBidding batchBidding = new BatchBidding();
-                batchBidding.Execute(hands, auctionsShape, auctionsControls);
+                BatchBidding batchBidding = new BatchBidding(auctionsShape, auctionsControls, fasesWithOffset);
+                batchBidding.Execute(hands);
             }
             finally
             {
@@ -194,7 +199,8 @@ namespace Tosr
                 int hcp;
                 do
                 {
-                    hands[i] = ShuffleRandomHand();
+                    IOrderedEnumerable<CardDto> dummy;
+                    (hands[i], dummy) = ShuffleRandomHand();
                     var northHand = hands[i].NorthHand;
                     hcp = northHand.Count(x => x == 'A') * 4 + northHand.Count(x => x == 'K') * 3 + northHand.Count(x => x == 'Q') * 2 + northHand.Count(x => x == 'J');
                 }
@@ -205,7 +211,7 @@ namespace Tosr
             return hands;
         }
 
-        private HandsNorthSouth ShuffleRandomHand()
+        private (HandsNorthSouth, IOrderedEnumerable<CardDto>) ShuffleRandomHand()
         {
             var handsNorthSouth = new HandsNorthSouth();
             var cards = Shuffling.FisherYates(26).ToList();
@@ -213,11 +219,11 @@ namespace Tosr
             var orderedCardsNorth = cards.Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
             handsNorthSouth.NorthHand = Common.Common.GetDeckAsString(orderedCardsNorth);
 
-            unOrderedCards = cards.Skip(13).Take(13).ToList();
-            var orderedCardsSouth = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
+            var unOrderedCards = cards.Skip(13).Take(13).ToList();
+                var orderedCardsSouth = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
             handsNorthSouth.SouthHand = Common.Common.GetDeckAsString(orderedCardsSouth);
 
-            return handsNorthSouth;
+            return (handsNorthSouth, orderedCardsSouth);
         }
 
         private void ButtonGenerateHandsClick(object sender, EventArgs e)

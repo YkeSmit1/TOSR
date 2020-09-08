@@ -33,9 +33,9 @@ namespace TosrGui.Test
         [Fact()]
         public void MergeControlAndShapeTest()
         {
-            Assert.Equal("Qxx,Kxxx,Axxxx,x", string.Join(',', BatchBidding.MergeControlAndShape("Axxx,Kxx,Qxx,xxx", "3451")));
-            Assert.Equal("Axxxx,Kxxx,Qxx,x", string.Join(',', BatchBidding.MergeControlAndShape("Axxx,Kxx,Qxx,xxx", "5431")));
-            Assert.Equal(",Axxx,Kxxxx,xxxx", string.Join(',', BatchBidding.MergeControlAndShape("Kxxx,Axx,xxx,xxx", "0454")));
+            Assert.Equal("Qxx,Kxxx,Axxxx,x", string.Join(',', BidManager.MergeControlAndShape("Axxx,Kxx,Qxx,xxx", "3451")));
+            Assert.Equal("Axxxx,Kxxx,Qxx,x", string.Join(',', BidManager.MergeControlAndShape("Axxx,Kxx,Qxx,xxx", "5431")));
+            Assert.Equal(",Axxx,Kxxxx,xxxx", string.Join(',', BidManager.MergeControlAndShape("Kxxx,Axx,xxx,xxx", "0454")));
         }
 
         [Fact()]

@@ -5,7 +5,8 @@ enum class Fase
     UnKnown,
     Shape,
     Controls,
-    Scanning
+    Scanning,
+    End
 };
 
 extern "C" __declspec(dllexport) int GetBidFromRule(Fase fase, const char* hand, int lastBidId, Fase* newFase);
