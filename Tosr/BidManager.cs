@@ -68,7 +68,7 @@ namespace Tosr
         public void NorthBid(BiddingState biddingState, Auction auction, string northHand)
         {
             if (biddingState.fase != Fase.End)
-                biddingState.currentBid = Bid.NextBid(biddingState.currentBid);
+                biddingState.currentBid = GetRelayBid(biddingState, auction);
             else
             {
                 biddingState.EndOfBidding = true;
@@ -97,8 +97,25 @@ namespace Tosr
             }
         }
 
+        private Bid GetRelayBid(BiddingState biddingState, Auction auction)
+        {
+            if (biddingState.currentBid == new Bid(3, Suit.Spades))
+            {
+                var strAuction = auction.GetBidsAsString(Fase.Shape);
+                var shape = shapeAuctions[strAuction].ToCharArray().OrderByDescending(x => x);
+                var shapeStringSorted = new string(shape.ToArray());
+
+                if (shapeStringSorted != "7330")
+                    return new Bid(4, Suit.Clubs);
+            }
+
+            return Bid.NextBid(biddingState.currentBid);
+        }
+
         public void SouthBid(BiddingState biddingState, string handsString)
         {
+            if (biddingState.EndOfBidding)
+                return;
             var (bidIdFromRule, nextfase, description) = bidGenerator.GetBid(biddingState, handsString);
             biddingState.UpdateBiddingState(bidIdFromRule, nextfase, description);
         }
