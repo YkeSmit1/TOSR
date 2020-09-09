@@ -71,6 +71,7 @@ namespace Tosr
                 biddingState.currentBid = Bid.NextBid(biddingState.currentBid);
             else
             {
+                biddingState.EndOfBidding = true;
                 // Try to guess contract by using single dummy solver
                 if (useSingleDummySolver)
                 {
@@ -82,24 +83,22 @@ namespace Tosr
                         var mostFrequent = scores.GroupBy(x => x).OrderByDescending(y => y.Count()).Take(1).Select(z => z.Key).First();
                         Bid bid = new Bid(mostFrequent - 6, (Suit)(3 - suit));
                         if (bid > biddingState.currentBid)
+                        {
                             biddingState.currentBid = bid;
+                            return;
+                        }
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
                     }
                 }
+                biddingState.currentBid = Bid.PassBid;
             }
         }
 
         public void SouthBid(BiddingState biddingState, string handsString)
         {
-            if (biddingState.fase == Fase.End)
-            {
-                biddingState.currentBid = Bid.PassBid;
-                biddingState.EndOfBidding = true;
-                return;
-            }
             var (bidIdFromRule, nextfase, description) = bidGenerator.GetBid(biddingState, handsString);
             biddingState.UpdateBiddingState(bidIdFromRule, nextfase, description);
         }
