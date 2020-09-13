@@ -24,10 +24,10 @@ namespace TosrGui.Test
         [Fact()]
         public void IsSameTeamTest()
         {
-            Assert.True(Common.Common.IsSameTeam(Player.North, Player.South));
-            Assert.True(Common.Common.IsSameTeam(Player.East, Player.West));
-            Assert.True(Common.Common.IsSameTeam(Player.UnKnown, Player.East));
-            Assert.False(Common.Common.IsSameTeam(Player.North, Player.West));
+            Assert.True(Util.IsSameTeam(Player.North, Player.South));
+            Assert.True(Util.IsSameTeam(Player.East, Player.West));
+            Assert.True(Util.IsSameTeam(Player.UnKnown, Player.East));
+            Assert.False(Util.IsSameTeam(Player.North, Player.West));
         }
 
         [Fact()]

@@ -97,14 +97,14 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             var suitLengthSouth = strHand.SouthHand.Split(',').Select(x => x.Length);
             var str = string.Join("", suitLengthSouth);
 
-            if (Common.Common.IsFreakHand(str))
+            if (Util.IsFreakHand(str))
                 return;
 
             var strAuction = auction.GetBidsAsString(Fase.Shape);
 
             AddHandPerAuction(str, strAuction);
 
-            var longestSuit = Common.Common.GetLongestSuit(strHand.NorthHand, strHand.SouthHand);
+            var longestSuit = Util.GetLongestSuit(strHand.NorthHand, strHand.SouthHand);
 
             statistics.AddOrUpdateDeclarer(auction.GetDeclarer((Suit)(3 - longestSuit)));
             statistics.AddOrUpdateContract(auction);

@@ -41,7 +41,7 @@ namespace Common
         {
             return bidType switch
             {
-                BidType.bid => rank + Common.GetSuitDescription(suit),
+                BidType.bid => rank + Util.GetSuitDescription(suit),
                 BidType.pass => "Pass",
                 BidType.dbl => "Dbl",
                 BidType.rdbl => "Rdbl",
@@ -51,7 +51,7 @@ namespace Common
 
         public static Bid GetBid(int bidId)
         {
-            return bidId == 0 ? Bid.PassBid : new Bid((bidId - 1) / 5 + 1, (Suit)((bidId - 1) % 5));
+            return bidId == 0 ? PassBid : new Bid((bidId - 1) / 5 + 1, (Suit)((bidId - 1) % 5));
         }
 
         public static int GetBidId(Bid bid)
@@ -61,7 +61,7 @@ namespace Common
 
         public static Bid NextBid(Bid bid)
         {
-            if (bid == Bid.PassBid)
+            if (bid == PassBid)
                 return new Bid(1, Suit.Clubs);
             if (bid.suit == Suit.NoTrump)
                 return new Bid(bid.rank + 1, Suit.Clubs);

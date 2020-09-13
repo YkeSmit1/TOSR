@@ -31,7 +31,7 @@ namespace Tosr
                                 var suitLengthSouth = hand.Split(',').Select(x => x.Length);
                                 var str = string.Join("", suitLengthSouth);
 
-                                if (!Common.Common.IsFreakHand(str))
+                                if (!Util.IsFreakHand(str))
                                 {
                                     var auction = bidManager.GetAuction(string.Empty, hand); // No northhand. Just for generating reverse dictionaries
                                     var isZoom = auction.GetBids(Player.South, Fase.Shape).Any(x => x.zoom);

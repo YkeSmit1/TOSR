@@ -18,8 +18,8 @@ namespace TosrIntegration.Test
             yield return new object[] { "FullTestCtlr2", "Axxx,Kxx,Kxx,xxx", "xxxx,Qxx,Ax,xxxx", "1♠2♦3♦3♠4♣4♥4NT5♦5NT6♦6NT" };
             yield return new object[] { "FullTestCtlr3", "Axxx,Kxx,Kxx,xxx", "Kxxx,Qxx,Ax,xxxx", "1♠2♦3♦3♠4♦4NT5♦5NT6♦6NT" };
             yield return new object[] { "FullTestCtrl4", "Axxx,Kxx,Kxx,xxx", "Kxxx,xxx,Ax,Kxxx", "1♠2♦3♦3♠4♥5♦5NT6♦6♠7♣" };
-            yield return new object[] { "FullTestZoomCtrl3", "Axxx,Kxx,Kxx,xxx", "Kxxx,Ax,Qxx,xxxx", "1♠2♦3♥3NT4♥5♣5♥6♣6♥7♣", };
-            yield return new object[] { "FullTestZoomCtrl4", "Kxxx,Kxx,Kxx,xxx", "Axxx,Ax,Qxx,xxxx", "1♠2♦3♥3NT4♠5♦5♠6♦6♠7♦", };
+            yield return new object[] { "FullTestZoomCtrl3", "Axxx,Kxx,Kxx,xxx", "Kxxx,Ax,Qxx,xxxx", "1♠2♦3♥4♣4♠5♣5♠6♣6♠", };
+            yield return new object[] { "FullTestZoomCtrl4", "Kxxx,Kxx,Kxx,xxx", "Axxx,Ax,Qxx,xxxx", "1♠2♦3♥4♦4NT5♦5NT6♦6NT", };
             yield return new object[] { "FullTestZoomCtrl5", "Axxx,Kxx,Kxx,xxx", "Kxxx,Ax,AQx,xxxx", "1♠2♦3NT4♥5♦5♠6♦" };
             yield return new object[] { "FullTestZoomCtrl6", "Kxxx,Kxx,Kxx,xxx", "Axxx,Ax,AQx,xxxx", "1♠2♦4♣4♠5♥5NT6♥" };
         }
@@ -35,24 +35,8 @@ namespace TosrIntegration.Test
         public FullTest()
         {
             fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
-            shapeAuctions = LoadAuctions<Tuple<string, bool>>("AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
-            auctionsControls = LoadAuctions<List<string>>("AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
-        }
-
-        public Dictionary<string, T> LoadAuctions<T>(string fileName, Func<Dictionary<string, T>> generateAuctions)
-        {
-            Dictionary<string, T> auctions;
-            if (File.Exists(fileName))
-            {
-                auctions = JsonConvert.DeserializeObject<Dictionary<string, T>>(File.ReadAllText(fileName));
-            }
-            else
-            {
-                auctions = generateAuctions();
-                var sortedAuctions = auctions.ToImmutableSortedDictionary();
-                File.WriteAllText(fileName, JsonConvert.SerializeObject(sortedAuctions, Formatting.Indented));
-            }
-            return auctions;
+            shapeAuctions = Util.LoadAuctions<Tuple<string, bool>>("AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
+            auctionsControls = Util.LoadAuctions<List<string>>("AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
         }
 
         [Theory]

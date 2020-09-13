@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -45,29 +43,13 @@ namespace Tosr
             Pinvoke.Setup("Tosr.db3");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
-            auctionsShape = LoadAuctions<Tuple<string, bool>>("AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
-            auctionsControls = LoadAuctions<List<string>>("AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
+            auctionsShape = Util.LoadAuctions<Tuple<string, bool>>("AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
+            auctionsControls = Util.LoadAuctions<List<string>>("AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
 
             bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, auctionsShape, auctionsControls);
 
             Shuffle();
             BidTillSouth(auctionControl.auction, biddingState);
-        }
-
-        public Dictionary<string, T> LoadAuctions<T>(string fileName, Func<Dictionary<string, T>> generateAuctions)
-        {
-            Dictionary < string, T> auctions;
-            if (File.Exists(fileName))
-            {
-                auctions = JsonConvert.DeserializeObject< Dictionary<string, T>>(File.ReadAllText(fileName));
-            }
-            else
-            {
-                auctions = generateAuctions();
-                var sortedAuctions = auctions.ToImmutableSortedDictionary();
-                File.WriteAllText(fileName, JsonConvert.SerializeObject(sortedAuctions, Formatting.Indented));
-            }
-            return auctions;
         }
 
         private void ShowBiddingBox()
@@ -217,11 +199,11 @@ namespace Tosr
             var cards = Shuffling.FisherYates(26).ToList();
 
             var orderedCardsNorth = cards.Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-            handsNorthSouth.NorthHand = Common.Common.GetDeckAsString(orderedCardsNorth);
+            handsNorthSouth.NorthHand = Util.GetDeckAsString(orderedCardsNorth);
 
             var unOrderedCards = cards.Skip(13).Take(13).ToList();
                 var orderedCardsSouth = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-            handsNorthSouth.SouthHand = Common.Common.GetDeckAsString(orderedCardsSouth);
+            handsNorthSouth.SouthHand = Util.GetDeckAsString(orderedCardsSouth);
 
             return (handsNorthSouth, orderedCardsSouth);
         }

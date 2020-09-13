@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -54,7 +56,7 @@ namespace Common
     };
 
 
-    public static class Common
+    public static class Util
     {
         public static string GetSuitDescription(Suit suit)
         {
@@ -148,6 +150,21 @@ namespace Common
             var handPattern = string.Concat(handLength.OrderByDescending(y => y));
             return handPattern == "7321" || int.Parse(handPattern[0].ToString()) >= 8 ||
                 int.Parse(handPattern[0].ToString()) + int.Parse(handPattern[1].ToString()) >= 12;
+        }
+        public static Dictionary<string, T> LoadAuctions<T>(string fileName, Func<Dictionary<string, T>> generateAuctions)
+        {
+            Dictionary<string, T> auctions;
+            if (File.Exists(fileName))
+            {
+                auctions = JsonConvert.DeserializeObject<Dictionary<string, T>>(File.ReadAllText(fileName));
+            }
+            else
+            {
+                auctions = generateAuctions();
+                var sortedAuctions = auctions.ToImmutableSortedDictionary();
+                File.WriteAllText(fileName, JsonConvert.SerializeObject(sortedAuctions, Formatting.Indented));
+            }
+            return auctions;
         }
 
 

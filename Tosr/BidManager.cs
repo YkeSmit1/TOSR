@@ -14,6 +14,7 @@ namespace Tosr
         readonly Dictionary<string, List<string>> controlsAuctions = null;
         readonly Dictionary<string, Tuple<string, bool>> shapeAuctions;
         readonly bool useSingleDummySolver = false;
+        Lazy<Tuple<string, int>> shape;
 
         public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset)
         {
@@ -38,6 +39,7 @@ namespace Tosr
 
             BiddingState biddingState = new BiddingState(fasesWithOffset);
             Player currentPlayer = Player.West;
+            shape = new Lazy<Tuple<string, int>>(() => GetShapeStrFromAuction(auction, shapeAuctions));
 
             do
             {
@@ -54,6 +56,12 @@ namespace Tosr
                     case Player.South:
                         SouthBid(biddingState, southHand);
                         auction.AddBid(biddingState.currentBid);
+                        // Specific for zoom. TODO Code is ugly, needs improvement
+                        if (shapeAuctions != null && biddingState.fase == Fase.Controls && biddingState.nextBidIdForRule == 0 && shape.Value.Item2 != 0)
+                        {
+                            biddingState.nextBidIdForRule = shape.Value.Item2;
+                            biddingState.relayBidIdLastFase -= shape.Value.Item2;
+                        }
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -78,7 +86,7 @@ namespace Tosr
                     try
                     {
                         var constructedSouthHand = ConstructSouthHand(northHand, auction);
-                        var suit = Common.Common.GetLongestSuit(northHand, constructedSouthHand);
+                        var suit = Util.GetLongestSuit(northHand, constructedSouthHand);
                         var scores = SingleDummySolver.SolveSingleDummy(suit, 0, northHand, constructedSouthHand);
                         var mostFrequent = scores.GroupBy(x => x).OrderByDescending(y => y.Count()).Take(1).Select(z => z.Key).First();
                         Bid bid = new Bid(mostFrequent - 6, (Suit)(3 - suit));
@@ -124,14 +132,13 @@ namespace Tosr
 
         public string ConstructSouthHand(string northHand, Auction auction)
         {
-            var shape = GetShapeStrFromAuction(auction, shapeAuctions);
-            var strControls = GetAuctionForControlsWithOffset(auction, new Bid(3, Suit.Diamonds), shape.Item2);
+            var strControls = GetAuctionForControlsWithOffset(auction, new Bid(3, Suit.Diamonds), shape.Value.Item2);
 
             if (!controlsAuctions.TryGetValue(strControls, out var possibleControls))
             {
                 throw new InvalidOperationException($"Auction not found in controls. controls: {strControls}. NorthHand: {northHand}.");
             }
-            var matches = GetMatchesWithNorthHand(shape.Item1, possibleControls, northHand);
+            var matches = GetMatchesWithNorthHand(shape.Value.Item1, possibleControls, northHand);
             return (matches.Count()) switch
             {
                 0 => throw new InvalidOperationException($"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {northHand}."),
@@ -150,7 +157,7 @@ namespace Tosr
             var strAuction = auction.GetBidsAsString(Fase.Shape);
 
             if (shapeAuctions.ContainsKey(strAuction))
-                return new Tuple<string, int>(shapeAuctions[strAuction].Item1, 0);
+                return new Tuple<string, int>(shapeAuctions[strAuction].Item1, shapeAuctions[strAuction].Item2 ? 2 : 0);
 
             var allBids = auction.GetBids(Player.South, Fase.Shape);
             var lastBid = allBids.Last();
