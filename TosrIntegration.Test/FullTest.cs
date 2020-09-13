@@ -25,6 +25,7 @@ namespace TosrIntegration.Test
         }
     }
 
+    [Collection("Sequential")]
     public class FullTest
     {
         private readonly Dictionary<Fase, bool> fasesWithOffset;

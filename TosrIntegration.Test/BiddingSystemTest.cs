@@ -8,6 +8,7 @@ using Tosr;
 
 namespace TosrIntegration.Test
 {
+    [Collection("Sequential")]
     public class BiddingSystemTest
     {
         [Fact]
