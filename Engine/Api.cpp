@@ -29,8 +29,6 @@ ISQLiteWrapper* GetSqliteWrapper()
 
 int GetBidFromRuleInternal(Fase fase, const char* hand, int lastBidId, Fase* newFase, std::string& description, bool& zoom)
 {
-    std::cout << "Fase:" << (int)fase << " hand:" << hand << '\n';
-
     auto handCharacteristic = GetHandCharacteristic(hand);
 
     auto [bidId, lNewfase, descr, lzoom] = GetSqliteWrapper()->GetRule(handCharacteristic, fase, lastBidId);
