@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Common;
 
 namespace Tosr
@@ -28,7 +29,7 @@ namespace Tosr
             FaseOffset = 0;
             nextBidIdForRule = 0;
         }
-        public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, string description)
+        public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, string description, bool zoom)
         {
             var bidId = bidIdFromRule + relayBidIdLastFase + FaseOffset;
             if (bidIdFromRule == 0)
@@ -41,6 +42,7 @@ namespace Tosr
             currentBid = Bid.GetBid(bidId);
             currentBid.fase = fase;
             currentBid.description = description;
+            currentBid.zoom = zoom;
 
             if (nextfase != fase)
             {

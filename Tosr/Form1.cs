@@ -28,7 +28,7 @@ namespace Tosr
         private readonly ShuffleRestrictions shuffleRestrictions = new ShuffleRestrictions();
         private string handsString;
         private BidManager bidManager;
-        private readonly Dictionary<string, string> auctionsShape;
+        private readonly Dictionary<string, Tuple<string, bool>> auctionsShape;
         private readonly Dictionary<string, List<string>> auctionsControls;
         private readonly static Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
         private readonly BiddingState biddingState = new BiddingState(fasesWithOffset);
@@ -45,7 +45,7 @@ namespace Tosr
             Pinvoke.Setup("Tosr.db3");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
-            auctionsShape = LoadAuctions<string>("AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
+            auctionsShape = LoadAuctions<Tuple<string, bool>>("AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
             auctionsControls = LoadAuctions<List<string>>("AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
 
             bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, auctionsShape, auctionsControls);

@@ -27,34 +27,34 @@ ISQLiteWrapper* GetSqliteWrapper()
     return sqliteWrapper.get();
 }
 
-int GetBidFromRuleInternal(Fase fase, const char* hand, int lastBidId, Fase* newFase, std::string& description)
+int GetBidFromRuleInternal(Fase fase, const char* hand, int lastBidId, Fase* newFase, std::string& description, bool& zoom)
 {
     std::cout << "Fase:" << (int)fase << " hand:" << hand << '\n';
 
     auto handCharacteristic = GetHandCharacteristic(hand);
 
-    auto [bidId, endFase, descr] = GetSqliteWrapper()->GetRule(handCharacteristic, fase, lastBidId);
+    auto [bidId, lNewfase, descr, lzoom] = GetSqliteWrapper()->GetRule(handCharacteristic, fase, lastBidId);
     description = descr;
-    // Check if the fase has ended
-    if (endFase)
-        *newFase = (Fase)((int)fase + 1);
-    else
-        *newFase = fase;
+    *newFase = lNewfase;
+    zoom = lzoom;
 
     return bidId;
 }
 
-int GetBidFromRule(Fase fase, const char* hand, int lastBidId, Fase* newFase)
+int GetBidFromRule(Fase fase, const char* hand, int lastBidId, Fase* newFase, bool* zoom)
 {
     std::string dummy;
-    auto bidId = GetBidFromRuleInternal(fase, hand, lastBidId, newFase, dummy);
+    bool lzoom;
+    auto bidId = GetBidFromRuleInternal(fase, hand, lastBidId, newFase, dummy, lzoom);
+    *zoom = lzoom;
     return bidId;
 }
 
 int GetBidFromRuleEx(Fase fase, const char* hand, int lastBidId, Fase* newFase, char* description)
 {
     std::string descr;
-    auto bidId = GetBidFromRuleInternal(fase, hand, lastBidId, newFase, descr);
+    bool dummy;
+    auto bidId = GetBidFromRuleInternal(fase, hand, lastBidId, newFase, descr, dummy);
     strncpy(description , descr.c_str(), descr.size());
     description[descr.size()] = '\0';
     return bidId;

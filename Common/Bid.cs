@@ -21,6 +21,7 @@ namespace Common
         public readonly Suit suit;
         public string description = string.Empty;
         public Fase fase = Fase.Unknown;
+        public bool zoom;
 
         public Bid(int rank, Suit suit)
         {
@@ -89,5 +90,8 @@ namespace Common
         public static bool operator >=(Bid a, Bid b) => a.CompareTo(b) >= 0;
         public static int operator -(Bid a, Bid b) => GetBidId(a) - GetBidId(b);
         public static Bid operator -(Bid a, int i) => a.bidType == BidType.bid ? GetBid(GetBidId(a) - i) : a;
+        public static Bid operator --(Bid a) => a.bidType == BidType.bid ? GetBid(GetBidId(a) - 1) : a;
+        public static Bid operator +(Bid a, int i) => a.bidType == BidType.bid ? GetBid(GetBidId(a) + i) : a;
+        public static Bid operator ++(Bid a) => a.bidType == BidType.bid ? GetBid(GetBidId(a) + 1) : a;
     }
 }

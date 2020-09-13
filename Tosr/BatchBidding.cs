@@ -46,11 +46,11 @@ namespace Tosr
         private readonly Statistics statistics = new Statistics();
         private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
         private readonly StringBuilder expectedSouthHands = new StringBuilder();
-        readonly Dictionary<string, string> shapeAuctions;
+        readonly Dictionary<string, Tuple<string, bool>> shapeAuctions;
         readonly Dictionary<string, List<string>> controlsAuctions;
         readonly BidManager bidManager;
 
-        public BatchBidding(Dictionary<string, string> shapeAuctions, Dictionary<string, List<string>> controlsAuctions, Dictionary<Fase, bool> fasesWithOffset)
+        public BatchBidding(Dictionary<string, Tuple<string, bool>> shapeAuctions, Dictionary<string, List<string>> controlsAuctions, Dictionary<Fase, bool> fasesWithOffset)
         {
             this.shapeAuctions = shapeAuctions;
             this.controlsAuctions = controlsAuctions;
@@ -64,6 +64,12 @@ namespace Tosr
 
             var stopwatch = Stopwatch.StartNew();
             var stringbuilder = new StringBuilder();
+
+            if (hands == null)
+            {
+                MessageBox.Show("Cannot do batchbidding. Shuffle first.");
+                return;
+            }
 
             foreach (var hand in hands)
             {
@@ -104,12 +110,14 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             statistics.AddOrUpdateContract(auction);
 
             // Start calculating hand
-            expectedSouthHands.AppendLine(ConstructSouthHand(strHand, auction, shapeAuctions[strAuction]));
+            expectedSouthHands.AppendLine(ConstructSouthHand(strHand, auction));
         }
 
-        private string ConstructSouthHand(HandsNorthSouth strHand, Auction auction, string shapeLengthStr)
+        private string ConstructSouthHand(HandsNorthSouth strHand, Auction auction)
         {
-            string strControls = BidManager.GetAuctionForControlsWithOffset(auction, new Bid(3, Suit.Diamonds));
+            var (shapeLengthStr, offset) = BidManager.GetShapeStrFromAuction(auction, shapeAuctions);
+
+            string strControls = BidManager.GetAuctionForControlsWithOffset(auction, new Bid(3, Suit.Diamonds), offset);
             if (!controlsAuctions.TryGetValue(strControls, out var possibleControls))
             {
                 return $"Auction not found in controls. controls: {strControls}. NorthHand: {strHand.NorthHand}.";

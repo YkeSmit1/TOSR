@@ -12,7 +12,7 @@ namespace Tosr
         readonly IBidGenerator bidGenerator;
         readonly Dictionary<Fase, bool> fasesWithOffset;
         readonly Dictionary<string, List<string>> controlsAuctions = null;
-        readonly Dictionary<string, string> shapeAuctions;
+        readonly Dictionary<string, Tuple<string, bool>> shapeAuctions;
         readonly bool useSingleDummySolver = false;
 
         public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset)
@@ -24,7 +24,7 @@ namespace Tosr
         }
 
         public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, 
-            Dictionary<string, string> shapeAuctions, Dictionary<string, List<string>> controlsAuctions) : this(bidGenerator, fasesWithOffset)
+            Dictionary<string, Tuple<string, bool>> shapeAuctions, Dictionary<string, List<string>> controlsAuctions) : this(bidGenerator, fasesWithOffset)
         {
             this.shapeAuctions = shapeAuctions;
             this.controlsAuctions = controlsAuctions;
@@ -77,9 +77,9 @@ namespace Tosr
                 {
                     try
                     {
-                        var southHand = ConstructSouthHand(northHand, auction);
-                        var suit = Common.Common.GetLongestSuit(northHand, southHand);
-                        var scores = SingleDummySolver.SolveSingleDummy(suit, 0, northHand, southHand);
+                        var constructedSouthHand = ConstructSouthHand(northHand, auction);
+                        var suit = Common.Common.GetLongestSuit(northHand, constructedSouthHand);
+                        var scores = SingleDummySolver.SolveSingleDummy(suit, 0, northHand, constructedSouthHand);
                         var mostFrequent = scores.GroupBy(x => x).OrderByDescending(y => y.Count()).Take(1).Select(z => z.Key).First();
                         Bid bid = new Bid(mostFrequent - 6, (Suit)(3 - suit));
                         if (bid > biddingState.currentBid)
@@ -99,15 +99,17 @@ namespace Tosr
 
         private Bid GetRelayBid(BiddingState biddingState, Auction auction)
         {
-            if (biddingState.currentBid == new Bid(3, Suit.Spades))
-            {
-                var strAuction = auction.GetBidsAsString(Fase.Shape);
-                var shape = shapeAuctions[strAuction].ToCharArray().OrderByDescending(x => x);
-                var shapeStringSorted = new string(shape.ToArray());
+            // TODO take zoom into account
+            //if (biddingState.currentBid == new Bid(3, Suit.Spades) && shapeAuctions != null)
+            //{
+            //    var strAuction = auction.GetBidsAsString(Fase.Shape);
+            //    var shapeStr = GetShapeStrFromAuction(auction, shapeAuctions).Item1;
+            //    var shape = shapeStr.ToCharArray().OrderByDescending(x => x);
+            //    var shapeStringSorted = new string(shape.ToArray());
 
-                if (shapeStringSorted != "7330")
-                    return new Bid(4, Suit.Clubs);
-            }
+            //    if (shapeStringSorted != "7330")
+            //        return new Bid(4, Suit.Clubs);
+            //}
 
             return Bid.NextBid(biddingState.currentBid);
         }
@@ -116,20 +118,20 @@ namespace Tosr
         {
             if (biddingState.EndOfBidding)
                 return;
-            var (bidIdFromRule, nextfase, description) = bidGenerator.GetBid(biddingState, handsString);
-            biddingState.UpdateBiddingState(bidIdFromRule, nextfase, description);
+            var (bidIdFromRule, nextfase, description, zoom) = bidGenerator.GetBid(biddingState, handsString);
+            biddingState.UpdateBiddingState(bidIdFromRule, nextfase, description, zoom);
         }
 
         public string ConstructSouthHand(string northHand, Auction auction)
         {
-            var strControls = GetAuctionForControlsWithOffset(auction, new Bid(3, Suit.Diamonds));
+            var shape = GetShapeStrFromAuction(auction, shapeAuctions);
+            var strControls = GetAuctionForControlsWithOffset(auction, new Bid(3, Suit.Diamonds), shape.Item2);
 
             if (!controlsAuctions.TryGetValue(strControls, out var possibleControls))
             {
                 throw new InvalidOperationException($"Auction not found in controls. controls: {strControls}. NorthHand: {northHand}.");
             }
-            var strAuction = auction.GetBidsAsString(Fase.Shape);
-            var matches = GetMatchesWithNorthHand(shapeAuctions[strAuction], possibleControls, northHand);
+            var matches = GetMatchesWithNorthHand(shape.Item1, possibleControls, northHand);
             return (matches.Count()) switch
             {
                 0 => throw new InvalidOperationException($"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {northHand}."),
@@ -139,18 +141,49 @@ namespace Tosr
         }
 
         /// <summary>
+        /// Lookup in the shape dictionary. If not found, it tries to find an auction when the last bid was done with zoom
+        /// </summary>
+        /// <param name="auction"></param>
+        /// <returns></returns>
+        public static Tuple<string, int> GetShapeStrFromAuction(Auction auction, Dictionary<string, Tuple<string, bool>> shapeAuctions)
+        {
+            var strAuction = auction.GetBidsAsString(Fase.Shape);
+
+            if (shapeAuctions.ContainsKey(strAuction))
+                return new Tuple<string, int>(shapeAuctions[strAuction].Item1, 0);
+
+            var allBids = auction.GetBids(Player.South, Fase.Shape);
+            var lastBid = allBids.Last();
+            var allButLastBid = allBids.Take(allBids.Count() - 1);
+            for (var bid = lastBid - 1; bid >= new Bid(3, Suit.Diamonds); bid--)
+            {
+                var allBidsNew = allButLastBid.Concat(new[] { bid });
+                var bidsStr = allBidsNew.Aggregate(string.Empty, (current, bid) => current + bid);
+                // Add two because auction is two bids lower if zoom applies
+                if (shapeAuctions.ContainsKey(bidsStr) && shapeAuctions[bidsStr].Item2)
+                    return new Tuple<string, int>(shapeAuctions[bidsStr].Item1, (lastBid - bid) + 2); 
+            }
+
+            throw new InvalidOperationException($"{ strAuction } not found in shape dictionary");
+        }
+
+        /// <summary>
         /// Extracts the control and scanning part of the auction and applies an offset of offsetBid
         /// </summary>
         /// <param name="auction">Generated auction </param>
         /// <param name="offsetBid">Offset used to generate AuctionsByControl.txt</param>
         /// <returns></returns>
-        public static string GetAuctionForControlsWithOffset(Auction auction, Bid offsetBid)
+        public static string GetAuctionForControlsWithOffset(Auction auction, Bid offsetBid, int zoomOffset)
         {
             var shapeBidsSouth = auction.GetBids(Player.South, Fase.Shape);
             var lastBidShape = shapeBidsSouth.Last();
             var bidsControls = auction.GetBids(Player.South, new Fase[] { Fase.Controls, Fase.Scanning });
             var offSet = lastBidShape - offsetBid;
-            bidsControls = bidsControls.Select(b => b -= offSet);
+            if (zoomOffset != 0)
+            {
+                bidsControls = new List<Bid> { lastBidShape }.Concat(bidsControls);
+            }
+            bidsControls = bidsControls.Select(b => b = (b - offSet) + zoomOffset);
             var strControls = string.Join("", bidsControls);
             return strControls;
         }

@@ -10,7 +10,7 @@ namespace Tosr
         public static extern int GetBidFromRuleEx(Fase fase, string hand, int lastBidId, out Fase newFase, StringBuilder description);
 
         [DllImport("Engine.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = false)]
-        public static extern int GetBidFromRule(Fase fase, string hand, int lastBidId, out Fase newFase);
+        public static extern int GetBidFromRule(Fase fase, string hand, int lastBidId, out Fase newFase, out bool zoom);
 
         [DllImport("Engine.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = false)]
         public static extern int Setup(string database);

@@ -82,5 +82,15 @@ namespace Common
             return bids.Where(x => x.Value.ContainsKey(player) && fases.Contains(x.Value[player].fase)).Select(x => x.Value[player]);
         }
 
+        public void SetBids(Player player, IEnumerable<Bid> newBids)
+        {
+            bids.Clear();
+            var biddingRound = 1;
+            foreach (var bid in newBids)
+            {
+                bids[biddingRound] = new Dictionary<Player, Bid>(new List<KeyValuePair<Player, Bid>> { new KeyValuePair<Player, Bid>(player, bid) });
+                biddingRound++;
+            }
+        }
     }
 }
