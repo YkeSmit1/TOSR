@@ -130,6 +130,13 @@ namespace Tosr
             biddingState.UpdateBiddingState(bidIdFromRule, nextfase, description, zoom);
         }
 
+        /// <summary>
+        /// Construct southhand to use for single dummy analyses
+        /// Does throw
+        /// </summary>
+        /// <param name="northHand"></param>
+        /// <param name="auction"></param>
+        /// <returns></returns>
         public string ConstructSouthHand(string northHand, Auction auction)
         {
             var strControls = GetAuctionForControlsWithOffset(auction, new Bid(3, Suit.Diamonds), shape.Value.Item2);
@@ -145,6 +152,45 @@ namespace Tosr
                 1 => matches.First(),
                 _ => throw new InvalidOperationException($"Multiple matches found. Matches: {string.Join('|', matches)}. NorthHand: {northHand}."),
             };
+        }
+
+        /// <summary>
+        /// Construct southhand to compare with the actual southhand
+        /// </summary>
+        /// <param name="strHand"></param>
+        /// <param name="auction"></param>
+        /// <returns></returns>
+        public string ConstructSouthHandSafe(HandsNorthSouth strHand, Auction auction)
+        {
+            try
+            {
+                var southHand = ConstructSouthHand(strHand.NorthHand, auction);
+                var southHandStr = HandWithx(strHand.SouthHand);
+
+                if (southHand == southHandStr)
+                    return $"Match is found: {southHand}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
+                else
+                    return $"SouthHand is not equal to expected. Expected: {southHand}. Actual {southHandStr}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
+            }
+            catch (Exception e)
+            {
+                return $"{e.Message} SouthHand: {strHand.SouthHand}";  
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Replaces cards smaller then queen into x's;
+        /// </summary>
+        /// <param name="hand"></param>
+        /// <returns></returns>
+        public static string HandWithx(string hand)
+        {
+            var southHand = new string(hand).ToList();
+            var relevantCards = new[] { 'A', 'K', 'Q', ',' };
+            southHand = southHand.Select(x => x = !relevantCards.Contains(x) ? 'x' : x).ToList();
+            var southHandStr = new string(southHand.ToArray());
+            return southHandStr;
         }
 
         /// <summary>
@@ -195,7 +241,7 @@ namespace Tosr
             return strControls;
         }
 
-        public IEnumerable<string> GetMatchesWithNorthHand(string shapeLengthStr, List<string> possibleControls, string northHandStr)
+        public static IEnumerable<string> GetMatchesWithNorthHand(string shapeLengthStr, List<string> possibleControls, string northHandStr)
         {
             var northHand = northHandStr.Split(',');
             foreach (var controlStr in possibleControls)
@@ -241,7 +287,7 @@ namespace Tosr
             }
         }
 
-        private bool Match(string[] hand1, string[] hand2)
+        private static bool Match(string[] hand1, string[] hand2)
         {
             var relevantCards = new[] { 'A', 'K', 'Q' };
             foreach (var suit in Enumerable.Range(0, 4))

@@ -110,50 +110,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             statistics.AddOrUpdateContract(auction);
 
             // Start calculating hand
-            expectedSouthHands.AppendLine(ConstructSouthHand(strHand, auction));
-        }
-
-        private string ConstructSouthHand(HandsNorthSouth strHand, Auction auction)
-        {
-            var (shapeLengthStr, offset) = BidManager.GetShapeStrFromAuction(auction, shapeAuctions);
-
-            string strControls = BidManager.GetAuctionForControlsWithOffset(auction, new Bid(3, Suit.Diamonds), offset);
-            if (!controlsAuctions.TryGetValue(strControls, out var possibleControls))
-            {
-                return $"Auction not found in controls. controls: {strControls}. NorthHand: {strHand.NorthHand}.";
-            }
-            var matches = bidManager.GetMatchesWithNorthHand(shapeLengthStr, possibleControls, strHand.NorthHand);
-            switch (matches.Count())
-            {
-                case 0:
-                    return $"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {strHand.NorthHand}.";
-                case 1:
-                    {
-                        var southHandStr = HandWithx(strHand.SouthHand);
-                        var shapeStr = matches.First();
-
-                        if (shapeStr == southHandStr)
-                            return $"Match is found: {shapeStr}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
-                        else
-                            return $"SouthHand is not equal to expected. Expected: {shapeStr}. Actual {southHandStr}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
-                    }
-                default:
-                    return $"Multiple matches found. Matches: {string.Join('|', matches)}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
-            }
-        }
-
-        /// <summary>
-        /// Replaces cards smaller then queen into x's;
-        /// </summary>
-        /// <param name="hand"></param>
-        /// <returns></returns>
-        public static string HandWithx(string hand)
-        {
-            var southHand = new string(hand).ToList();
-            var relevantCards = new[] { 'A', 'K', 'Q', ',' };
-            southHand = southHand.Select(x => x = !relevantCards.Contains(x) ? 'x' : x).ToList();
-            var southHandStr = new string(southHand.ToArray());
-            return southHandStr;
+            expectedSouthHands.AppendLine(bidManager.ConstructSouthHandSafe(strHand, auction));
         }
 
         private void AddHandPerAuction(string str, string strAuction)
