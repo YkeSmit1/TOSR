@@ -1,16 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
 namespace Common
 {
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public class Auction
     {
         public Player currentPlayer;
         private int currentBiddingRound;
         public readonly Dictionary<int, Dictionary<Player, Bid>> bids = new Dictionary<int, Dictionary<Player, Bid>>();
         public Bid currentContract = Bid.PassBid;
+
+        private string DebuggerDisplay
+        {
+            get { return $"SouthBids: { GetBidsAsString(Player.South) }. NorthBids. { GetBidsAsString(Player.North) } "; }
+        }
 
         public Player GetDeclarer(Suit suit)
         {

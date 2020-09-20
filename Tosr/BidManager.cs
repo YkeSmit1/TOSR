@@ -16,6 +16,10 @@ namespace Tosr
         readonly bool useSingleDummySolver = false;
         Lazy<Tuple<string, int>> shape;
 
+        static readonly Bid threeDiamondBid = new Bid(3, Suit.Diamonds);
+        static readonly Bid threeSpadeBid = new Bid(3, Suit.Spades);
+        static readonly Bid fourClBid = new Bid(4, Suit.Clubs);
+
         public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset)
         {
             this.bidGenerator = bidGenerator;
@@ -107,17 +111,19 @@ namespace Tosr
 
         private Bid GetRelayBid(BiddingState biddingState, Auction auction)
         {
-            // TODO take zoom into account
-            //if (biddingState.currentBid == new Bid(3, Suit.Spades) && shapeAuctions != null)
-            //{
-            //    var strAuction = auction.GetBidsAsString(Fase.Shape);
-            //    var shapeStr = GetShapeStrFromAuction(auction, shapeAuctions).Item1;
-            //    var shape = shapeStr.ToCharArray().OrderByDescending(x => x);
-            //    var shapeStringSorted = new string(shape.ToArray());
+            if (biddingState.currentBid == threeSpadeBid && shapeAuctions != null)
+            {
+                var strAuction = auction.GetBidsAsString(Fase.Shape);
+                var shapeStr = GetShapeStrFromAuction(auction, shapeAuctions).Item1;
+                var shape = shapeStr.ToCharArray().OrderByDescending(x => x);
+                var shapeStringSorted = new string(shape.ToArray());
 
-            //    if (shapeStringSorted != "7330")
-            //        return new Bid(4, Suit.Clubs);
-            //}
+                if (shapeStringSorted != "7330")
+                {
+                    biddingState.relayBidIdLastFase++;
+                    return fourClBid;
+                }
+            }
 
             return Bid.NextBid(biddingState.currentBid);
         }
@@ -139,7 +145,7 @@ namespace Tosr
         /// <returns></returns>
         public string ConstructSouthHand(string northHand, Auction auction)
         {
-            var strControls = GetAuctionForControlsWithOffset(auction, new Bid(3, Suit.Diamonds), shape.Value.Item2);
+            var strControls = GetAuctionForControlsWithOffset(auction, threeDiamondBid, shape.Value.Item2);
 
             if (!controlsAuctions.TryGetValue(strControls, out var possibleControls))
             {
@@ -175,7 +181,6 @@ namespace Tosr
             catch (Exception e)
             {
                 return $"{e.Message} SouthHand: {strHand.SouthHand}";  
-                throw;
             }
         }
 
@@ -208,7 +213,7 @@ namespace Tosr
             var allBids = auction.GetBids(Player.South, Fase.Shape);
             var lastBid = allBids.Last();
             var allButLastBid = allBids.Take(allBids.Count() - 1);
-            for (var bid = lastBid - 1; bid >= new Bid(3, Suit.Diamonds); bid--)
+            for (var bid = lastBid - 1; bid >= threeDiamondBid; bid--)
             {
                 var allBidsNew = allButLastBid.Concat(new[] { bid });
                 var bidsStr = allBidsNew.Aggregate(string.Empty, (current, bid) => current + bid);
@@ -236,9 +241,26 @@ namespace Tosr
             {
                 bidsControls = new List<Bid> { lastBidShape }.Concat(bidsControls);
             }
-            bidsControls = bidsControls.Select(b => b = (b - offSet) + zoomOffset);
+
+            var used4ClAsRelay = Used4ClAsRelay(auction);
+            bidsControls = bidsControls.Select(b => b = (b - (used4ClAsRelay && b > fourClBid ? offSet + 1 : offSet)) + zoomOffset);
             var strControls = string.Join("", bidsControls);
             return strControls;
+        }
+
+        private static bool Used4ClAsRelay(Auction auction)
+        {
+            var previousBiddingRound = auction.bids.First();
+            foreach (var biddingRound in auction.bids.Skip(1))
+            {
+                if (biddingRound.Value.ContainsKey(Player.North) && biddingRound.Value[Player.North] == fourClBid)
+                {
+                    return previousBiddingRound.Value[Player.South] == threeSpadeBid;
+                }
+
+                previousBiddingRound = biddingRound;
+            }
+            return false;
         }
 
         public static IEnumerable<string> GetMatchesWithNorthHand(string shapeLengthStr, List<string> possibleControls, string northHandStr)
