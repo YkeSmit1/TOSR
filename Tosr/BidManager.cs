@@ -4,6 +4,8 @@ using System.Linq;
 using System.Collections.Generic;
 using Common;
 using Solver;
+using ShapeDictionary = System.Collections.Generic.Dictionary<string, (System.Collections.Generic.List<string> pattern, bool zoom)>;
+using ControlsDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
 namespace Tosr
 {
@@ -11,30 +13,31 @@ namespace Tosr
     {
         readonly IBidGenerator bidGenerator;
         readonly Dictionary<Fase, bool> fasesWithOffset;
-        readonly Dictionary<string, List<string>> controlsAuctions = null;
-        readonly Dictionary<string, Tuple<string, bool>> shapeAuctions;
+        readonly ControlsDictionary controlsAuctions = null;
+        readonly ShapeDictionary shapeAuctions;
         readonly bool useSingleDummySolver = false;
-        Lazy<Tuple<string, int>> shape;
+        Lazy<Tuple<List<string>, int>> shape;
 
         static readonly Bid threeDiamondBid = new Bid(3, Suit.Diamonds);
         static readonly Bid threeSpadeBid = new Bid(3, Suit.Spades);
         static readonly Bid fourClBid = new Bid(4, Suit.Clubs);
+        static readonly char[] relevantCards = new[] { 'A', 'K', 'Q' };
 
         public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset)
         {
             this.bidGenerator = bidGenerator;
             this.fasesWithOffset = fasesWithOffset;
 
-            this.useSingleDummySolver = false;
+            useSingleDummySolver = false;
         }
 
-        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, 
-            Dictionary<string, Tuple<string, bool>> shapeAuctions, Dictionary<string, List<string>> controlsAuctions) : this(bidGenerator, fasesWithOffset)
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions) :
+            this(bidGenerator, fasesWithOffset)
         {
             this.shapeAuctions = shapeAuctions;
             this.controlsAuctions = controlsAuctions;
 
-            this.useSingleDummySolver = false;
+            useSingleDummySolver = false;
         }
 
         public Auction GetAuction(string northHand, string southHand)
@@ -43,7 +46,7 @@ namespace Tosr
 
             BiddingState biddingState = new BiddingState(fasesWithOffset);
             Player currentPlayer = Player.West;
-            shape = new Lazy<Tuple<string, int>>(() => GetShapeStrFromAuction(auction, shapeAuctions));
+            shape = new Lazy<Tuple<List<string>, int>>(() => GetShapeStrFromAuction(auction, shapeAuctions));
 
             do
             {
@@ -115,7 +118,7 @@ namespace Tosr
             {
                 var strAuction = auction.GetBidsAsString(Fase.Shape);
                 var shapeStr = GetShapeStrFromAuction(auction, shapeAuctions).Item1;
-                var shape = shapeStr.ToCharArray().OrderByDescending(x => x);
+                var shape = shapeStr.First().ToCharArray().OrderByDescending(x => x);
                 var shapeStringSorted = new string(shape.ToArray());
 
                 if (shapeStringSorted != "7330")
@@ -180,7 +183,7 @@ namespace Tosr
             }
             catch (Exception e)
             {
-                return $"{e.Message} SouthHand: {strHand.SouthHand}";  
+                return $"{e.Message} SouthHand: {strHand.SouthHand}";
             }
         }
 
@@ -203,12 +206,12 @@ namespace Tosr
         /// </summary>
         /// <param name="auction"></param>
         /// <returns></returns>
-        public static Tuple<string, int> GetShapeStrFromAuction(Auction auction, Dictionary<string, Tuple<string, bool>> shapeAuctions)
+        public static Tuple<List<string>, int> GetShapeStrFromAuction(Auction auction, ShapeDictionary shapeAuctions)
         {
             var strAuction = auction.GetBidsAsString(Fase.Shape);
 
             if (shapeAuctions.ContainsKey(strAuction))
-                return new Tuple<string, int>(shapeAuctions[strAuction].Item1, shapeAuctions[strAuction].Item2 ? 2 : 0);
+                return new Tuple<List<string>, int>(shapeAuctions[strAuction].pattern, shapeAuctions[strAuction].zoom ? 2 : 0);
 
             var allBids = auction.GetBids(Player.South, Fase.Shape);
             var lastBid = allBids.Last();
@@ -218,8 +221,8 @@ namespace Tosr
                 var allBidsNew = allButLastBid.Concat(new[] { bid });
                 var bidsStr = allBidsNew.Aggregate(string.Empty, (current, bid) => current + bid);
                 // Add two because auction is two bids lower if zoom applies
-                if (shapeAuctions.ContainsKey(bidsStr) && shapeAuctions[bidsStr].Item2)
-                    return new Tuple<string, int>(shapeAuctions[bidsStr].Item1, (lastBid - bid) + 2); 
+                if (shapeAuctions.ContainsKey(bidsStr) && shapeAuctions[bidsStr].zoom)
+                    return new Tuple<List<string>, int>(shapeAuctions[bidsStr].pattern, (lastBid - bid) + 2);
             }
 
             throw new InvalidOperationException($"{ strAuction } not found in shape dictionary");
@@ -233,14 +236,11 @@ namespace Tosr
         /// <returns></returns>
         public static string GetAuctionForControlsWithOffset(Auction auction, Bid offsetBid, int zoomOffset)
         {
-            var shapeBidsSouth = auction.GetBids(Player.South, Fase.Shape);
-            var lastBidShape = shapeBidsSouth.Last();
+            var lastBidShape = auction.GetBids(Player.South, Fase.Shape).Last();
             var bidsControls = auction.GetBids(Player.South, new Fase[] { Fase.Controls, Fase.Scanning });
             var offSet = lastBidShape - offsetBid;
             if (zoomOffset != 0)
-            {
                 bidsControls = new List<Bid> { lastBidShape }.Concat(bidsControls);
-            }
 
             var used4ClAsRelay = Used4ClAsRelay(auction);
             bidsControls = bidsControls.Select(b => b = (b - (used4ClAsRelay && b > fourClBid ? offSet + 1 : offSet)) + zoomOffset);
@@ -254,25 +254,24 @@ namespace Tosr
             foreach (var biddingRound in auction.bids.Skip(1))
             {
                 if (biddingRound.Value.ContainsKey(Player.North) && biddingRound.Value[Player.North] == fourClBid)
-                {
                     return previousBiddingRound.Value[Player.South] == threeSpadeBid;
-                }
 
                 previousBiddingRound = biddingRound;
             }
             return false;
         }
 
-        public static IEnumerable<string> GetMatchesWithNorthHand(string shapeLengthStr, List<string> possibleControls, string northHandStr)
+        public static IEnumerable<string> GetMatchesWithNorthHand(List<string> shapeLengthStrs, List<string> possibleControls, string northHandStr)
         {
             var northHand = northHandStr.Split(',');
             foreach (var controlStr in possibleControls)
             {
-                var controlByShape = MergeControlAndShape(controlStr, shapeLengthStr);
-                if (controlByShape.Count() == 4)
+                var controls = controlStr.Split(',').Select(x => x.TrimEnd('x')).ToArray();
+                var controlByShapes = shapeLengthStrs.Select(shapeLengthStr => MergeControlAndShape(controls, shapeLengthStr)).Where(x => x.Count() == 4);
+                var southHands = controlByShapes.Where(controlByShape => Match(controlByShape.ToArray(), northHand));
+                foreach (var southHand in southHands)
                 {
-                    if (Match(controlByShape.ToArray(), northHand))
-                        yield return string.Join(',', controlByShape);
+                    yield return string.Join(',', southHand);
                 }
             }
         }
@@ -284,15 +283,13 @@ namespace Tosr
         /// <param name="controlStr">"Axxx,Kxx,Qxx,xxx"</param>
         /// <param name="shapeLengthStr">"3451"</param>
         /// <returns>"Qxx,Kxxx,Axxxx,x"</returns>
-        public static IEnumerable<string> MergeControlAndShape(string controlStr, string shapeLengthStr)
+        public static IEnumerable<string> MergeControlAndShape(string[] controls, string shapeLengthStr)
         {
-            var controls = controlStr.Split(',').Select(x => x.TrimEnd('x')).ToArray();
             var shapes = shapeLengthStr.ToArray().Select(x => float.Parse(x.ToString())).ToList(); // 3424
+
             // This is because there can be two suits with the same length. So we added a small offset to make it unique
             foreach (var suit in Enumerable.Range(0, 4))
-            {
                 shapes[suit] += (float)(4 - suit) / 10;
-            }
 
             var shapesOrdered = shapes.OrderByDescending(x => x).ToList(); // 4432
 
@@ -302,24 +299,17 @@ namespace Tosr
                 var shape = shapes[suit];
                 string controlStrSuit = controls[shapesDic[suit]];
                 if (shape < controlStrSuit.Length)
-                {
                     yield break;
-                }
                 yield return controlStrSuit + new string('x', (int)shape - controlStrSuit.Length);
             }
         }
 
         private static bool Match(string[] hand1, string[] hand2)
         {
-            var relevantCards = new[] { 'A', 'K', 'Q' };
             foreach (var suit in Enumerable.Range(0, 4))
-            {
                 foreach (var c in relevantCards)
-                {
                     if (hand1[suit].Contains(c) && hand2[suit].Contains(c))
                         return false;
-                }
-            }
             return true;
         }
     }

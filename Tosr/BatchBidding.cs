@@ -8,6 +8,8 @@ using System.Text;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Common;
+using ShapeDictionary = System.Collections.Generic.Dictionary<string, (System.Collections.Generic.List<string> pattern, bool zoom)>;
+using ControlsDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
 namespace Tosr
 {
@@ -46,11 +48,11 @@ namespace Tosr
         private readonly Statistics statistics = new Statistics();
         private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
         private readonly StringBuilder expectedSouthHands = new StringBuilder();
-        readonly Dictionary<string, Tuple<string, bool>> shapeAuctions;
-        readonly Dictionary<string, List<string>> controlsAuctions;
+        readonly ShapeDictionary shapeAuctions;
+        readonly ControlsDictionary controlsAuctions;
         readonly BidManager bidManager;
 
-        public BatchBidding(Dictionary<string, Tuple<string, bool>> shapeAuctions, Dictionary<string, List<string>> controlsAuctions, Dictionary<Fase, bool> fasesWithOffset)
+        public BatchBidding(ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions, Dictionary<Fase, bool> fasesWithOffset)
         {
             this.shapeAuctions = shapeAuctions;
             this.controlsAuctions = controlsAuctions;
@@ -75,6 +77,9 @@ namespace Tosr
             {
                 try
                 {
+                    if (Util.IsFreakHand(string.Join("", hand.SouthHand.Split(',').Select(x => x.Length))))
+                        continue;
+
                     var auction = bidManager.GetAuction(hand.NorthHand, hand.SouthHand);
                     AddHandAndAuction(hand, auction);
                 }
@@ -96,9 +101,6 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
         {
             var suitLengthSouth = strHand.SouthHand.Split(',').Select(x => x.Length);
             var str = string.Join("", suitLengthSouth);
-
-            if (Util.IsFreakHand(str))
-                return;
 
             var strAuction = auction.GetBidsAsString(Fase.Shape);
 

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using ShapeDictionary = System.Collections.Generic.Dictionary<string, (System.Collections.Generic.List<string> pattern, bool zoom)>;
+using ControlsDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
 namespace Tosr
 {
@@ -16,10 +18,10 @@ namespace Tosr
             this.fasesWithOffset = fasesWithOffset;
         }
 
-        public Dictionary<string, Tuple<string, bool>> GenerateAuctionsForShape()
+        public ShapeDictionary GenerateAuctionsForShape()
         {
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
-            var auctions = new Dictionary<string, Tuple<string, bool>>();
+            var auctions = new ShapeDictionary();
 
             for (int spades = 0; spades < 8; spades++)
                 for (int hearts = 0; hearts < 8; hearts++)
@@ -36,15 +38,18 @@ namespace Tosr
                                     var auction = bidManager.GetAuction(string.Empty, hand); // No northhand. Just for generating reverse dictionaries
                                     var isZoom = auction.GetBids(Player.South, Fase.Shape).Any(x => x.zoom);
                                     string key = auction.GetBidsAsString(Fase.Shape);
-                                    auctions.Add(key, new Tuple<string, bool>(str, isZoom));
+                                    if (auctions.ContainsKey(key))
+                                        auctions[key].pattern.Add(str);
+                                    else 
+                                        auctions.Add(key, (new List<string> { str }, isZoom));
                                 }
                             }
             return auctions;
         }
 
-        public Dictionary<string, List<string>> GenerateAuctionsForControls()
+        public ControlsDictionary GenerateAuctionsForControls()
         {
-            var auctions = new Dictionary<string, List<string>>();
+            var auctions = new ControlsDictionary();
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
             string[] controls = new[] { "", "A", "K", "Q", "AK", "AQ", "KQ", "AKQ" };
 
@@ -64,9 +69,7 @@ namespace Tosr
                                 var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
                                 string key = auction.GetBidsAsString(new[] { Fase.Controls, Fase.Scanning });
                                 if (!auctions.ContainsKey(key))
-                                {
                                     auctions.Add(key, new List<string>());
-                                }
                                 auctions[key].Add(hand);
                             }
                         }

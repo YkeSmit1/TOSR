@@ -148,13 +148,14 @@ namespace Common
         public static bool IsFreakHand(string handLength)
         {
             var handPattern = string.Concat(handLength.OrderByDescending(y => y));
-            return handPattern == "7321" || int.Parse(handPattern[0].ToString()) >= 8 ||
+            return int.Parse(handPattern[0].ToString()) >= 8 ||
                 int.Parse(handPattern[0].ToString()) + int.Parse(handPattern[1].ToString()) >= 12;
         }
         public static Dictionary<string, T> LoadAuctions<T>(string fileName, Func<Dictionary<string, T>> generateAuctions)
         {
             Dictionary<string, T> auctions;
-            if (File.Exists(fileName))
+            // Generate only if file does not exist or is older then one day
+            if (File.Exists(fileName) && File.GetLastWriteTime(fileName) > DateTime.Now - TimeSpan.FromDays(1))
             {
                 auctions = JsonConvert.DeserializeObject<Dictionary<string, T>>(File.ReadAllText(fileName));
             }

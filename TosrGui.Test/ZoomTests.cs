@@ -1,31 +1,34 @@
-﻿using Xunit;
-using Tosr;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Common;
+using System.Linq;
+using Xunit;
 using Moq;
+using Tosr;
+using Common;
+using ShapeDictionary = System.Collections.Generic.Dictionary<string, (System.Collections.Generic.List<string> pattern, bool zoom)>;
+using ControlsDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
 namespace TosrGui.Test
 {
     public class ZoomTests
     {
-        private Dictionary<string, Tuple<string, bool>> shapeAuctions;
-        private Dictionary<string, List<string>> auctionsControls;
+        private ShapeDictionary shapeAuctions;
+        private ControlsDictionary auctionsControls;
         private Dictionary<Fase, bool> fasesWithOffset;
 
         public ZoomTests()
         {
             // Setup
-            shapeAuctions = new Dictionary<string, Tuple<string, bool>>
+            shapeAuctions = new ShapeDictionary
             {
-                {$"{new Bid(1, Suit.Spades)}{new Bid(3, Suit.Diamonds)}", new Tuple<string, bool>("3424", false) },
-                {$"{new Bid(1, Suit.Spades)}{new Bid(2, Suit.Diamonds)}{new Bid(3, Suit.Hearts)}", new Tuple<string, bool>("4234", true) },
-                {$"{new Bid(1, Suit.Spades)}{new Bid(3, Suit.Hearts)}", new Tuple<string, bool>("4243", true) },
-                {$"{new Bid(1, Suit.Hearts)}{new Bid(3, Suit.Hearts)}", new Tuple<string, bool>("6331", false) }
+                {$"{new Bid(1, Suit.Spades)}{new Bid(3, Suit.Diamonds)}", (new List<string>{ "3424" }, false) },
+                {$"{new Bid(1, Suit.Spades)}{new Bid(2, Suit.Diamonds)}{new Bid(3, Suit.Hearts)}", (new List<string>{ "4234" }, true) },
+                {$"{new Bid(1, Suit.Spades)}{new Bid(3, Suit.Hearts)}", (new List<string>{ "4243" }, true) },
+                {$"{new Bid(1, Suit.Hearts)}{new Bid(3, Suit.Hearts)}", (new List<string>{ "6331" }, false) }
             };
 
-            auctionsControls = new Dictionary<string, List<string>>
+            auctionsControls = new ControlsDictionary
             {
                 {"4♣4♠5♥5NT6♥", new List<string> { "Axxx,AQx,xxx,Kxx", "Axxx,KQx,xxx,Axx", "Kxxx,AQx,xxx,Axx"} }
             };
@@ -48,7 +51,7 @@ namespace TosrGui.Test
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Equal("6331", BidManager.GetShapeStrFromAuction(auction, shapeAuctions).Item1);
+            Assert.Equal("6331", BidManager.GetShapeStrFromAuction(auction, shapeAuctions).Item1.First());
         }
 
         [Fact()]
@@ -61,7 +64,7 @@ namespace TosrGui.Test
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Equal("4243", BidManager.GetShapeStrFromAuction(auction, shapeAuctions).Item1);
+            Assert.Equal("4243", BidManager.GetShapeStrFromAuction(auction, shapeAuctions).Item1.First());
         }
 
         [Fact()]

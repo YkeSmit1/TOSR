@@ -79,6 +79,11 @@ namespace Common
                 Aggregate(string.Empty, (current, biddingRound) => current + biddingRound.Value[south]);
         }
 
+        public IEnumerable<Bid> GetBids(Player player)
+        {
+            return bids.Where(x => x.Value.ContainsKey(player)).Select(x => x.Value[player]);
+        }
+
         public IEnumerable<Bid> GetBids(Player player, Fase fase)
         {
             return GetBids(player, new Fase[] { fase});

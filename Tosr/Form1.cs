@@ -7,6 +7,8 @@ using System.Text;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Common;
+using ShapeDictionary = System.Collections.Generic.Dictionary<string, (System.Collections.Generic.List<string> pattern, bool zoom)>;
+using ControlsDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
 namespace Tosr
 {
@@ -26,8 +28,8 @@ namespace Tosr
         private readonly ShuffleRestrictions shuffleRestrictions = new ShuffleRestrictions();
         private string handsString;
         private BidManager bidManager;
-        private readonly Dictionary<string, Tuple<string, bool>> auctionsShape;
-        private readonly Dictionary<string, List<string>> auctionsControls;
+        private readonly ShapeDictionary auctionsShape;
+        private readonly ControlsDictionary auctionsControls;
         private readonly static Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
         private readonly BiddingState biddingState = new BiddingState(fasesWithOffset);
 
@@ -43,8 +45,8 @@ namespace Tosr
             Pinvoke.Setup("Tosr.db3");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
-            auctionsShape = Util.LoadAuctions<Tuple<string, bool>>("AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
-            auctionsControls = Util.LoadAuctions<List<string>>("AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
+            auctionsShape = Util.LoadAuctions("AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
+            auctionsControls = Util.LoadAuctions("AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
 
             bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, auctionsShape, auctionsControls);
 
@@ -234,6 +236,16 @@ namespace Tosr
             {
                 Pinvoke.Setup(openFileDialog1.FileName);
             }
+        }
+
+        private void ViewAuctionClick(object sender, EventArgs e)
+        {
+            var stringBuilder = new StringBuilder();
+            foreach (var bid in auctionControl.auction.GetBids(Player.South))
+            {
+                stringBuilder.AppendLine($"{bid} {bid.description} ");
+            }
+            MessageBox.Show(stringBuilder.ToString(), "Auction");
         }
     }
 }

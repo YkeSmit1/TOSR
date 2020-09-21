@@ -8,6 +8,8 @@ using Xunit.Abstractions;
 using Newtonsoft.Json;
 using Tosr;
 using Common;
+using ShapeDictionary = System.Collections.Generic.Dictionary<string, (System.Collections.Generic.List<string> pattern, bool zoom)>;
+using ControlsDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
 namespace TosrIntegration.Test
 {
@@ -26,6 +28,8 @@ namespace TosrIntegration.Test
             yield return new object[] { "FullTestZoomCtrl6", "Kxxx,Kxx,Kxx,xxx", "Axxx,Ax,AQx,xxxx", "1♣1NT2♥4♦4NT5♠6♣Pass", "1♠2♦4♣4♠5♥5NT6♥" };
             yield return new object[] { "FullTest_6430Ctrl3", "Kxxx,Axx,Kxx,xxx", "AQxxxx,KQxx,Qxx,", "1♣1♠2♣4♣4♥5♣5NT6♦Pass", "1♥1NT3♠4♦4NT5♠6♣7♣" };
             yield return new object[] { "FullTest_7330Ctrl3", "Kxxx,Axx,Kxx,xxx", "AQxxxxx,KQx,Qxx,", "1♣1♠3NT4♦4NT5♠6♣Pass", "1♥3♠4♣4♠5♥5NT6NT" };
+            yield return new object[] { "FullTest_7231Ctrl3", "Kxxx,Axx,Kxx,xxx", "AQxxxxx,KQ,Qxx,x", "1♣1♠4♣4♥5♣5♠6♦Pass", "1♥3NT4♦4NT5♥6♣7♣" };
+            yield return new object[] { "FullTest_7321Ctrl3", "Kxxx,Axx,Kxx,xxx", "AQxxxxx,KQx,Qx,x", "1♣1♠4♣4♥5♣5NT6♦Pass", "1♥3NT4♦4NT5♠6♣7♣" };
         }
     }
 
@@ -33,16 +37,16 @@ namespace TosrIntegration.Test
     public class FullTest
     {
         private readonly Dictionary<Fase, bool> fasesWithOffset;
-        private readonly Dictionary<string, Tuple<string, bool>> shapeAuctions;
-        private readonly Dictionary<string, List<string>> auctionsControls;
+        private readonly ShapeDictionary shapeAuctions;
+        private readonly ControlsDictionary auctionsControls;
 
         private readonly ITestOutputHelper output;
 
         public FullTest(ITestOutputHelper output)
         {
             fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
-            shapeAuctions = Util.LoadAuctions<Tuple<string, bool>>("AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
-            auctionsControls = Util.LoadAuctions<List<string>>("AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
+            shapeAuctions = Util.LoadAuctions("AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
+            auctionsControls = Util.LoadAuctions("AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
 
             this.output = output;
         }
