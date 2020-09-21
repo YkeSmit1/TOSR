@@ -60,12 +60,12 @@ namespace Tosr
             {
                 var biddingBoxButton = (BiddingBoxButton)x;
                 bidManager.SouthBid(biddingState, handsString);
-                if (biddingBoxButton.bid != biddingState.currentBid)
+                if (biddingBoxButton.bid != biddingState.CurrentBid)
                 {
-                    MessageBox.Show($"The correct bid is {biddingState.currentBid}. Description: {biddingState.currentBid.description}.", "Incorrect bid");
+                    MessageBox.Show($"The correct bid is {biddingState.CurrentBid}. Description: {biddingState.CurrentBid.description}.", "Incorrect bid");
                 }
 
-                auctionControl.AddBid(biddingState.currentBid);
+                auctionControl.AddBid(biddingState.CurrentBid);
                 BidTillSouth(auctionControl.auction, biddingState);
             }
             biddingBox = new BiddingBox(handler)
@@ -96,12 +96,12 @@ namespace Tosr
             auction.AddBid(Bid.PassBid);
             // North
             bidManager.NorthBid(biddingState, auction, hand.NorthHand);
-            auction.AddBid(biddingState.currentBid);
+            auction.AddBid(biddingState.CurrentBid);
             // East
             auction.AddBid(Bid.PassBid);
 
             auctionControl.ReDraw();
-            biddingBox.UpdateButtons(biddingState.currentBid, auctionControl.auction.currentPlayer);
+            biddingBox.UpdateButtons(biddingState.CurrentBid, auctionControl.auction.currentPlayer);
         }
 
         private void ButtonShuffleClick(object sender, EventArgs e)

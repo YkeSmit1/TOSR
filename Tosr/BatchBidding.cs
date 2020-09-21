@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Common;
 using ShapeDictionary = System.Collections.Generic.Dictionary<string, (System.Collections.Generic.List<string> pattern, bool zoom)>;
 using ControlsDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
+using NLog;
 
 namespace Tosr
 {
@@ -48,20 +49,17 @@ namespace Tosr
         private readonly Statistics statistics = new Statistics();
         private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
         private readonly StringBuilder expectedSouthHands = new StringBuilder();
-        readonly ShapeDictionary shapeAuctions;
-        readonly ControlsDictionary controlsAuctions;
-        readonly BidManager bidManager;
+        private readonly BidManager bidManager;
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public BatchBidding(ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions, Dictionary<Fase, bool> fasesWithOffset)
         {
-            this.shapeAuctions = shapeAuctions;
-            this.controlsAuctions = controlsAuctions;
             bidManager = new BidManager(new BidGenerator(), fasesWithOffset, shapeAuctions, controlsAuctions);
         }
 
         public void Execute(HandsNorthSouth[] hands)
         {
-
+            logger.Info($"Start batchbidding. Number of hands : {hands.Length}");
             handPerAuction.Clear();
 
             var stopwatch = Stopwatch.StartNew();
@@ -78,13 +76,17 @@ namespace Tosr
                 try
                 {
                     if (Util.IsFreakHand(string.Join("", hand.SouthHand.Split(',').Select(x => x.Length))))
+                    {
+                        logger.Debug($"Hand {hand.SouthHand} is a freak hand. Will not be bid");
                         continue;
+                    }
 
                     var auction = bidManager.GetAuction(hand.NorthHand, hand.SouthHand);
                     AddHandAndAuction(hand, auction);
                 }
                 catch (Exception exception)
                 {
+                    logger.Warn(exception, $"Hand:{hand.SouthHand}");
                     stringbuilder.AppendLine(exception.Message);
                 }
             }
@@ -93,6 +95,8 @@ Duplicate auctions are written to ""HandPerAuction.txt""
 Statistics are written to ""Statistics.txt""
 Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             SaveAuctions();
+
+            logger.Info($"End batchbidding");
 
             MessageBox.Show(stringbuilder.ToString(), "Batch bidding done");
         }
@@ -125,6 +129,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
 
         private void SaveAuctions()
         {
+            logger.Debug("Save auctions");
             var multiHandPerAuction = handPerAuction.Where(x => x.Value.Count > 1).ToDictionary(x => x.Key, x => x.Value);
             File.WriteAllText("HandPerAuction.txt", JsonConvert.SerializeObject(multiHandPerAuction, Formatting.Indented));
             File.WriteAllText("Statistics.txt", JsonConvert.SerializeObject(statistics, Formatting.Indented));

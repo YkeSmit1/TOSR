@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -153,6 +154,8 @@ namespace Common
         }
         public static Dictionary<string, T> LoadAuctions<T>(string fileName, Func<Dictionary<string, T>> generateAuctions)
         {
+            var logger = LogManager.GetCurrentClassLogger();
+
             Dictionary<string, T> auctions;
             // Generate only if file does not exist or is older then one day
             if (File.Exists(fileName) && File.GetLastWriteTime(fileName) > DateTime.Now - TimeSpan.FromDays(1))
@@ -161,6 +164,7 @@ namespace Common
             }
             else
             {
+                logger.Info($"File {fileName} is too old or does not exist. File will be generated");
                 auctions = generateAuctions();
                 var sortedAuctions = auctions.ToImmutableSortedDictionary();
                 File.WriteAllText(fileName, JsonConvert.SerializeObject(sortedAuctions, Formatting.Indented));

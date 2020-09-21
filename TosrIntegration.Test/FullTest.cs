@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Text;
 using Xunit;
@@ -10,6 +9,7 @@ using Tosr;
 using Common;
 using ShapeDictionary = System.Collections.Generic.Dictionary<string, (System.Collections.Generic.List<string> pattern, bool zoom)>;
 using ControlsDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
+using NLog;
 
 namespace TosrIntegration.Test
 {
@@ -41,6 +41,7 @@ namespace TosrIntegration.Test
         private readonly ControlsDictionary auctionsControls;
 
         private readonly ITestOutputHelper output;
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public FullTest(ITestOutputHelper output)
         {
@@ -57,6 +58,7 @@ namespace TosrIntegration.Test
         {
             if (testName is null) 
                 throw new ArgumentNullException(nameof(testName));
+            logger.Info($"Executing testcase {testName}");
 
             Pinvoke.Setup("Tosr.db3");
             BidManager bidManager = new BidManager(new BidGenerator(), fasesWithOffset, shapeAuctions, auctionsControls);
