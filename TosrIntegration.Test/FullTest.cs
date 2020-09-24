@@ -30,6 +30,8 @@ namespace TosrIntegration.Test
             yield return new object[] { "FullTest_7330Ctrl3", "Kxxx,Axx,Kxx,xxx", "AQxxxxx,KQx,Qxx,", "1♣1♠3NT4♦4NT5♠6♣Pass", "1♥3♠4♣4♠5♥5NT6NT" };
             yield return new object[] { "FullTest_7231Ctrl3", "Kxxx,Axx,Kxx,xxx", "AQxxxxx,KQ,Qxx,x", "1♣1♠4♣4♥5♣5♠6♦Pass", "1♥3NT4♦4NT5♥6♣7♣" };
             yield return new object[] { "FullTest_7321Ctrl3", "Kxxx,Axx,Kxx,xxx", "AQxxxxx,KQx,Qx,x", "1♣1♠4♣4♥5♣5NT6♦Pass", "1♥3NT4♦4NT5♠6♣7♣" };
+            yield return new object[] { "FullTest_4441Ctrl4<12", "Kxxx,Axx,Axx,AKx", "Axxx,Kxxx,Kxxx,x", "1♣1♠2♣2♥3♦4♣5♣5♥5NT6♦Pass", "1♥1NT2♦3♣3NT4NT5♦5♠6♣6♥" };
+            yield return new object[] { "FullTest_4441Ctrl4>12", "Kxxx,Axx,Axx,AKx", "AQxx,KQxx,Kxxx,x", "1♣1♠2♣2♥3♥4♥5♦Pass", "1♥1NT2♦3♦4♦5♣5♥" };
         }
     }
 

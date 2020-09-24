@@ -152,10 +152,17 @@ namespace Tosr
 
         private void ButtonGetAuctionClick(object sender, EventArgs e)
         {
-            Clear();
-            auctionControl.auction = bidManager.GetAuction(hand.NorthHand, hand.SouthHand);
-            auctionControl.ReDraw();
-            biddingBox.Enabled = false;
+            try
+            {
+                Clear();
+                auctionControl.auction = bidManager.GetAuction(hand.NorthHand, hand.SouthHand);
+                auctionControl.ReDraw();
+                biddingBox.Enabled = false;
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.ToString(), "Error");
+            }
         }
 
         private void ButtonBatchBiddingClick(object sender, EventArgs e)

@@ -31,6 +31,7 @@ namespace Tosr
         readonly bool useSingleDummySolver = false;
         Lazy<Tuple<List<string>, int>> shape;
 
+        static readonly Bid twoNTBid = new Bid(2, Suit.NoTrump);
         static readonly Bid threeDiamondBid = new Bid(3, Suit.Diamonds);
         static readonly Bid threeSpadeBid = new Bid(3, Suit.Spades);
         static readonly Bid fourClBid = new Bid(4, Suit.Clubs);
@@ -262,7 +263,7 @@ namespace Tosr
             var allBids = auction.GetBids(Player.South, Fase.Shape);
             var lastBid = allBids.Last();
             var allButLastBid = allBids.Take(allBids.Count() - 1);
-            for (var bid = lastBid - 1; bid >= threeDiamondBid; bid--)
+            for (var bid = lastBid - 1; bid >= twoNTBid; bid--)
             {
                 var allBidsNew = allButLastBid.Concat(new[] { bid });
                 var bidsStr = allBidsNew.Aggregate(string.Empty, (current, bid) => current + bid);

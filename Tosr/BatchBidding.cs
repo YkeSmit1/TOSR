@@ -50,7 +50,6 @@ namespace Tosr
 
         public void Execute(HandsNorthSouth[] hands)
         {
-            logger.Info($"Start batchbidding. Number of hands : {hands.Length}");
             handPerAuction.Clear();
 
             var stopwatch = Stopwatch.StartNew();
@@ -58,9 +57,11 @@ namespace Tosr
 
             if (hands == null)
             {
-                MessageBox.Show("Cannot do batchbidding. Shuffle first.");
+                MessageBox.Show("Cannot do batchbidding. Shuffle first.", "Error");
                 return;
             }
+
+            logger.Info($"Start batchbidding. Number of hands : {hands.Length}");
 
             foreach (var hand in hands)
             {
