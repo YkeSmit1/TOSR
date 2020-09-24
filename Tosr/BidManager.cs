@@ -12,6 +12,18 @@ namespace Tosr
 {
     public class BidManager
     {
+        public enum ConstuctedSouthhandOutcome
+        {
+            NotSet,
+            SouthhandMatches,
+            AuctionNotFoundInShape,
+            AuctionNotFoundInControls,
+            AuctionNotFoundInControlsExpected,
+            NoMatchFound,
+            MultipleMatchesFound,
+            IncorrectSouthhand,
+        }
+
         private readonly IBidGenerator bidGenerator;
         readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ControlsDictionary controlsAuctions = null;
@@ -23,6 +35,7 @@ namespace Tosr
         static readonly Bid threeSpadeBid = new Bid(3, Suit.Spades);
         static readonly Bid fourClBid = new Bid(4, Suit.Clubs);
         static readonly char[] relevantCards = new[] { 'A', 'K', 'Q' };
+        public ConstuctedSouthhandOutcome constuctedSouthhandOutcome = ConstuctedSouthhandOutcome.NotSet;
 
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -50,6 +63,7 @@ namespace Tosr
 
             BiddingState biddingState = new BiddingState(fasesWithOffset);
             Player currentPlayer = Player.West;
+            constuctedSouthhandOutcome = BidManager.ConstuctedSouthhandOutcome.NotSet;
             shape = new Lazy<Tuple<List<string>, int>>(() => GetShapeStrFromAuction(auction, shapeAuctions));
 
             do
@@ -156,20 +170,37 @@ namespace Tosr
         {
             logger.Info($"Starting ConstructSouthHand for northhand : {northHand}");
 
-            var strControls = GetAuctionForControlsWithOffset(auction, threeDiamondBid, shape.Value.Item2);
+            int zoomOffset;
+            try
+            {
+                zoomOffset = shape.Value.Item2;
+            }
+            catch (Exception exception)
+            {
+                throw SetOutcome(exception.Message, ConstuctedSouthhandOutcome.AuctionNotFoundInControls);
+            }
+            var strControls = GetAuctionForControlsWithOffset(auction, threeDiamondBid, zoomOffset);
 
             if (!controlsAuctions.TryGetValue(strControls, out var possibleControls))
             {
-                throw new InvalidOperationException($"Auction not found in controls. controls: {strControls}. NorthHand: {northHand}.");
+                throw SetOutcome($"Auction not found in controls. controls: {strControls}. NorthHand: {northHand}.", ConstuctedSouthhandOutcome.AuctionNotFoundInControls);
             }
             var matches = GetMatchesWithNorthHand(shape.Value.Item1, possibleControls, northHand);
             logger.Info($"Ending ConstructSouthHand. southhand : {matches.First()}");
+
             return (matches.Count()) switch
             {
-                0 => throw new InvalidOperationException($"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {northHand}."),
+                0 => throw SetOutcome($"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {northHand}.", ConstuctedSouthhandOutcome.NoMatchFound),
                 1 => matches.First(),
-                _ => throw new InvalidOperationException($"Multiple matches found. Matches: {string.Join('|', matches)}. NorthHand: {northHand}."),
+                _ => throw SetOutcome($"Multiple matches found. Matches: {string.Join('|', matches)}. NorthHand: {northHand}.", ConstuctedSouthhandOutcome.MultipleMatchesFound),
             };
+        }
+
+        private Exception SetOutcome(string message, ConstuctedSouthhandOutcome outcome)
+        {
+            logger.Info($"Outcome not satisfied. {outcome}. Message : {message}");
+            constuctedSouthhandOutcome = outcome;
+            return new InvalidOperationException(message);
         }
 
         /// <summary>
@@ -186,9 +217,15 @@ namespace Tosr
                 var southHandStr = HandWithx(strHand.SouthHand);
 
                 if (southHand == southHandStr)
+                {
+                    constuctedSouthhandOutcome = ConstuctedSouthhandOutcome.SouthhandMatches;
                     return $"Match is found: {southHand}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
+                }
                 else
+                {
+                    constuctedSouthhandOutcome = ConstuctedSouthhandOutcome.IncorrectSouthhand;
                     return $"SouthHand is not equal to expected. Expected: {southHand}. Actual {southHandStr}. NorthHand: {strHand.NorthHand}. SouthHand: {strHand.SouthHand}";
+                }
             }
             catch (Exception e)
             {

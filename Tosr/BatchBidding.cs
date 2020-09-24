@@ -14,36 +14,25 @@ using NLog;
 
 namespace Tosr
 {
+    public static class DictionaryExtension 
+    {
+        public static void AddOrUpdateDictionary<T>(this IDictionary<T, int> dictionary, T item)
+        {
+            if (!dictionary.ContainsKey(item))
+                dictionary.Add(item, 1);
+            else
+                dictionary[item]++;
+        }
+    }
     public class BatchBidding
     {
         class Statistics
         {
-            public Dictionary<Player, int> dealers = new Dictionary<Player, int>();
+            public int handsNotBidBecauseofFreakhand = 0;
             public SortedDictionary<Bid, int> contracts = new SortedDictionary<Bid, int>();
-
-            public void AddOrUpdateDeclarer(Player player)
-            {
-                if (!dealers.ContainsKey(player))
-                {
-                    dealers.Add(player, 1);
-                }
-                else
-                {
-                    dealers[player]++;
-                }
-            }
-
-            public void AddOrUpdateContract(Auction auction)
-            {
-                if (!contracts.ContainsKey(auction.currentContract))
-                {
-                    contracts.Add(auction.currentContract, 1);
-                }
-                else
-                {
-                    contracts[auction.currentContract]++;
-                }
-            }
+            public Dictionary<BidManager.ConstuctedSouthhandOutcome, int> outcomes = new Dictionary<BidManager.ConstuctedSouthhandOutcome, int>();
+            public Dictionary<Player, int> dealers = new Dictionary<Player, int>();
+            public SortedDictionary<int, int> bidsNonShape = new SortedDictionary<int, int>();
         }
 
         private readonly Statistics statistics = new Statistics();
@@ -78,6 +67,7 @@ namespace Tosr
                     if (Util.IsFreakHand(string.Join("", hand.SouthHand.Split(',').Select(x => x.Length))))
                     {
                         logger.Debug($"Hand {hand.SouthHand} is a freak hand. Will not be bid");
+                        statistics.handsNotBidBecauseofFreakhand++;
                         continue;
                     }
 
@@ -110,13 +100,26 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
 
             AddHandPerAuction(str, strAuction);
 
-            var longestSuit = Util.GetLongestSuit(strHand.NorthHand, strHand.SouthHand);
-
-            statistics.AddOrUpdateDeclarer(auction.GetDeclarer((Suit)(3 - longestSuit)));
-            statistics.AddOrUpdateContract(auction);
-
             // Start calculating hand
             expectedSouthHands.AppendLine(bidManager.ConstructSouthHandSafe(strHand, auction));
+            Fix4CtrlBug(strHand);
+
+            var longestSuit = Util.GetLongestSuit(strHand.NorthHand, strHand.SouthHand);
+            statistics.dealers.AddOrUpdateDictionary(auction.GetDeclarer((Suit)(3 - longestSuit)));
+            statistics.contracts.AddOrUpdateDictionary(auction.currentContract);
+            statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Last() - auction.GetBids(Player.South, Fase.Shape).Last());
+            statistics.outcomes.AddOrUpdateDictionary(bidManager.constuctedSouthhandOutcome);
+        }
+
+        private void Fix4CtrlBug(HandsNorthSouth strHand)
+        {
+            if (bidManager.constuctedSouthhandOutcome == BidManager.ConstuctedSouthhandOutcome.AuctionNotFoundInControls)
+            {
+                var controls = strHand.SouthHand.Count(x => x == 'K') + strHand.SouthHand.Count(x => x == 'A') * 2;
+                var hcp = strHand.SouthHand.Count(x => x == 'J') + strHand.SouthHand.Count(x => x == 'Q') * 2 + strHand.SouthHand.Count(x => x == 'K') * 3 + strHand.SouthHand.Count(x => x == 'A') * 4;
+                if (controls == 4 && hcp >= 12 && hcp - strHand.SouthHand.Count(x => x == 'J') < 12)
+                    bidManager.constuctedSouthhandOutcome = BidManager.ConstuctedSouthhandOutcome.AuctionNotFoundInControlsExpected;
+            }
         }
 
         private void AddHandPerAuction(string str, string strAuction)
