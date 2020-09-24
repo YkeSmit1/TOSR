@@ -45,8 +45,8 @@ namespace Tosr
             Pinvoke.Setup("Tosr.db3");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
-            auctionsShape = Util.LoadAuctions("AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
-            auctionsControls = Util.LoadAuctions("AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
+            auctionsShape = Util.LoadAuctions("txt\\AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
+            auctionsControls = Util.LoadAuctions("txt\\AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
 
             bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, auctionsShape, auctionsControls);
 

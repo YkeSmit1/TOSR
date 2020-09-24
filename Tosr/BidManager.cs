@@ -58,7 +58,7 @@ namespace Tosr
 
         public Auction GetAuction(string northHand, string southHand)
         {
-            logger.Info($"Starting GetAuction for hand : {southHand}");
+            logger.Debug($"Starting GetAuction for hand : {southHand}");
             Auction auction = new Auction();
 
             BiddingState biddingState = new BiddingState(fasesWithOffset);
@@ -96,7 +96,7 @@ namespace Tosr
             }
             while (!biddingState.EndOfBidding);
 
-            logger.Info($"Ending GetAuction for hand : {southHand}");
+            logger.Debug($"Ending GetAuction for hand : {southHand}");
             return auction;
         }
 
@@ -168,7 +168,7 @@ namespace Tosr
         /// <returns></returns>
         public string ConstructSouthHand(string northHand, Auction auction)
         {
-            logger.Info($"Starting ConstructSouthHand for northhand : {northHand}");
+            logger.Debug($"Starting ConstructSouthHand for northhand : {northHand}");
 
             int zoomOffset;
             try
@@ -186,7 +186,7 @@ namespace Tosr
                 throw SetOutcome($"Auction not found in controls. controls: {strControls}. NorthHand: {northHand}.", ConstuctedSouthhandOutcome.AuctionNotFoundInControls);
             }
             var matches = GetMatchesWithNorthHand(shape.Value.Item1, possibleControls, northHand);
-            logger.Info($"Ending ConstructSouthHand. southhand : {matches.First()}");
+            logger.Debug($"Ending ConstructSouthHand. southhand : {matches.First()}");
 
             return (matches.Count()) switch
             {

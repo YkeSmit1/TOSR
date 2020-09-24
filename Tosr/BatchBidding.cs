@@ -28,7 +28,9 @@ namespace Tosr
     {
         class Statistics
         {
+            public int handsBid;
             public int handsNotBidBecauseofFreakhand = 0;
+            public int handsNotBidBecauseOfError = 0;
             public SortedDictionary<Bid, int> contracts = new SortedDictionary<Bid, int>();
             public Dictionary<BidManager.ConstuctedSouthhandOutcome, int> outcomes = new Dictionary<BidManager.ConstuctedSouthhandOutcome, int>();
             public Dictionary<Player, int> dealers = new Dictionary<Player, int>();
@@ -73,9 +75,11 @@ namespace Tosr
 
                     var auction = bidManager.GetAuction(hand.NorthHand, hand.SouthHand);
                     AddHandAndAuction(hand, auction);
+                    statistics.handsBid++;
                 }
                 catch (Exception exception)
                 {
+                    statistics.handsNotBidBecauseOfError++;
                     logger.Warn(exception, $"Hand:{hand.SouthHand}");
                     stringbuilder.AppendLine(exception.Message);
                 }
@@ -132,11 +136,11 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
 
         private void SaveAuctions()
         {
-            logger.Debug("Save auctions");
+            logger.Info("Save auctions");
             var multiHandPerAuction = handPerAuction.Where(x => x.Value.Count > 1).ToDictionary(x => x.Key, x => x.Value);
-            File.WriteAllText("HandPerAuction.txt", JsonConvert.SerializeObject(multiHandPerAuction, Formatting.Indented));
-            File.WriteAllText("Statistics.txt", JsonConvert.SerializeObject(statistics, Formatting.Indented));
-            File.WriteAllText("ExpectedSouthHands.txt", expectedSouthHands.ToString());
+            File.WriteAllText("txt\\HandPerAuction.txt", JsonConvert.SerializeObject(multiHandPerAuction, Formatting.Indented));
+            File.WriteAllText("txt\\Statistics.txt", JsonConvert.SerializeObject(statistics, Formatting.Indented));
+            File.WriteAllText("txt\\ExpectedSouthHands.txt", expectedSouthHands.ToString());
         }
     }
 }
