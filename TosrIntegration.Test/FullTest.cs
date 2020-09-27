@@ -7,12 +7,13 @@ using Xunit.Abstractions;
 using Newtonsoft.Json;
 using Tosr;
 using Common;
-using ShapeDictionary = System.Collections.Generic.Dictionary<string, (System.Collections.Generic.List<string> pattern, bool zoom)>;
-using ControlsDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 using NLog;
 
 namespace TosrIntegration.Test
 {
+    using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
+    using ControlsDictionary = Dictionary<string, List<string>>;
+
     public class TestCaseProvider
     {
         public static IEnumerable<object[]> TestCases()

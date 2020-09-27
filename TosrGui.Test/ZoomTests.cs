@@ -6,11 +6,12 @@ using Xunit;
 using Moq;
 using Tosr;
 using Common;
-using ShapeDictionary = System.Collections.Generic.Dictionary<string, (System.Collections.Generic.List<string> pattern, bool zoom)>;
-using ControlsDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
 namespace TosrGui.Test
 {
+    using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
+    using ControlsDictionary = Dictionary<string, List<string>>;
+
     public class ZoomTests
     {
         private ShapeDictionary shapeAuctions;
