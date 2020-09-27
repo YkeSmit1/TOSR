@@ -30,27 +30,32 @@ namespace Tosr
             FaseOffset = 0;
             NextBidIdForRule = 0;
         }
-        public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, string description, bool zoom)
+        public int CalculateBid(int bidIdFromRule, string description, bool zoom)
         {
             var bidId = bidIdFromRule + RelayBidIdLastFase + FaseOffset;
             if (bidIdFromRule == 0)
             {
                 CurrentBid = Bid.PassBid;
                 EndOfBidding = true;
-                return;
+                return bidId;
             }
 
             CurrentBid = Bid.GetBid(bidId);
             CurrentBid.fase = Fase;
             CurrentBid.description = description;
             CurrentBid.zoom = zoom;
+            return bidId;
+        }
 
+        public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, int bidId, Func<int> zoomOffset)
+        {
             if (nextfase != Fase)
             {
-                RelayBidIdLastFase = bidId + 1;
+                // Specific for zoom. TODO Code is ugly, needs improvement
+                RelayBidIdLastFase = (bidId + 1) - zoomOffset();
                 Fase = nextfase;
                 FaseOffset = 0;
-                NextBidIdForRule = 0;
+                NextBidIdForRule = zoomOffset();
             }
             else if (fasesWithOffset[Fase])
             {

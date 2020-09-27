@@ -52,7 +52,7 @@ namespace TosrGui.Test
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Equal("6331", BidManager.GetShapeStrFromAuction(auction, shapeAuctions).Item1.First());
+            Assert.Equal("6331", BidManager.GetShapeStrFromAuction(auction, shapeAuctions).shapes.First());
         }
 
         [Fact()]
@@ -65,7 +65,7 @@ namespace TosrGui.Test
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Equal("4243", BidManager.GetShapeStrFromAuction(auction, shapeAuctions).Item1.First());
+            Assert.Equal("4243", BidManager.GetShapeStrFromAuction(auction, shapeAuctions).shapes.First());
         }
 
         [Fact()]

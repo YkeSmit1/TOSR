@@ -60,7 +60,7 @@ namespace Tosr
             void handler(object x, EventArgs y)
             {
                 var biddingBoxButton = (BiddingBoxButton)x;
-                bidManager.SouthBid(biddingState, handsString);
+                bidManager.SouthBid(biddingState, auctionControl.auction, handsString);
                 if (biddingBoxButton.bid != biddingState.CurrentBid)
                 {
                     MessageBox.Show($"The correct bid is {biddingState.CurrentBid}. Description: {biddingState.CurrentBid.description}.", "Incorrect bid");
