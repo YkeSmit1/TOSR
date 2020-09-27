@@ -5,11 +5,12 @@ using System.Collections.Generic;
 using NLog;
 using Common;
 using Solver;
-using ShapeDictionary = System.Collections.Generic.Dictionary<string, (System.Collections.Generic.List<string> pattern, bool zoom)>;
-using ControlsDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
 namespace Tosr
 {
+    using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
+    using ControlsDictionary = Dictionary<string, List<string>>;
+
     public class BidManager
     {
         public enum ConstuctedSouthhandOutcome
@@ -199,7 +200,7 @@ namespace Tosr
 
         private Exception SetOutcome(string message, ConstuctedSouthhandOutcome outcome)
         {
-            logger.Info($"Outcome not satisfied. {outcome}. Message : {message}");
+            logger.Warn($"Outcome not satisfied. {outcome}. Message : {message}");
             constuctedSouthhandOutcome = outcome;
             return new InvalidOperationException(message);
         }
@@ -347,7 +348,7 @@ namespace Tosr
                 string controlStrSuit = controls[shapesDic[suit]];
                 if (shape < controlStrSuit.Length)
                     yield break;
-                yield return controlStrSuit + new string('x', (int)shape - controlStrSuit.Length);
+                yield return controlStrSuit.PadRight((int)shape, 'x');
             }
         }
 

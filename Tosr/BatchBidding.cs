@@ -8,12 +8,13 @@ using System.Text;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Common;
-using ShapeDictionary = System.Collections.Generic.Dictionary<string, (System.Collections.Generic.List<string> pattern, bool zoom)>;
-using ControlsDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 using NLog;
 
 namespace Tosr
 {
+    using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
+    using ControlsDictionary = Dictionary<string, List<string>>;
+
     public static class DictionaryExtension 
     {
         public static void AddOrUpdateDictionary<T>(this IDictionary<T, int> dictionary, T item)

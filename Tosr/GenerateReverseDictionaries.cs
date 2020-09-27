@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using ShapeDictionary = System.Collections.Generic.Dictionary<string, (System.Collections.Generic.List<string> pattern, bool zoom)>;
-using ControlsDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
 namespace Tosr
 {
+    using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
+    using ControlsDictionary = Dictionary<string, List<string>>;
+
     public class GenerateReverseDictionaries
     {
         private readonly Dictionary<Fase, bool> fasesWithOffset;
