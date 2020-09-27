@@ -108,24 +108,12 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
 
             // Start calculating hand
             expectedSouthHands.AppendLine(bidManager.ConstructSouthHandSafe(strHand, auction));
-            Fix4CtrlBug(strHand);
 
             var longestSuit = Util.GetLongestSuit(strHand.NorthHand, strHand.SouthHand);
             statistics.dealers.AddOrUpdateDictionary(auction.GetDeclarer((Suit)(3 - longestSuit)));
-            statistics.contracts.AddOrUpdateDictionary(auction.currentContract);
+            statistics.contracts.AddOrUpdateDictionary(auction.currentContract > new Bid(7, Suit.NoTrump) ? new Bid(7, Suit.NoTrump) : auction.currentContract);
             statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Last() - auction.GetBids(Player.South, Fase.Shape).Last());
             statistics.outcomes.AddOrUpdateDictionary(bidManager.constuctedSouthhandOutcome);
-        }
-
-        private void Fix4CtrlBug(HandsNorthSouth strHand)
-        {
-            if (bidManager.constuctedSouthhandOutcome == BidManager.ConstuctedSouthhandOutcome.AuctionNotFoundInControls)
-            {
-                var controls = strHand.SouthHand.Count(x => x == 'K') + strHand.SouthHand.Count(x => x == 'A') * 2;
-                var hcp = strHand.SouthHand.Count(x => x == 'J') + strHand.SouthHand.Count(x => x == 'Q') * 2 + strHand.SouthHand.Count(x => x == 'K') * 3 + strHand.SouthHand.Count(x => x == 'A') * 4;
-                if (controls == 4 && hcp >= 12 && hcp - strHand.SouthHand.Count(x => x == 'J') < 12)
-                    bidManager.constuctedSouthhandOutcome = BidManager.ConstuctedSouthhandOutcome.AuctionNotFoundInControlsExpected;
-            }
         }
 
         private void AddHandPerAuction(string str, string strAuction)

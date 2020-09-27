@@ -19,7 +19,6 @@ namespace Tosr
             SouthhandMatches,
             AuctionNotFoundInShape,
             AuctionNotFoundInControls,
-            AuctionNotFoundInControlsExpected,
             NoMatchFound,
             MultipleMatchesFound,
             IncorrectSouthhand,
@@ -328,27 +327,29 @@ namespace Tosr
         /// Merges shapes and controls. If controls does not fit, it returns an IEnumerable with length < 4
         /// TODO This function needs improvement
         /// </summary>
-        /// <param name="controlStr">"Axxx,Kxx,Qxx,xxx"</param>
+        /// <param name="controlStr">{"A","","Q","K"}</param>
         /// <param name="shapeLengthStr">"3451"</param>
-        /// <returns>"Qxx,Kxxx,Axxxx,x"</returns>
+        /// <returns>"Qxx,xxxx,Axxxx,K"</returns>
         public static IEnumerable<string> MergeControlAndShape(string[] controls, string shapeLengthStr)
         {
-            var shapes = shapeLengthStr.ToArray().Select(x => float.Parse(x.ToString())).ToList(); // 3424
+            var shapes = shapeLengthStr.ToArray().Select(x => float.Parse(x.ToString())).ToList(); // {3,4,5,1}
 
             // This is because there can be two suits with the same length. So we added a small offset to make it unique
             foreach (var suit in Enumerable.Range(0, 4))
                 shapes[suit] += (float)(4 - suit) / 10;
+            // Shapes : // {3.4,4.3,5.2,1.3}
 
-            var shapesOrdered = shapes.OrderByDescending(x => x).ToList(); // 4432
+            var shapesOrdered = shapes.OrderByDescending(x => x).ToList(); // {5.2,4.3,3.4,1.3}
 
-            var shapesDic = shapes.ToDictionary(key => shapes.IndexOf(key), value => shapesOrdered.IndexOf(value));
+            var shapesLookup = shapes.ToLookup(key => shapes.IndexOf(key), value => shapesOrdered.IndexOf(value));
+
             foreach (var suit in Enumerable.Range(0, 4))
             {
-                var shape = shapes[suit];
-                string controlStrSuit = controls[shapesDic[suit]];
+                var shape = (int)shapes[suit];
+                string controlStrSuit = controls[shapesLookup[suit].First()];
                 if (shape < controlStrSuit.Length)
                     yield break;
-                yield return controlStrSuit.PadRight((int)shape, 'x');
+                yield return controlStrSuit.PadRight(shape, 'x');
             }
         }
 

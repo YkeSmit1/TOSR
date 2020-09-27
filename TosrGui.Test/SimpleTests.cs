@@ -1,9 +1,26 @@
 using Tosr;
 using Xunit;
 using Common;
+using System.Collections.Generic;
 
 namespace TosrGui.Test
 {
+    public class TestCaseProviderMergeTest
+    {
+        public static IEnumerable<object[]> TestCases()
+        {
+            yield return new object[] { "Qxx,Kxxx,Axxxx,x", new[] { "A", "K", "Q", "" }, "3451" };
+            yield return new object[] { "Axxxx,Kxxx,Qxx,x", new[] { "A", "K", "Q", "" }, "5431" };
+            yield return new object[] { ",Axxx,Kxxxx,xxxx", new[] { "K", "A", "", "" }, "0454" };
+            yield return new object[] { "Kxxx,xxx,Qx,Axxx", new[] { "K", "A", "", "Q" }, "4324" };
+            yield return new object[] { "Kxxx,Axx,Qx,xxxx", new[] { "K", "", "A", "Q" }, "4324" };
+            yield return new object[] { "Kxxx,xxx,Axx,Qxx", new[] { "K", "", "A", "Q" }, "4333" };
+            yield return new object[] { "xxx,Kxxx,Axx,Qxx", new[] { "K", "", "A", "Q" }, "3433" };
+            yield return new object[] { "xxx,Axx,Kxxx,Qxx", new[] { "K", "", "A", "Q" }, "3343" };
+            yield return new object[] { "xxx,Axx,Qxx,Kxxx", new[] { "K", "", "A", "Q" }, "3334" };
+        }
+    }
+
     public class SimpleTests
     {
         [Fact]
@@ -30,20 +47,11 @@ namespace TosrGui.Test
             Assert.False(Util.IsSameTeam(Player.North, Player.West));
         }
 
-        [Fact()]
-        public void MergeControlAndShapeTest()
+        [Theory]
+        [MemberData(nameof(TestCaseProviderMergeTest.TestCases), MemberType = typeof(TestCaseProviderMergeTest))]
+        public void MergeControlAndShapeTest(string expected, string[] controls, string shapeLengthStr)
         {
-            Assert.Equal("Qxx,Kxxx,Axxxx,x", string.Join(',', BidManager.MergeControlAndShape(new[] { "A", "K", "Q", "" }, "3451")));
-            Assert.Equal("Axxxx,Kxxx,Qxx,x", string.Join(',', BidManager.MergeControlAndShape(new[] { "A", "K", "Q", "" }, "5431")));
-            Assert.Equal(",Axxx,Kxxxx,xxxx", string.Join(',', BidManager.MergeControlAndShape(new[] { "K", "A", "", "" }, "0454")));
-
-            Assert.Equal("Kxxx,xxx,Qx,Axxx", string.Join(',', BidManager.MergeControlAndShape(new[] { "K", "A", "", "Q" }, "4324")));
-            Assert.Equal("Kxxx,Axx,Qx,xxxx", string.Join(',', BidManager.MergeControlAndShape(new[] { "K", "", "A", "Q" }, "4324")));
-
-            Assert.Equal("Kxxx,xxx,Axx,Qxx", string.Join(',', BidManager.MergeControlAndShape(new[] { "K", "", "A", "Q" }, "4333")));
-            Assert.Equal("xxx,Kxxx,Axx,Qxx", string.Join(',', BidManager.MergeControlAndShape(new[] { "K", "", "A", "Q" }, "3433")));
-            Assert.Equal("xxx,Axx,Kxxx,Qxx", string.Join(',', BidManager.MergeControlAndShape(new[] { "K", "", "A", "Q" }, "3343")));
-            Assert.Equal("xxx,Axx,Qxx,Kxxx", string.Join(',', BidManager.MergeControlAndShape(new[] { "K", "", "A", "Q" }, "3334")));
+            Assert.Equal(expected, string.Join(',', BidManager.MergeControlAndShape(controls, shapeLengthStr)));
         }
 
         [Fact()]

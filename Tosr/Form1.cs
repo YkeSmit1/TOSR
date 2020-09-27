@@ -188,16 +188,10 @@ namespace Tosr
 
             for (int i = 0; i < batchSize; ++i)
             {
-                int hcp;
                 do
-                {
-                    IOrderedEnumerable<CardDto> dummy;
-                    (hands[i], dummy) = ShuffleRandomHand();
-                    var northHand = hands[i].NorthHand;
-                    hcp = northHand.Count(x => x == 'A') * 4 + northHand.Count(x => x == 'K') * 3 + northHand.Count(x => x == 'Q') * 2 + northHand.Count(x => x == 'J');
-                }
+                    (hands[i], _) = ShuffleRandomHand();
                 while
-                    (!localshuffleRestrictions.Match(hands[i].SouthHand) || hcp < 16);
+                    (!localshuffleRestrictions.Match(hands[i].SouthHand) || Util.GetHcpCount(hands[i].NorthHand) < 16);
             }
 
             return hands;

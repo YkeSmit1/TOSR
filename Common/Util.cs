@@ -114,7 +114,6 @@ namespace Common
             };
         }
 
-
         public static bool IsSameTeam(Player player1, Player player2)
         {
             return Math.Abs(player1 - player2) == 2 || 
@@ -172,6 +171,14 @@ namespace Common
             return auctions;
         }
 
+        public static int GetHcpCount(string hand)
+        {
+            return hand.Count(x => x == 'J') + hand.Count(x => x == 'Q') * 2 + hand.Count(x => x == 'K') * 3 + hand.Count(x => x == 'A') * 4;
+        }
 
+        public static int GetControlCount(string hand)
+        {
+            return hand.Count(x => x == 'K') + hand.Count(x => x == 'A') * 2;
+        }
     }
 }
