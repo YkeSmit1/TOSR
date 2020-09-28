@@ -1,6 +1,7 @@
 ﻿using Common;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Drawing.Text;
 using System.IO;
 using Tosr;
 using Xunit;
@@ -9,26 +10,38 @@ namespace TosrGui.Test
 {
     public class ScanningBugTest
     {
+        // Updates bidding state, without zoom
+        private void updateBiddingState(BiddingState biddingState, int bidIdFromRule, Fase currentFase, Fase nextFase)
+        {
+            biddingState.Fase = currentFase;
+            var bidId = biddingState.CalculateBid(bidIdFromRule, "", false);
+            biddingState.UpdateBiddingState(bidIdFromRule, nextFase, bidId, () => 0);
+        }
         [Fact()]
         public void ExecuteTest()
         {
-            var fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
+            var fasesWithOffset = new Dictionary<Fase, bool> {
+                { Fase.Shape, false },
+                { Fase.Controls, false },
+                { Fase.Scanning, true }
+            };
             var biddingState = new BiddingState(fasesWithOffset);
 
             // Controls --> Controls
-            biddingState.fase = Fase.Controls;
-            biddingState.UpdateBiddingState(3, Fase.Controls, "");
-            Assert.Equal(4, biddingState.nextBidIdForRule);
+            // If bidIdFromRule = 3, then nextBidIdForRule should be 4, because of the relay bid
+            updateBiddingState(biddingState, 3, Fase.Controls, Fase.Controls);
+            Assert.Equal(4, biddingState.NextBidIdForRule);
 
             // Controls --> Scanning
-            biddingState.fase = Fase.Controls;
-            biddingState.UpdateBiddingState(6, Fase.Scanning, "");
-            Assert.Equal(0, biddingState.nextBidIdForRule);
+            // When starting a next fase, the counting starts again at 0
+            updateBiddingState(biddingState, 6, Fase.Controls, Fase.Scanning);
+            Assert.Equal(0, biddingState.NextBidIdForRule);
 
             // Scanning --> Scanning
-            biddingState.fase = Fase.Scanning;
-            biddingState.UpdateBiddingState(5, Fase.Scanning, "");
-            Assert.Equal(5, biddingState.nextBidIdForRule);
+            // Here the relay bid is not part of the counting, because this is a relative fase
+            // Hence nextBidIdForRule should be equal to bidIdFromRule
+            updateBiddingState(biddingState, 5, Fase.Scanning, Fase.Scanning);
+            Assert.Equal(5, biddingState.NextBidIdForRule);
         }
     }
 }
