@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,23 +10,27 @@ using Common;
 
 namespace Tosr
 {
+    using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
+    using ControlsDictionary = Dictionary<string, List<string>>;
+
     public struct HandsNorthSouth
     {
         public string NorthHand;
         public string SouthHand;
     }
+
     public partial class Form1 : Form
     {
         private BiddingBox biddingBox;
         private AuctionControl auctionControl;
-        private List<CardDto> unOrderedCards;
 
+        private HandsNorthSouth hand;
         private HandsNorthSouth[] hands;
         private readonly ShuffleRestrictions shuffleRestrictions = new ShuffleRestrictions();
         private string handsString;
-        private IBidGenerator bidGenerator = new BidGeneratorDescription();
-        private readonly Dictionary<string, string> auctionsShape;
-        private readonly Dictionary<string, List<string>> auctionsControls;
+        private BidManager bidManager;
+        private readonly ShapeDictionary auctionsShape;
+        private readonly ControlsDictionary auctionsControls;
         private readonly static Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
         private readonly BiddingState biddingState = new BiddingState(fasesWithOffset);
 
@@ -41,29 +43,16 @@ namespace Tosr
             // Need to set in code because of a .net core bug
             numericUpDown1.Maximum = 100_000;
             numericUpDown1.Value = 1000;
-            Shuffle();
-            BidTillSouth(auctionControl.auction, biddingState);
             Pinvoke.Setup("Tosr.db3");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
-            auctionsShape = LoadAuctions<string>("AuctionsByShape.txt", () => new BatchBidding().GenerateAuctionsForShape());
-            auctionsControls = LoadAuctions<List<string>>("AuctionsByControls.txt", () => new BatchBidding().GenerateAuctionsForControls());
-        }
+            auctionsShape = Util.LoadAuctions("txt\\AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
+            auctionsControls = Util.LoadAuctions("txt\\AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
 
-        public Dictionary<string, T> LoadAuctions<T>(string fileName, Func<Dictionary<string, T>> generateAuctions)
-        {
-            Dictionary < string, T> auctions;
-            if (File.Exists(fileName))
-            {
-                auctions = JsonConvert.DeserializeObject< Dictionary<string, T>>(File.ReadAllText(fileName));
-            }
-            else
-            {
-                auctions = generateAuctions();
-                var sortedAuctions = auctions.ToImmutableSortedDictionary();
-                File.WriteAllText(fileName, JsonConvert.SerializeObject(sortedAuctions, Formatting.Indented));
-            }
-            return auctions;
+            bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, auctionsShape, auctionsControls);
+
+            Shuffle();
+            BidTillSouth(auctionControl.auction, biddingState);
         }
 
         private void ShowBiddingBox()
@@ -71,13 +60,13 @@ namespace Tosr
             void handler(object x, EventArgs y)
             {
                 var biddingBoxButton = (BiddingBoxButton)x;
-                BidManager.SouthBid(biddingState, handsString, bidGenerator);
-                if (biddingBoxButton.bid != biddingState.currentBid)
+                bidManager.SouthBid(biddingState, auctionControl.auction, handsString);
+                if (biddingBoxButton.bid != biddingState.CurrentBid)
                 {
-                    MessageBox.Show($"The correct bid is {biddingState.currentBid}. Description: {biddingState.currentBid.description}.", "Incorrect bid");
+                    MessageBox.Show($"The correct bid is {biddingState.CurrentBid}. Description: {biddingState.CurrentBid.description}.", "Incorrect bid");
                 }
 
-                auctionControl.AddBid(biddingState.currentBid);
+                auctionControl.AddBid(biddingState.CurrentBid);
                 BidTillSouth(auctionControl.auction, biddingState);
             }
             biddingBox = new BiddingBox(handler)
@@ -96,7 +85,7 @@ namespace Tosr
                 Parent = this,
                 Left = 300,
                 Top = 200,
-                Width = 205,
+                Width = 220,
                 Height = 200
             };
             auctionControl.Show();
@@ -107,13 +96,13 @@ namespace Tosr
             // West
             auction.AddBid(Bid.PassBid);
             // North
-            BidManager.NorthBid(biddingState);
-            auction.AddBid(biddingState.currentBid);
+            bidManager.NorthBid(biddingState, auction, hand.NorthHand);
+            auction.AddBid(biddingState.CurrentBid);
             // East
             auction.AddBid(Bid.PassBid);
 
             auctionControl.ReDraw();
-            biddingBox.UpdateButtons(biddingState.currentBid, auctionControl.auction.currentPlayer);
+            biddingBox.UpdateButtons(biddingState.CurrentBid, auctionControl.auction.currentPlayer);
         }
 
         private void ButtonShuffleClick(object sender, EventArgs e)
@@ -127,19 +116,22 @@ namespace Tosr
 
         private void Shuffle()
         {
+            IOrderedEnumerable<CardDto> cards;
             foreach (var card in Controls.OfType<Card>())
             {
                 card.Hide();
             }
 
             do
-                handsString = ShuffleRandomHand().SouthHand;
+            {
+                (hand, cards) = ShuffleRandomHand();
+                handsString = hand.SouthHand;
+            }
             while
                 (!shuffleRestrictions.Match(handsString));
 
             var left = 20 * 13;
-            var cardDtos = unOrderedCards.OrderBy(x => x.Suit, new GuiSuitComparer()).ThenBy(c => c.Face, new FaceComparer()).ToArray();
-            foreach (var cardDto in cardDtos)
+            foreach (var cardDto in cards.Reverse())
             {
                 var card = new Card(cardDto.Face, cardDto.Suit, Back.Crosshatch, false, false)
                 {
@@ -161,12 +153,17 @@ namespace Tosr
 
         private void ButtonGetAuctionClick(object sender, EventArgs e)
         {
-            Clear();
-            var orderedCards = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-            var handsString = Common.Common.GetDeckAsString(orderedCards);
-            auctionControl.auction = BidManager.GetAuction(handsString, bidGenerator, fasesWithOffset);
-            auctionControl.ReDraw();
-            biddingBox.Enabled = false;
+            try
+            {
+                Clear();
+                auctionControl.auction = bidManager.GetAuction(hand.NorthHand, hand.SouthHand);
+                auctionControl.ReDraw();
+                biddingBox.Enabled = false;
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.ToString(), "Error");
+            }
         }
 
         private void ButtonBatchBiddingClick(object sender, EventArgs e)
@@ -175,8 +172,8 @@ namespace Tosr
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
-                BatchBidding batchBidding = new BatchBidding();
-                batchBidding.Execute(hands, auctionsShape, auctionsControls);
+                BatchBidding batchBidding = new BatchBidding(auctionsShape, auctionsControls, fasesWithOffset);
+                batchBidding.Execute(hands);
             }
             finally
             {
@@ -191,33 +188,28 @@ namespace Tosr
 
             for (int i = 0; i < batchSize; ++i)
             {
-                int hcp;
                 do
-                {
-                    hands[i] = ShuffleRandomHand();
-                    var northHand = hands[i].NorthHand;
-                    hcp = northHand.Count(x => x == 'A') * 4 + northHand.Count(x => x == 'K') * 3 + northHand.Count(x => x == 'Q') * 2 + northHand.Count(x => x == 'J');
-                }
+                    (hands[i], _) = ShuffleRandomHand();
                 while
-                    (!localshuffleRestrictions.Match(hands[i].SouthHand) || hcp < 16);
+                    (!localshuffleRestrictions.Match(hands[i].SouthHand) || Util.GetHcpCount(hands[i].NorthHand) < 16);
             }
 
             return hands;
         }
 
-        private HandsNorthSouth ShuffleRandomHand()
+        private (HandsNorthSouth, IOrderedEnumerable<CardDto>) ShuffleRandomHand()
         {
             var handsNorthSouth = new HandsNorthSouth();
             var cards = Shuffling.FisherYates(26).ToList();
 
             var orderedCardsNorth = cards.Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-            handsNorthSouth.NorthHand = Common.Common.GetDeckAsString(orderedCardsNorth);
+            handsNorthSouth.NorthHand = Util.GetDeckAsString(orderedCardsNorth);
 
-            unOrderedCards = cards.Skip(13).Take(13).ToList();
-            var orderedCardsSouth = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-            handsNorthSouth.SouthHand = Common.Common.GetDeckAsString(orderedCardsSouth);
+            var unOrderedCards = cards.Skip(13).Take(13).ToList();
+                var orderedCardsSouth = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
+            handsNorthSouth.SouthHand = Util.GetDeckAsString(orderedCardsSouth);
 
-            return handsNorthSouth;
+            return (handsNorthSouth, orderedCardsSouth);
         }
 
         private void ButtonGenerateHandsClick(object sender, EventArgs e)
@@ -246,6 +238,16 @@ namespace Tosr
             {
                 Pinvoke.Setup(openFileDialog1.FileName);
             }
+        }
+
+        private void ViewAuctionClick(object sender, EventArgs e)
+        {
+            var stringBuilder = new StringBuilder();
+            foreach (var bid in auctionControl.auction.GetBids(Player.South))
+            {
+                stringBuilder.AppendLine($"{bid} {bid.description} ");
+            }
+            MessageBox.Show(stringBuilder.ToString(), "Auction");
         }
     }
 }

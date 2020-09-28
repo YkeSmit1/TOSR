@@ -1,5 +1,8 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using NLog;
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -49,11 +52,12 @@ namespace Common
         Unknown,
         Shape,
         Controls,
-        Scanning
+        Scanning,
+        End
     };
 
 
-    public static class Common
+    public static class Util
     {
         public static string GetSuitDescription(Suit suit)
         {
@@ -110,7 +114,6 @@ namespace Common
             };
         }
 
-
         public static bool IsSameTeam(Player player1, Player player2)
         {
             return Math.Abs(player1 - player2) == 2 || 
@@ -131,6 +134,51 @@ namespace Common
         public static string SuitAsString(IEnumerable<CardDto> cards, Suit suit)
         {
             return cards.Where(c => c.Suit == suit).Aggregate("", (x, y) => x + GetFaceDescription(y.Face));
+        }
+
+        public static int GetLongestSuit(string northHand, string southHand)
+        {
+            var suitLengthNorth = northHand.Split(',').Select(x => x.Length);
+            var suitLengthSouth = southHand.Split(',').Select(x => x.Length);
+            var suitLengthNS = suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
+            var longestSuit = suitLengthNS.ToList().IndexOf(suitLengthNS.Max());
+            return longestSuit;
+        }
+
+        public static bool IsFreakHand(string handLength)
+        {
+            var handPattern = string.Concat(handLength.OrderByDescending(y => y));
+            return int.Parse(handPattern[0].ToString()) >= 8 ||
+                int.Parse(handPattern[0].ToString()) + int.Parse(handPattern[1].ToString()) >= 12;
+        }
+        public static Dictionary<string, T> LoadAuctions<T>(string fileName, Func<Dictionary<string, T>> generateAuctions)
+        {
+            var logger = LogManager.GetCurrentClassLogger();
+
+            Dictionary<string, T> auctions;
+            // Generate only if file does not exist or is older then one day
+            if (File.Exists(fileName) && File.GetLastWriteTime(fileName) > DateTime.Now - TimeSpan.FromDays(1))
+            {
+                auctions = JsonConvert.DeserializeObject<Dictionary<string, T>>(File.ReadAllText(fileName));
+            }
+            else
+            {
+                logger.Info($"File {fileName} is too old or does not exist. File will be generated");
+                auctions = generateAuctions();
+                var sortedAuctions = auctions.ToImmutableSortedDictionary();
+                File.WriteAllText(fileName, JsonConvert.SerializeObject(sortedAuctions, Formatting.Indented));
+            }
+            return auctions;
+        }
+
+        public static int GetHcpCount(string hand)
+        {
+            return hand.Count(x => x == 'J') + hand.Count(x => x == 'Q') * 2 + hand.Count(x => x == 'K') * 3 + hand.Count(x => x == 'A') * 4;
+        }
+
+        public static int GetControlCount(string hand)
+        {
+            return hand.Count(x => x == 'K') + hand.Count(x => x == 'A') * 2;
         }
     }
 }

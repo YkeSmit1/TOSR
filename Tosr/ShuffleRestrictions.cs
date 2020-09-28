@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,7 +20,7 @@ namespace Tosr
 
         private bool HasCorrectControls(string s)
         {
-            var controlsInHand = s.Count(x => x == 'A') * 2 + s.Count(x => x == 'K');
+            var controlsInHand = Util.GetControlCount(s);
             return (!restrictControls && controlsInHand >= 2) || (restrictControls && controlsInHand == controls);
         }
 

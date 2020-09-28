@@ -36,7 +36,7 @@ namespace Tosr
                         Left = (4 - (int) suit) * defaultButtonWidth,
                         Top = (level - 1) * defaultButtonHeight,
                         Parent = this,
-                        Text = Convert.ToString(level) + Common.Common.GetSuitDescription(suit),
+                        Text = Convert.ToString(level) + Util.GetSuitDescription(suit),
                         ForeColor = suit == Suit.Diamonds || suit == Suit.Hearts ? Color.Red : Color.Black
                     };
                     button.Click += BiddingBoxClick;
@@ -88,7 +88,7 @@ namespace Tosr
                     }
                     break;
                 case BidType.pass:
-                    if (Common.Common.IsSameTeam(auctionCurrentPlayer, currentDeclarer))
+                    if (Util.IsSameTeam(auctionCurrentPlayer, currentDeclarer))
                     {
                         switch (currentBidType)
                         {

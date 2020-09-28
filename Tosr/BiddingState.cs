@@ -1,17 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Common;
 
 namespace Tosr
 {
     public class BiddingState
     {
-        public Fase fase { get; set; }
-        public Bid currentBid { get; set; }
-        public int relayBidIdLastFase { get; set; }
-        public int nextBidIdForRule { get; set; }
+        public Fase Fase { get; set; }
+        public Bid CurrentBid { get; set; }
+        public int RelayBidIdLastFase { get; set; }
+        public int NextBidIdForRule { get; set; }
         public int FaseOffset { get; set; }
         public bool EndOfBidding { get; set; }
-        Dictionary<Fase, bool> fasesWithOffset;
+
+        private readonly Dictionary<Fase, bool> fasesWithOffset;
 
         public BiddingState(Dictionary<Fase, bool> fasesWithOffset)
         {
@@ -21,42 +23,48 @@ namespace Tosr
 
         public void Init()
         {
-            fase = Fase.Shape;
-            currentBid = Bid.PassBid;
-            relayBidIdLastFase = 0;
+            Fase = Fase.Shape;
+            CurrentBid = Bid.PassBid;
+            RelayBidIdLastFase = 0;
             EndOfBidding = false;
             FaseOffset = 0;
-            nextBidIdForRule = 0;
+            NextBidIdForRule = 0;
         }
-        public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, string description)
+        public int CalculateBid(int bidIdFromRule, string description, bool zoom)
         {
-            var bidId = bidIdFromRule + relayBidIdLastFase + FaseOffset;
+            var bidId = bidIdFromRule + RelayBidIdLastFase + FaseOffset;
             if (bidIdFromRule == 0)
             {
-                currentBid = Bid.PassBid;
+                CurrentBid = Bid.PassBid;
                 EndOfBidding = true;
-                return;
+                return bidId;
             }
 
-            currentBid = Bid.GetBid(bidId);
-            currentBid.fase = fase;
-            currentBid.description = description;
+            CurrentBid = Bid.GetBid(bidId);
+            CurrentBid.fase = Fase;
+            CurrentBid.description = description;
+            CurrentBid.zoom = zoom;
+            return bidId;
+        }
 
-            if (nextfase != fase)
+        public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, int bidId, Func<int> zoomOffset)
+        {
+            if (nextfase != Fase)
             {
-                relayBidIdLastFase = bidId + 1;
-                fase = nextfase;
+                // Specific for zoom. TODO Code is ugly, needs improvement
+                RelayBidIdLastFase = (bidId + 1) - zoomOffset();
+                Fase = nextfase;
                 FaseOffset = 0;
-                nextBidIdForRule = 0;
+                NextBidIdForRule = zoomOffset();
             }
-            else if (fasesWithOffset[fase])
+            else if (fasesWithOffset[Fase])
             {
                 FaseOffset++;
-                nextBidIdForRule = bidIdFromRule;
+                NextBidIdForRule = bidIdFromRule;
             }
             else
             {
-                nextBidIdForRule = bidIdFromRule + 1;
+                NextBidIdForRule = bidIdFromRule + 1;
             }
         }
     }

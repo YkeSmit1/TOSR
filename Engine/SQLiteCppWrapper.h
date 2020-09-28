@@ -31,7 +31,7 @@ class SQLiteCppWrapper : public ISQLiteWrapper
         AND MaxHcp >= ?
         ORDER BY RelBidId ASC)";
 
-    constexpr static std::string_view scanningSql = R"(SELECT RelBidId, Id, Description FROM Scanning 
+    constexpr static std::string_view scanningSql = R"(SELECT RelBidId, EndFase, Id, Description FROM Scanning 
         WHERE RelbidId > ?
         AND (Controls1Suit = ? or Controls1Suit is null)
         AND (Controls2Suit = ? or Controls2Suit is null)
@@ -52,8 +52,8 @@ public:
     SQLiteCppWrapper(const std::string& database);
 private:
     void GetBid(int bidId, int& rank, int& suit) final override;
-    std::tuple<int, bool, std::string> GetRule(const HandCharacteristic& hand, const Fase& fase, int lastBidId) final override;
-    std::tuple<int, bool, std::string> GetRuleShape(const HandCharacteristic& hand, int lastBidId);
+    std::tuple<int, Fase, std::string, bool> GetRule(const HandCharacteristic& hand, const Fase& fase, int lastBidId) final override;
+    std::tuple<int, bool, std::string, bool> GetRuleShape(const HandCharacteristic& hand, int lastBidId);
     std::tuple<int, bool, std::string> GetRuleControls(const HandCharacteristic& hand, int lastBidId);
     std::tuple<int, bool, std::string> GetRuleScanning(const HandCharacteristic& hand, int lastBidId);
     void SetDatabase(const std::string& database) override;

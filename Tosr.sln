@@ -14,7 +14,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tosr", "Tosr\Tosr.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TosrGui.Test", "TosrGui.Test\TosrGui.Test.csproj", "{0D9D7C37-BEA7-4D89-A509-A75357294F49}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TosrIntegration.Test", "TosrIntegration.Test\TosrIntegration.Test.csproj", "{B8DEAB01-5919-4542-8F32-5A83E4F48F15}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TosrIntegration.Test", "TosrIntegration.Test\TosrIntegration.Test.csproj", "{B8DEAB01-5919-4542-8F32-5A83E4F48F15}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Solver", "Solver\Solver.csproj", "{67D3D670-A0F2-4BA6-A393-DBCAA13409DA}"
 EndProject

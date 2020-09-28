@@ -11,7 +11,7 @@ namespace Common
         static readonly Random random = new Random();
         public static IEnumerable<CardDto> FisherYates(int length)
         {
-            var deck = Enumerable.Range(0, 51).ToArray();
+            var deck = Enumerable.Range(0, 52).ToArray();
 
             for (var n = deck.Length - 1; n > 0; --n)
             {
@@ -32,7 +32,7 @@ namespace Common
             var cardsNorthAndSouth = northHand.Concat(southHand).Select(card => (int)card.Suit * 13 + (int)card.Face).ToList();
             Debug.Assert(cardsNorthAndSouth.Count == 26);
 
-            var notPickedCards = Enumerable.Range(0, 51).Where(x => !cardsNorthAndSouth.Contains(x)).ToArray();
+            var notPickedCards = Enumerable.Range(0, 52).Where(x => !cardsNorthAndSouth.Contains(x)).ToArray();
             Debug.Assert(notPickedCards.Count() == 26);
 
             for (var i = notPickedCards.Length - 1; i > 0; i--)
