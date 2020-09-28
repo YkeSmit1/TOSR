@@ -1,8 +1,5 @@
 ﻿using Common;
-using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Drawing.Text;
-using System.IO;
 using Tosr;
 using Xunit;
 
@@ -38,7 +35,7 @@ namespace TosrGui.Test
             Assert.Equal(0, biddingState.NextBidIdForRule);
 
             // Scanning --> Scanning
-            // Here the relay bid is not part of the counting, because this is a relative fase
+            // Here the relay bid is not part of the counting, because this is a fase with offset
             // Hence nextBidIdForRule should be equal to bidIdFromRule
             updateBiddingState(biddingState, 5, Fase.Scanning, Fase.Scanning);
             Assert.Equal(5, biddingState.NextBidIdForRule);
