@@ -23,7 +23,7 @@ namespace TosrGui.Test
             }
         }
 
-        [Fact()]
+        [Fact(Skip = "Dealer.exe is not available. Accidental commit")]
         public void Test2()
         {
             int trumpSuit = 0; // Spades
