@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Common;
@@ -34,6 +36,41 @@ namespace Solver
                 var handStrs = GetDealAsString(deal);
                 yield return handStrs.Aggregate("W:", (current, hand) => current + hand.handStr.Replace(',', '.') + " ");
             }
+        }
+
+        public static List<int> SolveSingleDummy2(int trumpSuit, int declarer)
+        {
+            var handsForSolver = GetHandsForSolver2(10);
+            //var scores = Api.SolveAllBoards(handsForSolver, trumpSuit, declarer).ToList();
+            //for (int i = 0; i < scores.Count; i++)
+            //{
+            //    Console.WriteLine($"Deal: {handsForSolver[i]} Nr of tricks:{scores[i]}");
+            //}
+            return new List<int>();
+        }
+
+        private static string[] GetHandsForSolver2(int nrOfHands)
+        {
+            var directory = "C:/Users/Administrator/Downloads/andrews-deal-master/andrews-deal-master";
+            //Environment.CurrentDirectory = directory;
+
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.WorkingDirectory = directory;
+            startInfo.FileName = Path.Combine(directory, "Dealer.exe");
+            startInfo.UseShellExecute = false;
+            startInfo.Arguments = "-i format/pbn -i ex/custom.tcl " + nrOfHands.ToString() + $" >> {directory}/deal.txt";
+            startInfo.RedirectStandardOutput = true;
+            startInfo.RedirectStandardError = true;
+            Process process = new Process { StartInfo = startInfo };
+
+            process.Start();
+            process.WaitForExit();
+            if (process.ExitCode != 0)
+            {
+                throw new Exception($"Dealer has incorrect exit code: {process.ExitCode}");
+            }
+            return null;
+            //return process.StandardOutput.ReadToEnd().Split("\n").Where(x => x.StartsWith("[")).Select(x => x.Substring(6, 71)).ToArray();
         }
 
         private static IEnumerable<(Player player, string handStr)> GetDealAsString(IEnumerable<CardDto> deal)

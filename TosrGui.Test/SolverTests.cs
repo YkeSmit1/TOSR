@@ -22,5 +22,23 @@ namespace TosrGui.Test
                 Assert.InRange(score, 10, 12);
             }
         }
+
+        [Fact()]
+        public void Test2()
+        {
+            int trumpSuit = 0; // Spades
+            int declarer = 0; // North
+            //var northHand = "KT98,AK96,AKJ9,4";
+            //var southHand = "Axxx,Qxxx,xx,KQx";
+            List<int> scores = null;
+            for (int i = 0; i < 10; i++)
+            {
+                scores = SingleDummySolver.SolveSingleDummy2(trumpSuit, declarer);
+            }
+            foreach (var score in scores)
+            {
+                Assert.InRange(score, 10, 12);
+            }
+        }
     }
 }
