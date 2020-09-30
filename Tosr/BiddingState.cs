@@ -10,7 +10,7 @@ namespace Tosr
         public Bid CurrentBid { get; set; }
         public int RelayBidIdLastFase { get; set; }
         public int NextBidIdForRule { get; set; }
-        public int FaseOffset { get; set; }
+        private int FaseOffset { get; set; }
         public bool EndOfBidding { get; set; }
 
         private readonly Dictionary<Fase, bool> fasesWithOffset;
@@ -47,15 +47,15 @@ namespace Tosr
             return bidId;
         }
 
-        public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, int bidId, Func<int> zoomOffset)
+        public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, int bidId, int zoomOffset)
         {
             if (nextfase != Fase)
             {
                 // Specific for zoom. TODO Code is ugly, needs improvement
-                RelayBidIdLastFase = (bidId + 1) - zoomOffset();
+                RelayBidIdLastFase = (bidId + 1) - zoomOffset;
                 Fase = nextfase;
                 FaseOffset = 0;
-                NextBidIdForRule = zoomOffset();
+                NextBidIdForRule = zoomOffset;
             }
             else if (fasesWithOffset[Fase])
             {

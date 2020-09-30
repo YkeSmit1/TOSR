@@ -153,7 +153,7 @@ namespace Tosr
             var bidId = biddingState.CalculateBid(bidIdFromRule, description, zoom);
             auction.AddBid(biddingState.CurrentBid);
             biddingState.UpdateBiddingState(bidIdFromRule, nextfase, bidId, 
-                () => shapeAuctions == null || nextfase != Fase.Controls ? 0 : shape.Value.zoomOffset);
+                shapeAuctions == null || nextfase != Fase.Controls ? 0 : shape.Value.zoomOffset);
         }
 
         /// <summary>
