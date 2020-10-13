@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Solver\Solver.csproj" />
     <ProjectReference Include="..\Tosr\Tosr.csproj" />
   </ItemGroup>

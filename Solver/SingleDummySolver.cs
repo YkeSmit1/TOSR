@@ -13,12 +13,7 @@ namespace Solver
         public static List<int> SolveSingleDummy(int trumpSuit, int declarer, string northHand, string southHand)
         {
             var handsForSolver = GetHandsForSolver(northHand, southHand, 10).ToArray();
-            var scores = Api.SolveAllBoards(handsForSolver, trumpSuit, declarer).ToList();
-            for (int i = 0; i < scores.Count; i++)
-            {
-                Console.WriteLine($"Deal: {handsForSolver[i]} Nr of tricks:{scores[i]}");
-            }
-            return scores;
+            return Api.SolveAllBoards(handsForSolver, trumpSuit, declarer).ToList();
         }
 
         private static IEnumerable<string> GetHandsForSolver(string northHandStr, string southHandStr, int nrOfHands)
@@ -34,6 +29,49 @@ namespace Solver
                 // Shuffle
                 var deal = Shuffling.FisherYates(northHandCards, southHandCards).ToList();
                 var handStrs = GetDealAsString(deal);
+                yield return handStrs.Aggregate("W:", (current, hand) => current + hand.handStr.Replace(',', '.') + " ");
+            }
+        }
+
+        public static List<int> SolveSingleDummy(int trumpSuit, int declarer, string northHand, string southHandShape, int minControls, int maxControls)
+        {
+            var handsForSolver = GetHandsForSolver(northHand, southHandShape, minControls, maxControls, 10).ToArray();
+            return Api.SolveAllBoards(handsForSolver, trumpSuit, declarer).ToList();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="northHandStr">Whole northhand. Cannot contain x's</param>
+        /// <param name="southHandShape">For example 5431</param>
+        /// <param name="minControls">Number of controls in the southhand</param>
+        /// <param name="nrOfHands"></param>
+        /// <returns></returns>
+        private static IEnumerable<string> GetHandsForSolver(string northHandStr, string southHandShape, int minControls, int maxControls, int nrOfHands)
+        {
+            var shuffleRestrictions = new ShuffleRestrictions
+            {
+                shape = southHandShape,
+                restrictShape = true,
+            };
+            shuffleRestrictions.SetControls(minControls, maxControls);
+
+            var northHandCards = GetCardDtosFromString(northHandStr.Split(','));
+
+            for (int i = 0; i < nrOfHands; i++)
+            {
+                string southHand;
+                List<CardDto> cards;
+                do
+                {
+                    cards = Shuffling.FisherYates(northHandCards, new List<CardDto>{ }).ToList();
+                    var orderedCardsSouth = cards.Skip(13).Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
+                    southHand = Util.GetDeckAsString(orderedCardsSouth);
+                }
+                while
+                    (!shuffleRestrictions.Match(southHand));
+
+                var handStrs = GetDealAsString(cards);
                 yield return handStrs.Aggregate("W:", (current, hand) => current + hand.handStr.Replace(',', '.') + " ");
             }
         }

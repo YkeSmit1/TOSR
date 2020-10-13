@@ -9,6 +9,7 @@ using Solver;
 namespace Tosr
 {
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
+    using ControlsOnlyDictionary = Dictionary<string, List<int>>;
     using ControlsDictionary = Dictionary<string, List<string>>;
 
     public class BidManager
@@ -24,19 +25,45 @@ namespace Tosr
             IncorrectSouthhand,
         }
 
+        private enum RelayBidKind
+        {
+            Relay,
+            fourDiamondEndSignal,
+            gameBid,
+        }
+
         private readonly IBidGenerator bidGenerator;
         readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ControlsDictionary controlsAuctions = null;
         private readonly ShapeDictionary shapeAuctions;
+        private readonly ControlsOnlyDictionary controlsOnlyAuctions;
         readonly bool useSingleDummySolver = false;
         Lazy<(List<string> shapes, int zoomOffset)> shape;
 
         static readonly Bid twoNTBid = new Bid(2, Suit.NoTrump);
         static readonly Bid threeDiamondBid = new Bid(3, Suit.Diamonds);
         static readonly Bid threeSpadeBid = new Bid(3, Suit.Spades);
-        static readonly Bid fourClBid = new Bid(4, Suit.Clubs);
+        static readonly Bid threeNTBid = new Bid(3, Suit.NoTrump);
+        static readonly Bid fourClubBid = new Bid(4, Suit.Clubs);
+        static readonly Bid fourDiamondBid = new Bid(4, Suit.Diamonds);
+        static readonly Bid fourNTBid = new Bid(4, Suit.NoTrump);
+
         static readonly char[] relevantCards = new[] { 'A', 'K', 'Q' };
         public ConstuctedSouthhandOutcome constuctedSouthhandOutcome = ConstuctedSouthhandOutcome.NotSet;
+
+        // Special TOSR logic. Should be in a JSON file as parameters
+        static readonly Dictionary<int, List<int>> requirementsToPull3NT = new Dictionary<int, List<int>> {
+            {0, Enumerable.Range(16, 5).ToList()},
+            {1, Enumerable.Range(21, 2).ToList()},
+            {2, Enumerable.Range(23, 2).ToList()}};
+
+        static readonly List<((double, double), RelayBidKind)> requirementsForRelayBid = new List<((double, double), RelayBidKind)> { 
+            {((0.0, 11.0) , RelayBidKind.gameBid )},
+            {((11.0, 12.0) , RelayBidKind.fourDiamondEndSignal)},
+            {((12.0, 13.0) , RelayBidKind.Relay )},
+        };
+
+        static readonly int requiredMaxHcpToBid4Diamond = 17;
 
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -48,13 +75,15 @@ namespace Tosr
             useSingleDummySolver = false;
         }
 
-        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions) :
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ShapeDictionary shapeAuctions, 
+            ControlsDictionary controlsAuctions, ControlsOnlyDictionary controlsOnlyAuctions, bool useSingleDummySolver) :
             this(bidGenerator, fasesWithOffset)
         {
             this.shapeAuctions = shapeAuctions;
+            this.controlsOnlyAuctions = controlsOnlyAuctions;
             this.controlsAuctions = controlsAuctions;
 
-            useSingleDummySolver = false;
+            this.useSingleDummySolver = useSingleDummySolver;
         }
 
         public Auction GetAuction(string northHand, string southHand)
@@ -97,7 +126,7 @@ namespace Tosr
         public void NorthBid(BiddingState biddingState, Auction auction, string northHand)
         {
             if (biddingState.Fase != Fase.End)
-                biddingState.CurrentBid = GetRelayBid(biddingState, auction);
+                biddingState.CurrentBid = GetRelayBid(biddingState, auction, northHand);
             else
             {
                 biddingState.EndOfBidding = true;
@@ -108,9 +137,9 @@ namespace Tosr
                     {
                         var constructedSouthHand = ConstructSouthHand(northHand, auction);
                         var suit = Util.GetLongestSuit(northHand, constructedSouthHand);
-                        var scores = SingleDummySolver.SolveSingleDummy(suit, 0, northHand, constructedSouthHand);
+                        var scores = SingleDummySolver.SolveSingleDummy(3 - (int)suit.Item1, 3 - (int)auction.GetDeclarer(suit.Item1), northHand, constructedSouthHand);
                         var mostFrequent = scores.GroupBy(x => x).OrderByDescending(y => y.Count()).Take(1).Select(z => z.Key).First();
-                        Bid bid = new Bid(mostFrequent - 6, (Suit)(3 - suit));
+                        Bid bid = new Bid(mostFrequent - 6, (Suit)(3 - suit.Item1));
                         if (bid > biddingState.CurrentBid)
                         {
                             biddingState.CurrentBid = bid;
@@ -126,29 +155,109 @@ namespace Tosr
             }
         }
 
-        private Bid GetRelayBid(BiddingState biddingState, Auction auction)
+        private Bid GetRelayBid(BiddingState biddingState, Auction auction, string northHand)
         {
-            if (biddingState.CurrentBid == threeSpadeBid && shapeAuctions != null)
+            if (biddingState.Fase != Fase.Shape && shapeAuctions != null)
             {
-                var strAuction = auction.GetBidsAsString(Fase.Shape);
-                var shapesStr = GetShapeStrFromAuction(auction, shapeAuctions).shapes;
-                var shape = shapesStr.First().ToCharArray().OrderByDescending(x => x);
-                var shapeStringSorted = new string(shape.ToArray());
-
-                if (shapeStringSorted != "7330")
+                // TODO make lazy
+                var southHandShape = GetShapeStrFromAuction(auction, shapeAuctions).shapes.First();
+                if (biddingState.Fase == Fase.BidGame)
                 {
-                    biddingState.RelayBidIdLastFase++;
-                    return fourClBid;
+                    biddingState.Fase = Fase.End;
+                    var southHand = string.Join(',', southHandShape.Select(x => new string('x', int.Parse(x.ToString()))));
+                    var trumpSuit = Util.GetTrumpSuit(northHand, southHand);
+                    var game = Bid.GetGameContract(trumpSuit);
+                    return biddingState.CurrentBid == game ? Bid.PassBid : game;
+                }
+
+                if (!biddingState.HasSignedOff && !string.IsNullOrWhiteSpace(northHand))
+                {
+                    var controls = GetAuctionForFaseWithOffset(auction, threeDiamondBid, shape.Value.zoomOffset, new Fase[] { Fase.Controls });
+                    var controlBidCount = controls.Count();
+                    var southHand = string.Join(',', southHandShape.Select(x => new string('x', int.Parse(x.ToString()))));
+                    var trumpSuit = Util.GetTrumpSuit(northHand, southHand);
+                    var hcp = Util.GetHcpCount(northHand);
+                    if (trumpSuit == Suit.NoTrump)
+                    {
+                        if (requirementsToPull3NT.TryGetValue(controlBidCount, out var hcps) && hcps.Contains(hcp))
+                        {
+                            var noTrumpBid = biddingState.CurrentBid < threeNTBid ? threeNTBid : fourNTBid;
+                            biddingState.UpdateBiddingStateSignOff(controlBidCount, noTrumpBid, true);
+                            return noTrumpBid;
+                        }
+                    }
+                    else
+                    {
+                        if (controlBidCount == 0 && hcp <= requiredMaxHcpToBid4Diamond)
+                        {
+                            biddingState.UpdateBiddingStateSignOff(controlBidCount, fourDiamondBid, false);
+                            return fourDiamondBid;
+                        }
+                        if (controlBidCount == 1 && useSingleDummySolver)
+                        {
+                            var averageTricks = GetAverageTricks(northHand, southHandShape, controls, trumpSuit, auction.GetDeclarer(trumpSuit));
+                            foreach (var (requirement, relayBidType) in requirementsForRelayBid)
+                            {
+                                if (averageTricks > requirement.Item1 && averageTricks < requirement.Item2)
+                                {
+                                    switch (relayBidType)
+                                    {
+                                        case RelayBidKind.Relay:
+                                            break;
+                                        case RelayBidKind.fourDiamondEndSignal:
+                                            if (biddingState.CurrentBid < fourClubBid)
+                                            {
+                                                biddingState.UpdateBiddingStateSignOff(controlBidCount, fourDiamondBid, false);
+                                                return fourDiamondBid;
+                                            }
+                                            break;
+                                        case RelayBidKind.gameBid:
+                                            {
+                                                biddingState.Fase = Fase.End;
+                                                return Bid.GetGameContract(trumpSuit);
+                                            }
+                                        default:
+                                            throw new ArgumentException(nameof(relayBidType));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (biddingState.CurrentBid == threeSpadeBid)
+                {
+                    var shape = southHandShape.ToCharArray().OrderByDescending(x => x);
+                    var shapeStringSorted = new string(shape.ToArray());
+
+                    if (shapeStringSorted != "7330")
+                    {
+                        biddingState.RelayBidIdLastFase++;
+                        return fourClubBid;
+                    }
                 }
             }
 
             return Bid.NextBid(biddingState.CurrentBid);
         }
 
+        private double GetAverageTricks(string northHand, string southHandShape, IEnumerable<Bid> controls, Suit trumpSuit, Player declarer)
+        {
+            var strControls = string.Join("", controls);
+            var tricks = SingleDummySolver.SolveSingleDummy(3 - (int)trumpSuit, 3 - (int)declarer,
+                northHand, southHandShape, controlsOnlyAuctions[strControls].First(), controlsOnlyAuctions[strControls].Last());
+            var averageTricks = tricks.Average();
+            return averageTricks;
+        }
+
         public void SouthBid(BiddingState biddingState, Auction auction, string handsString)
         {
-            if (biddingState.EndOfBidding)
+            if (biddingState.Fase == Fase.End)
+            {
+                auction.AddBid(Bid.PassBid);
+                biddingState.EndOfBidding = true;
                 return;
+            }
             var (bidIdFromRule, nextfase, description, zoom) = bidGenerator.GetBid(biddingState, handsString);
             var bidId = biddingState.CalculateBid(bidIdFromRule, description, zoom);
             auction.AddBid(biddingState.CurrentBid);
@@ -176,7 +285,8 @@ namespace Tosr
             {
                 throw SetOutcome(exception.Message, ConstuctedSouthhandOutcome.AuctionNotFoundInControls);
             }
-            var strControls = GetAuctionForControlsWithOffset(auction, threeDiamondBid, zoomOffset);
+            var controls = GetAuctionForFaseWithOffset(auction, threeDiamondBid, zoomOffset, new Fase[] { Fase.Controls, Fase.Scanning });
+            var strControls = string.Join("", controls);
 
             if (!controlsAuctions.TryGetValue(strControls, out var possibleControls))
             {
@@ -276,19 +386,19 @@ namespace Tosr
         /// </summary>
         /// <param name="auction">Generated auction </param>
         /// <param name="offsetBid">Offset used to generate AuctionsByControl.txt</param>
+        /// <param name="fase">Which fases to get the offset from</param>
         /// <returns></returns>
-        public static string GetAuctionForControlsWithOffset(Auction auction, Bid offsetBid, int zoomOffset)
+        public static IEnumerable<Bid> GetAuctionForFaseWithOffset(Auction auction, Bid offsetBid, int zoomOffset, Fase[] fases)
         {
             var lastBidShape = auction.GetBids(Player.South, Fase.Shape).Last();
-            var bidsControls = auction.GetBids(Player.South, new Fase[] { Fase.Controls, Fase.Scanning });
+            var bidsControls = auction.GetBids(Player.South, fases);
             var offSet = lastBidShape - offsetBid;
             if (zoomOffset != 0)
                 bidsControls = new List<Bid> { lastBidShape }.Concat(bidsControls);
 
             var used4ClAsRelay = Used4ClAsRelay(auction);
-            bidsControls = bidsControls.Select(b => b = (b - (used4ClAsRelay && b > fourClBid ? offSet + 1 : offSet)) + zoomOffset);
-            var strControls = string.Join("", bidsControls);
-            return strControls;
+            bidsControls = bidsControls.Select(b => b = (b - (used4ClAsRelay && b > fourClubBid ? offSet + 1 : offSet)) + zoomOffset);
+            return bidsControls;
         }
 
         private static bool Used4ClAsRelay(Auction auction)
@@ -296,7 +406,7 @@ namespace Tosr
             var previousBiddingRound = auction.bids.First();
             foreach (var biddingRound in auction.bids.Skip(1))
             {
-                if (biddingRound.Value.ContainsKey(Player.North) && biddingRound.Value[Player.North] == fourClBid)
+                if (biddingRound.Value.ContainsKey(Player.North) && biddingRound.Value[Player.North] == fourClubBid)
                     return previousBiddingRound.Value[Player.South] == threeSpadeBid;
 
                 previousBiddingRound = biddingRound;

@@ -10,12 +10,14 @@ using Common;
 namespace TosrGui.Test
 {
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
+    using ControlsOnlyDictionary = Dictionary<string, List<int>>;
     using ControlsDictionary = Dictionary<string, List<string>>;
 
     public class ZoomTests
     {
         private ShapeDictionary shapeAuctions;
         private ControlsDictionary auctionsControls;
+        private ControlsOnlyDictionary auctionsControlsOnly;
         private Dictionary<Fase, bool> fasesWithOffset;
 
         public ZoomTests()
@@ -32,6 +34,11 @@ namespace TosrGui.Test
             auctionsControls = new ControlsDictionary
             {
                 {"4♣4♠5♥5NT6♥", new List<string> { "Axxx,AQx,xxx,Kxx", "Axxx,KQx,xxx,Axx", "Kxxx,AQx,xxx,Axx"} }
+            };
+
+            auctionsControlsOnly = new ControlsOnlyDictionary
+            {
+                {"4♣", new List<int>{ 5 } }
             };
 
             fasesWithOffset = new Dictionary<Fase, bool>
@@ -104,7 +111,7 @@ namespace TosrGui.Test
                 // 6D
                 Returns(() => (8, Fase.Scanning, "", false));
 
-            BidManager bidManager = new BidManager(bidGenerator.Object, fasesWithOffset, shapeAuctions, auctionsControls);
+            BidManager bidManager = new BidManager(bidGenerator.Object, fasesWithOffset, shapeAuctions, auctionsControls, auctionsControlsOnly, false);
             var auction = bidManager.GetAuction("", "");
 
             Assert.Equal("1♠2♦3NT4♥5♦5♠6♦Pass", auction.GetBidsAsString(Player.South));

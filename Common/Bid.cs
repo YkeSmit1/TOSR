@@ -68,6 +68,20 @@ namespace Common
             return new Bid(bid.rank, bid.suit + 1);
         }
 
+        public static Bid GetGameContract(Suit trumpSuit)
+        {
+            return trumpSuit switch
+            {
+                Suit.Spades => new Bid(4, Suit.Spades),
+                Suit.Hearts => new Bid(4, Suit.Hearts),
+                Suit.Diamonds => new Bid(5, Suit.Diamonds),
+                Suit.Clubs => new Bid(5, Suit.Clubs),
+                Suit.NoTrump => new Bid(3, Suit.NoTrump),
+                _ => throw new ArgumentException(nameof(trumpSuit)),
+            };
+        }
+
+        // Operators
         public bool Equals(Bid other) => suit == other.suit && bidType == other.bidType && rank == other.rank;
         public override bool Equals(object obj) => obj is Bid other && Equals(other);
         public override int GetHashCode() => HashCode.Combine(bidType, rank, suit);

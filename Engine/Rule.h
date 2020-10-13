@@ -46,6 +46,8 @@ struct HandCharacteristic
 	std::vector<bool> QueensSuit;
 
 	int Hcp = 0;
+	bool isMax = false;
+	int Queens = 0;
 
 	static bool CalcuateIsReverse(const std::unordered_map<int, size_t>& suitLength);
 	static bool Calcuate65IsReverse(const std::unordered_map<int, size_t>& suitLength);
