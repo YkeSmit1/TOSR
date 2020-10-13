@@ -10,15 +10,8 @@ namespace TosrGui.Test
 {
     public class SolverTests
     {
-        private readonly ITestOutputHelper output;
-
-        public SolverTests(ITestOutputHelper output)
-        {
-            this.output = output;
-        }
-
         [Fact()]
-        public void ExecuteTest()
+        public void SolveWithExactSouthHand()
         {
             int trumpSuit = 0; // Spades
             int declarer = 0; // North
@@ -33,7 +26,7 @@ namespace TosrGui.Test
         }
 
         [Fact()]
-        public void Test2()
+        public void SolveWithSouthHandInfo()
         {
             int trumpSuit = 0; // Spades
             int declarer = 0; // North
@@ -41,8 +34,8 @@ namespace TosrGui.Test
             SouthHandInfo southHandInfo = new SouthHandInfo
             {
                 shape = "4423",
-                minControls = 2,
-                maxControls = 4,
+                minControls = 3,
+                maxControls = 3,
                 DCB1 = new int?[] { 1, 0, 0, 1 },
                 DCB2 = new int?[] { 0, 1, 0, 1 }
             };
@@ -51,18 +44,6 @@ namespace TosrGui.Test
             {
                 Assert.InRange(score, 10, 12);
             }
-        }
-
-        [Fact()]
-        public void DealerTest()
-        {
-            SouthHandInfo southHandInfo = new SouthHandInfo();
-            southHandInfo.shape = "4432";
-            southHandInfo.minControls = 4;
-            southHandInfo.maxControls = 5;
-            southHandInfo.DCB1 = new int?[] { 1, 0, 1, 1 };
-            southHandInfo.DCB2 = new int?[] { 0, 0, 1, 0 };
-            output.WriteLine(getTCLInput("5432, 32, 32, 65432", southHandInfo));
         }
     }
 }
