@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Common;
+using static Solver.DealHands;
 
 namespace Solver
 {
@@ -38,18 +39,18 @@ namespace Solver
             }
         }
 
-        public static List<int> SolveSingleDummy2(int trumpSuit, int declarer)
+        public static List<int> SolveSingleDummy2(int trumpSuit, int declarer , string northHandStr, SouthHandInfo southHandInfo)
         {
-            var handsForSolver = GetHandsForSolver2(10);
-            //var scores = Api.SolveAllBoards(handsForSolver, trumpSuit, declarer).ToList();
-            //for (int i = 0; i < scores.Count; i++)
-            //{
-            //    Console.WriteLine($"Deal: {handsForSolver[i]} Nr of tricks:{scores[i]}");
-            //}
-            return new List<int>();
+            var handsForSolver = GetHandsForSolver2(northHandStr, southHandInfo, 10);
+            var scores = Api.SolveAllBoards(handsForSolver, trumpSuit, declarer).ToList();
+            for (int i = 0; i < scores.Count; i++)
+            {
+                Console.WriteLine($"Deal: {handsForSolver[i]} Nr of tricks:{scores[i]}");
+            }
+            return scores;
         }
 
-        private static string[] GetHandsForSolver2(int nrOfHands)
+        private static string[] GetHandsForSolver2(string northHandStr, SouthHandInfo southHandInfo, int nrOfHands)
         {
             var directory = "C:/Users/Administrator/Downloads/andrews-deal-master/andrews-deal-master";
             //Environment.CurrentDirectory = directory;
@@ -58,9 +59,10 @@ namespace Solver
             startInfo.WorkingDirectory = directory;
             startInfo.FileName = Path.Combine(directory, "Dealer.exe");
             startInfo.UseShellExecute = false;
-            startInfo.Arguments = "-i format/pbn -i ex/custom.tcl " + nrOfHands.ToString() + $" >> {directory}/deal.txt";
             startInfo.RedirectStandardOutput = true;
             startInfo.RedirectStandardError = true;
+            File.WriteAllText(Path.Combine(directory, "custom.tcl"), getTCLInput(northHandStr, southHandInfo));
+            startInfo.Arguments = $"-i format/pbn -i custom.tcl {nrOfHands.ToString()}";
             Process process = new Process { StartInfo = startInfo };
 
             process.Start();
@@ -69,8 +71,7 @@ namespace Solver
             {
                 throw new Exception($"Dealer has incorrect exit code: {process.ExitCode}");
             }
-            return null;
-            //return process.StandardOutput.ReadToEnd().Split("\n").Where(x => x.StartsWith("[")).Select(x => x.Substring(6, 71)).ToArray();
+            return process.StandardOutput.ReadToEnd().Split("\n").Where(x => x.StartsWith("[")).Select(x => x.Substring(7, 69)).ToArray();
         }
 
         private static IEnumerable<(Player player, string handStr)> GetDealAsString(IEnumerable<CardDto> deal)
