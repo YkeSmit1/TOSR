@@ -86,6 +86,11 @@ namespace Tosr
             this.useSingleDummySolver = useSingleDummySolver;
         }
 
+        public void Init(Auction auction)
+        {
+            shape = new Lazy<(List<string> shapes, int zoomOffset)>(() => GetShapeStrFromAuction(auction, shapeAuctions));
+        }
+
         public Auction GetAuction(string northHand, string southHand)
         {
             logger.Debug($"Starting GetAuction for hand : {southHand}");
@@ -94,7 +99,7 @@ namespace Tosr
             BiddingState biddingState = new BiddingState(fasesWithOffset);
             Player currentPlayer = Player.West;
             constuctedSouthhandOutcome = BidManager.ConstuctedSouthhandOutcome.NotSet;
-            shape = new Lazy<(List<string> shapes, int zoomOffset)>(() => GetShapeStrFromAuction(auction, shapeAuctions));
+            Init(auction);
 
             do
             {

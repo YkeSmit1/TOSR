@@ -174,6 +174,9 @@ namespace Common
                 logger.Info($"File {fileName} is too old or does not exist. File will be generated");
                 auctions = generateAuctions();
                 var sortedAuctions = auctions.ToImmutableSortedDictionary();
+                var path = Path.GetDirectoryName(fileName);
+                if (!string.IsNullOrWhiteSpace(path))
+                    Directory.CreateDirectory(path);
                 File.WriteAllText(fileName, JsonConvert.SerializeObject(sortedAuctions, Formatting.Indented));
             }
             return auctions;

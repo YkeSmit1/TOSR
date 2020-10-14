@@ -16,7 +16,7 @@ namespace Common
 
         private string DebuggerDisplay
         {
-            get { return string.Join(Environment.NewLine, GetBids(Player.South).Zip(GetBids(Player.North), (x, y) => x.ToString() + y.ToString())); }
+            get { return string.Join(Environment.NewLine, GetBids(Player.North).Zip(GetBids(Player.South), (x, y) => x.ToString() + y.ToString())); }
         }
 
         public Player GetDeclarer(Suit suit)

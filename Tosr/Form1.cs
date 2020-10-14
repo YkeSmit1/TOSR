@@ -29,7 +29,7 @@ namespace Tosr
         private HandsNorthSouth[] hands;
         private readonly ShuffleRestrictions shuffleRestrictions = new ShuffleRestrictions();
         private string handsString;
-        private BidManager bidManager;
+        private readonly BidManager bidManager;
         private readonly ShapeDictionary auctionsShape;
         private readonly ControlsDictionary auctionsControls;
         private readonly ControlsOnlyDictionary auctionsControlsOnly;
@@ -54,6 +54,7 @@ namespace Tosr
             auctionsControlsOnly = Util.LoadAuctions("txt\\AuctionsByControlsOnly.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControlsOnly());
 
             bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, auctionsShape, auctionsControls, auctionsControlsOnly, false);
+            bidManager.Init(auctionControl.auction);
             shuffleRestrictions.SetControls(2, 12);
             Shuffle();
             BidTillSouth(auctionControl.auction, biddingState);
@@ -70,7 +71,6 @@ namespace Tosr
                     MessageBox.Show($"The correct bid is {biddingState.CurrentBid}. Description: {biddingState.CurrentBid.description}.", "Incorrect bid");
                 }
 
-                auctionControl.AddBid(biddingState.CurrentBid);
                 BidTillSouth(auctionControl.auction, biddingState);
             }
             biddingBox = new BiddingBox(handler)
@@ -113,6 +113,7 @@ namespace Tosr
         {
             Shuffle();
             biddingState.Init();
+            bidManager.Init(auctionControl.auction);
             Clear();
             BidTillSouth(auctionControl.auction, biddingState);
             biddingBox.Enabled = true;
