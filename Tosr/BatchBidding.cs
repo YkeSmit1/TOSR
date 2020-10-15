@@ -34,7 +34,7 @@ namespace Tosr
             public int handsNotBidBecauseofFreakhand = 0;
             public int handsNotBidBecauseOfError = 0;
             public SortedDictionary<Bid, int> contracts = new SortedDictionary<Bid, int>();
-            public Dictionary<BidManager.ConstuctedSouthhandOutcome, int> outcomes = new Dictionary<BidManager.ConstuctedSouthhandOutcome, int>();
+            public Dictionary<BidManager.ConstructedSouthhandOutcome, int> outcomes = new Dictionary<BidManager.ConstructedSouthhandOutcome, int>();
             public Dictionary<Player, int> dealers = new Dictionary<Player, int>();
             public SortedDictionary<int, int> bidsNonShape = new SortedDictionary<int, int>();
         }
@@ -108,13 +108,14 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             AddHandPerAuction(str, strAuction);
 
             // Start calculating hand
-            expectedSouthHands.AppendLine(bidManager.ConstructSouthHandSafe(strHand, auction));
+            if (bidManager.constructedSouthhandOutcome != BidManager.ConstructedSouthhandOutcome.HasSignedOff)
+                expectedSouthHands.AppendLine(bidManager.ConstructSouthHandSafe(strHand, auction));
 
             var longestSuit = Util.GetLongestSuit(strHand.NorthHand, strHand.SouthHand);
             statistics.dealers.AddOrUpdateDictionary(auction.GetDeclarer((Suit)(3 - longestSuit.Item1)));
             statistics.contracts.AddOrUpdateDictionary(auction.currentContract > new Bid(7, Suit.NoTrump) ? new Bid(7, Suit.NoTrump) : auction.currentContract);
             statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Last() - auction.GetBids(Player.South, Fase.Shape).Last());
-            statistics.outcomes.AddOrUpdateDictionary(bidManager.constuctedSouthhandOutcome);
+            statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthhandOutcome);
         }
 
         private void AddHandPerAuction(string str, string strAuction)

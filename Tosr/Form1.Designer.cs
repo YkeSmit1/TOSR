@@ -53,6 +53,8 @@
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.panelNorth = new System.Windows.Forms.Panel();
+            this.panelSouth = new System.Windows.Forms.Panel();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
@@ -61,7 +63,7 @@
             // buttonGetAuction
             // 
             this.buttonGetAuction.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonGetAuction.Location = new System.Drawing.Point(30, 438);
+            this.buttonGetAuction.Location = new System.Drawing.Point(403, 461);
             this.buttonGetAuction.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.buttonGetAuction.Name = "buttonGetAuction";
             this.buttonGetAuction.Size = new System.Drawing.Size(105, 27);
@@ -245,7 +247,7 @@
             // numericUpDown1
             // 
             this.numericUpDown1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.numericUpDown1.Location = new System.Drawing.Point(156, 441);
+            this.numericUpDown1.Location = new System.Drawing.Point(529, 464);
             this.numericUpDown1.Name = "numericUpDown1";
             this.numericUpDown1.Size = new System.Drawing.Size(120, 23);
             this.numericUpDown1.TabIndex = 16;
@@ -254,7 +256,7 @@
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(156, 415);
+            this.label1.Location = new System.Drawing.Point(529, 438);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(134, 15);
             this.label1.TabIndex = 17;
@@ -265,12 +267,30 @@
             this.openFileDialog1.DefaultExt = "db3";
             this.openFileDialog1.FileName = "Tosr.db3";
             // 
+            // panelNorth
+            // 
+            this.panelNorth.BackColor = System.Drawing.Color.Green;
+            this.panelNorth.Location = new System.Drawing.Point(41, 77);
+            this.panelNorth.Name = "panelNorth";
+            this.panelNorth.Size = new System.Drawing.Size(311, 95);
+            this.panelNorth.TabIndex = 18;
+            // 
+            // panelSouth
+            // 
+            this.panelSouth.BackColor = System.Drawing.Color.Green;
+            this.panelSouth.Location = new System.Drawing.Point(41, 418);
+            this.panelSouth.Name = "panelSouth";
+            this.panelSouth.Size = new System.Drawing.Size(311, 95);
+            this.panelSouth.TabIndex = 18;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Green;
-            this.ClientSize = new System.Drawing.Size(730, 479);
+            this.ClientSize = new System.Drawing.Size(730, 539);
+            this.Controls.Add(this.panelSouth);
+            this.Controls.Add(this.panelNorth);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.numericUpDown1);
             this.Controls.Add(this.toolStrip1);
@@ -314,6 +334,8 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem11;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem12;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem13;
+        private System.Windows.Forms.Panel panelNorth;
+        private System.Windows.Forms.Panel panelSouth;
     }
 }
 
