@@ -207,7 +207,8 @@ namespace Tosr
                                 {
                                     switch (relayBidType)
                                     {
-                                        case RelayBidKind.Relay:
+                                        case RelayBidKind.Relay: 
+                                            biddingState.HasSignedOff = true;
                                             break;
                                         case RelayBidKind.fourDiamondEndSignal:
                                             if (biddingState.CurrentBid < fourClubBid)
@@ -396,14 +397,14 @@ namespace Tosr
         public static IEnumerable<Bid> GetAuctionForFaseWithOffset(Auction auction, Bid offsetBid, int zoomOffset, Fase[] fases)
         {
             var lastBidShape = auction.GetBids(Player.South, Fase.Shape).Last();
-            var bidsControls = auction.GetBids(Player.South, fases);
+            var bidsForFases = auction.GetBids(Player.South, fases);
             var offSet = lastBidShape - offsetBid;
             if (zoomOffset != 0)
-                bidsControls = new List<Bid> { lastBidShape }.Concat(bidsControls);
+                bidsForFases = new List<Bid> { lastBidShape }.Concat(bidsForFases);
 
             var used4ClAsRelay = Used4ClAsRelay(auction);
-            bidsControls = bidsControls.Select(b => b = (b - (used4ClAsRelay && b > fourClubBid ? offSet + 1 : offSet)) + zoomOffset);
-            return bidsControls;
+            bidsForFases = bidsForFases.Select(b => b = (b - (used4ClAsRelay && b > fourClubBid ? offSet + 1 : offSet)) + zoomOffset);
+            return bidsForFases;
         }
 
         private static bool Used4ClAsRelay(Auction auction)
