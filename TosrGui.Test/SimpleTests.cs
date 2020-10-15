@@ -59,5 +59,17 @@ namespace TosrGui.Test
         {
             Assert.Equal("Ax,KQxx,Qxxxx,xx", BidManager.HandWithx("A5,KQ65,QT987,42"));
         }
+
+        [Fact()]
+        public void GetTrumpSuitTest()
+        {
+            Assert.Equal(Suit.Hearts, Util.GetTrumpSuit("xxx,xxxx,xxx,xxx", "xxx,xxxx,xxx,xxx"));
+            Assert.Equal(Suit.Spades, Util.GetTrumpSuit("xxxxx,xx,xxx,xxx", "xxxx,xxx,xxx,xxx"));
+            Assert.Equal(Suit.NoTrump, Util.GetTrumpSuit("xxx,xxxx,xxx,xxx", "xxxx,xxx,xxx,xxx"));
+            Assert.Equal(Suit.NoTrump, Util.GetTrumpSuit("xxx,xxx,xxxx,xxx", "xxx,xxx,xxxx,xxx"));
+            Assert.Equal(Suit.NoTrump, Util.GetTrumpSuit("xxx,xxx,xxxxx,xx", "xxx,xxx,xxxx,xxx"));
+            Assert.Equal(Suit.NoTrump, Util.GetTrumpSuit("xxx,xxx,xxxx,xxx", "xxxx,xxxx,xxxx,x"));
+            Assert.Equal(Suit.Diamonds, Util.GetTrumpSuit("xxx,xxx,xxxxx,xx", "xxxx,xxxx,xxxx,x"));
+        }
     }
 }

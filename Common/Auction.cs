@@ -16,7 +16,7 @@ namespace Common
 
         private string DebuggerDisplay
         {
-            get { return $"SouthBids: { GetBidsAsString(Player.South) }. NorthBids. { GetBidsAsString(Player.North) } "; }
+            get { return string.Join(Environment.NewLine, GetBids(Player.North).Zip(GetBids(Player.South), (x, y) => $"{x}{y}")); }
         }
 
         public Player GetDeclarer(Suit suit)

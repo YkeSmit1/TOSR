@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using Common;
 
 namespace Tosr
 {
@@ -28,14 +29,15 @@ namespace Tosr
         {
             checkBoxControls.Checked = shuffleRestrictions.restrictControls;
             checkBoxShape.Checked = shuffleRestrictions.restrictShape;
-            numericUpDownControls.Value = shuffleRestrictions.controls;
+            numericUpDownControls.Value = shuffleRestrictions.minControls;
             textBoxShape.Text = shuffleRestrictions.shape;
         }
         private void FormToObject()
         {
             shuffleRestrictions.restrictControls = checkBoxControls.Checked;
             shuffleRestrictions.restrictShape = checkBoxShape.Checked;
-            shuffleRestrictions.controls = (int)numericUpDownControls.Value;
+            shuffleRestrictions.minControls = (int)numericUpDownControls.Value;
+            shuffleRestrictions.maxControls = (int)numericUpDownControls.Value;
             shuffleRestrictions.shape = textBoxShape.Text;
         }
 

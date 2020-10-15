@@ -14,6 +14,8 @@ namespace Tosr
         public bool EndOfBidding { get; set; }
 
         private readonly Dictionary<Fase, bool> fasesWithOffset;
+        public Fase PreviousFase { get; set; }
+        public bool HasSignedOff { get; set; }
 
         public BiddingState(Dictionary<Fase, bool> fasesWithOffset)
         {
@@ -29,6 +31,7 @@ namespace Tosr
             EndOfBidding = false;
             FaseOffset = 0;
             NextBidIdForRule = 0;
+            HasSignedOff = false;
         }
         public int CalculateBid(int bidIdFromRule, string description, bool zoom)
         {
@@ -65,6 +68,32 @@ namespace Tosr
             else
             {
                 NextBidIdForRule = bidIdFromRule + 1;
+            }
+        }
+
+        public void UpdateBiddingStateSignOff(int controlBidCount, Bid relayBid, bool isNoTrump)
+        {
+            PreviousFase = Fase;
+            RelayBidIdLastFase = Bid.GetBidId(relayBid);
+            HasSignedOff = true;
+            if (isNoTrump)
+            {
+                Fase = controlBidCount switch
+                {
+                    0 => Fase.Pull3NTNoAsk,
+                    1 => Fase.Pull3NTOneAsk,
+                    2 => Fase.Pull3NTTwoAsks,
+                    _ => throw new ArgumentException(nameof(controlBidCount)),
+                };
+            }
+            else
+            {
+                Fase = controlBidCount switch
+                {
+                    0 => Fase.Pull4DiamondsNoAsk,
+                    1 => Fase.Pull4DiamondsOneAsk,
+                    _ => throw new ArgumentException(nameof(controlBidCount)),
+                };
             }
         }
     }

@@ -30,10 +30,8 @@ namespace Common
         public static IEnumerable<CardDto> FisherYates(IEnumerable<CardDto> northHand, IEnumerable<CardDto> southHand)
         {
             var cardsNorthAndSouth = northHand.Concat(southHand).Select(card => (int)card.Suit * 13 + (int)card.Face).ToList();
-            Debug.Assert(cardsNorthAndSouth.Count == 26);
-
             var notPickedCards = Enumerable.Range(0, 52).Where(x => !cardsNorthAndSouth.Contains(x)).ToArray();
-            Debug.Assert(notPickedCards.Count() == 26);
+            Debug.Assert(notPickedCards.Count() + cardsNorthAndSouth.Count == 52);
 
             for (var i = notPickedCards.Length - 1; i > 0; i--)
             {

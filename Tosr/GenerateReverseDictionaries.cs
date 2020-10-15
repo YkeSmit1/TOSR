@@ -8,6 +8,7 @@ using System.Text;
 namespace Tosr
 {
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
+    using ControlsOnlyDictionary = Dictionary<string, List<int>>;
     using ControlsDictionary = Dictionary<string, List<string>>;
 
     public class GenerateReverseDictionaries
@@ -48,6 +49,68 @@ namespace Tosr
             return auctions;
         }
 
+        public ControlsOnlyDictionary GenerateAuctionsForControlsOnly()
+        {
+            var auctions = new ControlsOnlyDictionary();
+            var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
+
+            var shuffleRestrictions = new ShuffleRestrictions
+            {
+                shape = "4333",
+                restrictShape = true,
+            };
+
+            foreach (var control in Enumerable.Range(2, 9))
+            {
+                if (control == 4)
+                {
+                    shuffleRestrictions.SetHcp(0, 11);
+                    BidAndStoreHand(control);
+                    shuffleRestrictions.SetHcp(12, 37);
+                    BidAndStoreHand(control);
+                    shuffleRestrictions.restrictHcp = false;
+                }
+                else
+                    BidAndStoreHand(control);
+            }
+            // Generate entries for one bid control(s)
+            var oneAuction = new ControlsOnlyDictionary();
+            foreach (var auction in auctions.Keys)
+            {
+                if (auction.Length == 4)
+                {
+                    string key = auction.Substring(0, 2);
+                    if (!oneAuction.ContainsKey(key))
+                    {
+                        oneAuction.Add(key, new List<int>());
+                    }
+
+                    oneAuction[key].Add(auctions[auction].First());
+
+                }
+            }
+            return auctions.Union(oneAuction).ToDictionary(pair => pair.Key, pair => pair.Value);
+
+            void BidAndStoreHand(int control)
+            {
+                shuffleRestrictions.SetControls(control, control);
+                string hand;
+                do
+                {
+                    var cards = Shuffling.FisherYates(13).ToList();
+
+                    var orderedCards = cards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
+                    hand = Util.GetDeckAsString(orderedCards);
+                }
+                while
+                    (!shuffleRestrictions.Match(hand));
+
+                var auction = bidManager.GetAuction(string.Empty, hand); // No northhand. Just for generating reverse dictionaries
+                auctions.Add(auction.GetBidsAsString(Fase.Controls), new List<int> { control });
+            }
+
+        }
+
         public ControlsDictionary GenerateAuctionsForControls()
         {
             var auctions = new ControlsDictionary();
@@ -69,7 +132,7 @@ namespace Tosr
                             int controlCount = Util.GetControlCount(hand);
                             if (controlCount > 1)
                             {
-                                BidAndStoreHand(auctions, bidManager, hand, hand);
+                                BidAndStoreHand(hand, hand);
                                 // Also try to store the hand with extra jacks for exactly 4 controls, because auction will be different if there are more then 12 HCP in the hand
                                 if (controlCount == 4 && Util.GetHcpCount(hand) < 12)
                                 {
@@ -78,13 +141,13 @@ namespace Tosr
                                                       GetControlsWithJackIfPossible(diamonds, suitLength[2]).PadRight(suitLength[2], 'x') + ',' +
                                                          GetControlsWithJackIfPossible(clubs, suitLength[3]).PadRight(suitLength[3], 'x');
                                     Debug.Assert(hand.Length == 16);
-                                    BidAndStoreHand(auctions, bidManager, handWithJacks, hand);
+                                    BidAndStoreHand(handWithJacks, hand);
                                 }
                             }
                         }
             return auctions;
 
-            static void BidAndStoreHand(ControlsDictionary auctions, BidManager bidManager, string hand, string handToStore)
+            void BidAndStoreHand(string hand, string handToStore)
             {
                 var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
                 string key = auction.GetBidsAsString(new[] { Fase.Controls, Fase.Scanning });

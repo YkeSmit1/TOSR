@@ -3,6 +3,7 @@ using NLog;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -53,7 +54,13 @@ namespace Common
         Shape,
         Controls,
         Scanning,
-        End
+        End,
+        Pull3NTNoAsk,
+        Pull3NTOneAsk,
+        Pull3NTTwoAsks,
+        Pull4DiamondsNoAsk,
+        Pull4DiamondsOneAsk,
+        BidGame,
     };
 
 
@@ -136,13 +143,14 @@ namespace Common
             return cards.Where(c => c.Suit == suit).Aggregate("", (x, y) => x + GetFaceDescription(y.Face));
         }
 
-        public static int GetLongestSuit(string northHand, string southHand)
+        public static (Suit, int) GetLongestSuit(string northHand, string southHand)
         {
             var suitLengthNorth = northHand.Split(',').Select(x => x.Length);
             var suitLengthSouth = southHand.Split(',').Select(x => x.Length);
             var suitLengthNS = suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
-            var longestSuit = suitLengthNS.ToList().IndexOf(suitLengthNS.Max());
-            return longestSuit;
+            var maxSuitLength = suitLengthNS.Max();
+            var longestSuit = suitLengthNS.ToList().IndexOf(maxSuitLength);
+            return ((Suit)(3 - longestSuit), maxSuitLength);
         }
 
         public static bool IsFreakHand(string handLength)
@@ -166,6 +174,9 @@ namespace Common
                 logger.Info($"File {fileName} is too old or does not exist. File will be generated");
                 auctions = generateAuctions();
                 var sortedAuctions = auctions.ToImmutableSortedDictionary();
+                var path = Path.GetDirectoryName(fileName);
+                if (!string.IsNullOrWhiteSpace(path))
+                    Directory.CreateDirectory(path);
                 File.WriteAllText(fileName, JsonConvert.SerializeObject(sortedAuctions, Formatting.Indented));
             }
             return auctions;
@@ -180,5 +191,21 @@ namespace Common
         {
             return hand.Count(x => x == 'K') + hand.Count(x => x == 'A') * 2;
         }
+
+        public static Suit GetTrumpSuit(string northHand, string southHand)
+        {
+            Debug.Assert(northHand.Length == 16);
+            Debug.Assert(southHand.Length == 16);
+            // TODO Use single dummy analyses to find out the best trump suit
+            var (longestSuit, suitLength) = Util.GetLongestSuit(northHand, southHand);
+            // If we have a major fit return the major
+            if (new List<Suit> { Suit.Spades, Suit.Hearts }.Contains(longestSuit))
+                return (suitLength < 8) ? Suit.NoTrump : longestSuit;
+            // Only wants to play a minor if we have a singleton and more than 9 trumps
+            if (suitLength > 8 && (northHand.Split(',').Select(x => x.Length).Min() <= 1 || southHand.Split(',').Select(x => x.Length).Min() <= 1))
+                return longestSuit;
+            return Suit.NoTrump;
+        }
+
     }
 }

@@ -12,6 +12,7 @@ using NLog;
 namespace TosrIntegration.Test
 {
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
+    using ControlsOnlyDictionary = Dictionary<string, List<int>>;
     using ControlsDictionary = Dictionary<string, List<string>>;
 
     public class TestCaseProvider
@@ -41,6 +42,7 @@ namespace TosrIntegration.Test
     {
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ShapeDictionary shapeAuctions;
+        private ControlsOnlyDictionary auctionsControlsOnly;
         private readonly ControlsDictionary auctionsControls;
 
         private readonly ITestOutputHelper output;
@@ -51,6 +53,7 @@ namespace TosrIntegration.Test
             fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
             shapeAuctions = Util.LoadAuctions("AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
             auctionsControls = Util.LoadAuctions("AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
+            auctionsControlsOnly = Util.LoadAuctions("AuctionsByControlsOnly.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControlsOnly());
 
             this.output = output;
         }
@@ -64,7 +67,7 @@ namespace TosrIntegration.Test
             logger.Info($"Executing testcase {testName}");
 
             Pinvoke.Setup("Tosr.db3");
-            BidManager bidManager = new BidManager(new BidGenerator(), fasesWithOffset, shapeAuctions, auctionsControls);
+            BidManager bidManager = new BidManager(new BidGenerator(), fasesWithOffset, shapeAuctions, auctionsControls, auctionsControlsOnly, false);
             var auction = bidManager.GetAuction(string.Empty, southHand);
             var actualBidsSouth = auction.GetBidsAsString(Player.South);
             Assert.Equal(expectedBidsSouth, actualBidsSouth);

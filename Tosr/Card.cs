@@ -50,7 +50,7 @@ namespace Tosr
         }
 
         /// <summary>
-        /// Draws a card with the specified given proterties using 
+        /// Draws a card with the specified given properties using 
         /// </summary>
         /// <param name="face">Number of card face</param>
         /// <param name="suit">Suit of the card</param>
@@ -175,7 +175,7 @@ namespace Tosr
             cdtTerm();          // to release resources used by the control
         }
         /// <summary>
-        /// Here on paint is overriden to force the designer to draw cards 
+        /// Here on paint is overridden to force the designer to draw cards 
         /// on the surface of the control, since the designer executes these 
         /// lines of code stored in OnPaint to obtain appearance of the 
         /// control. 
@@ -252,11 +252,11 @@ namespace Tosr
         /// <param name="card">Number of card to be drawn 
         ///  If a card face is to be drawn (type is 0 or 2), then card must be a value from 0 through 51 to represent each card.
         ///  If type specifies that a card back is to be drawn (type is 1), then card must be a value from 53 to 68 (inclusive), to represent one of the 16 possible card backs.
-        ///  The card faces are organised in increasing order. That is, the aces come first, then the two's and so on. In each group, the cards are ordered by suit. The order is clubs, diamons, hearts, spades. This pattern is repeated as the card values increase.
+        ///  The card faces are organized in increasing order. That is, the aces come first, then the two's and so on. In each group, the cards are ordered by suit. The order is clubs, diamonds, hearts, spades. This pattern is repeated as the card values increase.
         /// </param>
         /// <param name="hdc">the handle of the device context on which the card will be drawn</param>
         /// <param name="type">Controls whether the front, the back, or the inverted front of the card is drawn.
-        /// 0: front, 1: back, 2: hilite, 3: ghost, 4: remove, 5: invisible ghost, 6: X, 7: O
+        /// 0: front, 1: back, 2: hi-lite, 3: ghost, 4: remove, 5: invisible ghost, 6: X, 7: O
         /// </param>
         /// <param name="x">X position of the card upper left corner</param>
         /// <param name="y">X position of the card upper left corner</param>
@@ -269,11 +269,11 @@ namespace Tosr
         /// <param name="card">Number of card to be drawn 
         ///  If a card face is to be drawn (type is 0 or 2), then card must be a value from 0 through 51 to represent each card.
         ///  If type specifies that a card back is to be drawn (type is 1), then card must be a value from 53 to 68 (inclusive), to represent one of the 16 possible card backs.
-        ///  The card faces are organised in increasing order. That is, the aces come first, then the two's and so on. In each group, the cards are ordered by suit. The order is clubs, diamons, hearts, spades. This pattern is repeated as the card values increase.
+        ///  The card faces are organized in increasing order. That is, the aces come first, then the two's and so on. In each group, the cards are ordered by suit. The order is clubs, diamonds, hearts, spades. This pattern is repeated as the card values increase.
         /// </param>
         /// <param name="hdc">the handle of the device context on which the card will be drawn</param>
         /// <param name="suit">Controls whether the front, the back, or the inverted front of the card is drawn.
-        /// 0: front, 1: back, 2: hilite, 3: ghost, 4: remove, 5: invisible ghost, 6: X, 7: O
+        /// 0: front, 1: back, 2: hi-lite, 3: ghost, 4: remove, 5: invisible ghost, 6: X, 7: O
         /// </param>
         /// <param name="color"> Sets the background color for the CrossHatch card back(card = 53), which uses a pattern drawn with lines. All the other backs and fronts are bitmaps, so color has no effect.</param>
         /// <param name="dx">Width of the drawn card</param>

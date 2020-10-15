@@ -23,7 +23,7 @@ void SQLiteCppWrapper::GetBid(int bidId, int& rank, int& suit)
         suit = query->getColumn(1);
     }
 }
-std::tuple<int, Fase, std::string, bool> SQLiteCppWrapper::GetRule(const HandCharacteristic& hand, const Fase& fase, int lastBidId)
+std::tuple<int, Fase, std::string, bool> SQLiteCppWrapper::GetRule(const HandCharacteristic& hand, const Fase& fase, Fase previousFase, int lastBidId)
 {
     switch (fase)
     {
@@ -47,6 +47,22 @@ std::tuple<int, Fase, std::string, bool> SQLiteCppWrapper::GetRule(const HandCha
             auto [bidId, endfase, str] = GetRuleScanning(hand, lastBidId);
             return std::make_tuple(bidId, endfase ? Fase::End : Fase::Scanning, str, false);
         }
+        case Fase::Pull3NTNoAsk:
+        case Fase::Pull3NTOneAsk:
+        case Fase::Pull3NTTwoAsks:
+        case Fase::Pull4DiamondsNoAsk:
+        case Fase::Pull4DiamondsOneAsk:
+        {
+            auto [bidId, zoom, str] = GetRuleSignOff(hand, fase);
+            if (zoom)
+            {
+                auto [bidIdCtrls, endfaseCtrls, strCtrl] = GetRuleControls(hand, 0);
+                return std::make_tuple(bidId + bidIdCtrls - 1, endfaseCtrls ? previousFase : (Fase)((int)previousFase + 1), str + "\n" + strCtrl, zoom);
+            }
+            auto nextFase = bidId == 1 && (fase == Fase::Pull4DiamondsNoAsk || fase == Fase::Pull4DiamondsOneAsk) ? Fase::BidGame : previousFase;
+            return std::make_tuple(bidId, nextFase, str, zoom);
+        }
+
         default:
             throw std::invalid_argument(std::to_string((int)fase));
     }
@@ -170,6 +186,41 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleScanning(const HandC
     }
 }
 
+std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleSignOff(const HandCharacteristic& hand, Fase fase)
+{
+    try
+    {
+        // Bind parameters
+        querySignOffs->reset();
+
+        querySignOffs->bind(1, (int)fase);
+
+        querySignOffs->bind(2, hand.isMax);
+        querySignOffs->bind(3, hand.Hcp);
+        querySignOffs->bind(4, hand.Hcp);
+        querySignOffs->bind(5, hand.Queens);
+        querySignOffs->bind(6, hand.Queens);
+
+        if (!querySignOffs->executeStep())
+            throw std::runtime_error("No row found in SignOff table.");
+
+        int bidId = querySignOffs->getColumn(0);
+        bool zoom = querySignOffs->getColumn(1).getInt();
+        auto id = querySignOffs->getColumn(2).getInt();
+        auto str = querySignOffs->getColumn(3).getString();
+
+        DBOUT("SignOff. Rule Id:" << id << '\n');
+
+        return std::make_tuple(bidId, zoom, str);
+    }
+    catch (std::exception& e)
+    {
+        std::cerr << e.what();
+        throw;
+    }
+
+}
+
 void SQLiteCppWrapper::SetDatabase(const std::string& database)
 {
     db.release();
@@ -178,4 +229,5 @@ void SQLiteCppWrapper::SetDatabase(const std::string& database)
     queryShape = std::make_unique<SQLite::Statement>(*db, shapeSql.data());
     queryControls = std::make_unique<SQLite::Statement>(*db, controlsSql.data());
     queryScanning = std::make_unique<SQLite::Statement>(*db, scanningSql.data());
+    querySignOffs = std::make_unique<SQLite::Statement>(*db, signOffsSql.data());
 }

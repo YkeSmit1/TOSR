@@ -11,6 +11,7 @@ using Common;
 namespace Tosr
 {
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
+    using ControlsOnlyDictionary = Dictionary<string, List<int>>;
     using ControlsDictionary = Dictionary<string, List<string>>;
 
     public struct HandsNorthSouth
@@ -28,9 +29,11 @@ namespace Tosr
         private HandsNorthSouth[] hands;
         private readonly ShuffleRestrictions shuffleRestrictions = new ShuffleRestrictions();
         private string handsString;
-        private BidManager bidManager;
+        private readonly BidManager bidManager;
         private readonly ShapeDictionary auctionsShape;
         private readonly ControlsDictionary auctionsControls;
+        private readonly ControlsOnlyDictionary auctionsControlsOnly;
+
         private readonly static Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
         private readonly BiddingState biddingState = new BiddingState(fasesWithOffset);
 
@@ -48,9 +51,11 @@ namespace Tosr
 
             auctionsShape = Util.LoadAuctions("txt\\AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
             auctionsControls = Util.LoadAuctions("txt\\AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
+            auctionsControlsOnly = Util.LoadAuctions("txt\\AuctionsByControlsOnly.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControlsOnly());
 
-            bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, auctionsShape, auctionsControls);
-
+            bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, auctionsShape, auctionsControls, auctionsControlsOnly, false);
+            bidManager.Init(auctionControl.auction);
+            shuffleRestrictions.SetControls(2, 12);
             Shuffle();
             BidTillSouth(auctionControl.auction, biddingState);
         }
@@ -66,7 +71,6 @@ namespace Tosr
                     MessageBox.Show($"The correct bid is {biddingState.CurrentBid}. Description: {biddingState.CurrentBid.description}.", "Incorrect bid");
                 }
 
-                auctionControl.AddBid(biddingState.CurrentBid);
                 BidTillSouth(auctionControl.auction, biddingState);
             }
             biddingBox = new BiddingBox(handler)
@@ -109,6 +113,7 @@ namespace Tosr
         {
             Shuffle();
             biddingState.Init();
+            bidManager.Init(auctionControl.auction);
             Clear();
             BidTillSouth(auctionControl.auction, biddingState);
             biddingBox.Enabled = true;
@@ -172,7 +177,7 @@ namespace Tosr
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
-                BatchBidding batchBidding = new BatchBidding(auctionsShape, auctionsControls, fasesWithOffset);
+                BatchBidding batchBidding = new BatchBidding(auctionsShape, auctionsControls, auctionsControlsOnly, fasesWithOffset);
                 batchBidding.Execute(hands);
             }
             finally
@@ -185,6 +190,7 @@ namespace Tosr
         {
             hands = new HandsNorthSouth[batchSize];
             var localshuffleRestrictions = new ShuffleRestrictions();
+            localshuffleRestrictions.SetControls(2, 12);
 
             for (int i = 0; i < batchSize; ++i)
             {
@@ -205,8 +211,8 @@ namespace Tosr
             var orderedCardsNorth = cards.Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
             handsNorthSouth.NorthHand = Util.GetDeckAsString(orderedCardsNorth);
 
-            var unOrderedCards = cards.Skip(13).Take(13).ToList();
-                var orderedCardsSouth = unOrderedCards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
+            var unOrderedCardsSouth = cards.Skip(13).Take(13).ToList();
+            var orderedCardsSouth = unOrderedCardsSouth.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
             handsNorthSouth.SouthHand = Util.GetDeckAsString(orderedCardsSouth);
 
             return (handsNorthSouth, orderedCardsSouth);

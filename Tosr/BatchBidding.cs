@@ -13,6 +13,7 @@ using NLog;
 namespace Tosr
 {
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
+    using ControlsOnlyDictionary = Dictionary<string, List<int>>;
     using ControlsDictionary = Dictionary<string, List<string>>;
 
     public static class DictionaryExtension 
@@ -44,9 +45,9 @@ namespace Tosr
         private readonly BidManager bidManager;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        public BatchBidding(ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions, Dictionary<Fase, bool> fasesWithOffset)
+        public BatchBidding(ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions, ControlsOnlyDictionary controlsOnlyDictionary, Dictionary<Fase, bool> fasesWithOffset)
         {
-            bidManager = new BidManager(new BidGenerator(), fasesWithOffset, shapeAuctions, controlsAuctions);
+            bidManager = new BidManager(new BidGenerator(), fasesWithOffset, shapeAuctions, controlsAuctions, controlsOnlyDictionary, false);
         }
 
         public void Execute(HandsNorthSouth[] hands)
@@ -110,7 +111,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             expectedSouthHands.AppendLine(bidManager.ConstructSouthHandSafe(strHand, auction));
 
             var longestSuit = Util.GetLongestSuit(strHand.NorthHand, strHand.SouthHand);
-            statistics.dealers.AddOrUpdateDictionary(auction.GetDeclarer((Suit)(3 - longestSuit)));
+            statistics.dealers.AddOrUpdateDictionary(auction.GetDeclarer((Suit)(3 - longestSuit.Item1)));
             statistics.contracts.AddOrUpdateDictionary(auction.currentContract > new Bid(7, Suit.NoTrump) ? new Bid(7, Suit.NoTrump) : auction.currentContract);
             statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Last() - auction.GetBids(Player.South, Fase.Shape).Last());
             statistics.outcomes.AddOrUpdateDictionary(bidManager.constuctedSouthhandOutcome);
