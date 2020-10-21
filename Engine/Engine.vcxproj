@@ -163,7 +163,6 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Rule.h" />
     <ClInclude Include="SQLiteCppWrapper.h" />
-    <ClInclude Include="SQLiteOrmWrapper.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>

@@ -10,10 +10,6 @@ using Common;
 
 namespace Tosr
 {
-    using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
-    using ControlsOnlyDictionary = Dictionary<string, List<int>>;
-    using ControlsDictionary = Dictionary<string, List<string>>;
-
     public struct HandsNorthSouth
     {
         public string NorthHand;
@@ -31,9 +27,8 @@ namespace Tosr
         private readonly ShuffleRestrictions shuffleRestrictionsNorth = new ShuffleRestrictions();
 
         private readonly BidManager bidManager;
-        private readonly ShapeDictionary auctionsShape;
-        private readonly ControlsDictionary auctionsControls;
-        private readonly ControlsOnlyDictionary auctionsControlsOnly;
+
+        ReverseDictionaries reverseDictionaries;
 
         private readonly static Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
         private readonly BiddingState biddingState = new BiddingState(fasesWithOffset);
@@ -50,11 +45,9 @@ namespace Tosr
             Pinvoke.Setup("Tosr.db3");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
-            auctionsShape = Util.LoadAuctions("txt\\AuctionsByShape.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
-            auctionsControls = Util.LoadAuctions("txt\\AuctionsByControls.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
-            auctionsControlsOnly = Util.LoadAuctions("txt\\AuctionsByControlsOnly.txt", () => new GenerateReverseDictionaries(fasesWithOffset).GenerateAuctionsForControlsOnly());
-
-            bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, auctionsShape, auctionsControls, auctionsControlsOnly, false);
+            reverseDictionaries = new ReverseDictionaries("txt\\AuctionsByShape.txt", "txt\\AuctionsByControls.txt", 
+                "txt\\AuctionsByControlsOnly.txt", "txt\\AuctionsByControlsScanning.txt", fasesWithOffset);
+            bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, false);
             bidManager.Init(auctionControl.auction);
             shuffleRestrictionsSouth.SetControls(2, 12);
             shuffleRestrictionsNorth.SetHcp(16, 37);
@@ -193,7 +186,7 @@ namespace Tosr
             {
                 Cursor.Current = Cursors.WaitCursor;
                 panelNorth.Visible = false;
-                BatchBidding batchBidding = new BatchBidding(auctionsShape, auctionsControls, auctionsControlsOnly, fasesWithOffset);
+                BatchBidding batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset);
                 batchBidding.Execute(hands);
             }
             finally

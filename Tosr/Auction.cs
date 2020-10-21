@@ -17,14 +17,9 @@ namespace Tosr
             void handler(object x, MouseEventArgs y)
             {
                 var index = richTextBox1.GetCharIndexFromPosition(y.Location);
-                var biddinground = richTextBox1.GetLineFromCharIndex(index);
-                if (auction.bids.ContainsKey(biddinground))
-                {
-                    if (auction.bids[biddinground].ContainsKey(Player.South))
-                    {
-                        toolTip.Show(auction.bids[biddinground][Player.South].description, richTextBox1);
-                    }
-                }
+                var biddingRoundIndex = richTextBox1.GetLineFromCharIndex(index);
+                if (auction.bids.TryGetValue(biddingRoundIndex, out var biddingRound) && biddingRound.TryGetValue(Player.South, out var bid))
+                    toolTip.Show(bid.description, richTextBox1);
             }
             richTextBox1.MouseMove += handler;
             auction.Clear();

@@ -12,10 +12,6 @@ using NLog;
 
 namespace Tosr
 {
-    using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
-    using ControlsOnlyDictionary = Dictionary<string, List<int>>;
-    using ControlsDictionary = Dictionary<string, List<string>>;
-
     public static class DictionaryExtension 
     {
         public static void AddOrUpdateDictionary<T>(this IDictionary<T, int> dictionary, T item)
@@ -45,9 +41,9 @@ namespace Tosr
         private readonly BidManager bidManager;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        public BatchBidding(ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions, ControlsOnlyDictionary controlsOnlyDictionary, Dictionary<Fase, bool> fasesWithOffset)
+        public BatchBidding(ReverseDictionaries reverseDictionaries, Dictionary<Fase, bool> fasesWithOffset)
         {
-            bidManager = new BidManager(new BidGenerator(), fasesWithOffset, shapeAuctions, controlsAuctions, controlsOnlyDictionary, false);
+            bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, false);
         }
 
         public void Execute(HandsNorthSouth[] hands)

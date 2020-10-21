@@ -35,17 +35,17 @@ std::tuple<int, Fase, std::string, bool> SQLiteCppWrapper::GetRule(const HandCha
                 auto [bidIdCtrls, endfaseCtrls, strCtrl] = GetRuleControls(hand, 0);
                 return std::make_tuple(bidId + bidIdCtrls - 1, endfaseCtrls ? Fase::Scanning : Fase::Controls, str + "\n" + strCtrl, zoom);
             }
-            return std::make_tuple(bidId, endfase ? Fase::Controls : Fase::Shape, str, zoom);
+            return std::make_tuple(bidId, endfase ? Fase::Controls : fase, str, zoom);
         }
         case Fase::Controls:
         {
             auto [bidId, endfase, str] = GetRuleControls(hand, lastBidId);
-            return std::make_tuple(bidId, endfase ? Fase::Scanning : Fase::Controls, str, false);
+            return std::make_tuple(bidId, endfase ? Fase::Scanning : fase, str, false);
         }
         case Fase::Scanning: 
         {
             auto [bidId, endfase, str] = GetRuleScanning(hand, lastBidId);
-            return std::make_tuple(bidId, endfase ? Fase::End : Fase::Scanning, str, false);
+            return std::make_tuple(bidId, endfase ? Fase::End : fase, str, false);
         }
         case Fase::Pull3NTNoAsk:
         case Fase::Pull3NTOneAsk:

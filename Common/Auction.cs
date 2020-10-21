@@ -16,7 +16,7 @@ namespace Common
 
         private string DebuggerDisplay
         {
-            get { return string.Join(Environment.NewLine, GetBids(Player.North).Zip(GetBids(Player.South), (x, y) => $"{x}{y}")); }
+            get { return string.Join(Environment.NewLine, GetBids(Player.North).Zip(GetBids(Player.South), (x, y) => $"{x}{y} {y.description}")); }
         }
 
         public Player GetDeclarer(Suit suit)
@@ -75,7 +75,7 @@ namespace Common
         public string GetBidsAsString(Fase[] fases)
         {
             const Player south = Player.South;
-            return bids.Where(x => x.Value.ContainsKey(south) && fases.Contains(x.Value[south].fase)).
+            return bids.Where(x => x.Value.TryGetValue(south, out var bid) && fases.Contains(bid.fase)).
                 Aggregate(string.Empty, (current, biddingRound) => current + biddingRound.Value[south]);
         }
 
@@ -91,7 +91,7 @@ namespace Common
 
         public IEnumerable<Bid> GetBids(Player player, Fase[] fases)
         {
-            return bids.Where(x => x.Value.ContainsKey(player) && fases.Contains(x.Value[player].fase)).Select(x => x.Value[player]);
+            return bids.Where(x => x.Value.TryGetValue(player, out var bid) && fases.Contains(bid.fase)).Select(x => x.Value[player]);
         }
 
         public void SetBids(Player player, IEnumerable<Bid> newBids)
@@ -103,6 +103,19 @@ namespace Common
                 bids[biddingRound] = new Dictionary<Player, Bid>(new List<KeyValuePair<Player, Bid>> { new KeyValuePair<Player, Bid>(player, bid) });
                 biddingRound++;
             }
+        }
+
+        public bool Used4ClAsRelay()
+        {
+            var previousBiddingRound = bids.First();
+            foreach (var biddingRound in bids.Skip(1))
+            {
+                if (biddingRound.Value.TryGetValue(Player.North, out var bid) && bid == Bid.fourClubBid)
+                    return previousBiddingRound.Value[Player.South] == Bid.threeSpadeBid;
+
+                previousBiddingRound = biddingRound;
+            }
+            return false;
         }
     }
 }

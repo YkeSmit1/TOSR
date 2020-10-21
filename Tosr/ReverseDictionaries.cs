@@ -11,11 +11,29 @@ namespace Tosr
     using ControlsOnlyDictionary = Dictionary<string, List<int>>;
     using ControlsDictionary = Dictionary<string, List<string>>;
 
-    public class GenerateReverseDictionaries
+    public class ReverseDictionaries
     {
+        public ShapeDictionary ShapeAuctions { get; }
+        public ControlsDictionary ControlsAuctions { get; }
+        public ControlsOnlyDictionary ControlsOnlyAuctions { get; }
+
+        public ReverseDictionaries(ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions, ControlsOnlyDictionary controlsOnlyAuctions)
+        {
+            ShapeAuctions = shapeAuctions;
+            ControlsAuctions = controlsAuctions;
+            ControlsOnlyAuctions = controlsOnlyAuctions;
+        }
+
+        public ReverseDictionaries(string shapeFilename, string controlFilename, string controlsOnlyFilename, string contorlsScanning, Dictionary<Fase, bool> fasesWithOffset)
+        {
+            ShapeAuctions = Util.LoadAuctions(shapeFilename, () => new ReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
+            ControlsAuctions = Util.LoadAuctions(controlFilename, () => new ReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
+            ControlsOnlyAuctions = Util.LoadAuctions(controlsOnlyFilename, () => new ReverseDictionaries(fasesWithOffset).GenerateAuctionsForControlsOnly());
+        }
+
         private readonly Dictionary<Fase, bool> fasesWithOffset;
 
-        public GenerateReverseDictionaries(Dictionary<Fase, bool> fasesWithOffset)
+        public ReverseDictionaries(Dictionary<Fase, bool> fasesWithOffset)
         {
             this.fasesWithOffset = fasesWithOffset;
         }
@@ -73,23 +91,23 @@ namespace Tosr
                 else
                     BidAndStoreHand(control);
             }
-            // Generate entries for one bid control(s)
-            var oneAuction = new ControlsOnlyDictionary();
+            // Generate entries for one ask control(s)
+            var oneAskAuction = new ControlsOnlyDictionary();
             foreach (var auction in auctions.Keys)
             {
                 if (auction.Length == 4)
                 {
                     string key = auction.Substring(0, 2);
-                    if (!oneAuction.ContainsKey(key))
+                    if (!oneAskAuction.ContainsKey(key))
                     {
-                        oneAuction.Add(key, new List<int>());
+                        oneAskAuction.Add(key, new List<int>());
                     }
 
-                    oneAuction[key].Add(auctions[auction].First());
+                    oneAskAuction[key].Add(auctions[auction].First());
 
                 }
             }
-            return auctions.Union(oneAuction).ToDictionary(pair => pair.Key, pair => pair.Value);
+            return auctions.Union(oneAskAuction).ToDictionary(pair => pair.Key, pair => pair.Value);
 
             void BidAndStoreHand(int control)
             {
@@ -109,6 +127,54 @@ namespace Tosr
                 auctions.Add(auction.GetBidsAsString(Fase.Controls), new List<int> { control });
             }
 
+        }
+
+        public ControlsDictionary GenerateAuctionsForControlsScanning()
+        {
+            var auctions = new ControlsDictionary();
+            var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
+            int[] suitLength = new[] { 4, 3, 3, 3 };
+            string[] controls = new[] { "", "A", "K", "AK"};
+
+            foreach (var spades in controls)
+                foreach (var hearts in controls)
+                    foreach (var diamonds in controls)
+                        foreach (var clubs in controls)
+                        {
+                            var hand = spades.PadRight(suitLength[0], 'x') + ',' +
+                                       hearts.PadRight(suitLength[1], 'x') + ',' +
+                                     diamonds.PadRight(suitLength[2], 'x') + ',' +
+                                        clubs.PadRight(suitLength[3], 'x');
+                            Debug.Assert(hand.Length == 16);
+
+                            int controlCount = Util.GetControlCount(hand);
+                            if (controlCount > 1)
+                            {
+                                BidAndStoreHand(hand, hand);
+                                // Also try to store the hand with extra queens for exactly 4 controls, because auction will be different if there are more then 12 HCP in the hand
+                                if (controlCount == 4 && Util.GetHcpCount(hand) < 12)
+                                {
+                                    var handWithJacks = GetControlsWithHonorsIfPossible(spades, suitLength[0], "Q").PadRight(suitLength[0], 'x') + ',' +
+                                                        GetControlsWithHonorsIfPossible(hearts, suitLength[1], "Q").PadRight(suitLength[1], 'x') + ',' +
+                                                      GetControlsWithHonorsIfPossible(diamonds, suitLength[2], "Q").PadRight(suitLength[2], 'x') + ',' +
+                                                         GetControlsWithHonorsIfPossible(clubs, suitLength[3], "Q").PadRight(suitLength[3], 'x');
+                                    Debug.Assert(hand.Length == 16);
+                                    BidAndStoreHand(handWithJacks, hand);
+                                }
+                            }
+                        }
+            return auctions;
+
+            void BidAndStoreHand(string hand, string handToStore)
+            {
+                var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
+                // TODO fix correct fase
+                var key = auction.GetBidsAsString(new[] { Fase.Controls, Fase.Scanning });
+                if (auctions.ContainsKey(key))
+                    auctions[key].Add((handToStore));
+                else
+                    auctions.Add(key, (new List<string>() { handToStore }));
+            }
         }
 
         public ControlsDictionary GenerateAuctionsForControls()
@@ -136,10 +202,10 @@ namespace Tosr
                                 // Also try to store the hand with extra jacks for exactly 4 controls, because auction will be different if there are more then 12 HCP in the hand
                                 if (controlCount == 4 && Util.GetHcpCount(hand) < 12)
                                 {
-                                    var handWithJacks = GetControlsWithJackIfPossible(spades, suitLength[0]).PadRight(suitLength[0], 'x') + ',' +
-                                                        GetControlsWithJackIfPossible(hearts, suitLength[1]).PadRight(suitLength[1], 'x') + ',' +
-                                                      GetControlsWithJackIfPossible(diamonds, suitLength[2]).PadRight(suitLength[2], 'x') + ',' +
-                                                         GetControlsWithJackIfPossible(clubs, suitLength[3]).PadRight(suitLength[3], 'x');
+                                    var handWithJacks = GetControlsWithHonorsIfPossible(spades, suitLength[0], "J").PadRight(suitLength[0], 'x') + ',' +
+                                                        GetControlsWithHonorsIfPossible(hearts, suitLength[1], "J").PadRight(suitLength[1], 'x') + ',' +
+                                                      GetControlsWithHonorsIfPossible(diamonds, suitLength[2], "J").PadRight(suitLength[2], 'x') + ',' +
+                                                         GetControlsWithHonorsIfPossible(clubs, suitLength[3], "J").PadRight(suitLength[3], 'x');
                                     Debug.Assert(hand.Length == 16);
                                     BidAndStoreHand(handWithJacks, hand);
                                 }
@@ -155,11 +221,11 @@ namespace Tosr
                     auctions.Add(key, new List<string>());
                 auctions[key].Add(handToStore);
             }
+        }
 
-            static string GetControlsWithJackIfPossible(string suit, int suitLength)
-            {
-                return suit + (suit.Length == suitLength ? "" : "J");
-            }
+        static string GetControlsWithHonorsIfPossible(string suit, int suitLength, string honor)
+        {
+            return suit + (suit.Length == suitLength ? "" : honor);
         }
     }
 }
