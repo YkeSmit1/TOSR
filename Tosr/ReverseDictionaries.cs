@@ -111,7 +111,7 @@ namespace Tosr
 
                 }
             }
-            return auctions.Union(oneAskAuction).ToDictionary(pair => pair.Key, pair => pair.Value);
+            return auctions.Concat(oneAskAuction).ToDictionary(pair => pair.Key, pair => pair.Value);
 
             void BidAndStoreHand(int control)
             {
