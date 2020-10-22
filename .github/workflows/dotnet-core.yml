@@ -35,7 +35,7 @@ jobs:
     - name: Install SQLiteCpp using vcpg      
       run: |
         $VCPKG_ROOT/vcpkg install SQLiteCpp:x64-windows
-        # $VCPKG_ROOT/vcpkg integrate install SQLiteCpp:x64-windows
+        $VCPKG_ROOT/vcpkg integrate install
       shell: bash      
     - name: Build
       run: msbuild /t:Build /p:Configuration=Release -m Tosr.sln
