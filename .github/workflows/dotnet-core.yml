@@ -23,16 +23,17 @@ jobs:
       run: dotnet restore
     - name: NuGet Restore
       run: nuget restore Tosr.sln
-    - name: Installing vcpkg (windows)
-      run: |
-        cd ..
-        git clone https://github.com/Microsoft/vcpkg.git
-        cd vcpkg
-        git checkout
-        .\bootstrap-vcpkg.bat
-        .\vcpkg.exe install SQLiteCpp:x64-windows
-        .\vcpkg.exe install sqlite-orm:x64-windows
-        .\vcpkg.exe integrate install
+    # Restore from cache the previously built ports. If cache-miss, download, build vcpkg.
+    - name: Restore from cache and install vcpkg
+      # Download and build vcpkg, without installing any port. If content is cached already, it is a no-op.
+      uses: lukka/run-vcpkg@v4
+      with:
+        setupOnly: true
+    # Now that vcpkg is installed, it is being used to run with desired arguments.
+    - run: |
+        $VCPKG_ROOT/vcpkg install SQLiteCpp:x64-windows
+        # $VCPKG_ROOT/vcpkg integrate install SQLiteCpp:x64-windows
+      shell: bash      
     - name: Build
       run: msbuild /t:Build /p:Configuration=Release -m Tosr.sln
     - name: Run c# Test
