@@ -25,17 +25,12 @@ jobs:
       run: dotnet restore
     - name: NuGet Restore
       run: nuget restore Tosr.sln
-    # Restore from cache the previously built ports. If "cache miss", then provision vcpkg, install desired ports, finally cache everything for the next run.
-    - name: Restore from cache and run vcpkg
+    # Restore from cache the previously built ports. If cache-miss, download, build vcpkg.
+    - name: Restore from cache and install vcpkg
+      # Download and build vcpkg, without installing any port. If content is cached already, it is a no-op.
       uses: lukka/run-vcpkg@v4
       with:
-        # Response file stored in source control, it provides the list of ports and triplet(s).
-        vcpkgArguments: '@${{ env.vcpkgResponseFile }}'
-        # Location of the vcpkg as submodule of the repository.
-        vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-        # Since the cache must be invalidated when content of the response file changes, let's
-        # compute its hash and append this to the computed cache's key.
-        appendedCacheKey: ${{ hashFiles(env.vcpkgResponseFile) }}
+        setupOnly: true
     # Now that vcpkg is installed, it is being used to run with desired arguments.
     - name: Install SQLiteCpp using vcpg      
       run: |
