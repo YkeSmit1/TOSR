@@ -10,25 +10,29 @@ namespace Tosr
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
     using ControlsOnlyDictionary = Dictionary<string, List<int>>;
     using ControlsDictionary = Dictionary<string, List<string>>;
+    using ControlScanningDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
 
     public class ReverseDictionaries
     {
         public ShapeDictionary ShapeAuctions { get; }
         public ControlsDictionary ControlsAuctions { get; }
         public ControlsOnlyDictionary ControlsOnlyAuctions { get; }
+        public ControlScanningDictionary ControlScanningAuctions { get; }
 
-        public ReverseDictionaries(ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions, ControlsOnlyDictionary controlsOnlyAuctions)
+        public ReverseDictionaries(ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions, ControlsOnlyDictionary controlsOnlyAuctions, ControlScanningDictionary controlScanningAuctions)
         {
             ShapeAuctions = shapeAuctions;
             ControlsAuctions = controlsAuctions;
             ControlsOnlyAuctions = controlsOnlyAuctions;
+            ControlScanningAuctions = controlScanningAuctions;
         }
 
-        public ReverseDictionaries(string shapeFilename, string controlFilename, string controlsOnlyFilename, string contorlsScanning, Dictionary<Fase, bool> fasesWithOffset)
+        public ReverseDictionaries(string shapeFilename, string controlFilename, string controlsOnlyFilename, string controlsScanningFilename, Dictionary<Fase, bool> fasesWithOffset)
         {
             ShapeAuctions = Util.LoadAuctions(shapeFilename, () => new ReverseDictionaries(fasesWithOffset).GenerateAuctionsForShape());
             ControlsAuctions = Util.LoadAuctions(controlFilename, () => new ReverseDictionaries(fasesWithOffset).GenerateAuctionsForControls());
             ControlsOnlyAuctions = Util.LoadAuctions(controlsOnlyFilename, () => new ReverseDictionaries(fasesWithOffset).GenerateAuctionsForControlsOnly());
+            ControlScanningAuctions = Util.LoadAuctions(controlsScanningFilename, () => new ReverseDictionaries(fasesWithOffset).GenerateAuctionsForControlsScanning());
         }
 
         private readonly Dictionary<Fase, bool> fasesWithOffset;
@@ -129,9 +133,9 @@ namespace Tosr
 
         }
 
-        public ControlsDictionary GenerateAuctionsForControlsScanning()
+        public ControlScanningDictionary GenerateAuctionsForControlsScanning()
         {
-            var auctions = new ControlsDictionary();
+            var auctions = new ControlScanningDictionary();
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
             int[] suitLength = new[] { 4, 3, 3, 3 };
             string[] controls = new[] { "", "A", "K", "AK"};
@@ -169,11 +173,12 @@ namespace Tosr
             {
                 var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
                 // TODO fix correct fase
-                var key = auction.GetBidsAsString(new[] { Fase.Controls, Fase.Scanning });
+                var key = auction.GetBidsAsString(new[] { Fase.Controls, Fase.ScanningControls });
+                var isZoom = auction.GetBids(Player.South, Fase.ScanningControls).Any(x => x.zoom);
                 if (auctions.ContainsKey(key))
-                    auctions[key].Add((handToStore));
+                    auctions[key].pattern.Add((handToStore));
                 else
-                    auctions.Add(key, (new List<string>() { handToStore }));
+                    auctions.Add(key, (new List<string>() { handToStore }, isZoom ));
             }
         }
 
@@ -216,7 +221,7 @@ namespace Tosr
             void BidAndStoreHand(string hand, string handToStore)
             {
                 var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
-                string key = auction.GetBidsAsString(new[] { Fase.Controls, Fase.Scanning });
+                string key = auction.GetBidsAsString(new[] { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther });
                 if (!auctions.ContainsKey(key))
                     auctions.Add(key, new List<string>());
                 auctions[key].Add(handToStore);

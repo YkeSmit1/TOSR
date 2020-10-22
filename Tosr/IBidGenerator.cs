@@ -4,6 +4,6 @@ namespace Tosr
 {
     public interface IBidGenerator
     {
-        (int, Fase, string, bool) GetBid(BiddingState biddingState, string handsString);
+        (int, Fase, string, int) GetBid(BiddingState biddingState, string handsString);
     }
 }

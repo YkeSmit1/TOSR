@@ -31,17 +31,22 @@ class SQLiteCppWrapper : public ISQLiteWrapper
         AND MaxHcp >= ?
         ORDER BY RelBidId ASC)";
 
-    constexpr static std::string_view scanningSql = R"(SELECT RelBidId, EndFase, Id, Description FROM Scanning 
+    constexpr static std::string_view scanningControlsSql = R"(SELECT RelBidId, EndFase, Zoom, Id, Description FROM ScanningControls
         WHERE RelbidId > ?
         AND (Controls1Suit = ? or Controls1Suit is null)
         AND (Controls2Suit = ? or Controls2Suit is null)
         AND (Controls3Suit = ? or Controls3Suit is null)
         AND (Controls4Suit = ? or Controls4Suit is null)
+        ORDER BY RelBidId ASC)";
+
+    constexpr static std::string_view scanningOtherSql = R"(SELECT RelBidId, EndFase, Id, Description FROM ScanningOther 
+        WHERE RelbidId > ?
         AND (Queen1Suit = ? or Queen1Suit is null)
         AND (Queen2Suit = ? or Queen2Suit is null)
         AND (Queen3Suit = ? or Queen3Suit is null)
         AND (Queen4Suit = ? or Queen4Suit is null)
         ORDER BY RelBidId ASC)";
+
 
     constexpr static std::string_view signOffsSql = R"(SELECT RelBidId, Zoom, Id, Description FROM SignOffs
         WHERE Fase = ?
@@ -54,17 +59,19 @@ class SQLiteCppWrapper : public ISQLiteWrapper
     std::unique_ptr<SQLite::Database> db;
     std::unique_ptr<SQLite::Statement> queryShape;
     std::unique_ptr<SQLite::Statement> queryControls;
-    std::unique_ptr<SQLite::Statement> queryScanning;
+    std::unique_ptr<SQLite::Statement> queryScanningControls;
+    std::unique_ptr<SQLite::Statement> queryScanningOther;
     std::unique_ptr<SQLite::Statement> querySignOffs;
 
 public:
     SQLiteCppWrapper(const std::string& database);
 private:
     void GetBid(int bidId, int& rank, int& suit) final override;
-    std::tuple<int, Fase, std::string, bool> GetRule(const HandCharacteristic& hand, const Fase& fase, Fase previousFase, int lastBidId) final override;
+    std::tuple<int, Fase, std::string, int> GetRule(const HandCharacteristic& hand, const Fase& fase, Fase previousFase, int lastBidId) final override;
     std::tuple<int, bool, std::string, bool> GetRuleShape(const HandCharacteristic& hand, int lastBidId);
     std::tuple<int, bool, std::string> GetRuleControls(const HandCharacteristic& hand, int lastBidId);
-    std::tuple<int, bool, std::string> GetRuleScanning(const HandCharacteristic& hand, int lastBidId);
+    std::tuple<int, bool, std::string, bool> GetRuleScanningControls(const HandCharacteristic& hand, int lastBidId);
+    std::tuple<int, bool, std::string> GetRuleScanningOther(const HandCharacteristic& hand, int lastBidId);
     std::tuple<int, bool, std::string> GetRuleSignOff(const HandCharacteristic& hand, Fase fase);
     void SetDatabase(const std::string& database) override;
 };

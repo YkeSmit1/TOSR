@@ -22,17 +22,17 @@ namespace TosrGui.Test
             // 1Sp
             bidGenerator.SetupSequence(x => x.GetBid(It.IsAny<BiddingState>(), It.IsAny<string>())).
                // 1Sp
-                Returns(() => (4, Fase.Shape, "", false)).
+                Returns(() => (4, Fase.Shape, "", 0)).
                 // 2Di
-                Returns(() => (7, Fase.Shape, "", false)).
+                Returns(() => (7, Fase.Shape, "", 0)).
                 // 3NT
-                Returns(() => (15, Fase.Controls, "", false)).
+                Returns(() => (15, Fase.Controls, "", 0)).
                 // 4NT
-                Returns(() => (5, Fase.Scanning, "", false)).
+                Returns(() => (5, Fase.ScanningControls, "", 0)).
                 // 5NT
-                Returns(() => (5, Fase.Scanning, "", false)).
+                Returns(() => (5, Fase.ScanningControls, "", 0)).
                 // Pass
-                Returns(() => (0, Fase.Scanning, "", false));
+                Returns(() => (0, Fase.ScanningControls, "", 0));
 
             var auction = new BidManager(bidGenerator.Object, fasesWithOffset).GetAuction("", "");
 
@@ -40,7 +40,7 @@ namespace TosrGui.Test
             Assert.Equal("1♠2♦3NT5♣6♦Pass", auction.GetBidsAsString(Player.South));
             Assert.Equal("1♠2♦3NT", auction.GetBidsAsString(Fase.Shape));
             Assert.Equal("5♣", auction.GetBidsAsString(Fase.Controls));
-            Assert.Equal("6♦", auction.GetBidsAsString(Fase.Scanning));
+            Assert.Equal("6♦", auction.GetBidsAsString(Fase.ScanningControls));
         }
     }
 }

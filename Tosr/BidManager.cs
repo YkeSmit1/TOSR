@@ -11,6 +11,7 @@ namespace Tosr
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
     using ControlsOnlyDictionary = Dictionary<string, List<int>>;
     using ControlsDictionary = Dictionary<string, List<string>>;
+    using ControlScanningDictionary = Dictionary<string, (List<string> controls, bool zoom)>;
 
     public class BidManager
     {
@@ -38,6 +39,7 @@ namespace Tosr
         private readonly ReverseDictionaries reverseDictionaries = null;
         readonly bool useSingleDummySolver = false;
         private Lazy<(List<string> shapes, int zoomOffset)> shape;
+        private Lazy<(List<string> controls, int zoomOffset)> controlsScanning;
 
         static readonly char[] relevantCards = new[] { 'A', 'K', 'Q' };
         public ConstructedSouthhandOutcome constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
@@ -76,6 +78,7 @@ namespace Tosr
         public void Init(Auction auction)
         {
             shape = new Lazy<(List<string> shapes, int zoomOffset)>(() => GetShapeStrFromAuction(auction, reverseDictionaries.ShapeAuctions));
+            controlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() => GetControlsScanningStrFromAuction(auction, reverseDictionaries.ControlScanningAuctions));
         }
 
         public Auction GetAuction(string northHand, string southHand)
@@ -255,11 +258,18 @@ namespace Tosr
                 biddingState.EndOfBidding = true;
                 return;
             }
-            var (bidIdFromRule, nextfase, description, zoom) = bidGenerator.GetBid(biddingState, handsString);
-            var bidId = biddingState.CalculateBid(bidIdFromRule, description, zoom);
+            var (bidIdFromRule, nextfase, description, zoomOffset) = bidGenerator.GetBid(biddingState, handsString);
+            var bidId = biddingState.CalculateBid(bidIdFromRule, description, zoomOffset != 0);
             auction.AddBid(biddingState.CurrentBid);
-            biddingState.UpdateBiddingState(bidIdFromRule, nextfase, bidId, 
-                reverseDictionaries == null || nextfase != Fase.Controls ? 0 : shape.Value.zoomOffset);
+
+            var lzoomOffset = reverseDictionaries == null ? zoomOffset :
+                nextfase switch
+                {
+                    Fase.Controls => shape.Value.zoomOffset,
+                    Fase.ScanningOther => controlsScanning.Value.zoomOffset,
+                    _ => 0,
+                };
+            biddingState.UpdateBiddingState(bidIdFromRule, nextfase, bidId, lzoomOffset);
         }
 
         /// <summary>
@@ -282,7 +292,7 @@ namespace Tosr
             {
                 throw SetOutcome(exception.Message, ConstructedSouthhandOutcome.AuctionNotFoundInControls);
             }
-            var controls = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffset, new Fase[] { Fase.Controls, Fase.Scanning });
+            var controls = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffset, new Fase[] { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther });
             var strControls = string.Join("", controls);
 
             if (!reverseDictionaries.ControlsAuctions.TryGetValue(strControls, out var possibleControls))
@@ -376,6 +386,38 @@ namespace Tosr
             }
 
             throw new InvalidOperationException($"{ strAuction } not found in shape dictionary");
+        }
+
+        /// <summary>
+        /// Lookup in the controlScanning dictionary. If not found, it tries to find an auction when the last bid was done with zoom
+        /// </summary>
+        /// <param name="auction"></param>
+        /// <returns></returns>
+        public (List<string> shapes, int zoomOffset) GetControlsScanningStrFromAuction(Auction auction, ControlScanningDictionary controlScanningAuctions)
+        {
+            var fases = new Fase[] { Fase.Controls, Fase.ScanningControls };
+            var bidsForFase = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, shape.Value.zoomOffset, fases);
+            var strAuction = string.Join("", bidsForFase);
+
+            if (controlScanningAuctions.TryGetValue(strAuction, out var controls))
+                return (controls.controls, controls.zoom ? 1 : 0);
+
+            var allBids = auction.GetBids(Player.South, fases);
+            var lastBid = allBids.Last();
+            var firstBid = allBids.First();
+            var allButLastBid = allBids.Take(allBids.Count() - 1);
+            for (var bid = lastBid - 1; bid >= firstBid; bid--)
+            {
+                var allBidsNew = allButLastBid.Concat(new[] { bid });
+                var bidsStr = allBidsNew.Aggregate(string.Empty, (current, bid) => current + bid);
+                // Add one because auction is one bids lower if zoom applies
+                if (controlScanningAuctions.TryGetValue(bidsStr, out var shapeZoom) && shapeZoom.zoom)
+                    return (shapeZoom.controls, (lastBid - bid) + 1);
+            }
+            // TODO fix this. It is wrong for pulling after a sign-off bid. 
+            return (new List<string>(), 0);
+
+            //throw new InvalidOperationException($"{ strAuction } not found in controls scanning dictionary");
         }
 
         /// <summary>

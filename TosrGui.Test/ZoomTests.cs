@@ -12,12 +12,14 @@ namespace TosrGui.Test
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
     using ControlsOnlyDictionary = Dictionary<string, List<int>>;
     using ControlsDictionary = Dictionary<string, List<string>>;
+    using ControlScanningDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
 
     public class ZoomTests
     {
         private ShapeDictionary shapeAuctions;
         private ControlsDictionary auctionsControls;
         private ControlsOnlyDictionary auctionsControlsOnly;
+        private ControlScanningDictionary auctionsControlsScanning;
         private Dictionary<Fase, bool> fasesWithOffset;
 
         public ZoomTests()
@@ -45,7 +47,13 @@ namespace TosrGui.Test
             {
                 { Fase.Shape, false },
                 { Fase.Controls, false},
-                { Fase.Scanning, true}
+                { Fase.ScanningControls, true},
+                { Fase.ScanningOther, true}
+            };
+            // TODO fix dictionary
+            auctionsControlsScanning = new ControlScanningDictionary
+            {
+                {"4♣", (new List<string>{ "Kxxx,xxx,xxx,Kxx" }, false) }
             };
         }
 
@@ -97,21 +105,21 @@ namespace TosrGui.Test
             var bidGenerator = new Mock<IBidGenerator>();
             bidGenerator.SetupSequence(x => x.GetBid(It.IsAny<BiddingState>(), It.IsAny<string>())).
                 // 1Sp
-                Returns(() => (4, Fase.Shape, "", false)).
+                Returns(() => (4, Fase.Shape, "", 0)).
                 // 2D
-                Returns(() => (7, Fase.Shape, "", false)).
+                Returns(() => (7, Fase.Shape, "", 0)).
                 // 3NT
-                Returns(() => (15, Fase.Scanning, "", true)).
+                Returns(() => (15, Fase.ScanningControls, "", 1)).
                 // 4H
-                Returns(() => (2, Fase.Scanning, "", false)).
+                Returns(() => (2, Fase.ScanningControls, "", 0)).
                 // 5D
-                Returns(() => (5, Fase.Scanning, "", false)).
+                Returns(() => (5, Fase.ScanningControls, "", 0)).
                 // 5S
-                Returns(() => (6, Fase.Scanning, "", false)).
+                Returns(() => (6, Fase.ScanningControls, "", 0)).
                 // 6D
-                Returns(() => (8, Fase.Scanning, "", false));
+                Returns(() => (8, Fase.ScanningControls, "", 0));
 
-            ReverseDictionaries reverseDictionaries = new ReverseDictionaries(shapeAuctions, auctionsControls, auctionsControlsOnly);
+            ReverseDictionaries reverseDictionaries = new ReverseDictionaries(shapeAuctions, auctionsControls, auctionsControlsOnly, auctionsControlsScanning);
             BidManager bidManager = new BidManager(bidGenerator.Object, fasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction("", "");
 
@@ -120,7 +128,7 @@ namespace TosrGui.Test
 
             Assert.Equal("1♠2♦3NT", auction.GetBidsAsString(Fase.Shape));
             Assert.Equal("", auction.GetBidsAsString(Fase.Controls));
-            Assert.Equal("4♥5♦5♠6♦", auction.GetBidsAsString(Fase.Scanning));
+            Assert.Equal("4♥5♦5♠6♦", auction.GetBidsAsString(Fase.ScanningControls));
 
             var southHand = bidManager.ConstructSouthHand("Axxx,Kxx,Kxx,Kxx", auction);
             Assert.Equal("Kxxx,Ax,xxx,AQxx", southHand);
