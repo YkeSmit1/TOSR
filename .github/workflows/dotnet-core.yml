@@ -13,8 +13,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+          submodules: true      
     - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.0       
+      uses: microsoft/setup-msbuild@v1.0.2
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
@@ -30,9 +32,10 @@ jobs:
       with:
         setupOnly: true
     # Now that vcpkg is installed, it is being used to run with desired arguments.
-    - run: |
+    - name: Install SQLiteCpp using vcpg      
+      run: |
         $VCPKG_ROOT/vcpkg install SQLiteCpp:x64-windows
-        # $VCPKG_ROOT/vcpkg integrate install SQLiteCpp:x64-windows
+        $VCPKG_ROOT/vcpkg integrate install
       shell: bash      
     - name: Build
       run: msbuild /t:Build /p:Configuration=Release -m Tosr.sln
