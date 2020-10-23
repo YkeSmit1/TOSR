@@ -7,6 +7,7 @@ using System.IO;
 using System.Text;
 using Tosr;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace TosrIntegration.Test
 {
@@ -21,12 +22,10 @@ namespace TosrIntegration.Test
             yield return new object[] { "Test3NT23HCP", "AK32,AK2,A32,KQ2", "x,xxxx,Kxxxx,Axx", "1♣1NT2♦2♠3♣3♥4♣4NT", "1♠2♣2♥2NT3♦3♠4♥Pass" };
 
             // 3(4)NT tests with pull
-            yield return new object[] { "Test3NTPull18HCP", "AK32,AK2,A32,432", "x,Qxxx,KQxxx,AQx", "1♣1NT2♦2♠3♣3NT4♦4♠5♦5NT6♥Pass", "1♠2♣2♥2NT3♦4♣4♥5♣5♠6♦7♦" };
-            yield return new object[] { "Test3NTPull21HCPMin", "AK32,AK2,A32,K32", "Q,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥3NT4♦4NT5♥6♣6♥Pass", "1♠2♣2♥2NT3♦3♠4♣4♠5♦5NT6♦6NT" };
-            // Fix test.
-            //yield return new object[] { "Test3NTPull21HCPMax", "AQJ2,AQJ,A32,K32", "K,Kxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4NT5♠7♣7♥Pass", "1♠2♣2♥2NT3♦4♣5♥6NT7♦7♠" };
-            // Fix test.
-            //yield return new object[] { "Test3NTPull23HCP", "AK32,AK2,A32,KQ2", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4♣4NTPass", "1♠2♣2♥2NT3♦3♠4♥5♣" };
+            yield return new object[] { "Test3NTPull18HCP", "AK32,AK2,A32,432", "x,Qxxx,KQxxx,AQx", "1♣1NT2♦2♠3♣3NT4♦4♠5♦5NT6♥7♥", "1♠2♣2♥2NT3♦4♣4♥5♣5♠6♦7♦" };
+            yield return new object[] { "Test3NTPull21HCPMin", "AK32,AK2,A32,K32", "Q,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥3NT4NT5♥6♣6♠7♣Pass", "1♠2♣2♥2NT3♦3♠4♠5♦5NT6♥6NT7♥" };
+            yield return new object[] { "Test3NTPull21HCPMax", "AQJ2,AQJ,A32,K32", "K,Kxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4NT6♥7♣7♥Pass", "1♠2♣2♥2NT3♦4♣6♦6NT7♦7♠" };
+            yield return new object[] { "Test3NTPull23HCP", "AK32,AK2,A32,KQ2", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4♣4NT5♥6♣6♠7♦7♠Pass", "1♠2♣2♥2NT3♦3♠4♥5♦5NT6♥7♣7♥7NT" };
 
             // These test can sometimes fail. Because it uses single dummy analyses and shuffles hands.
 
@@ -36,11 +35,9 @@ namespace TosrIntegration.Test
             yield return new object[] { "TestFit18HCPMax", "Q432,Q432,AJ,AKQ", "Kx,AJxx,Kxxxx,Jx", "1♣1NT2♦2♠3♦4♦Pass", "1♠2♣2♥3♣3♠4♥Pass" };
 
             // Test with major fit with pull
-            yield return new object[] { "TestFitPull17HCP", "AK32,A432,A32,Q2", "xx,Kxxx,KQxxx,AK", "1♣1NT2♦2♠4♦5♦6♣6NT7♦7NT8♦Pass", "1♠2♣2♥3♣5♣5NT6♠7♣7♠8♣8♥" };
-            // Fix test.
-            //yield return new object[] { "TestFitPull20HCPMin", "AQ32,A432,A2,A32", "xx,Kxxx,KQxxx,Kx", "1♣1NT2♦2♠3♦4♦4NT5♠6♥6NTPass", "1♠2♣2♥3♣3♥4♠5♥6♦6♠7♣" };
-            // Fix test.
-            //yield return new object[] { "TestFitPull18HCPMax", "QJ32,QJ32,AJ,AK2", "Kx,Axxx,KQxxx,xx", "1♣1NT2♦2♠3♦4♦5♣6♣6♠7♣Pass", "1♠2♣2♥3♣3♠4NT5NT6♥6NT7♦" };
+            yield return new object[] { "TestFitPull17HCP", "AK32,A432,A32,Q2", "xx,Kxxx,KQxxx,AK", "1♣1NT2♦2♠4♦5♦6♣6♥7♣7♥Pass", "1♠2♣2♥3♣5♣5NT6♦6NT7♦7♠" };
+            yield return new object[] { "TestFitPull18HCPMax", "QJ32,QJ32,AJ,AK2", "Kx,Axxx,KQxxx,xx", "1♣1NT2♦2♠3♦4♦5♥6♣6♥Pass", "1♠2♣2♥3♣3♠5♦5NT6♦6♠" };
+            yield return new object[] { "TestFitPull20HCPMin", "AQ32,A432,A2,A32", "xx,Kxxx,KQxxx,Kx", "1♣1NT2♦2♠3♦4♦5♥6♦7♣7♠8♣Pass", "1♠2♣2♥3♣3♥5♦6♣6NT7♥7NT8♦" };
 
             // Test with minor fit
         }
@@ -51,14 +48,16 @@ namespace TosrIntegration.Test
     {
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         ReverseDictionaries reverseDictionaries;
+        private readonly ITestOutputHelper output;
 
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        public TestRelayBid()
+        public TestRelayBid(ITestOutputHelper output)
         {
             fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
             reverseDictionaries = new ReverseDictionaries("AuctionsByShape.txt", "AuctionsByControls.txt",
                 "AuctionsByControlsOnly.txt", "AuctionsByControlsScanning.txt", fasesWithOffset);
+            this.output = output;
         }
 
         [Theory]
@@ -70,7 +69,7 @@ namespace TosrIntegration.Test
             logger.Info($"Executing test-case {testName}");
 
             Pinvoke.Setup("Tosr.db3");
-            BidManager bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, true);
+            var bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, true);
             var auction = bidManager.GetAuction(northHand, southHand);
             var actualBidsSouth = auction.GetBidsAsString(Player.South);
             var actualBidsNorth = auction.GetBidsAsString(Player.North);

@@ -33,14 +33,14 @@ std::tuple<int, Fase, std::string, int> SQLiteCppWrapper::GetRule(const HandChar
             if (zoom)
             {
                 auto [bidIdCtrls, endfaseCtrls, strCtrl] = GetRuleControls(hand, 0);
-                return std::make_tuple(bidId + bidIdCtrls - 1, endfaseCtrls ? Fase::ScanningControls : Fase::Controls, str + "\n" + strCtrl, bidIdCtrls);
+                return std::make_tuple(bidId + bidIdCtrls - 1, GetNextFase(endfaseCtrls, NextFase(fase)), str + "\n" + strCtrl, bidIdCtrls);
             }
-            return std::make_tuple(bidId, endfase ? Fase::Controls : fase, str, 0);
+            return std::make_tuple(bidId, GetNextFase(endfase, fase), str, 0);
         }
         case Fase::Controls:
         {
             auto [bidId, endfase, str] = GetRuleControls(hand, lastBidId);
-            return std::make_tuple(bidId, endfase ? Fase::ScanningControls : fase, str, 0);
+            return std::make_tuple(bidId, GetNextFase(endfase, fase), str, 0);
         }
         case Fase::ScanningControls: 
         {
@@ -48,15 +48,15 @@ std::tuple<int, Fase, std::string, int> SQLiteCppWrapper::GetRule(const HandChar
             if (zoom)
             {
                 auto [bidIdCtrls, endfaseCtrls, strCtrl] = GetRuleScanningOther(hand, 0);
-                return std::make_tuple(bidId + bidIdCtrls - 1, endfaseCtrls ? Fase::End : Fase::ScanningOther, str + "\n" + strCtrl, bidIdCtrls);
+                return std::make_tuple(bidId + bidIdCtrls - 1, GetNextFase(endfaseCtrls, NextFase(fase)), str + "\n" + strCtrl, bidIdCtrls);
             }
 
-            return std::make_tuple(bidId, endfase ? Fase::ScanningOther : fase, str, false);
+            return std::make_tuple(bidId, GetNextFase(endfase, fase), str, false);
         }
         case Fase::ScanningOther:
         {
             auto [bidId, endfase, str] = GetRuleScanningOther(hand, lastBidId);
-            return std::make_tuple(bidId, endfase ? Fase::End : fase, str, false);
+            return std::make_tuple(bidId, GetNextFase(endfase, fase), str, false);
         }
         case Fase::Pull3NTNoAsk:
         case Fase::Pull3NTOneAsk:
@@ -67,8 +67,27 @@ std::tuple<int, Fase, std::string, int> SQLiteCppWrapper::GetRule(const HandChar
             auto [bidId, zoom, str] = GetRuleSignOff(hand, fase);
             if (zoom)
             {
-                auto [bidIdCtrls, endfaseCtrls, strCtrl] = GetRuleControls(hand, 0);
-                return std::make_tuple(bidId + bidIdCtrls - 1, endfaseCtrls ? previousFase : (Fase)((int)previousFase + 1), str + "\n" + strCtrl, bidIdCtrls);
+                switch (previousFase)
+                {
+                case Fase::Controls:
+                {
+                    auto [bidIdCtrls, endfaseCtrls, strCtrl] = GetRuleControls(hand, lastBidId);
+                    return std::make_tuple(bidId + bidIdCtrls - 1, GetNextFase(endfaseCtrls, previousFase), str + "\n" + strCtrl, bidIdCtrls);
+                }
+                case Fase::ScanningControls:
+                {
+                    auto [bidIdCtrlsScanning, endfaseCtrlsScanning, strCtrlScanning, zoom] = GetRuleScanningControls(hand, lastBidId);
+                    if (zoom)
+                    {
+                        auto [bidIdScanningOther, endfaseScanningOther, strScanningOther] = GetRuleScanningOther(hand, 0);
+                        return std::make_tuple(bidId + bidIdCtrlsScanning + bidIdScanningOther - 1, 
+                            GetNextFase(endfaseScanningOther, NextFase(previousFase)), str + "\n" + strCtrlScanning + "\n" + strScanningOther, bidIdCtrlsScanning);
+                    }
+                    return std::make_tuple(bidId + bidIdCtrlsScanning - 1, GetNextFase(endfaseCtrlsScanning, previousFase), str + "\n" + strCtrlScanning, bidIdCtrlsScanning);
+                }
+                default:
+                    throw std::invalid_argument(std::to_string((int)previousFase));
+                }
             }
             auto nextFase = bidId == 1 && (fase == Fase::Pull4DiamondsNoAsk || fase == Fase::Pull4DiamondsOneAsk) ? Fase::BidGame : previousFase;
             return std::make_tuple(bidId, nextFase, str, 0);
@@ -77,6 +96,16 @@ std::tuple<int, Fase, std::string, int> SQLiteCppWrapper::GetRule(const HandChar
         default:
             throw std::invalid_argument(std::to_string((int)fase));
     }
+}
+
+Fase SQLiteCppWrapper::GetNextFase(bool endfase, Fase fase)
+{
+    return endfase ? NextFase(fase) : fase;
+}
+
+Fase SQLiteCppWrapper::NextFase(Fase fase)
+{
+    return (Fase)((int)fase + 1);
 }
 
 std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleShape(const HandCharacteristic& hand, int lastBidId)

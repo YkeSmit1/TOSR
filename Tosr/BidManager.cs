@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using NLog;
 using Common;
 using Solver;
+using System.Diagnostics;
 
 namespace Tosr
 {
@@ -50,13 +51,14 @@ namespace Tosr
             {1, Enumerable.Range(21, 2).ToList()},
             {2, Enumerable.Range(23, 2).ToList()}};
 
-        static readonly List<((double min, double max) range, RelayBidKind relayBidKind)> requirementsForRelayBid = new List<((double, double), RelayBidKind)> { 
+        static readonly List<((double min, double max) range, RelayBidKind relayBidKind)> requirementsForRelayBid = new List<((double, double), RelayBidKind)> {
             {((0.0, 11.01) , RelayBidKind.gameBid )},
             {((11.0, 12.01) , RelayBidKind.fourDiamondEndSignal)},
             {((12.0, 13.01) , RelayBidKind.Relay )},
         };
 
         static readonly int requiredMaxHcpToBid4Diamond = 17;
+        static readonly List<Fase> signOffFases = new List<Fase> {Fase.Pull3NTNoAsk, Fase.Pull3NTOneAsk, Fase.Pull3NTTwoAsks, Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAsk};
 
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -434,7 +436,17 @@ namespace Tosr
                 bidsForFases = new List<Bid> { lastBidShape }.Concat(bidsForFases);
 
             var used4ClAsRelay = Used4ClAsRelay(auction);
-            bidsForFases = bidsForFases.Select(b => b = (b - (used4ClAsRelay && b > Bid.fourClubBid ? offSet + 1 : offSet)) + zoomOffset);
+            var signOffBids = auction.GetBids(Player.South).Where(bid => signOffFases.Contains(bid.fase));
+            Debug.Assert(signOffBids.Count() <= 1);
+            if (used4ClAsRelay)
+                bidsForFases = bidsForFases.Select(b => b = (b - (b > Bid.fourClubBid ? offSet + 1 : offSet)) + zoomOffset);
+            else if (signOffBids.Count() == 1)
+            {
+                bidsForFases = bidsForFases.Select(b => b = (b - (b >= signOffBids.Single() ? signOffBids.Single() - offsetBid : offSet)) + zoomOffset);
+            }
+            else
+                bidsForFases = bidsForFases.Select(b => b = (b - offSet) + zoomOffset);
+
             return bidsForFases;
         }
 
