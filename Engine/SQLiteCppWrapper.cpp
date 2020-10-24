@@ -14,13 +14,13 @@ SQLiteCppWrapper::SQLiteCppWrapper(const std::string& database)
 
 void SQLiteCppWrapper::GetBid(int bidId, int& rank, int& suit)
 {
-    auto query = std::make_unique<SQLite::Statement>(*db, "SELECT Rank, Suit, description FROM bids where id = ?");
-    query->bind(1, bidId);
+    SQLite::Statement query(*db, "SELECT Rank, Suit, description FROM bids where id = ?");
+    query.bind(1, bidId);
 
-    if (query->executeStep())
+    if (query.executeStep())
     {
-        rank = query->getColumn(0);
-        suit = query->getColumn(1);
+        rank = query.getColumn(0);
+        suit = query.getColumn(1);
     }
 }
 std::tuple<int, Fase, std::string, int> SQLiteCppWrapper::GetRule(const HandCharacteristic& hand, const Fase& fase, Fase previousFase, int lastBidId)
@@ -98,12 +98,12 @@ std::tuple<int, Fase, std::string, int> SQLiteCppWrapper::GetRule(const HandChar
     }
 }
 
-Fase SQLiteCppWrapper::GetNextFase(bool endfase, Fase fase)
+Fase SQLiteCppWrapper::GetNextFase(bool endfase, Fase fase) noexcept
 {
     return endfase ? NextFase(fase) : fase;
 }
 
-Fase SQLiteCppWrapper::NextFase(Fase fase)
+Fase SQLiteCppWrapper::NextFase(Fase fase) noexcept
 {
     return (Fase)((int)fase + 1);
 }
@@ -144,7 +144,7 @@ std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleShape(const Ha
 
         return std::make_tuple(bidId, endfase, str, zoom);
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         std::cerr << e.what();
         throw;
@@ -182,7 +182,7 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleControls(const HandC
 
         return std::make_tuple(bidId, endFase, str);
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         std::cerr << e.what();
         throw;
@@ -216,7 +216,7 @@ std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleScanningContro
 
         return std::make_tuple(bidId, endFase, str, zoom);
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         std::cerr << e.what();
         throw;
@@ -249,7 +249,7 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleScanningOther(const 
 
         return std::make_tuple(bidId, endFase, str);
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         std::cerr << e.what();
         throw;
@@ -283,7 +283,7 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleSignOff(const HandCh
 
         return std::make_tuple(bidId, zoom, str);
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         std::cerr << e.what();
         throw;

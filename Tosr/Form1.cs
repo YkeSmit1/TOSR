@@ -47,7 +47,7 @@ namespace Tosr
 
             reverseDictionaries = new ReverseDictionaries("txt\\AuctionsByShape.txt", "txt\\AuctionsByControls.txt", 
                 "txt\\AuctionsByControlsOnly.txt", "txt\\AuctionsByControlsScanning.txt", fasesWithOffset);
-            bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, false);
+            bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, true);
             bidManager.Init(auctionControl.auction);
             shuffleRestrictionsSouth.SetControls(2, 12);
             shuffleRestrictionsNorth.SetHcp(16, 37);

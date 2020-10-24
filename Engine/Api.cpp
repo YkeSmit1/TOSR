@@ -43,7 +43,7 @@ int GetBidFromRule(Fase fase, Fase previousFase, const char* hand, int lastBidId
 {
     std::string dummy;
     int lZoomOffset;
-    auto bidId = GetBidFromRuleInternal(fase, previousFase, hand, lastBidId, newFase, dummy, lZoomOffset);
+    const auto bidId = GetBidFromRuleInternal(fase, previousFase, hand, lastBidId, newFase, dummy, lZoomOffset);
     *zoomOffset = lZoomOffset;
     return bidId;
 }
@@ -52,7 +52,7 @@ int GetBidFromRuleEx(Fase fase, Fase previousFase, const char* hand, int lastBid
 {
     std::string descr;
     int dummy;
-    auto bidId = GetBidFromRuleInternal(fase, previousFase, hand, lastBidId, newFase, descr, dummy);
+    const auto bidId = GetBidFromRuleInternal(fase, previousFase, hand, lastBidId, newFase, descr, dummy);
     strncpy(description , descr.c_str(), descr.size());
     description[descr.size()] = '\0';
     return bidId;

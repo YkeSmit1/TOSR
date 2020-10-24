@@ -14,6 +14,8 @@ namespace Tosr
     using ControlsDictionary = Dictionary<string, List<string>>;
     using ControlScanningDictionary = Dictionary<string, (List<string> controls, bool zoom)>;
 
+    using RelayBidKindFunc = Func<Auction, string, string, IEnumerable<Bid>, Suit, BidManager.RelayBidKind>;
+
     public class BidManager
     {
         public enum ConstructedSouthhandOutcome
@@ -28,7 +30,7 @@ namespace Tosr
             HasSignedOff,
         }
 
-        private enum RelayBidKind
+        public enum RelayBidKind
         {
             Relay,
             fourDiamondEndSignal,
@@ -60,21 +62,39 @@ namespace Tosr
         static readonly int requiredMaxHcpToBid4Diamond = 17;
         static readonly List<Fase> signOffFases = new List<Fase> {Fase.Pull3NTNoAsk, Fase.Pull3NTOneAsk, Fase.Pull3NTTwoAsks, Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAsk};
 
+        private readonly RelayBidKindFunc getRelayBidKindFunc = (auction, northHand, southHandShape, controls, trumpSuit) => { return BidManager.RelayBidKind.Relay; };
+
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset)
+        // Constructor used for test
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, RelayBidKindFunc getRelayBidKindFunc) :
+            this(bidGenerator, fasesWithOffset)
         {
-            this.bidGenerator = bidGenerator;
-            this.fasesWithOffset = fasesWithOffset;
-
-            useSingleDummySolver = false;
+            this.reverseDictionaries = reverseDictionaries;
+            this.getRelayBidKindFunc = getRelayBidKindFunc;
         }
 
+        // Standard constructor
         public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, bool useSingleDummySolver) :
             this(bidGenerator, fasesWithOffset)
         {
             this.reverseDictionaries = reverseDictionaries;
             this.useSingleDummySolver = useSingleDummySolver;
+            this.getRelayBidKindFunc = GetRelayBidKind;
+        }
+
+        // Constructor used for generate reverse dictionaries for sign-off auctions
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, RelayBidKindFunc getRelayBidKindFunc) :
+            this(bidGenerator, fasesWithOffset)
+        {
+            this.getRelayBidKindFunc = getRelayBidKindFunc;
+        }
+
+        // Constructor used for generate reverse dictionaries
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset)
+        {
+            this.bidGenerator = bidGenerator;
+            this.fasesWithOffset = fasesWithOffset;
         }
 
         public void Init(Auction auction)
@@ -189,10 +209,9 @@ namespace Tosr
                             biddingState.UpdateBiddingStateSignOff(controlBidCount, Bid.fourDiamondBid, false);
                             return Bid.fourDiamondBid;
                         }
-                        if (controlBidCount == 1 && useSingleDummySolver)
+                        if (controlBidCount == 1)
                         {
-                            var averageTricks = GetAverageTricks(northHand, southHandShape, controls, trumpSuit, auction.GetDeclarer(trumpSuit));
-                            var relayBidkind = requirementsForRelayBid.Where(x => averageTricks > x.range.min && averageTricks < x.range.max).First().relayBidKind; 
+                            var relayBidkind = getRelayBidKindFunc(auction, northHand, southHandShape, controls, trumpSuit);
                             switch (relayBidkind)
                             {
                                 case RelayBidKind.Relay:
@@ -229,6 +248,13 @@ namespace Tosr
             }
 
             return Bid.NextBid(biddingState.CurrentBid);
+        }
+
+        public RelayBidKind GetRelayBidKind(Auction auction, string northHand, string southHandShape, IEnumerable<Bid> controls, Suit trumpSuit)
+        {
+            var averageTricks = GetAverageTricks(northHand, southHandShape, controls, trumpSuit, auction.GetDeclarer(trumpSuit));
+            var relayBidkind = requirementsForRelayBid.Where(x => averageTricks > x.range.min && averageTricks < x.range.max).First().relayBidKind;
+            return relayBidkind;
         }
 
         private double GetAverageTricks(string northHand, string southHandShape, IEnumerable<Bid> controls, Suit trumpSuit, Player declarer)
@@ -417,7 +443,7 @@ namespace Tosr
             // TODO fix this. It is wrong for pulling after a sign-off bid. 
             return (new List<string>(), 0);
 
-            //throw new InvalidOperationException($"{ string.Join("", bidsForFase) } not found in controls scanning dictionary");
+            throw new InvalidOperationException($"{ string.Join("", bidsForFase) } not found in controls scanning dictionary");
         }
 
         /// <summary>

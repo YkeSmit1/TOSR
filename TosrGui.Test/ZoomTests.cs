@@ -50,7 +50,6 @@ namespace TosrGui.Test
                 { Fase.ScanningControls, true},
                 { Fase.ScanningOther, true}
             };
-            // TODO fix dictionary
             auctionsControlsScanning = new ControlScanningDictionary
             {
                 {"4♣", (new List<string>{ "Kxxx,xxx,xxx,Kxx" }, false) }

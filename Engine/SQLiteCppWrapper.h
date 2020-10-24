@@ -66,10 +66,10 @@ class SQLiteCppWrapper : public ISQLiteWrapper
 public:
     SQLiteCppWrapper(const std::string& database);
 private:
-    void GetBid(int bidId, int& rank, int& suit) final override;
-    std::tuple<int, Fase, std::string, int> GetRule(const HandCharacteristic& hand, const Fase& fase, Fase previousFase, int lastBidId) final override;
-    Fase GetNextFase(bool endfase, Fase fase);
-    Fase NextFase(Fase previousFase);
+    void GetBid(int bidId, int& rank, int& suit) final;
+    std::tuple<int, Fase, std::string, int> GetRule(const HandCharacteristic& hand, const Fase& fase, Fase previousFase, int lastBidId) final;
+    Fase GetNextFase(bool endfase, Fase fase) noexcept;
+    Fase NextFase(Fase previousFase) noexcept;
     std::tuple<int, bool, std::string, bool> GetRuleShape(const HandCharacteristic& hand, int lastBidId);
     std::tuple<int, bool, std::string> GetRuleControls(const HandCharacteristic& hand, int lastBidId);
     std::tuple<int, bool, std::string, bool> GetRuleScanningControls(const HandCharacteristic& hand, int lastBidId);

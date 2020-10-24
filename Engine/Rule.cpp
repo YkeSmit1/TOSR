@@ -28,7 +28,7 @@ void HandCharacteristic::Initialize(const std::string& hand)
     Diamonds = (int)suitLength.at(2);
     Clubs = (int)suitLength.at(3);
 
-    std::sort(suits.begin(), suits.end(), [] (const auto& l, const auto& r) {return l.length() > r.length();});
+    std::sort(suits.begin(), suits.end(), [] (const auto& l, const auto& r) noexcept {return l.length() > r.length();});
     distribution = std::to_string(suits[0].length()) + std::to_string(suits[1].length()) + 
         std::to_string(suits[2].length())  + std::to_string(suits[3].length());
     isBalanced = distribution == "4333" || distribution == "4432";
@@ -96,7 +96,7 @@ Shortage HandCharacteristic::CalculateShortage(const std::unordered_map<int, siz
         return Shortage::MiddleOne;
     }
     // Two suiters
-    auto is55 = std::count_if(suitLength.begin(), suitLength.end(), [] (const auto& pair) {return pair.second >= 5;}) == 2;
+    const auto is55 = std::count_if(suitLength.begin(), suitLength.end(), [] (const auto& pair) {return pair.second >= 5;}) == 2;
     if (shortSuits.size() == 2)
     {
         if (std::count_if(shortSuits.begin(), shortSuits.end(), [&minElement] (const auto& pair) {return pair.second == minElement->second; }) > 1)
