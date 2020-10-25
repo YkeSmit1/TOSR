@@ -12,7 +12,7 @@ namespace Tosr
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
     using ControlsOnlyDictionary = Dictionary<string, List<int>>;
     using ControlsDictionary = Dictionary<string, List<string>>;
-    using ControlScanningDictionary = Dictionary<string, (List<string> controls, bool zoom)>;
+    using ControlScanningDictionary = Dictionary<string, (List<string> controlsScanning, bool zoom)>;
 
     using RelayBidKindFunc = Func<Auction, string, string, IEnumerable<Bid>, Suit, BidManager.RelayBidKind>;
     using RelayBidFunc = Func<BiddingState, Auction, string, Bid>;
@@ -255,7 +255,8 @@ namespace Tosr
 
         public RelayBidKind GetRelayBidKind(Auction auction, string northHand, string southHandShape, IEnumerable<Bid> controls, Suit trumpSuit)
         {
-            var averageTricks = GetAverageTricks(northHand, southHandShape, controls, trumpSuit, auction.GetDeclarer(trumpSuit));
+            Player declarer = auction.GetDeclarer(trumpSuit);
+            var averageTricks = GetAverageTricks(northHand, southHandShape, controls, trumpSuit, declarer != Player.UnKnown ? declarer : Player.North);
             var relayBidkind = requirementsForRelayBid.Where(x => averageTricks > x.range.min && averageTricks < x.range.max).First().relayBidKind;
             return relayBidkind;
         }
@@ -430,7 +431,7 @@ namespace Tosr
             var bidsForFase = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffsetShape, fases);
 
             if (controlScanningAuctions.TryGetValue(string.Join("", bidsForFase), out var controls))
-                return (controls.controls, controls.zoom ? 1 : 0);
+                return (controls.controlsScanning, controls.zoom ? 1 : 0);
 
             var lastBid = bidsForFase.Last();
             var firstBid = bidsForFase.First();
@@ -440,7 +441,7 @@ namespace Tosr
                 var allBidsNew = allButLastBid.Concat(new[] { bid });
                 // Add one because auction is one bids lower if zoom applies
                 if (controlScanningAuctions.TryGetValue(string.Join("", allBidsNew), out var zoom) && zoom.zoom)
-                    return (zoom.controls, (lastBid - bid) + 1);
+                    return (zoom.controlsScanning, (lastBid - bid) + 1);
             }
             // TODO fix this. It is wrong for pulling after a sign-off bid. 
             return (new List<string>(), 0);

@@ -110,7 +110,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             var longestSuit = Util.GetLongestSuit(strHand.NorthHand, strHand.SouthHand);
             statistics.dealers.AddOrUpdateDictionary(auction.GetDeclarer((Suit)(3 - longestSuit.Item1)));
             statistics.contracts.AddOrUpdateDictionary(auction.currentContract > new Bid(7, Suit.NoTrump) ? new Bid(7, Suit.NoTrump) : auction.currentContract);
-            statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Last() - auction.GetBids(Player.South, Fase.Shape).Last());
+            statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Where(bid => bid.bidType == BidType.bid). Last() - auction.GetBids(Player.South, Fase.Shape).Last());
             statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthhandOutcome);
         }
 
