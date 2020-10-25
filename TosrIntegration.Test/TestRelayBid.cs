@@ -59,8 +59,7 @@ namespace TosrIntegration.Test
         public TestRelayBid(ITestOutputHelper output)
         {
             fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
-            reverseDictionaries = new ReverseDictionaries("AuctionsByShape.txt", "AuctionsByControls.txt",
-                "AuctionsByControlsOnly.txt", "AuctionsByControlsScanning.txt", fasesWithOffset);
+            reverseDictionaries = new ReverseDictionaries(fasesWithOffset);
             this.output = output;
         }
 

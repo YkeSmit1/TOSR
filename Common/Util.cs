@@ -62,6 +62,7 @@ namespace Common
         Pull4DiamondsNoAsk,
         Pull4DiamondsOneAsk,
         BidGame,
+        Invalid,
     };
 
 
@@ -160,15 +161,15 @@ namespace Common
             return int.Parse(handPattern[0].ToString()) >= 8 ||
                 int.Parse(handPattern[0].ToString()) + int.Parse(handPattern[1].ToString()) >= 12;
         }
-        public static Dictionary<string, T> LoadAuctions<T>(string fileName, Func<Dictionary<string, T>> generateAuctions)
+        public static Dictionary<T, U> LoadAuctions<T, U>(string fileName, Func<Dictionary<T, U>> generateAuctions)
         {
             var logger = LogManager.GetCurrentClassLogger();
 
-            Dictionary<string, T> auctions;
+            Dictionary<T, U> auctions;
             // Generate only if file does not exist or is older then one day
             if (File.Exists(fileName) && File.GetLastWriteTime(fileName) > DateTime.Now - TimeSpan.FromDays(1))
             {
-                auctions = JsonConvert.DeserializeObject<Dictionary<string, T>>(File.ReadAllText(fileName));
+                auctions = JsonConvert.DeserializeObject<Dictionary<T, U>>(File.ReadAllText(fileName));
             }
             else
             {

@@ -45,8 +45,7 @@ namespace Tosr
             Pinvoke.Setup("Tosr.db3");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
-            reverseDictionaries = new ReverseDictionaries("txt\\AuctionsByShape.txt", "txt\\AuctionsByControls.txt", 
-                "txt\\AuctionsByControlsOnly.txt", "txt\\AuctionsByControlsScanning.txt", fasesWithOffset);
+            reverseDictionaries = new ReverseDictionaries(fasesWithOffset);
             bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, true);
             bidManager.Init(auctionControl.auction);
             shuffleRestrictionsSouth.SetControls(2, 12);

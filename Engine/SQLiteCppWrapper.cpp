@@ -85,6 +85,12 @@ std::tuple<int, Fase, std::string, int> SQLiteCppWrapper::GetRule(const HandChar
                     }
                     return std::make_tuple(bidId + bidIdCtrlsScanning - 1, GetNextFase(endfaseCtrlsScanning, previousFase), str + "\n" + strCtrlScanning, bidIdCtrlsScanning);
                 }
+                case Fase::ScanningOther:
+                {
+                    auto [bidIdScanningOther, endfaseScanningOther, strScanningOther] = GetRuleScanningOther(hand, lastBidId);
+                    return std::make_tuple(bidId + bidIdScanningOther - 1, GetNextFase(endfaseScanningOther, previousFase), str + "\n" + strScanningOther, bidIdScanningOther);
+                }
+
                 default:
                     throw std::invalid_argument(std::to_string((int)previousFase));
                 }

@@ -15,6 +15,7 @@ namespace Tosr
     using ControlScanningDictionary = Dictionary<string, (List<string> controls, bool zoom)>;
 
     using RelayBidKindFunc = Func<Auction, string, string, IEnumerable<Bid>, Suit, BidManager.RelayBidKind>;
+    using RelayBidFunc = Func<BiddingState, Auction, string, Bid>;
 
     public class BidManager
     {
@@ -60,9 +61,10 @@ namespace Tosr
         };
 
         static readonly int requiredMaxHcpToBid4Diamond = 17;
-        static readonly List<Fase> signOffFases = new List<Fase> {Fase.Pull3NTNoAsk, Fase.Pull3NTOneAsk, Fase.Pull3NTTwoAsks, Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAsk};
+        public static readonly List<Fase> signOffFases = new List<Fase> {Fase.Pull3NTNoAsk, Fase.Pull3NTOneAsk, Fase.Pull3NTTwoAsks, Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAsk};
 
         private readonly RelayBidKindFunc getRelayBidKindFunc = (auction, northHand, southHandShape, controls, trumpSuit) => { return BidManager.RelayBidKind.Relay; };
+        private readonly RelayBidFunc getRelayBidFunc = (BiddingState biddingState, Auction auction, string northHand) => { return Bid.NextBid(biddingState.CurrentBid); };
 
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -80,14 +82,13 @@ namespace Tosr
         {
             this.reverseDictionaries = reverseDictionaries;
             this.useSingleDummySolver = useSingleDummySolver;
-            this.getRelayBidKindFunc = GetRelayBidKind;
         }
 
         // Constructor used for generate reverse dictionaries for sign-off auctions
-        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, RelayBidKindFunc getRelayBidKindFunc) :
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, RelayBidFunc getRelayBidFunc) :
             this(bidGenerator, fasesWithOffset)
         {
-            this.getRelayBidKindFunc = getRelayBidKindFunc;
+            this.getRelayBidFunc = getRelayBidFunc;
         }
 
         // Constructor used for generate reverse dictionaries
@@ -95,6 +96,8 @@ namespace Tosr
         {
             this.bidGenerator = bidGenerator;
             this.fasesWithOffset = fasesWithOffset;
+            this.getRelayBidFunc = GetRelayBid;
+            this.getRelayBidKindFunc = GetRelayBidKind;
         }
 
         public void Init(Auction auction)
@@ -147,7 +150,7 @@ namespace Tosr
         public void NorthBid(BiddingState biddingState, Auction auction, string northHand)
         {
             if (biddingState.Fase != Fase.End)
-                biddingState.CurrentBid = GetRelayBid(biddingState, auction, northHand);
+                biddingState.CurrentBid = getRelayBidFunc(biddingState, auction, northHand);
             else
             {
                 biddingState.EndOfBidding = true;
@@ -290,11 +293,10 @@ namespace Tosr
             var bidId = biddingState.CalculateBid(bidIdFromRule, description, zoomOffset != 0);
             auction.AddBid(biddingState.CurrentBid);
 
-            var lzoomOffset = reverseDictionaries == null ? zoomOffset :
-                nextfase switch
+            var lzoomOffset = nextfase switch
                 {
-                    Fase.Controls => shape.Value.zoomOffset,
-                    Fase.ScanningOther => controlsScanning.Value.zoomOffset,
+                    Fase.Controls => reverseDictionaries == null ? zoomOffset : shape.Value.zoomOffset,
+                    Fase.ScanningOther => reverseDictionaries == null ? zoomOffset : controlsScanning.Value.zoomOffset,
                     _ => 0,
                 };
             biddingState.UpdateBiddingState(bidIdFromRule, nextfase, bidId, lzoomOffset);
