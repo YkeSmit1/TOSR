@@ -7,13 +7,9 @@ The goal of the program will be two-fold:
 
 TODO
 - Create a rules database for the Tarzan system.
-- Implement more statistics. 
+ - Implement more statistics. 
 - Implement zooming.
 - Create integration test.
-
-BUGS
-- 2Nd step in scanning is off by one.
-- 3NT is sometimes a relay when it should not.
 
 How to build
 - Clone or download the sources.
