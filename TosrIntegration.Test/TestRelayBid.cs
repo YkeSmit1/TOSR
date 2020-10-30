@@ -41,7 +41,7 @@ namespace TosrIntegration.Test
             // Test with major fit with pull
             yield return new object[] { "TestFitPull17HCP", "AK32,A432,A32,Q2", "xx,Kxxx,KQxxx,AK", "1♣1NT2♦2♠4♦5♦6♣6♥7♣7♥Pass", "1♠2♣2♥3♣5♣5NT6♦6NT7♦7♠" };
             yield return new object[] { "TestFitPull18HCPMax", "QJ32,QJ32,AJ,AK2", "Kx,Axxx,KQxxx,xx", "1♣1NT2♦2♠3♦4♦5♥6♣6♥Pass", "1♠2♣2♥3♣3♠5♦5NT6♦6♠" };
-            yield return new object[] { "TestFitPull20HCPMin", "AQ32,A432,A2,A32", "xx,Kxxx,KQxxx,Kx", "1♣1NT2♦2♠3♦4♦5♥6♦7♣7♠8♣Pass", "1♠2♣2♥3♣3♥5♦6♣6NT7♥7NT8♦" };
+            yield return new object[] { "TestFitPull20HCPMin", "AQ32,A432,A2,A32", "xx,Kxxx,KQxxx,Kx", "1♣1NT2♦2♠3♦4♦5♥6♦7♣7♥7NTPass", "1♠2♣2♥3♣3♥5♦6♣6NT7♦7♠8♣" };
 
             // Test with minor fit. TODO
         }
@@ -71,6 +71,7 @@ namespace TosrIntegration.Test
             var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction(northHand, southHand);
             AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
+            //AssertHand(bidManager, auction, northHand, southHand);
         }
 
         [Theory]
@@ -81,6 +82,7 @@ namespace TosrIntegration.Test
             var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, (auction, northHand, southHandShape, controls, trumpSuit) => { return BidManager.RelayBidKind.fourDiamondEndSignal; });
             var auction = bidManager.GetAuction(northHand, southHand);
             AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
+            //AssertHand(bidManager, auction, northHand, southHand);
         }
 
         private static void SetupTest(string testName)
@@ -98,9 +100,12 @@ namespace TosrIntegration.Test
 
             Assert.Equal(expectedBidsSouth, actualBidsSouth);
             Assert.Equal(expectedBidsNorth, actualBidsNorth);
+        }
 
-            //var constructedSouthHand = bidManager.ConstructSouthHand(northHand, auction);
-            //Assert.Equal(southHand, constructedSouthHand);
+        private static void AssertHand(BidManager bidManager, Auction auction, string northHand, string southHand)
+        {
+            var constructedSouthHand = bidManager.ConstructSouthHand(northHand, auction);
+            Assert.Equal(southHand, constructedSouthHand);
         }
     }
 }

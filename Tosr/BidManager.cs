@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Text;
 using System.Linq;
 using System.Collections.Generic;
@@ -103,7 +104,7 @@ namespace Tosr
         public void Init(Auction auction)
         {
             shape = new Lazy<(List<string> shapes, int zoomOffset)>(() => GetShapeStrFromAuction(auction, reverseDictionaries.ShapeAuctions));
-            controlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() => GetControlsScanningStrFromAuction(auction, reverseDictionaries.ControlScanningAuctions, shape.Value.zoomOffset));
+            controlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() => GetControlsScanningStrFromAuction(auction, reverseDictionaries, shape.Value.zoomOffset));
         }
 
         public Auction GetAuction(string northHand, string southHand)
@@ -425,11 +426,22 @@ namespace Tosr
         /// <param name="controlScanningAuctions"></param>
         /// <param name="zoomOffsetShape"></param>
         /// <returns></returns>
-        public static (List<string> controls, int zoomOffset) GetControlsScanningStrFromAuction(Auction auction, ControlScanningDictionary controlScanningAuctions, int zoomOffsetShape)
+        public static (List<string> controls, int zoomOffset) GetControlsScanningStrFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, int zoomOffsetShape)
         {
-            var fases = new Fase[] { Fase.Controls, Fase.ScanningControls };
+            var fases = new List<Fase> { Fase.Controls, Fase.ScanningControls }.Concat(BidManager.signOffFases).ToArray();
             var bidsForFase = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffsetShape, fases);
-
+            var signOffBids = auction.GetBids(Player.South, BidManager.signOffFases.ToArray());
+            var sigOffFase = signOffBids.Any() ? signOffBids.First().fase : Fase.Unknown;
+            var controlScanningAuctions = sigOffFase switch
+            {
+                Fase.Unknown => reverseDictionaries.ControlScanningAuctions,
+                Fase.Pull3NTNoAsk => reverseDictionaries.ControlScanningPullAuctions3NT,
+                Fase.Pull3NTOneAsk => reverseDictionaries.ControlScanningPullAuctions3NT,
+                Fase.Pull3NTTwoAsks => reverseDictionaries.ControlScanningPullAuctions3NT,
+                Fase.Pull4DiamondsNoAsk => reverseDictionaries.ControlScanningPullAuctions4Di,
+                Fase.Pull4DiamondsOneAsk => reverseDictionaries.ControlScanningPullAuctions4Di,
+                _ => null,
+            };
             if (controlScanningAuctions.TryGetValue(string.Join("", bidsForFase), out var controls))
                 return (controls.controlsScanning, controls.zoom ? 1 : 0);
 
@@ -443,8 +455,6 @@ namespace Tosr
                 if (controlScanningAuctions.TryGetValue(string.Join("", allBidsNew), out var zoom) && zoom.zoom)
                     return (zoom.controlsScanning, (lastBid - bid) + 1);
             }
-            // TODO fix this. It is wrong for pulling after a sign-off bid. 
-            return (new List<string>(), 0);
 
             throw new InvalidOperationException($"{ string.Join("", bidsForFase) } not found in controls scanning dictionary");
         }
@@ -467,14 +477,13 @@ namespace Tosr
             var used4ClAsRelay = Used4ClAsRelay(auction);
             var signOffBids = auction.GetBids(Player.South).Where(bid => signOffFases.Contains(bid.fase));
             Debug.Assert(signOffBids.Count() <= 1);
-            if (used4ClAsRelay)
-                bidsForFases = bidsForFases.Select(b => b = (b - (b > Bid.fourClubBid ? offSet + 1 : offSet)) + zoomOffset);
-            else if (signOffBids.Count() == 1)
+            var usedSignOffBid = signOffBids.Count() == 1;
+            bidsForFases = bidsForFases.Select(b =>
             {
-                bidsForFases = bidsForFases.Select(b => b = (b - (b >= signOffBids.Single() ? signOffBids.Single() - offsetBid : offSet)) + zoomOffset);
-            }
-            else
-                bidsForFases = bidsForFases.Select(b => b = (b - offSet) + zoomOffset);
+                var bidAfterSignOff = usedSignOffBid && b >= signOffBids.Single();
+                var bidAfter4ClRelay = used4ClAsRelay && b > Bid.fourClubBid;
+                return b = b + zoomOffset - (bidAfter4ClRelay && !bidAfterSignOff ? offSet + 1 : bidAfterSignOff ? 0 : offSet);
+            });
 
             return bidsForFases;
         }

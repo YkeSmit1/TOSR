@@ -203,7 +203,7 @@ namespace Common
             // If we have a major fit return the major
             if (new List<Suit> { Suit.Spades, Suit.Hearts }.Contains(longestSuit))
                 return (suitLength < 8) ? Suit.NoTrump : longestSuit;
-            // Only wants to play a minor if we have a singleton and more than 9 trumps
+            // Only wants to play a minor if we have a singleton and 9 or more trumps
             if (suitLength > 8 && (northHand.Split(',').Select(x => x.Length).Min() <= 1 || southHand.Split(',').Select(x => x.Length).Min() <= 1))
                 return longestSuit;
             return Suit.NoTrump;

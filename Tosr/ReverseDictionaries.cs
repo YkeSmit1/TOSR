@@ -143,7 +143,7 @@ namespace Tosr
         public ControlScanningDictionary GenerateAuctionsForControlsScanning()
         {
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
-            return GenerateAuctionsForControlsScanningInternal(bidManager);
+            return GenerateAuctionsForControlsScanningInternal(bidManager, false);
         }
 
         public ControlScanningPullDictionary GenerateAuctionsForControlsScanningPull3NT()
@@ -165,10 +165,10 @@ namespace Tosr
             var fasesControl = new Fase[] { Fase.Controls };
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset,
                 (biddingState, auction, northHand) => GetRelayBidFunc(biddingState, auction, fasesControl, controlBidCount, relayBid));
-            return GenerateAuctionsForControlsScanningInternal(bidManager);
+            return GenerateAuctionsForControlsScanningInternal(bidManager, true);
         }
 
-        private static ControlScanningDictionary GenerateAuctionsForControlsScanningInternal(BidManager bidManager)
+        private static ControlScanningDictionary GenerateAuctionsForControlsScanningInternal(BidManager bidManager, bool useExtraQueens)
         {
             var auctions = new ControlScanningDictionary();
             var suitLength = new[] { 4, 3, 3, 3 };
@@ -181,15 +181,21 @@ namespace Tosr
                         {
                             var hand = ConstructHand(suitLength, spades, hearts, diamonds, clubs);
                             var controlCount = Util.GetControlCount(hand);
-                            var hcpCount = Util.GetHcpCount(hand);
-                            if (controlCount > 1 && hcpCount < 25)
+                            if (controlCount > 1)
                             {
                                 BidAndStoreHand(hand, hand);
-                                // Also try to store the hand with extra queens for exactly 4 controls, because auction will be different if there are more then 12 HCP in the hand
-                                if (controlCount == 4 && hcpCount < 12)
+                                if (useExtraQueens)
                                 {
-                                    var handWithJacks = AddHonors(suitLength, spades, hearts, diamonds, clubs, "Q");
-                                    BidAndStoreHand(handWithJacks, hand);
+                                    BidAndStoreHand(ConstructHand(suitLength, spades + "Q", hearts, diamonds, clubs), hand);
+                                    BidAndStoreHand(ConstructHand(suitLength, spades + "Q", hearts + "Q", diamonds, clubs), hand);
+                                    BidAndStoreHand(ConstructHand(suitLength, spades + "Q", hearts + "Q", diamonds + "Q", clubs), hand);
+                                    BidAndStoreHand(ConstructHand(suitLength, spades + "Q", hearts + "Q", diamonds + "Q", clubs + "Q"), hand);
+                                }
+                                // Also try to store the hand with extra queens for exactly 4 controls, because auction will be different if there are more then 12 HCP in the hand
+                                else if (controlCount == 4 && Util.GetHcpCount(hand) < 12)
+                                {
+                                    var handWithQueens = AddHonors(suitLength, spades, hearts, diamonds, clubs, "Q");
+                                    BidAndStoreHand(handWithQueens, hand);
                                 }
                             }
                         }
@@ -198,16 +204,19 @@ namespace Tosr
             void BidAndStoreHand(string hand, string handToStore)
             {
                 Debug.Assert(hand.Length == 16);
-                var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
-                if (IsPullAuction(auction))
+                if (Util.GetHcpCount(hand) < 25)
                 {
-                    var fases = new List<Fase> { Fase.Controls, Fase.ScanningControls }.Concat(BidManager.signOffFases).ToArray();
-                    var key = auction.GetBidsAsString(fases);
-                    var isZoom = auction.GetBids(Player.South, Fase.ScanningControls).Any(x => x.zoom);
-                    if (auctions.ContainsKey(key))
-                        auctions[key].controlsScanning.Add((handToStore));
-                    else
-                        auctions.Add(key, (new List<string>() { handToStore }, isZoom));
+                    var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
+                    if (IsPullAuction(auction))
+                    {
+                        var fases = new List<Fase> { Fase.Controls, Fase.ScanningControls }.Concat(BidManager.signOffFases).ToArray();
+                        var key = auction.GetBidsAsString(fases);
+                        var isZoom = auction.GetBids(Player.South, Fase.ScanningControls).Any(x => x.zoom);
+                        if (!auctions.ContainsKey(key))
+                            auctions.Add(key, (new List<string>() { handToStore }, isZoom));
+                        else if (!auctions[key].controlsScanning.Contains(handToStore))
+                            auctions[key].controlsScanning.Add((handToStore));
+                    }
                 }
             }
         }
@@ -329,23 +338,20 @@ namespace Tosr
             }
         }
 
-        private static string ConstructHand(int[] suitLength, string spades, string hearts, string diamonds, string clubs)
-        {
-            return spades.PadRight(suitLength[0], 'x') + ',' +
-                   hearts.PadRight(suitLength[1], 'x') + ',' +
-                 diamonds.PadRight(suitLength[2], 'x') + ',' +
-                    clubs.PadRight(suitLength[3], 'x');
-        }
-
         private static string AddHonors(int[] suitLength, string spades, string hearts, string diamonds, string clubs, string honor)
         {
-            return GetControlsWithHonorsIfPossible(spades, suitLength[0], honor).PadRight(suitLength[0], 'x') + ',' +
-                   GetControlsWithHonorsIfPossible(hearts, suitLength[1], honor).PadRight(suitLength[1], 'x') + ',' +
-                   GetControlsWithHonorsIfPossible(diamonds, suitLength[2], honor).PadRight(suitLength[2], 'x') + ',' +
-                   GetControlsWithHonorsIfPossible(clubs, suitLength[3], honor).PadRight(suitLength[3], 'x');
+            return ConstructHand(suitLength, GetControlsWithHonorsIfPossible(spades, suitLength[0], honor),
+                   GetControlsWithHonorsIfPossible(hearts, suitLength[1], honor),
+                   GetControlsWithHonorsIfPossible(diamonds, suitLength[2], honor),
+                   GetControlsWithHonorsIfPossible(clubs, suitLength[3], honor));
         }
 
-        static string GetControlsWithHonorsIfPossible(string suit, int suitLength, string honor)
+        private static string ConstructHand(int[] suitLength, params string[] suits)
+        {
+            return string.Join(',', suitLength.Zip(suits, (x, y) => y.PadRight(x, 'x')));
+        }
+
+        private static string GetControlsWithHonorsIfPossible(string suit, int suitLength, string honor)
         {
             return suit + (suit.Length == suitLength ? "" : honor);
         }
