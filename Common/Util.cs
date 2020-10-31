@@ -62,7 +62,6 @@ namespace Common
         Pull4DiamondsNoAsk,
         Pull4DiamondsOneAsk,
         BidGame,
-        Invalid,
     };
 
 

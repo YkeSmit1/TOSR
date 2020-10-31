@@ -13,7 +13,6 @@ namespace Common
     public class Bid : IEquatable<Bid>, IComparable<Bid>
     {
         public static Bid PassBid = new Bid(BidType.pass);
-        public static Bid InvalidPassBid = new Bid(BidType.pass) { fase = Fase.Invalid};
         public static Bid Dbl = new Bid(BidType.dbl);
         public static Bid Rdbl = new Bid(BidType.rdbl);
 

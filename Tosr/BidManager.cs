@@ -39,6 +39,7 @@ namespace Tosr
             gameBid,
         }
 
+        public const string signOffMessage = "Cannot construct southhand due to sign-off";
         private readonly IBidGenerator bidGenerator;
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries = null;
@@ -302,6 +303,9 @@ namespace Tosr
                     _ => 0,
                 };
             biddingState.UpdateBiddingState(bidIdFromRule, nextfase, bidId, lzoomOffset);
+            if (nextfase == Fase.BidGame)
+                auction.hasSignedOff = true;
+
         }
 
         /// <summary>
@@ -315,6 +319,12 @@ namespace Tosr
         {
             logger.Debug($"Starting ConstructSouthHand for northhand : {northHand}");
 
+            if (auction.hasSignedOff)
+            {
+                constructedSouthhandOutcome = ConstructedSouthhandOutcome.HasSignedOff;
+                return signOffMessage;
+            }
+
             int zoomOffset;
             try
             {
@@ -324,15 +334,31 @@ namespace Tosr
             {
                 throw SetOutcome(exception.Message, ConstructedSouthhandOutcome.AuctionNotFoundInControls);
             }
-            var controls = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffset, new Fase[] { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther });
+
+            var fases = new List<Fase> { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther }.Concat(signOffFases).ToArray();
+            var controls = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffset, fases);
             var strControls = string.Join("", controls);
 
-            if (!reverseDictionaries.ControlsAuctions.TryGetValue(strControls, out var possibleControls))
+            var signOffBids = auction.GetBids(Player.South, BidManager.signOffFases.ToArray());
+            var sigOffFase = signOffBids.Any() ? signOffBids.First().fase : Fase.Unknown;
+            var controlScanningAuctions = sigOffFase switch
+            {
+                Fase.Unknown => reverseDictionaries.ControlsAuctions,
+                Fase.Pull3NTNoAsk => reverseDictionaries.ControlsPullAuctions3NT,
+                Fase.Pull3NTOneAsk => reverseDictionaries.ControlsPullAuctions3NT,
+                Fase.Pull3NTTwoAsks => reverseDictionaries.ControlsPullAuctions3NT,
+                Fase.Pull4DiamondsNoAsk => reverseDictionaries.ControlsPullAuctions4Di,
+                Fase.Pull4DiamondsOneAsk => reverseDictionaries.ControlsPullAuctions4Di,
+                _ => null,
+            };
+
+            if (!controlScanningAuctions.TryGetValue(strControls, out var possibleControls))
             {
                 throw SetOutcome($"Auction not found in controls. controls: {strControls}. NorthHand: {northHand}.", ConstructedSouthhandOutcome.AuctionNotFoundInControls);
             }
             var matches = GetMatchesWithNorthHand(shape.Value.shapes, possibleControls, northHand);
-            logger.Debug($"Ending ConstructSouthHand. southhand : {matches.First()}");
+            if (matches.Count() == 1)
+                logger.Debug($"Ending ConstructSouthHand. southhand : {matches.First()}");
 
             return (matches.Count()) switch
             {
@@ -493,7 +519,7 @@ namespace Tosr
             var previousBiddingRound = auction.bids.First();
             foreach (var biddingRound in auction.bids.Skip(1))
             {
-                if (biddingRound.Value.ContainsKey(Player.North) && biddingRound.Value[Player.North] == Bid.fourClubBid)
+                if (biddingRound.Value.TryGetValue(Player.North, out var bid) && bid == Bid.fourClubBid)
                     return previousBiddingRound.Value[Player.South] == Bid.threeSpadeBid;
 
                 previousBiddingRound = biddingRound;

@@ -32,6 +32,7 @@ namespace Tosr
             FaseOffset = 0;
             NextBidIdForRule = 0;
             HasSignedOff = false;
+            PreviousFase = Fase.Unknown;
         }
         public int CalculateBid(int bidIdFromRule, string description, bool zoom)
         {

@@ -207,7 +207,7 @@ namespace Tosr
                 if (Util.GetHcpCount(hand) < 25)
                 {
                     var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
-                    if (IsPullAuction(auction))
+                    if (IsSignOffOrInvalidAuction(auction))
                     {
                         var fases = new List<Fase> { Fase.Controls, Fase.ScanningControls }.Concat(BidManager.signOffFases).ToArray();
                         var key = auction.GetBidsAsString(fases);
@@ -279,11 +279,12 @@ namespace Tosr
                 Debug.Assert(hand.Length == 16);
                 var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
                 var key = auction.GetBidsAsString(new List<Fase> { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther }.Concat(BidManager.signOffFases).ToArray());
-                if (IsPullAuction(auction))
+                if (IsSignOffOrInvalidAuction(auction))
                 {
                     if (!auctions.ContainsKey(key))
                         auctions.Add(key, new List<string>());
-                    auctions[key].Add(handToStore);
+                    if (!auctions[key].Contains(handToStore))
+                        auctions[key].Add(handToStore);
                 }
             }
         }
@@ -304,6 +305,7 @@ namespace Tosr
                 if (biddingState.Fase == Fase.BidGame)
                 {
                     biddingState.Fase = Fase.End;
+                    auction.hasSignedOff = true;
                     return Bid.PassBid;
                 }
 
@@ -329,7 +331,8 @@ namespace Tosr
                 if (biddingState.CurrentBid > Bid.fourClubBid)
                 {
                     biddingState.Fase = Fase.End;
-                    return Bid.InvalidPassBid;
+                    auction.isInvalid = true;
+                    return Bid.PassBid;
                 }
 
                 biddingState.UpdateBiddingStateSignOff(fasesBidCount, relayBid, false);
@@ -356,11 +359,9 @@ namespace Tosr
             return suit + (suit.Length == suitLength ? "" : honor);
         }
 
-        private static bool IsPullAuction(Auction auction)
+        private static bool IsSignOffOrInvalidAuction(Auction auction)
         {
-            var bidsNorth = auction.GetBids(Player.North);
-            var bidsSouth = auction.GetBids(Player.South);
-            return !(bidsNorth.Any(bid => bid.fase == Fase.Invalid) || endBids.Contains(bidsNorth.Last()) || bidsSouth.Skip(bidsSouth.Count() - 2).First() == Bid.fourHeartsBid);
+            return !auction.isInvalid && !auction.hasSignedOff;
         }
     }
 }
