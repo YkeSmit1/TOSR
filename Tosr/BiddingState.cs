@@ -9,13 +9,13 @@ namespace Tosr
         public Fase Fase { get; set; }
         public Bid CurrentBid { get; set; }
         public int RelayBidIdLastFase { get; set; }
-        public int NextBidIdForRule { get; set; }
+        public int NextBidIdForRule { get; private set; }
         private int FaseOffset { get; set; }
         public bool EndOfBidding { get; set; }
 
         private readonly Dictionary<Fase, bool> fasesWithOffset;
-        public Fase PreviousFase { get; set; }
-        public bool HasSignedOff { get; set; }
+        public Fase PreviousFase { get; private set; }
+        public bool HasSignedOff { get; private set; }
 
         public BiddingState(Dictionary<Fase, bool> fasesWithOffset)
         {
@@ -53,6 +53,12 @@ namespace Tosr
 
         public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, int bidId, int zoomOffset)
         {
+            if (BidManager.signOffFases.Contains(Fase))
+            {
+                Fase = PreviousFase;
+                RelayBidIdLastFase = (bidId + 1) - zoomOffset;
+            }
+
             if (nextfase != Fase)
             {
                 // Specific for zoom. TODO Code is ugly, needs improvement

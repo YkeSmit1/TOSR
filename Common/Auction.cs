@@ -119,5 +119,20 @@ namespace Common
             }
             return false;
         }
+
+        public void CheckConsistency()
+        {
+            var bidsSouth = GetBids(Player.South);
+            var previousBid = bidsSouth.First();
+            foreach (var bid in bidsSouth.Skip(1))
+            {
+                if (bid.bidType == BidType.bid)
+                {
+                    if (bid <= previousBid)
+                        throw new InvalidOperationException("Bid is lower");
+                    previousBid = bid;
+                }
+            }
+        }
     }
 }

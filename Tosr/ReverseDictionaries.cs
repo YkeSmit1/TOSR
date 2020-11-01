@@ -321,6 +321,12 @@ namespace Tosr
                 var lRelayBid = relayBid;
                 if (biddingState.CurrentBid > lRelayBid)
                     lRelayBid += 5; // Bid 4NT instead of 3NT
+                if (biddingState.CurrentBid > lRelayBid)
+                {
+                    biddingState.Fase = Fase.End;
+                    auction.isInvalid = true;
+                    return Bid.PassBid;
+                }
                 biddingState.UpdateBiddingStateSignOff(fasesBidCount, lRelayBid, true);
 
                 return lRelayBid;

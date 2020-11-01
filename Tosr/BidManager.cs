@@ -142,6 +142,7 @@ namespace Tosr
             while (!biddingState.EndOfBidding);
 
             logger.Debug($"Ending GetAuction for hand : {southHand}");
+            auction.CheckConsistency();
             return auction;
         }
 
@@ -297,8 +298,6 @@ namespace Tosr
                     Fase.ScanningOther => reverseDictionaries == null ? zoomOffset : controlsScanning.Value.zoomOffset,
                     _ => 0,
                 };
-            if (signOffFases.Contains(biddingState.Fase))
-                biddingState.Fase = biddingState.PreviousFase;
             biddingState.UpdateBiddingState(bidIdFromRule, nextfase, bidId, lzoomOffset);
             if (nextfase == Fase.BidGame)
                 auction.hasSignedOff = true;

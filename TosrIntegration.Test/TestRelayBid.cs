@@ -24,12 +24,12 @@ namespace TosrIntegration.Test
             yield return new object[] { "Test3NT23HCP", "AK32,AK2,A32,KQ2", "x,xxxx,Kxxxx,Axx", "1♣1NT2♦2♠3♣3♥4♣4NT", "1♠2♣2♥2NT3♦3♠4♥Pass" };
 
             // 3(4)NT tests with pull
-            yield return new object[] { "Test3NTPull18HCP", "AK32,AK2,A32,432", "x,Qxxx,KQxxx,AQx", "1♣1NT2♦2♠3♣3NT4♦4NT5♥6♣Pass", "1♠2♣2♥2NT3♦4♣4♠5♦5NT6NT" };
+            yield return new object[] { "Test3NTPull18HCP", "AK32,AK2,A32,432", "x,Qxxx,KQxxx,AQx", "1♣1NT2♦2♠3♣3NT4♦5♦5NT6♥Pass", "1♠2♣2♥2NT3♦4♣5♣5♠6♦7♦" };
             yield return new object[] { "Test3NTPull21HCPMin", "AK32,AK2,A32,K32", "Q,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥3NT4NT5♥6♣6♠7♣Pass", "1♠2♣2♥2NT3♦3♠4♠5♦5NT6♥6NT7♥" };
             // TODO fix double zoom. Should ask for queens once after zoom twice.
             //yield return new object[] { "Test3NTPull21HCPMax", "AQJ2,AQJ,A32,K32", "K,Kxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4NT6♥7♣7♥Pass", "1♠2♣2♥2NT3♦4♣6♦6NT7♦7♠" };
-            yield return new object[] { "Test3NTPull21HCPMax", "AQJ2,AQJ,AK2,432", "K,Kxxx,Qxxxx,AKx", "1♣1NT2♦2♠3♣3♥4NT5♦5NT6♠7♣Pass", "1♠2♣2♥2NT3♦4♣5♣5♠6♥6NT7♦" };
-            yield return new object[] { "Test3NTPull23HCP", "AK32,AK2,A32,KQ2", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4♣4NT5♥6♣6♠7♣Pass", "1♠2♣2♥2NT3♦3♠4♥5♦5NT6♥6NT7♦" };
+            yield return new object[] { "Test3NTPull21HCPMax", "AQJ2,AQJ,AK2,432", "K,Kxxx,Qxxxx,AKx", "1♣1NT2♦2♠3♣3♥4NT5♦6♦7♣7♥Pass", "1♠2♣2♥2NT3♦4♣5♣6♣6NT7♦7♠" };
+            yield return new object[] { "Test3NTPull23HCP", "AK32,AK2,A32,KQ2", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4♣4NT5♥6♠7♦7♠Pass", "1♠2♣2♥2NT3♦3♠4♥5♦6♥7♣7♥7NT" };
         }
 
         public static IEnumerable<object[]> TestCases4Diamond()
