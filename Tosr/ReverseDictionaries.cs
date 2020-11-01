@@ -186,10 +186,10 @@ namespace Tosr
                                 BidAndStoreHand(hand, hand);
                                 if (useExtraQueens)
                                 {
-                                    BidAndStoreHand(ConstructHand(suitLength, spades + "Q", hearts, diamonds, clubs), hand);
-                                    BidAndStoreHand(ConstructHand(suitLength, spades + "Q", hearts + "Q", diamonds, clubs), hand);
-                                    BidAndStoreHand(ConstructHand(suitLength, spades + "Q", hearts + "Q", diamonds + "Q", clubs), hand);
-                                    BidAndStoreHand(ConstructHand(suitLength, spades + "Q", hearts + "Q", diamonds + "Q", clubs + "Q"), hand);
+                                    // Don't add queens in spades, It will zoom
+                                    BidAndStoreHand(ConstructHand(suitLength, spades, hearts, diamonds, clubs + "Q"), hand);
+                                    BidAndStoreHand(ConstructHand(suitLength, spades, hearts, diamonds + "Q", clubs + "Q"), hand);
+                                    BidAndStoreHand(ConstructHand(suitLength, spades, hearts + "Q", diamonds + "Q", clubs + "Q"), hand);
                                 }
                                 // Also try to store the hand with extra queens for exactly 4 controls, because auction will be different if there are more then 12 HCP in the hand
                                 else if (controlCount == 4 && Util.GetHcpCount(hand) < 12)
@@ -343,7 +343,8 @@ namespace Tosr
 
         private static string AddHonors(int[] suitLength, string spades, string hearts, string diamonds, string clubs, string honor)
         {
-            return ConstructHand(suitLength, GetControlsWithHonorsIfPossible(spades, suitLength[0], honor),
+            // Don't add queens in spades, It will zoom
+            return ConstructHand(suitLength, spades,
                    GetControlsWithHonorsIfPossible(hearts, suitLength[1], honor),
                    GetControlsWithHonorsIfPossible(diamonds, suitLength[2], honor),
                    GetControlsWithHonorsIfPossible(clubs, suitLength[3], honor));

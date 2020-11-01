@@ -29,7 +29,6 @@ namespace Tosr
             NoMatchFound,
             MultipleMatchesFound,
             IncorrectSouthhand,
-            HasSignedOff,
         }
 
         public enum RelayBidKind
@@ -39,7 +38,6 @@ namespace Tosr
             gameBid,
         }
 
-        public const string signOffMessage = "Cannot construct southhand due to sign-off";
         private readonly IBidGenerator bidGenerator;
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries = null;
@@ -144,8 +142,6 @@ namespace Tosr
             while (!biddingState.EndOfBidding);
 
             logger.Debug($"Ending GetAuction for hand : {southHand}");
-            if (biddingState.HasSignedOff)
-                constructedSouthhandOutcome = ConstructedSouthhandOutcome.HasSignedOff;
             return auction;
         }
 
@@ -220,7 +216,6 @@ namespace Tosr
                             switch (relayBidkind)
                             {
                                 case RelayBidKind.Relay:
-                                    biddingState.HasSignedOff = true;
                                     break;
                                 case RelayBidKind.fourDiamondEndSignal:
                                     if (biddingState.CurrentBid < Bid.fourClubBid)
@@ -232,6 +227,7 @@ namespace Tosr
                                 case RelayBidKind.gameBid:
                                     {
                                         biddingState.Fase = Fase.End;
+                                        auction.hasSignedOff = true;
                                         return Bid.GetGameContract(trumpSuit);
                                     }
                                 default:
@@ -275,7 +271,6 @@ namespace Tosr
 
         private Bid CalculateEndContract(Auction auction, string northHand)
         {
-            // TODO solve sign-off bids!!!
             var constructedSouthHand = ConstructSouthHand(northHand, auction);
             var suit = Util.GetLongestSuit(northHand, constructedSouthHand);
             var scores = SingleDummySolver.SolveSingleDummy(3 - (int)suit.Item1, 3 - (int)auction.GetDeclarer(suit.Item1), northHand, constructedSouthHand);
@@ -302,6 +297,8 @@ namespace Tosr
                     Fase.ScanningOther => reverseDictionaries == null ? zoomOffset : controlsScanning.Value.zoomOffset,
                     _ => 0,
                 };
+            if (signOffFases.Contains(biddingState.Fase))
+                biddingState.Fase = biddingState.PreviousFase;
             biddingState.UpdateBiddingState(bidIdFromRule, nextfase, bidId, lzoomOffset);
             if (nextfase == Fase.BidGame)
                 auction.hasSignedOff = true;
@@ -318,12 +315,6 @@ namespace Tosr
         public string ConstructSouthHand(string northHand, Auction auction)
         {
             logger.Debug($"Starting ConstructSouthHand for northhand : {northHand}");
-
-            if (auction.hasSignedOff)
-            {
-                constructedSouthhandOutcome = ConstructedSouthhandOutcome.HasSignedOff;
-                return signOffMessage;
-            }
 
             int zoomOffset;
             try
