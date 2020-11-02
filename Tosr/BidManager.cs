@@ -523,7 +523,7 @@ namespace Tosr
             foreach (var controlStr in possibleControls)
             {
                 var controls = controlStr.Split(',').Select(x => x.TrimEnd('x')).ToArray();
-                var controlByShapes = shapeLengthStrs.Select(shapeLengthStr => MergeControlAndShape(controls, shapeLengthStr)).Where(x => x.Count() == 4);
+                var controlByShapes = shapeLengthStrs.Select(shapeLengthStr => MergeControlAndShape(controls, shapeLengthStr)).Where(x => x.Sum(x => x.Length) == 13);
                 var southHands = controlByShapes.Where(controlByShape => Match(controlByShape.ToArray(), northHand));
                 foreach (var southHand in southHands)
                 {
@@ -533,41 +533,24 @@ namespace Tosr
         }
 
         /// <summary>
-        /// Merges shapes and controls. If controls does not fit, it returns an IEnumerable with length < 4
-        /// TODO This function needs improvement
+        /// Merges shapes and controls
         /// </summary>
-        /// <param name="controlStr">{"A","","Q","K"}</param>
+        /// <param name="controls">{"A","","Q","K"}</param>
         /// <param name="shapeLengthStr">"3451"</param>
-        /// <returns>"Qxx,xxxx,Axxxx,K"</returns>
+        /// <returns>{"Qxx","xxxx","Axxxx","K"}</returns>
         public static IEnumerable<string> MergeControlAndShape(string[] controls, string shapeLengthStr)
         {
-            var shapes = shapeLengthStr.ToArray().Select(x => float.Parse(x.ToString())).ToList(); // {3,4,5,1}
-
-            // This is because there can be two suits with the same length. So we added a small offset to make it unique
-            foreach (var suit in Enumerable.Range(0, 4))
-                shapes[suit] += (float)(4 - suit) / 10;
-            // Shapes : // {3.4,4.3,5.2,1.3}
-
-            var shapesOrdered = shapes.OrderByDescending(x => x).ToList(); // {5.2,4.3,3.4,1.3}
-
-            var shapesLookup = shapes.ToLookup(key => shapes.IndexOf(key), value => shapesOrdered.IndexOf(value));
-
-            foreach (var suit in Enumerable.Range(0, 4))
-            {
-                var shape = (int)shapes[suit];
-                string controlStrSuit = controls[shapesLookup[suit].First()];
-                if (shape < controlStrSuit.Length)
-                    yield break;
-                yield return controlStrSuit.PadRight(shape, 'x');
-            }
+            var shapes = shapeLengthStr.ToArray().Select((x, index) => (float.Parse(x.ToString()), index)); // {3,4,5,1}
+            // Sort by length, then by position 
+            var shapesOrdered = shapes.OrderByDescending(x => x.Item1).ThenBy(x => x.index).ToList(); // {5,4,3,1}
+            return shapes.Select(shape => controls[shapesOrdered.IndexOf(shape)].PadRight((int)shape.Item1, 'x'));
         }
 
         private static bool Match(string[] hand1, string[] hand2)
         {
-            foreach (var suit in Enumerable.Range(0, 4))
-                foreach (var c in relevantCards)
-                    if (hand1[suit].Contains(c) && hand2[suit].Contains(c))
-                        return false;
+            foreach (var suit in hand1.Zip(hand2, (x, y) => (x, y)))
+                if (relevantCards.Any(c => suit.x.Contains(c) && suit.y.Contains(c)))
+                    return false; 
             return true;
         }
     }
