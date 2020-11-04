@@ -218,7 +218,7 @@ std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleScanningContro
         auto id = queryScanningControls->getColumn(3).getInt();
         auto str = queryScanningControls->getColumn(4).getString();
 
-        DBOUT("Scanning. Rule Id:" << id << '\n');
+        DBOUT("Scanning controls. Rule Id:" << id << '\n');
 
         return std::make_tuple(bidId, endFase, str, zoom);
     }

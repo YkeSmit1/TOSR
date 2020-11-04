@@ -63,7 +63,7 @@ namespace Tosr
         static readonly int requiredMaxHcpToBid4Diamond = 17;
         public static readonly List<Fase> signOffFases = new List<Fase> {Fase.Pull3NTNoAsk, Fase.Pull3NTOneAsk, Fase.Pull3NTTwoAsks, Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAsk};
 
-        private readonly RelayBidKindFunc getRelayBidKindFunc = (auction, northHand, southHandShape, controls, trumpSuit) => { return BidManager.RelayBidKind.Relay; };
+        private readonly RelayBidKindFunc getRelayBidKindFunc = (auction, northHand, southHandShape, controls, trumpSuit) => { return RelayBidKind.Relay; };
         private readonly RelayBidFunc getRelayBidFunc = (BiddingState biddingState, Auction auction, string northHand) => { return Bid.NextBid(biddingState.CurrentBid); };
 
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
@@ -113,7 +113,7 @@ namespace Tosr
 
             BiddingState biddingState = new BiddingState(fasesWithOffset);
             Player currentPlayer = Player.West;
-            constructedSouthhandOutcome = BidManager.ConstructedSouthhandOutcome.NotSet;
+            constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
             Init(auction);
 
             do
@@ -276,7 +276,7 @@ namespace Tosr
             var suit = Util.GetLongestSuit(northHand, constructedSouthHand);
             var scores = SingleDummySolver.SolveSingleDummy(3 - (int)suit.Item1, 3 - (int)auction.GetDeclarer(suit.Item1), northHand, constructedSouthHand);
             var mostFrequent = scores.GroupBy(x => x).OrderByDescending(y => y.Count()).Take(1).Select(z => z.Key).First();
-            var bid = new Bid(mostFrequent - 6, (Suit)(3 - suit.Item1));
+            var bid = new Bid(mostFrequent - 6, 3 - suit.Item1);
             return bid;
         }
 
@@ -329,7 +329,7 @@ namespace Tosr
             var controls = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffset, fases);
             var strControls = string.Join("", controls);
 
-            var signOffBids = auction.GetBids(Player.South, BidManager.signOffFases.ToArray());
+            var signOffBids = auction.GetBids(Player.South, signOffFases.ToArray());
             var sigOffFase = signOffBids.Any() ? signOffBids.First().fase : Fase.Unknown;
             var controlScanningAuctions = sigOffFase switch
             {
@@ -444,9 +444,9 @@ namespace Tosr
         /// <returns></returns>
         public static (List<string> controls, int zoomOffset) GetControlsScanningStrFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, int zoomOffsetShape)
         {
-            var fases = new List<Fase> { Fase.Controls, Fase.ScanningControls }.Concat(BidManager.signOffFases).ToArray();
+            var fases = new List<Fase> { Fase.Controls, Fase.ScanningControls }.Concat(signOffFases).ToArray();
             var bidsForFase = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffsetShape, fases);
-            var signOffBids = auction.GetBids(Player.South, BidManager.signOffFases.ToArray());
+            var signOffBids = auction.GetBids(Player.South, signOffFases.ToArray());
             var sigOffFase = signOffBids.Any() ? signOffBids.First().fase : Fase.Unknown;
             var controlScanningAuctions = sigOffFase switch
             {

@@ -47,6 +47,9 @@ namespace TosrIntegration.Test
             yield return new object[] { "TestFitPull20HCPMin", "AQ32,A432,K2,AK2", "xx,KQxx,AQxxx,xx", "1♣1NT2♦2♠3♦4♦5♥6♦6♠7♥Pass", "1♠2♣2♥3♣3♥5♦6♣6♥7♦7♠" };
 
             // Test with minor fit. TODO
+            //yield return new object[] { "TestFitPullControlsNotFound", "Q,AKJ74,J84,AKT4", "JT8,Q,AQT6,QJ765", "1♣2♠3♥4♦5♦5♠6♦6♠7♥Pass", "2♥3♦3♠5♣5♥6♣6♥7♦7NT" };
+            //yield return new object[] { "TestFitPullControlsNotFoundZoom", "Q,AJ874,Q84,AKT3", "T932,KQ,KJ3,QT64", "1♣2♠3♥4♦5♦5♠6♦6♠7♥Pass", "2♥3♦3♠5♣5♥6♣6♥7♦7NT" };
+            //yield return new object[] { "TestFitError3Ctrls", "Q,AKJ74,J84,AKT4", "Kxxx,Qxx,QJx,Kxx", "1♣2♠3♥4♦5♦5♠6♦6♠7♥Pass", "2♥3♦3♠5♣5♥6♣6♥7♦7NT" };
         }
     }
 

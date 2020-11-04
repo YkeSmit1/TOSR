@@ -188,6 +188,11 @@ namespace Common
             return hand.Count(x => x == 'J') + hand.Count(x => x == 'Q') * 2 + hand.Count(x => x == 'K') * 3 + hand.Count(x => x == 'A') * 4;
         }
 
+        public static int GetHcpCount(params string[] suits)
+        {
+            return suits.Sum(suit => suit.Count(x => x == 'J') + suit.Count(x => x == 'Q') * 2 + suit.Count(x => x == 'K') * 3 + suit.Count(x => x == 'A') * 4);
+        }
+
         public static int GetControlCount(string hand)
         {
             return hand.Count(x => x == 'K') + hand.Count(x => x == 'A') * 2;
