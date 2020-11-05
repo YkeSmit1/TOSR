@@ -472,7 +472,8 @@ namespace Tosr
                     return (zoom.controlsScanning, (lastBid - bid) + 1);
             }
 
-            throw new InvalidOperationException($"{ string.Join("", bidsForFase) } not found in controls scanning dictionary");
+            throw new InvalidOperationException($"{ string.Join("", bidsForFase) } not found in controls scanning dictionary. Auction:{auction.GetPrettyAuction("|")}. " +
+                $"Sign-off fase:{sigOffFase}. zoom-offset shape:{zoomOffsetShape}");
         }
 
         /// <summary>

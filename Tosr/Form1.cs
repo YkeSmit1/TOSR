@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Newtonsoft.Json;
+using NLog;
 using Common;
 
 namespace Tosr
@@ -32,10 +33,13 @@ namespace Tosr
 
         private readonly static Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
         private readonly BiddingState biddingState = new BiddingState(fasesWithOffset);
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public Form1()
         {
             InitializeComponent();
+
+            logger.Info("Starting program");
             ShowBiddingBox();
             ShowAuction();
 
@@ -43,6 +47,7 @@ namespace Tosr
             numericUpDown1.Maximum = 100_000;
             numericUpDown1.Value = 1000;
             Pinvoke.Setup("Tosr.db3");
+            logger.Info($"Initialized engine with database '{"Tosr.db3"}'");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
             reverseDictionaries = new ReverseDictionaries(fasesWithOffset);

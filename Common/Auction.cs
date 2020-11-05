@@ -18,7 +18,12 @@ namespace Common
 
         private string DebuggerDisplay
         {
-            get { return string.Join(Environment.NewLine, GetBids(Player.North).Zip(GetBids(Player.South), (x, y) => $"{x}{y} {y.description}")); }
+            get { return GetPrettyAuction(Environment.NewLine); }
+        }
+
+        public string GetPrettyAuction(string separator)
+        {
+            return string.Join(separator, GetBids(Player.North).Zip(GetBids(Player.South), (x, y) => $"{x}{y} {y.description}"));
         }
 
         public Player GetDeclarer(Suit suit)

@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Common;
 using NLog;
@@ -79,7 +80,10 @@ namespace Tosr
                 catch (Exception exception)
                 {
                     statistics.handsNotBidBecauseOfError++;
-                    logger.Warn(exception, $"Hand:{hand.SouthHand}");
+                    var controlsInSuit = new string(string.Join(',', hand.SouthHand.Split(',').OrderByDescending(x => x.Length).
+                        Select((x, index) => Regex.Replace(x, "[^AK]", string.Empty).PadRight(index == 0 ? 4 : 3, 'x'))));
+                    logger.Warn(exception, $"Error:{exception.Message} South hand:{hand.SouthHand} Controls:{Util.GetControlCount(hand.SouthHand)} " +
+                        $"HCP: {Util.GetHcpCount(hand.SouthHand)} Controls in suit: {controlsInSuit}");
                     stringbuilder.AppendLine(exception.Message);
                 }
             }
