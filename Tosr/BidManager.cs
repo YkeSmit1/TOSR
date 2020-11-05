@@ -499,7 +499,7 @@ namespace Tosr
             {
                 var bidAfterSignOff = usedSignOffBid && b >= signOffBids.Single();
                 var bidAfter4ClRelay = used4ClAsRelay && b > Bid.fourClubBid;
-                return b = b + zoomOffset - (bidAfter4ClRelay && !bidAfterSignOff ? offSet + 1 : bidAfterSignOff ? 0 : offSet);
+                return b -= (bidAfter4ClRelay && !bidAfterSignOff ? (offSet + 1) - zoomOffset : bidAfterSignOff ? 0 : offSet - zoomOffset);
             });
 
             return bidsForFases;
