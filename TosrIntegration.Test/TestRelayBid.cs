@@ -24,10 +24,12 @@ namespace TosrIntegration.Test
             yield return new object[] { "Test3NT23HCP", "AK32,AK2,A32,KQ2", "x,xxxx,Kxxxx,Axx", "1♣1NT2♦2♠3♣3♥4♣4NT", "1♠2♣2♥2NT3♦3♠4♥Pass" };
 
             // 3(4)NT tests with pull
+            // TODO this has to be fixed
+            //yield return new object[] { "Test3NTPull16HCP", "KJx,KJxxx,Kx,AJx", "AQ,Qx,Axxxx,KQxx", "1♣3NT4♠5♥6♥6NTPass", "3♣4♥5♦6♦6♠7♠" };
             yield return new object[] { "Test3NTPull18HCP", "AK32,AK2,A32,432", "x,Qxxx,KQxxx,AQx", "1♣1NT2♦2♠3♣3NT4♦5♦5NT6♥Pass", "1♠2♣2♥2NT3♦4♣5♣5♠6♦7♦" };
             yield return new object[] { "Test3NTPull21HCPMin", "AK32,AK2,A32,K32", "Q,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥3NT4NT5♥6♣6♠7♣Pass", "1♠2♣2♥2NT3♦3♠4♠5♦5NT6♥6NT7♥" };
             // TODO fix double zoom. Should ask for queens once after zoom twice.
-            //yield return new object[] { "Test3NTPull21HCPMax", "AQJ2,AQJ,A32,K32", "K,Kxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4NT6♥7♣7♥Pass", "1♠2♣2♥2NT3♦4♣6♦6NT7♦7♠" };
+            //yield return new object[] { "Test3NTPull21HCPMax_", "AQJ2,AQJ,A32,K32", "K,Kxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4NT6♥6NT7♦Pass", "1♠2♣2♥2NT3♦4♣6♦6♠7♣7♥" };
             yield return new object[] { "Test3NTPull21HCPMax", "AQJ2,AQJ,AK2,432", "K,Kxxx,Qxxxx,AKx", "1♣1NT2♦2♠3♣3♥4NT5♦6♦7♣7♥Pass", "1♠2♣2♥2NT3♦4♣5♣6♣6NT7♦7♠" };
             yield return new object[] { "Test3NTPull23HCP", "AK32,AK2,A32,KQ2", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4♣4NT5♥6♠7♦7♠Pass", "1♠2♣2♥2NT3♦3♠4♥5♦6♥7♣7♥7NT" };
         }
@@ -47,8 +49,6 @@ namespace TosrIntegration.Test
             yield return new object[] { "TestFitPull20HCPMin", "AQ32,A432,K2,AK2", "xx,KQxx,AQxxx,xx", "1♣1NT2♦2♠3♦4♦5♥6♦6♠7♥Pass", "1♠2♣2♥3♣3♥5♦6♣6♥7♦7♠" };
 
             // Test with minor fit. TODO
-            //yield return new object[] { "TestFitPullControlsNotFound", "Q,AKJ74,J84,AKT4", "JT8,Q,AQT6,QJ765", "1♣2♠3♥4♦5♦5♠6♦6♠7♥Pass", "2♥3♦3♠5♣5♥6♣6♥7♦7NT" };
-            //yield return new object[] { "TestFitPullControlsNotFoundZoom", "Q,AJ874,Q84,AKT3", "T932,KQ,KJ3,QT64", "1♣2♠3♥4♦5♦5♠6♦6♠7♥Pass", "2♥3♦3♠5♣5♥6♣6♥7♦7NT" };
 
             // Test with zoom
             yield return new object[] { "TestFitWithZoom", "KJ743,K,A84,AQT4", "Axxx,AQ,Qxx,Kxxx", "1♣1NT2♥4♦5♦6♠7♣Pass", "1♠2♦3NT5♣6♥6NT7♠" };        }

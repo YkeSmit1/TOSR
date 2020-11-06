@@ -78,12 +78,12 @@ namespace Tosr
             }
         }
 
-        public void UpdateBiddingStateSignOff(int controlBidCount, Bid relayBid, bool isNoTrump)
+        public void UpdateBiddingStateSignOff(int controlBidCount, Bid relayBid)
         {
             PreviousFase = Fase;
             RelayBidIdLastFase = Bid.GetBidId(relayBid);
             HasSignedOff = true;
-            if (isNoTrump)
+            if (relayBid.suit == Suit.NoTrump)
             {
                 Fase = controlBidCount switch
                 {

@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using System.Resources;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace Common
 {
@@ -213,5 +214,10 @@ namespace Common
             return Suit.NoTrump;
         }
 
+        public static string GetHandWithOnlyControlsAs4333(string handsString, string honors)
+        {
+            return new string(string.Join(',', handsString.Split(',').OrderByDescending(x => x.Length).
+                Select((x, index) => Regex.Replace(x, $"[^{honors}]", string.Empty).PadRight(index == 0 ? 4 : 3, 'x'))));
+        }
     }
 }

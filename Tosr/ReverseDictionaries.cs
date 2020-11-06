@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Tosr
 {
@@ -45,19 +46,20 @@ namespace Tosr
         {
             this.fasesWithOffset = fasesWithOffset;
             ShapeAuctions = Util.LoadAuctions("txt\\AuctionsByShape.txt", GenerateAuctionsForShape);
-            ControlsAuctions = Util.LoadAuctions("txt\\AuctionsByControls.txt", GenerateAuctionsForControls);
-            ControlsPullAuctions3NT = Util.LoadAuctions("txt\\AuctionsByControlsPull3NT.txt", GenerateAuctionsForControlsPull3NT);
-            ControlsPullAuctions4Di = Util.LoadAuctions("txt\\AuctionsByControlsPull4Di.txt", GenerateAuctionsForControlsPull4Di);
             ControlsOnlyAuctions = Util.LoadAuctions("txt\\AuctionsByControlsOnly.txt", GenerateAuctionsForControlsOnly);
             ControlScanningAuctions = Util.LoadAuctions("txt\\AuctionsByControlsScanning.txt", GenerateAuctionsForControlsScanning);
             ControlScanningPullAuctions3NT = Util.LoadAuctions("txt\\AuctionsByControlsScanningPull3NT.txt", GenerateAuctionsForControlsScanningPull3NT);
             ControlScanningPullAuctions4Di = Util.LoadAuctions("txt\\AuctionsByControlsScanningPull4Di.txt", GenerateAuctionsForControlsScanningPull4Di);
+            ControlsAuctions = Util.LoadAuctions("txt\\AuctionsByControls.txt", GenerateAuctionsForControls);
+            ControlsPullAuctions3NT = Util.LoadAuctions("txt\\AuctionsByControlsPull3NT.txt", GenerateAuctionsForControlsPull3NT);
+            ControlsPullAuctions4Di = Util.LoadAuctions("txt\\AuctionsByControlsPull4Di.txt", GenerateAuctionsForControlsPull4Di);
         }
 
         public ShapeDictionary GenerateAuctionsForShape()
         {
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
             var auctions = new ShapeDictionary();
+            var regex = new Regex("x");
 
             for (int spades = 0; spades < 8; spades++)
                 for (int hearts = 0; hearts < 8; hearts++)
@@ -66,6 +68,8 @@ namespace Tosr
                             if (spades + hearts + diamonds + clubs == 13)
                             {
                                 var hand = new string('x', spades) + "," + new string('x', hearts) + "," + new string('x', diamonds) + "," + new string('x', clubs);
+                                // We need a hand with two controls. Otherwise engine cannot find a bid
+                                hand = regex.Replace(hand, "A", 1);
                                 var suitLengthSouth = hand.Split(',').Select(x => x.Length);
                                 var str = string.Join("", suitLengthSouth);
 
@@ -215,7 +219,7 @@ namespace Tosr
             void BidAndStoreHand(string hand, string handToStore)
             {
                 Debug.Assert(hand.Length == 16);
-                if (Util.GetHcpCount(hand) < 25)
+                if (Util.GetControlCount(hand) > 1 && Util.GetHcpCount(hand) < 25)
                 {
                     var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
                     if (IsSignOffOrInvalidAuction(auction))
@@ -320,42 +324,11 @@ namespace Tosr
                     return Bid.PassBid;
                 }
 
-                if (!biddingState.HasSignedOff)
-                    if (auction.GetBids(Player.South, fases).Count() == fasesBidCount)
-                        return relayBid == Bid.threeNTBid ? DoRelayBid3NT(relayBid) : DoRelayBid4Diamonds(relayBid);
+                if (!biddingState.HasSignedOff && auction.GetBids(Player.South, fases).Count() == fasesBidCount)
+                    biddingState.UpdateBiddingStateSignOff(fasesBidCount, relayBid);
             }
 
             return Bid.NextBid(biddingState.CurrentBid);
-
-            Bid DoRelayBid3NT(Bid relayBid)
-            {
-                var lRelayBid = relayBid;
-                if (biddingState.CurrentBid > lRelayBid)
-                    lRelayBid += 5; // Bid 4NT instead of 3NT
-                if (biddingState.CurrentBid > lRelayBid)
-                {
-                    biddingState.Fase = Fase.End;
-                    auction.isInvalid = true;
-                    return Bid.PassBid;
-                }
-                biddingState.UpdateBiddingStateSignOff(fasesBidCount, lRelayBid, true);
-
-                return lRelayBid;
-            }
-
-            Bid DoRelayBid4Diamonds(Bid relayBid)
-            {
-                if (biddingState.CurrentBid > Bid.fourClubBid)
-                {
-                    biddingState.Fase = Fase.End;
-                    auction.isInvalid = true;
-                    return Bid.PassBid;
-                }
-
-                biddingState.UpdateBiddingStateSignOff(fasesBidCount, relayBid, false);
-
-                return relayBid;
-            }
         }
 
         private static string AddHonors(int[] suitLength, string honor, params string[] suits)
