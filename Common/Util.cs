@@ -155,9 +155,9 @@ namespace Common
             return ((Suit)(3 - longestSuit), maxSuitLength);
         }
 
-        public static bool IsFreakHand(string handLength)
+        public static bool IsFreakHand(IEnumerable<int> handLength)
         {
-            var handPattern = string.Concat(handLength.OrderByDescending(y => y));
+            var handPattern = handLength.OrderByDescending(y => y).ToArray();
             return int.Parse(handPattern[0].ToString()) >= 8 ||
                 int.Parse(handPattern[0].ToString()) + int.Parse(handPattern[1].ToString()) >= 12;
         }
@@ -204,7 +204,7 @@ namespace Common
             Debug.Assert(northHand.Length == 16);
             Debug.Assert(southHand.Length == 16);
             // TODO Use single dummy analyses to find out the best trump suit
-            var (longestSuit, suitLength) = Util.GetLongestSuit(northHand, southHand);
+            var (longestSuit, suitLength) = GetLongestSuit(northHand, southHand);
             // If we have a major fit return the major
             if (new List<Suit> { Suit.Spades, Suit.Hearts }.Contains(longestSuit))
                 return (suitLength < 8) ? Suit.NoTrump : longestSuit;
@@ -218,6 +218,56 @@ namespace Common
         {
             return new string(string.Join(',', handsString.Split(',').OrderByDescending(x => x.Length).
                 Select((x, index) => Regex.Replace(x, $"[^{honors}]", string.Empty).PadRight(index == 0 ? 4 : 3, 'x'))));
+        }
+
+        public static bool TryAddQuacksTillHCP(int hcp, ref string[] suits)
+        {
+            if (hcp <= GetHcpCount(suits))
+                return true;
+
+            int suitToAdd = 3;
+            while (hcp - GetHcpCount(suits) > 1)
+            {
+                if (suitToAdd == 0)
+                    break;
+
+                suits[suitToAdd] += 'Q';
+                suitToAdd--;
+            };
+
+            suitToAdd = 3;
+            while (hcp != GetHcpCount(suits))
+            {
+                if (suitToAdd == 0)
+                    return false;
+
+                if (suits[suitToAdd].Length < 3)
+                    suits[suitToAdd] += 'J';
+
+                suitToAdd--;
+            };
+
+            return hcp == GetHcpCount(suits);
+        }
+
+        public static bool TryAddJacksTillHCP(int hcp, ref string[] suits)
+        {
+            if (hcp <= GetHcpCount(suits))
+                return true;
+
+            int suitToAdd = 3;
+            while (hcp != GetHcpCount(suits))
+            {
+                if (suitToAdd == 0)
+                    return false;
+
+                if (suits[suitToAdd].Length < 3)
+                    suits[suitToAdd] += 'J';
+
+                suitToAdd--;
+            };
+
+            return hcp == GetHcpCount(suits);
         }
     }
 }

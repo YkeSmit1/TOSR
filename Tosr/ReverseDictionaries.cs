@@ -75,7 +75,7 @@ namespace Tosr
                                 var suitLengthSouth = hand.Split(',').Select(x => x.Length);
                                 var str = string.Join("", suitLengthSouth);
 
-                                if (!Util.IsFreakHand(str))
+                                if (!Util.IsFreakHand(suitLengthSouth))
                                 {
                                     var auction = bidManager.GetAuction(string.Empty, hand); // No northhand. Just for generating reverse dictionaries
                                     var isZoom = auction.GetBids(Player.South, Fase.Shape).Any(x => x.zoom);
@@ -148,8 +148,7 @@ namespace Tosr
         public ControlScanningDictionary GenerateAuctionsForControlsScanning()
         {
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
-            return GenerateAuctionsForControlsScanningInternal(bidManager, 
-                (hand) => Util.GetControlCount(hand) == 4 && Util.GetHcpCount(hand) < 12 ? (new int[] { 0, 12 }) : (new int[] { 0 }));
+            return GenerateAuctionsForControlsScanningInternal(bidManager, GetHcpGeneratorGeneral());
         }
 
         public ControlScanningPullDictionary GenerateAuctionsForControlsScanningPull3NT()
@@ -172,28 +171,7 @@ namespace Tosr
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset,
                 (biddingState, auction, northHand) => GetRelayBidFunc(biddingState, auction, new Fase[] { Fase.Controls }, controlBidCount, relayBid));
 
-            Dictionary<(Bid, int), Func<string, int[]>> HcpRequiredToPull = new Dictionary<(Bid, int), Func<string, int[]>>() {
-            { (Bid.threeNTBid, 0), (hand) => (new[] {13, 15, 17, 19, 21, 23 }) },
-            { (Bid.threeNTBid, 1), GetHcpAfterOneAsk(11, 15) },
-            { (Bid.threeNTBid, 2), (hand) => (new[] { 9 }) },
-            { (Bid.fourDiamondBid, 0), (hand) => (new [] {14 }) },
-            { (Bid.fourDiamondBid, 1), GetHcpAfterOneAsk(11, 13) } };
-
-            static Func<string, int[]> GetHcpAfterOneAsk(int hcpMin, int hcpMax)
-            {
-                return (hand) =>
-                {
-                    int controlCount = Util.GetControlCount(hand);
-                    return controlCount switch
-                    {
-                        var c when c < 4 => new int[] { hcpMin },
-                        4 => new int[] { hcpMin, hcpMax },
-                        _ => new[] { hcpMax }
-                    };
-                };
-            }
-
-            return GenerateAuctionsForControlsScanningInternal(bidManager, HcpRequiredToPull[(relayBid, controlBidCount)]);
+            return GenerateAuctionsForControlsScanningInternal(bidManager, GetHcpGeneratorForPull()[(relayBid, controlBidCount)]);
         }
 
         private ControlScanningDictionary GenerateAuctionsForControlsScanningInternal(BidManager bidManager, Func<string, int[]> hcpGenerator)
@@ -212,7 +190,7 @@ namespace Tosr
                             foreach (var hcp in hcpGenerator.Invoke(hand))
                             {
                                 var suits = new string[] { spades, hearts, diamonds, clubs };
-                                if (TryAddQuacksTillHCP(hcp, ref suits))
+                                if (Util.TryAddQuacksTillHCP(hcp, ref suits))
                                     BidAndStoreHand(ConstructHand(suitLength, suits), hand);
                             }
                         }
@@ -226,15 +204,7 @@ namespace Tosr
                     var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
                     if (IsSignOffOrInvalidAuction(auction))
                     {
-                        try
-                        {
-                            CheckWithNoPullAuction(hand, auction, fasesWithOffset);
-                        }
-                        catch (InvalidOperationException ex)
-                        {
-                            logger.Warn($"Auction is different from relay auction. Error:{ex.Message}. Hand: {hand}. Controls:{Util.GetControlCount(hand)}");
-                            return;
-                        }
+                        CheckWithNoPullAuction(hand, auction, fasesWithOffset);
 
                         var fases = new List<Fase> { Fase.Controls, Fase.ScanningControls }.Concat(BidManager.signOffFases).ToArray();
                         var key = auction.GetBidsAsString(fases);
@@ -251,7 +221,7 @@ namespace Tosr
         public ControlsDictionary GenerateAuctionsForControls()
         {
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
-            return GenerateAuctionsForControlsInternal(bidManager);
+            return GenerateAuctionsForControlsInternal(bidManager, GetHcpGeneratorGeneral());
         }
 
         public ControlsPullDictionary GenerateAuctionsForControlsPull3NT()
@@ -271,10 +241,10 @@ namespace Tosr
             logger.Info($"Generating dictionaries for controlBidCount:{controlBidCount} relayBid:{relayBid}");
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset,
                 (biddingState, auction, northHand) => GetRelayBidFunc(biddingState, auction, new Fase[] { Fase.Controls }, controlBidCount, relayBid));
-            return GenerateAuctionsForControlsInternal(bidManager);
+            return GenerateAuctionsForControlsInternal(bidManager, GetHcpGeneratorForPull()[(relayBid, controlBidCount)]);
         }
 
-        private ControlsDictionary GenerateAuctionsForControlsInternal(BidManager bidManager)
+        private ControlsDictionary GenerateAuctionsForControlsInternal(BidManager bidManager, Func<string, int[]> hcpGenerator)
         {
             var auctions = new ControlsDictionary();
             var suitLength = new[] { 4, 3, 3, 3 };
@@ -286,17 +256,12 @@ namespace Tosr
                         foreach (var clubs in controls)
                         {
                             var hand = ConstructHand(suitLength, spades, hearts, diamonds, clubs);
-                            var controlCount = Util.GetControlCount(hand);
-                            var hcpCount = Util.GetHcpCount(hand);
-                            if (controlCount > 1 && hcpCount < 25)
+
+                            foreach (var hcp in hcpGenerator.Invoke(hand))
                             {
-                                BidAndStoreHand(hand, hand);
-                                // Also try to store the hand with extra jacks for exactly 4 controls, because auction will be different if there are more then 12 HCP in the hand
-                                if (controlCount == 4 && hcpCount < 12)
-                                {
-                                    var handWithJacks = AddHonors(suitLength, "J", spades, hearts, diamonds, clubs);
-                                    BidAndStoreHand(handWithJacks, hand);
-                                }
+                                var suits = new string[] { spades, hearts, diamonds, clubs };
+                                if (Util.TryAddJacksTillHCP(hcp, ref suits))
+                                    BidAndStoreHand(ConstructHand(suitLength, suits), hand);
                             }
                         }
             return auctions;
@@ -304,24 +269,18 @@ namespace Tosr
             void BidAndStoreHand(string hand, string handToStore)
             {
                 Debug.Assert(hand.Length == 16);
-                var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
-                var key = auction.GetBidsAsString(new List<Fase> { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther }.Concat(BidManager.signOffFases).ToArray());
-                if (IsSignOffOrInvalidAuction(auction))
+                if (Util.GetControlCount(hand) > 1 && Util.GetHcpCount(hand) < 25)
                 {
-                    try
+                    var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
+                    var key = auction.GetBidsAsString(new List<Fase> { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther }.Concat(BidManager.signOffFases).ToArray());
+                    if (IsSignOffOrInvalidAuction(auction))
                     {
                         CheckWithNoPullAuction(hand, auction, fasesWithOffset);
+                        if (!auctions.ContainsKey(key))
+                            auctions.Add(key, new List<string>());
+                        if (!auctions[key].Contains(handToStore))
+                            auctions[key].Add(handToStore);
                     }
-                    catch (InvalidOperationException ex)
-                    {
-                        logger.Warn($"Auction is different from relay auction. Error:{ex.Message}. Hand: {hand}. Controls:{Util.GetControlCount(hand)}");
-                        return;
-                    }
-
-                    if (!auctions.ContainsKey(key))
-                        auctions.Add(key, new List<string>());
-                    if (!auctions[key].Contains(handToStore))
-                        auctions[key].Add(handToStore);
                 }
             }
         }
@@ -356,53 +315,40 @@ namespace Tosr
             return Bid.NextBid(biddingState.CurrentBid);
         }
 
-        private static string AddHonors(int[] suitLength, string honor, params string[] suits)
+        private static Func<string, int[]> GetHcpGeneratorGeneral()
         {
-            // Don't add queens in spades, It will zoom
-            return ConstructHand(suitLength, suits[0],
-                   GetControlsWithHonorsIfPossible(suits[1], suitLength[1], honor),
-                   GetControlsWithHonorsIfPossible(suits[2], suitLength[2], honor),
-                   GetControlsWithHonorsIfPossible(suits[3], suitLength[3], honor));
+            return (hand) => Util.GetControlCount(hand) == 4 && Util.GetHcpCount(hand) < 12 ? (new int[] { 0, 12 }) : (new int[] { 0 });
+        }
+
+        private static Dictionary<(Bid, int), Func<string, int[]>> GetHcpGeneratorForPull()
+        {
+            var HcpRequiredToPull = new Dictionary<(Bid, int), Func<string, int[]>>() {
+            { (Bid.threeNTBid, 0), (hand) => (new[] {13, 15, 17, 19, 21, 23 }) },
+            { (Bid.threeNTBid, 1), GetHcpAfterOneAsk(11, 15) },
+            { (Bid.threeNTBid, 2), (hand) => (new[] { 9 }) },
+            { (Bid.fourDiamondBid, 0), (hand) => (new [] {14 }) },
+            { (Bid.fourDiamondBid, 1), GetHcpAfterOneAsk(11, 13) } };
+
+            static Func<string, int[]> GetHcpAfterOneAsk(int hcpMin, int hcpMax)
+            {
+                return (hand) =>
+                {
+                    int controlCount = Util.GetControlCount(hand);
+                    return controlCount switch
+                    {
+                        var c when c < 4 => new int[] { hcpMin },
+                        4 => new int[] { hcpMin, hcpMax },
+                        _ => new[] { hcpMax }
+                    };
+                };
+            }
+
+            return HcpRequiredToPull;
         }
 
         private static string ConstructHand(int[] suitLength, params string[] suits)
         {
             return string.Join(',', suitLength.Zip(suits, (x, y) => y.PadRight(x, 'x')));
-        }
-
-        private static string GetControlsWithHonorsIfPossible(string suit, int suitLength, string honor)
-        {
-            return suit + (suit.Length == suitLength ? "" : honor);
-        }
-
-        private static bool TryAddQuacksTillHCP(int hcp, ref string[] suits)
-        {
-            if (hcp <= Util.GetHcpCount(suits))
-                return true;
-
-            int suitToAdd = 3;
-            while (hcp - Util.GetHcpCount(suits) > 1)
-            {
-                if (suitToAdd == 0)
-                    break;
-
-                suits[suitToAdd] += 'Q';
-                suitToAdd--;
-            };
-
-            suitToAdd = 3;
-            while (hcp != Util.GetHcpCount(suits))
-            {
-                if (suitToAdd == 0)
-                    return false;
-
-                if (suits[suitToAdd].Length < 3)
-                    suits[suitToAdd] += 'J';
-
-                suitToAdd--;
-            };
-
-            return true;
         }
 
         private static bool IsSignOffOrInvalidAuction(Auction auction)

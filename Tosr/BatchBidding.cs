@@ -65,7 +65,7 @@ namespace Tosr
             {
                 try
                 {
-                    if (Util.IsFreakHand(string.Join("", hand.SouthHand.Split(',').Select(x => x.Length))))
+                    if (Util.IsFreakHand(hand.SouthHand.Split(',').Select(x => x.Length)))
                     {
                         logger.Debug($"Hand {hand.SouthHand} is a freak hand. Will not be bid");
                         statistics.handsNotBidBecauseofFreakhand++;
