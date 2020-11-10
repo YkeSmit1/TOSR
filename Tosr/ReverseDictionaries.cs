@@ -384,7 +384,7 @@ namespace Tosr
             while (hcp - Util.GetHcpCount(suits) > 1)
             {
                 if (suitToAdd == 0)
-                    return false;
+                    break;
 
                 suits[suitToAdd] += 'Q';
                 suitToAdd--;

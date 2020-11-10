@@ -15,7 +15,7 @@ namespace TosrIntegration.Test
 
     public class TestCaseProviderRelayBid
     {
-        // TODO 4 tests has to be fixed
+        // TODO 2 tests has to be fixed
         public static IEnumerable<object[]> TestCases3NT()
         {
             // ♣♦♥♠
@@ -29,15 +29,16 @@ namespace TosrIntegration.Test
         {
             // ♣♦♥♠
             // 3(4)NT tests with pull
-            //yield return new object[] { "TestNoAskCtrl2", "AK32,AK2,A32,432", "x,QJxx,KQJxx,KQJ", "1♣1NT2♦2♠3♣3NT4♦5♣5♠6♦Pass", "1♠2♣2♥2NT3♦4♣4NT5♥6♣7♣" };
+            //yield return new object[] { "TestNoAskCtrl2", "AK32,AK2,A32,432", "x,QJxx,KQJxx,KQJ", "1♣1NT2♦2♠3♣3NT4♥4NT5♦5NT6♥Pass", "1♠2♣2♥2NT3♦4♦4♠5♣5♠6♦7♦" };
             yield return new object[] { "TestNoAskCtrl3", "AK32,AK2,A32,432", "x,Qxxx,KQxxx,AQx", "1♣1NT2♦2♠3♣3NT4♦4♠5♦5NT6♥Pass", "1♠2♣2♥2NT3♦4♣4♥5♣5♠6♦7♦" };
-            //yield return new object[] { "TestNoAskCtrl3_", "AK32,AK2,A32,432", "Q,Qxxx,KQxxx,AQx", "1♣1NT2♦2♠3♣3NT4♦5♦5NT6♥Pass", "1♠2♣2♥2NT3♦4♣5♣5♠6♦7♥" };
+            yield return new object[] { "TestNoAskCtrl3_", "AK32,AK2,A32,432", "Q,Qxxx,KQxxx,AQx", "1♣1NT2♦2♠3♣3NT4♥4NT5♥6♣6♠Pass", "1♠2♣2♥2NT3♦4♦4♠5♦5NT6♥7♠" };
             yield return new object[] { "TestNoAskCtrl5", "KJx,KJxxx,Kx,AJx", "AQ,Qx,Axxxx,KQxx", "1♣3NT4♠5♥6♥6NTPass", "3♣4♥5♦6♦6♠7♠" };
             yield return new object[] { "TestOneAsk21HCPMin", "AK32,AK2,A32,K32", "Q,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥3NT4♥5♣5♠6♦6♠Pass", "1♠2♣2♥2NT3♦3♠4♦4NT5♥6♣6♥7♣" };
             // TODO fix double zoom. Should ask for queens once after zoom twice.
-            //yield return new object[] { "Test3NTPull21HCPMax_", "AQJ2,AQJ,A32,K32", "K,Kxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4NT6♥6NT7♦Pass", "1♠2♣2♥2NT3♦4♣6♦6♠7♣7♥" };
-            yield return new object[] { "TestOneAsk21HCPMax", "AQJ2,AQJ,AK2,432", "K,Kxxx,Qxxxx,AKx", "1♣1NT2♦2♠3♣3♥4NT5♦5NT6♠7♣Pass", "1♠2♣2♥2NT3♦4♣5♣5♠6♥6NT7♦" };
-            yield return new object[] { "TestTwoAsk23HCP", "AK32,AK2,A32,KQ2", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4♣4NT5♥6♣6♠7♣Pass", "1♠2♣2♥2NT3♦3♠4♥5♦5NT6♥6NT7♦" };
+            //yield return new object[] { "TestOneAskCtrl5ZoomScan", "AQJ2,AQJ,A32,K32", "K,Kxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4NT6♥6NT7♦Pass", "1♠2♣2♥2NT3♦4♣6♦6♠7♣7♥" };
+            yield return new object[] { "TestOneAskCtrl5", "AQJ2,AQJ,AK2,432", "K,Kxxx,Qxxxx,AKx", "1♣1NT2♦2♠3♣3♥4NT5♦5NT6♠7♣Pass", "1♠2♣2♥2NT3♦4♣5♣5♠6♥6NT7♦" };
+            yield return new object[] { "TestTwoAskCtrl3", "AK32,AK2,A32,KQ2", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4♣4NT5♥6♣6♠7♣Pass", "1♠2♣2♥2NT3♦3♠4♥5♦5NT6♥6NT7♦" };
+            yield return new object[] { "TestTwoAskCtrl5", "KQ32,AKQ,A32,KQ2", "A,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4♦4NT5NT6♦Pass", "1♠2♣2♥2NT3♦4♣4♠5♠6♣6♥" };
         }
 
         public static IEnumerable<object[]> TestCases4Diamond()
@@ -54,7 +55,7 @@ namespace TosrIntegration.Test
             // ♣♦♥♠
             // Test with major fit with pull
             yield return new object[] { "Test17HCP", "AK32,A432,A32,Q2", "xx,Kxxx,KQxxx,AK", "1♣1NT2♦2♠4♦5♦6♣6♥7♣7♥Pass", "1♠2♣2♥3♣5♣5NT6♦6NT7♦7♠" };
-            //yield return new object[] { "Test18HCPMax", "QJ32,KQJ2,AJ,A32", "Kx,Axxx,KQxxx,xx", "1♣1NT2♦2♠3♦4♦5♥6♣6♥Pass", "1♠2♣2♥3♣3♠5♦5NT6♦6♠" };
+            yield return new object[] { "Test18HCPMax", "QJ32,KQJ2,AJ,A32", "Kx,Axxx,KQxxx,xx", "1♣1NT2♦2♠3♦4♦5♥6♣6♥Pass", "1♠2♣2♥3♣3♠5♦5NT6♦6♠" };
             yield return new object[] { "Test18HCPMin", "AQ32,A432,A2,A32", "xx,Kxxx,KQxxx,Kx", "1♣1NT2♦2♠3♦4♦5♣5NT6♠7♣Pass", "1♠2♣2♥3♣3♥4NT5♠6♥6NT7♦" };
             yield return new object[] { "Test20HCPMin", "AQ32,A432,K2,AK2", "xx,KQxx,AQxxx,xx", "1♣1NT2♦2♠3♦4♦5♣5NT6♦7♣Pass", "1♠2♣2♥3♣3♥4NT5♠6♣6NT7♦" };
 
