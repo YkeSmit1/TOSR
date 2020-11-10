@@ -39,8 +39,15 @@ namespace Tosr
             var bidId = bidIdFromRule + RelayBidIdLastFase + FaseOffset;
             if (bidIdFromRule == 0)
             {
-                CurrentBid = Bid.PassBid;
-                EndOfBidding = true;
+                if (Fase == Fase.Pull4DiamondsNoAsk || Fase == Fase.Pull4DiamondsOneAsk)
+                {
+                    CurrentBid = Bid.fourHeartsBid;
+                }
+                else
+                {
+                    CurrentBid = Bid.PassBid;
+                    EndOfBidding = true;
+                }
                 return bidId;
             }
 
@@ -55,8 +62,13 @@ namespace Tosr
         {
             if (BidManager.signOffFases.Contains(Fase))
             {
+                if (Fase == Fase.Pull3NTNoAsk)
+                {
+                    RelayBidIdLastFase += bidIdFromRule + 1;
+                    Fase = PreviousFase;
+                    return;
+                }
                 Fase = PreviousFase;
-                RelayBidIdLastFase = (bidId + 1) - zoomOffset;
             }
 
             if (nextfase != Fase)
@@ -81,7 +93,7 @@ namespace Tosr
         public void UpdateBiddingStateSignOff(int controlBidCount, Bid relayBid)
         {
             PreviousFase = Fase;
-            RelayBidIdLastFase = Bid.GetBidId(relayBid);
+            RelayBidIdLastFase = Bid.GetBidId(relayBid) - NextBidIdForRule - FaseOffset + (relayBid == Bid.fourDiamondBid ? 1 : 0);
             HasSignedOff = true;
             if (relayBid.suit == Suit.NoTrump)
             {

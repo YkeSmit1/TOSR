@@ -95,7 +95,7 @@ std::tuple<int, Fase, std::string, int> SQLiteCppWrapper::GetRule(const HandChar
                     throw std::invalid_argument(std::to_string((int)previousFase));
                 }
             }
-            auto nextFase = bidId == 0 || (bidId == 1 && (fase == Fase::Pull4DiamondsNoAsk || fase == Fase::Pull4DiamondsOneAsk))? Fase::BidGame : previousFase;
+            auto nextFase = bidId == 0 ? Fase::BidGame : previousFase;
             return std::make_tuple(bidId, nextFase, str, 0);
         }
 
@@ -174,9 +174,8 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleControls(const HandC
 
         if (!queryControls->executeStep())
         {
-            std::string emptystring;
-            return std::make_tuple(1, true, emptystring);
-            //throw std::runtime_error("No row found in controls table.");
+            //return std::make_tuple(1, true, "");
+            throw std::runtime_error("No row found in controls table.");
         }
 
         int bidId = queryControls->getColumn(0);

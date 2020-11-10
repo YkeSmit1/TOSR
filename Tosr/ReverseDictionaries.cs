@@ -1,4 +1,5 @@
 ﻿using Common;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,6 +28,7 @@ namespace Tosr
         public ControlScanningPullDictionary ControlScanningPullAuctions4Di { get; }
 
         private readonly Dictionary<Fase, bool> fasesWithOffset;
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public ReverseDictionaries(ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions, ControlsOnlyDictionary controlsOnlyAuctions, 
             ControlScanningDictionary controlScanningAuctions, ControlsPullDictionary controlsPullAuctions3NT, ControlScanningPullDictionary controlScanningPullAuctions3NT,
@@ -166,9 +168,9 @@ namespace Tosr
 
         private ControlScanningPullDictionary GenerateDictionariesControlsScanning(int controlBidCount, Bid relayBid)
         {
-            var fasesControl = new Fase[] { Fase.Controls };
+            logger.Info($"Generating dictionaries for controlBidCount:{controlBidCount} relayBid:{relayBid}");
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset,
-                (biddingState, auction, northHand) => GetRelayBidFunc(biddingState, auction, fasesControl, controlBidCount, relayBid));
+                (biddingState, auction, northHand) => GetRelayBidFunc(biddingState, auction, new Fase[] { Fase.Controls }, controlBidCount, relayBid));
 
             Dictionary<(Bid, int), Func<string, int[]>> HcpRequiredToPull = new Dictionary<(Bid, int), Func<string, int[]>>() {
             { (Bid.threeNTBid, 0), (hand) => (new[] {13, 15, 17, 19, 21, 23 }) },
@@ -224,6 +226,16 @@ namespace Tosr
                     var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
                     if (IsSignOffOrInvalidAuction(auction))
                     {
+                        try
+                        {
+                            CheckWithNoPullAuction(hand, auction, fasesWithOffset);
+                        }
+                        catch (InvalidOperationException ex)
+                        {
+                            logger.Warn($"Auction is different from relay auction. Error:{ex.Message}. Hand: {hand}. Controls:{Util.GetControlCount(hand)}");
+                            return;
+                        }
+
                         var fases = new List<Fase> { Fase.Controls, Fase.ScanningControls }.Concat(BidManager.signOffFases).ToArray();
                         var key = auction.GetBidsAsString(fases);
                         var isZoom = auction.GetBids(Player.South, Fase.ScanningControls).Any(x => x.zoom);
@@ -256,13 +268,13 @@ namespace Tosr
 
         private ControlsDictionary GenerateDictionariesControls(int controlBidCount, Bid relayBid)
         {
-            var fasesControl = new Fase[] { Fase.Controls };
+            logger.Info($"Generating dictionaries for controlBidCount:{controlBidCount} relayBid:{relayBid}");
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset,
-                (biddingState, auction, northHand) => GetRelayBidFunc(biddingState, auction, fasesControl, controlBidCount, relayBid));
+                (biddingState, auction, northHand) => GetRelayBidFunc(biddingState, auction, new Fase[] { Fase.Controls }, controlBidCount, relayBid));
             return GenerateAuctionsForControlsInternal(bidManager);
         }
 
-        private static ControlsDictionary GenerateAuctionsForControlsInternal(BidManager bidManager)
+        private ControlsDictionary GenerateAuctionsForControlsInternal(BidManager bidManager)
         {
             var auctions = new ControlsDictionary();
             var suitLength = new[] { 4, 3, 3, 3 };
@@ -296,6 +308,16 @@ namespace Tosr
                 var key = auction.GetBidsAsString(new List<Fase> { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther }.Concat(BidManager.signOffFases).ToArray());
                 if (IsSignOffOrInvalidAuction(auction))
                 {
+                    try
+                    {
+                        CheckWithNoPullAuction(hand, auction, fasesWithOffset);
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        logger.Warn($"Auction is different from relay auction. Error:{ex.Message}. Hand: {hand}. Controls:{Util.GetControlCount(hand)}");
+                        return;
+                    }
+
                     if (!auctions.ContainsKey(key))
                         auctions.Add(key, new List<string>());
                     if (!auctions[key].Contains(handToStore))
@@ -313,7 +335,7 @@ namespace Tosr
             return result;
         }
 
-        private static Bid GetRelayBidFunc(BiddingState biddingState, Auction auction, Fase[] fases, int fasesBidCount, Bid relayBid)
+        public static Bid GetRelayBidFunc(BiddingState biddingState, Auction auction, Fase[] fases, int fasesBidCount, Bid relayBid)
         {
             if (biddingState.Fase != Fase.Shape)
             {
@@ -325,7 +347,10 @@ namespace Tosr
                 }
 
                 if (!biddingState.HasSignedOff && auction.GetBids(Player.South, fases).Count() == fasesBidCount)
+                {
                     biddingState.UpdateBiddingStateSignOff(fasesBidCount, relayBid);
+                    return relayBid;
+                }
             }
 
             return Bid.NextBid(biddingState.CurrentBid);
@@ -383,6 +408,28 @@ namespace Tosr
         private static bool IsSignOffOrInvalidAuction(Auction auction)
         {
             return !auction.isInvalid && !auction.hasSignedOff;
+        }
+
+        public static void CheckWithNoPullAuction(string southHand, Auction auction, Dictionary<Fase, bool> fasesWithOffset)
+        {
+            var bidManagerRelay = new BidManager(new BidGenerator(), fasesWithOffset, (biddingState, auction, northHand) => Bid.NextBid(biddingState.CurrentBid));
+            var auctionRelay = bidManagerRelay.GetAuction("", southHand);
+            var bidSouthNoPull = auctionRelay.GetBids(Player.South);
+
+            var bidsSouthPull = auction.GetBids(Player.South).Where(bid => bid.fase != Fase.Pull3NTNoAsk);
+            if (bidsSouthPull.Count() != bidSouthNoPull.Count())
+                throw new InvalidOperationException($"Number of bids is different. Pull:{bidsSouthPull.Count()} Relay:{bidSouthNoPull.Count()}");
+            var bothAuctions = bidsSouthPull.Zip(bidSouthNoPull);
+            var bidPull3NTNoAsk = auction.GetBids(Player.South).Where(bid => bid.fase == Fase.Pull3NTNoAsk);
+
+            var offset = 0;
+            foreach (var (First, Second) in bothAuctions)
+            {
+                if (BidManager.signOffFases.Contains(First.fase) || (bidPull3NTNoAsk.Count() == 1 && offset == 0 && First > bidPull3NTNoAsk.Single()))
+                    offset = First - Second;
+                if (!(First - offset == Second))
+                    throw new InvalidOperationException($"Auction is different. Bid of pull {First - offset}. Bid of relay {Second}. Southhand:{southHand}");
+            }
         }
     }
 }
