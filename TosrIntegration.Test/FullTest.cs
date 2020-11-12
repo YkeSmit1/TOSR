@@ -45,7 +45,7 @@ namespace TosrIntegration.Test
         public FullTest(ITestOutputHelper output)
         {
             fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
-            reverseDictionaries = new ReverseDictionaries(fasesWithOffset);
+            reverseDictionaries = new ReverseDictionaries(fasesWithOffset, new Progress<string>());
 
             this.output = output;
         }
