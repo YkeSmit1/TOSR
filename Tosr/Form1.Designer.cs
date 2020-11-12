@@ -55,15 +55,18 @@
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.panelNorth = new System.Windows.Forms.Panel();
             this.panelSouth = new System.Windows.Forms.Panel();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
+            this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonGetAuction
             // 
             this.buttonGetAuction.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonGetAuction.Location = new System.Drawing.Point(403, 461);
+            this.buttonGetAuction.Location = new System.Drawing.Point(403, 484);
             this.buttonGetAuction.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.buttonGetAuction.Name = "buttonGetAuction";
             this.buttonGetAuction.Size = new System.Drawing.Size(105, 27);
@@ -165,7 +168,7 @@
             this.toolStripMenuItem9.ShortcutKeys = System.Windows.Forms.Keys.F5;
             this.toolStripMenuItem9.Size = new System.Drawing.Size(234, 22);
             this.toolStripMenuItem9.Text = "Batch bid generated hands";
-            this.toolStripMenuItem9.Click += new System.EventHandler(this.ButtonBatchBiddingClick);
+            this.toolStripMenuItem9.Click += new System.EventHandler(this.ButtonBatchBiddingClickAsync);
             // 
             // toolStripMenuItem1
             // 
@@ -232,7 +235,7 @@
             this.toolStripButton3.Name = "toolStripButton3";
             this.toolStripButton3.Size = new System.Drawing.Size(23, 22);
             this.toolStripButton3.Text = "Batch";
-            this.toolStripButton3.Click += new System.EventHandler(this.ButtonBatchBiddingClick);
+            this.toolStripButton3.Click += new System.EventHandler(this.ButtonBatchBiddingClickAsync);
             // 
             // toolStripButton4
             // 
@@ -247,7 +250,7 @@
             // numericUpDown1
             // 
             this.numericUpDown1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.numericUpDown1.Location = new System.Drawing.Point(529, 464);
+            this.numericUpDown1.Location = new System.Drawing.Point(529, 487);
             this.numericUpDown1.Name = "numericUpDown1";
             this.numericUpDown1.Size = new System.Drawing.Size(120, 23);
             this.numericUpDown1.TabIndex = 16;
@@ -256,7 +259,7 @@
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(529, 438);
+            this.label1.Location = new System.Drawing.Point(529, 461);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(134, 15);
             this.label1.TabIndex = 17;
@@ -283,12 +286,30 @@
             this.panelSouth.Size = new System.Drawing.Size(311, 95);
             this.panelSouth.TabIndex = 18;
             // 
+            // statusStrip1
+            // 
+            this.statusStrip1.BackColor = System.Drawing.SystemColors.Control;
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripStatusLabel1});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 540);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(730, 22);
+            this.statusStrip1.TabIndex = 19;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabel1
+            // 
+            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(118, 17);
+            this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Green;
-            this.ClientSize = new System.Drawing.Size(730, 539);
+            this.ClientSize = new System.Drawing.Size(730, 562);
+            this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.panelSouth);
             this.Controls.Add(this.panelNorth);
             this.Controls.Add(this.label1);
@@ -299,11 +320,14 @@
             this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "Form1";
             this.Text = "TOSR";
+            this.Load += new System.EventHandler(this.Form1LoadAsync);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -336,6 +360,8 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem13;
         private System.Windows.Forms.Panel panelNorth;
         private System.Windows.Forms.Panel panelSouth;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
     }
 }
 

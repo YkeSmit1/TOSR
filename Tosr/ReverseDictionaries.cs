@@ -44,16 +44,24 @@ namespace Tosr
             ControlScanningPullAuctions4Di = controlScanningPullAuctions4Di;
         }
 
-        public ReverseDictionaries(Dictionary<Fase, bool> fasesWithOffset)
+        public ReverseDictionaries(Dictionary<Fase, bool> fasesWithOffset, IProgress<string> progress)
         {
             this.fasesWithOffset = fasesWithOffset;
+            progress.Report(nameof(ShapeAuctions));
             ShapeAuctions = Util.LoadAuctions("txt\\AuctionsByShape.txt", GenerateAuctionsForShape);
+            progress.Report(nameof(ControlsOnlyAuctions));
             ControlsOnlyAuctions = Util.LoadAuctions("txt\\AuctionsByControlsOnly.txt", GenerateAuctionsForControlsOnly);
+            progress.Report(nameof(ControlScanningAuctions));
             ControlScanningAuctions = Util.LoadAuctions("txt\\AuctionsByControlsScanning.txt", GenerateAuctionsForControlsScanning);
+            progress.Report(nameof(ControlScanningPullAuctions3NT));
             ControlScanningPullAuctions3NT = Util.LoadAuctions("txt\\AuctionsByControlsScanningPull3NT.txt", GenerateAuctionsForControlsScanningPull3NT);
+            progress.Report(nameof(ControlScanningPullAuctions4Di));
             ControlScanningPullAuctions4Di = Util.LoadAuctions("txt\\AuctionsByControlsScanningPull4Di.txt", GenerateAuctionsForControlsScanningPull4Di);
+            progress.Report(nameof(ControlsAuctions));
             ControlsAuctions = Util.LoadAuctions("txt\\AuctionsByControls.txt", GenerateAuctionsForControls);
+            progress.Report(nameof(ControlsPullAuctions3NT));
             ControlsPullAuctions3NT = Util.LoadAuctions("txt\\AuctionsByControlsPull3NT.txt", GenerateAuctionsForControlsPull3NT);
+            progress.Report(nameof(ControlsPullAuctions4Di));
             ControlsPullAuctions4Di = Util.LoadAuctions("txt\\AuctionsByControlsPull4Di.txt", GenerateAuctionsForControlsPull4Di);
         }
 

@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
 using Newtonsoft.Json;
 using NLog;
 using Common;
@@ -27,18 +30,22 @@ namespace Tosr
         private readonly ShuffleRestrictions shuffleRestrictionsSouth = new ShuffleRestrictions();
         private readonly ShuffleRestrictions shuffleRestrictionsNorth = new ShuffleRestrictions();
 
-        private readonly BidManager bidManager;
+        private BidManager bidManager;
 
         ReverseDictionaries reverseDictionaries;
 
         private readonly static Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
         private readonly BiddingState biddingState = new BiddingState(fasesWithOffset);
-        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly static Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly ManualResetEvent resetEvent = new ManualResetEvent(false);
 
         public Form1()
         {
             InitializeComponent();
+        }
 
+        private async void Form1LoadAsync(object sender, EventArgs e)
+        {
             logger.Info("Starting program");
             ShowBiddingBox();
             ShowAuction();
@@ -50,7 +57,14 @@ namespace Tosr
             logger.Info($"Initialized engine with database '{"Tosr.db3"}'");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
-            reverseDictionaries = new ReverseDictionaries(fasesWithOffset);
+            toolStripStatusLabel1.Text = "Generating reverse dictionaries...";
+            await Task.Run(() =>
+            {
+                var progress = new Progress<string>(report => toolStripStatusLabel1.Text = $"Generating dictionary {report}...");
+                reverseDictionaries = new ReverseDictionaries(fasesWithOffset, progress);
+            });
+            toolStripStatusLabel1.Text = "Generating reverse dictionaries done";
+
             bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, true);
             bidManager.Init(auctionControl.auction);
             shuffleRestrictionsSouth.SetControls(2, 12);
@@ -58,6 +72,7 @@ namespace Tosr
 
             Shuffle();
             BidTillSouth(auctionControl.auction, biddingState);
+            resetEvent.Set();
         }
 
         private void ShowBiddingBox()
@@ -171,6 +186,7 @@ namespace Tosr
         {
             try
             {
+                _ = resetEvent.WaitOne();
                 Clear();
                 auctionControl.auction = bidManager.GetAuction(hand.NorthHand, hand.SouthHand);
                 auctionControl.ReDraw();
@@ -183,15 +199,22 @@ namespace Tosr
             }
         }
 
-        private void ButtonBatchBiddingClick(object sender, EventArgs e)
+        private async void ButtonBatchBiddingClickAsync(object sender, EventArgs e)
         {
             var oldCursor = Cursor.Current;
             try
             {
+                _ = resetEvent.WaitOne();
                 Cursor.Current = Cursors.WaitCursor;
                 panelNorth.Visible = false;
                 BatchBidding batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset);
-                batchBidding.Execute(hands);
+                toolStripStatusLabel1.Text = "Batch bidding hands...";
+                await Task.Run(() =>
+                {
+                    var progress = new Progress<int>(report => toolStripStatusLabel1.Text = $"Hands done: {report}");
+                    batchBidding.Execute(hands, progress);
+                });
+                toolStripStatusLabel1.Text = "Batch bidding done";
             }
             finally
             {

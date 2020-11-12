@@ -184,7 +184,7 @@ namespace Tosr
                     biddingState.Fase = Fase.End;
                     var southHand = string.Join(',', southHandShape.Select(x => new string('x', int.Parse(x.ToString()))));
                     var trumpSuit = Util.GetTrumpSuit(northHand, southHand);
-                    var game = Bid.GetGameContract(trumpSuit);
+                    var game = Bid.GetGameContract(trumpSuit, biddingState.CurrentBid);
                     return biddingState.CurrentBid == game ? Bid.PassBid : game;
                 }
 
@@ -211,6 +211,25 @@ namespace Tosr
                             biddingState.UpdateBiddingStateSignOff(controlBidCount, Bid.fourDiamondBid);
                             return Bid.fourDiamondBid;
                         }
+                        if (biddingState.Fase == Fase.ScanningOther && !auction.GetBids(Player.South, Fase.ScanningOther).Any())
+                        {
+                            if (useSingleDummySolver)
+                            {
+                                var declarer = auction.GetDeclarer(trumpSuit);
+                                var matches = GetMatchesWithNorthHand(shape.Value.shapes, controlsScanning.Value.controls, northHand);
+                                if (matches.Count() == 1)
+                                {
+                                    var averageTricks = GetAverageTricks(northHand, matches.First(), trumpSuit, declarer != Player.UnKnown ? declarer : Player.North);
+                                    if (averageTricks < 11.8)
+                                    {
+                                        biddingState.Fase = Fase.End;
+                                        auction.hasSignedOff = true;
+                                        return Bid.GetGameContract(trumpSuit, biddingState.CurrentBid);
+                                    }
+                                }
+                            }
+
+                        }
                         if (controlBidCount == 1)
                         {
                             var relayBidkind = getRelayBidKindFunc(auction, northHand, southHandShape, controls, trumpSuit);
@@ -229,7 +248,7 @@ namespace Tosr
                                     {
                                         biddingState.Fase = Fase.End;
                                         auction.hasSignedOff = true;
-                                        return Bid.GetGameContract(trumpSuit);
+                                        return Bid.GetGameContract(trumpSuit, biddingState.CurrentBid);
                                     }
                                 default:
                                     throw new ArgumentException(nameof(relayBidkind));
@@ -275,6 +294,13 @@ namespace Tosr
             var possibleControls = reverseDictionaries.ControlsOnlyAuctions[strControls];
             var tricks = SingleDummySolver.SolveSingleDummy(3 - (int)trumpSuit, 3 - (int)declarer, northHand, 
                 southHandShape, possibleControls.First(), possibleControls.Last());
+            var averageTricks = tricks.Average();
+            return averageTricks;
+        }
+
+        private double GetAverageTricks(string northHand, string southHandControlScanning, Suit trumpSuit, Player declarer)
+        {
+            var tricks = SingleDummySolver.SolveSingleDummy(3 - (int)trumpSuit, 3 - (int)declarer, northHand, southHandControlScanning);
             var averageTricks = tricks.Average();
             return averageTricks;
         }

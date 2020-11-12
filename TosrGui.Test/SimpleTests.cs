@@ -71,5 +71,16 @@ namespace TosrGui.Test
             Assert.Equal(Suit.NoTrump, Util.GetTrumpSuit("xxx,xxx,xxxx,xxx", "xxxx,xxxx,xxxx,x"));
             Assert.Equal(Suit.Diamonds, Util.GetTrumpSuit("xxx,xxx,xxxxx,xx", "xxxx,xxxx,xxxx,x"));
         }
+
+        [Fact()]
+        public void GetGameContractTest()
+        {
+            Assert.Equal(Bid.GetGameContract(Suit.Hearts, new Bid(4, Suit.Hearts)), Bid.PassBid);
+            Assert.Equal(Bid.GetGameContract(Suit.Hearts, new Bid(5, Suit.Hearts)), Bid.PassBid);
+            Assert.Equal(Bid.GetGameContract(Suit.Hearts, new Bid(4, Suit.Diamonds)), new Bid(4, Suit.Hearts));
+            Assert.Equal(Bid.GetGameContract(Suit.Hearts, new Bid(5, Suit.Diamonds)), new Bid(5, Suit.Hearts));
+            Assert.Equal(Bid.GetGameContract(Suit.Hearts, new Bid(3, Suit.Spades)), new Bid(4, Suit.Hearts));
+            Assert.Equal(Bid.GetGameContract(Suit.Hearts, new Bid(4, Suit.Spades)), new Bid(5, Suit.Hearts));
+        }
     }
 }

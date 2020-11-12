@@ -77,9 +77,9 @@ namespace Common
             return new Bid(bid.rank, bid.suit + 1);
         }
 
-        public static Bid GetGameContract(Suit trumpSuit)
+        public static Bid GetGameContract(Suit trumpSuit, Bid currentBid)
         {
-            return trumpSuit switch
+            var bid = trumpSuit switch
             {
                 Suit.Spades => new Bid(4, Suit.Spades),
                 Suit.Hearts => new Bid(4, Suit.Hearts),
@@ -88,6 +88,15 @@ namespace Common
                 Suit.NoTrump => new Bid(3, Suit.NoTrump),
                 _ => throw new ArgumentException(nameof(trumpSuit)),
             };
+            return CheapestContract(currentBid, bid);
+        }
+
+        private static Bid CheapestContract(Bid currentBid, Bid bid)
+        {
+            return currentBid.suit == bid.suit ? PassBid : 
+                currentBid < bid ? bid : 
+                currentBid.suit < bid.suit ? new Bid(currentBid.rank, bid.suit) : 
+                new Bid(currentBid.rank + 1, bid.suit);
         }
 
         // Operators

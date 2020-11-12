@@ -46,7 +46,7 @@ namespace Tosr
             bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, false);
         }
 
-        public void Execute(HandsNorthSouth[] hands)
+        public void Execute(HandsNorthSouth[] hands, IProgress<int> progress)
         {
             handPerAuction.Clear();
 
@@ -75,6 +75,8 @@ namespace Tosr
                     var auction = bidManager.GetAuction(hand.NorthHand, hand.SouthHand);
                     AddHandAndAuction(hand, auction);
                     statistics.handsBid++;
+                    if (statistics.handsBid % 100 == 0)
+                        progress.Report(statistics.handsBid);
                 }
                 catch (Exception exception)
                 {
