@@ -41,6 +41,7 @@
             this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem8 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem9 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemUseSolver = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
@@ -149,7 +150,8 @@
             // 
             this.toolStripMenuItem6.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem8,
-            this.toolStripMenuItem9});
+            this.toolStripMenuItem9,
+            this.toolStripMenuItemUseSolver});
             this.toolStripMenuItem6.Name = "toolStripMenuItem6";
             this.toolStripMenuItem6.Size = new System.Drawing.Size(49, 20);
             this.toolStripMenuItem6.Text = "Batch";
@@ -169,6 +171,13 @@
             this.toolStripMenuItem9.Size = new System.Drawing.Size(234, 22);
             this.toolStripMenuItem9.Text = "Batch bid generated hands";
             this.toolStripMenuItem9.Click += new System.EventHandler(this.ButtonBatchBiddingClickAsync);
+            // 
+            // toolStripMenuItemUseSolver
+            // 
+            this.toolStripMenuItemUseSolver.CheckOnClick = true;
+            this.toolStripMenuItemUseSolver.Name = "toolStripMenuItemUseSolver";
+            this.toolStripMenuItemUseSolver.Size = new System.Drawing.Size(234, 22);
+            this.toolStripMenuItemUseSolver.Text = "Use Solver";
             // 
             // toolStripMenuItem1
             // 
@@ -362,6 +371,7 @@
         private System.Windows.Forms.Panel panelSouth;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemUseSolver;
     }
 }
 

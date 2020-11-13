@@ -33,6 +33,8 @@ namespace Tosr
             public Dictionary<BidManager.ConstructedSouthhandOutcome, int> outcomes = new Dictionary<BidManager.ConstructedSouthhandOutcome, int>();
             public Dictionary<Player, int> dealers = new Dictionary<Player, int>();
             public SortedDictionary<int, int> bidsNonShape = new SortedDictionary<int, int>();
+            public Dictionary<BidManager.CorrectnessContract, int> ContractCorrectness = new Dictionary<BidManager.CorrectnessContract, int>();
+
         }
 
         private readonly Statistics statistics = new Statistics();
@@ -41,9 +43,9 @@ namespace Tosr
         private readonly BidManager bidManager;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        public BatchBidding(ReverseDictionaries reverseDictionaries, Dictionary<Fase, bool> fasesWithOffset)
+        public BatchBidding(ReverseDictionaries reverseDictionaries, Dictionary<Fase, bool> fasesWithOffset, bool useSingleDummySolver)
         {
-            bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, false);
+            bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, useSingleDummySolver);
         }
 
         public void Execute(HandsNorthSouth[] hands, IProgress<int> progress)
@@ -111,11 +113,14 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
                 expectedSouthHands.AppendLine(bidManager.ConstructSouthHandSafe(strHand, auction));
 
             var longestSuit = Util.GetLongestSuit(strHand.NorthHand, strHand.SouthHand);
-            statistics.dealers.AddOrUpdateDictionary(auction.GetDeclarer((Suit)(3 - longestSuit.Item1)));
-            statistics.contracts.AddOrUpdateDictionary(auction.currentContract > new Bid(7, Suit.NoTrump) ? new Bid(7, Suit.NoTrump) : auction.currentContract);
+            var dealer = auction.GetDeclarer(3 - longestSuit.Item1);
+            statistics.dealers.AddOrUpdateDictionary(dealer);
+            var contract = auction.currentContract > new Bid(7, Suit.NoTrump) ? new Bid(7, Suit.NoTrump) : auction.currentContract;
+            statistics.contracts.AddOrUpdateDictionary(contract);
             if (!auction.hasSignedOff)
                 statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Where(bid => bid.bidType == BidType.bid).Last() - auction.GetBids(Player.South, Fase.Shape).Last());
             statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthhandOutcome);
+            statistics.ContractCorrectness.AddOrUpdateDictionary(bidManager.CheckContract(contract, strHand, dealer == Player.UnKnown ? Player.North : dealer));
         }
 
         private void AddHandPerAuction(string str, string strAuction)

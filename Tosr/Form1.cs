@@ -207,7 +207,7 @@ namespace Tosr
                 _ = resetEvent.WaitOne();
                 Cursor.Current = Cursors.WaitCursor;
                 panelNorth.Visible = false;
-                BatchBidding batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset);
+                BatchBidding batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, toolStripMenuItemUseSolver.Checked);
                 toolStripStatusLabel1.Text = "Batch bidding hands...";
                 await Task.Run(() =>
                 {

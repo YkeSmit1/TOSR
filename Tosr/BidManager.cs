@@ -39,6 +39,17 @@ namespace Tosr
             gameBid,
         }
 
+        public enum CorrectnessContract
+        {
+            WrongTrumpSuit,
+            MissedSmallSlam,
+            MissedGrandSlam,
+            GrandSlamTooHigh,
+            SmallSlamTooHigh,
+            ContractCorrect,
+            Unknonwn,
+        }
+
         private readonly IBidGenerator bidGenerator;
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries = null;
@@ -558,8 +569,8 @@ namespace Tosr
             {
                 var bidAfterSignOff = usedSignOffBid && b >= signOffBids.Single().bid;
                 var bidAfter4ClRelay = used4ClAsRelay && b > Bid.fourClubBid;
-                // So many offsets, maybe we can improve
-                return b -= (bidAfter4ClRelay && !bidAfterSignOff ? (offSet + 1) - zoomOffset : bidAfterSignOff ? signOffOffset : offSet - zoomOffset);
+
+                return b -= bidAfterSignOff ? signOffOffset : offSet - zoomOffset + (bidAfter4ClRelay ? 1 : 0);
             });
 
             return bidsForFases;
@@ -613,6 +624,23 @@ namespace Tosr
                 if (relevantCards.Any(c => suit.x.Contains(c) && suit.y.Contains(c)))
                     return false; 
             return true;
+        }
+
+        public BidManager.CorrectnessContract CheckContract(Bid contract, HandsNorthSouth strHand, Player declarer)
+        {
+            if (!useSingleDummySolver)
+                return CorrectnessContract.Unknonwn;
+            var tricks = SingleDummySolver.SolveSingleDummy(3 - (int)contract.suit, 3 - (int)declarer, strHand.NorthHand, strHand.SouthHand);
+            var actualNumberOfTricks = (int)Math.Round(tricks.Average() - 7);
+            if (actualNumberOfTricks == 7 && contract.rank < 7)
+                return CorrectnessContract.MissedGrandSlam;
+            if (actualNumberOfTricks == 6 && contract.rank < 6)
+                return CorrectnessContract.MissedSmallSlam;
+            if (actualNumberOfTricks < 7 && contract.rank == 7)
+                return CorrectnessContract.GrandSlamTooHigh;
+            if (actualNumberOfTricks < 6 && contract.rank == 6)
+                return CorrectnessContract.SmallSlamTooHigh;
+            return CorrectnessContract.ContractCorrect;
         }
     }
 }
