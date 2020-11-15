@@ -14,7 +14,6 @@ namespace Common
         public readonly Dictionary<int, Dictionary<Player, Bid>> bids = new Dictionary<int, Dictionary<Player, Bid>>();
         public Bid currentContract = Bid.PassBid;
         public bool hasSignedOff = false;
-        public bool isInvalid = false;
 
         private string DebuggerDisplay
         {

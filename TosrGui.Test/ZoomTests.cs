@@ -118,7 +118,7 @@ namespace TosrGui.Test
                 // 6D
                 Returns(() => (8, Fase.ScanningControls, "", 0));
 
-            ReverseDictionaries reverseDictionaries = new ReverseDictionaries(shapeAuctions, auctionsControls, auctionsControlsOnly, auctionsControlsScanning, null, null, null, null);
+            ReverseDictionaries reverseDictionaries = new ReverseDictionaries(shapeAuctions, auctionsControls, auctionsControlsOnly, auctionsControlsScanning);
             BidManager bidManager = new BidManager(bidGenerator.Object, fasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction("", "");
 

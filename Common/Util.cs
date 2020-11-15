@@ -81,6 +81,20 @@ namespace Common
             };
         }
 
+        public static Suit GetSuit(string suit)
+        {
+            return suit switch
+            {
+                "♣" => Suit.Clubs, // \u2663
+                "♦" => Suit.Diamonds, // \u2666
+                "♥" => Suit.Hearts, // \u2665
+                "♠" => Suit.Spades, // \u2660
+                "NT" => Suit.NoTrump,
+                _ => throw new ArgumentOutOfRangeException(nameof(suit), suit, null),
+            };
+        }
+
+
         public static char GetFaceDescription(Face face)
         {
             return face switch

@@ -74,9 +74,9 @@ namespace Tosr
 
         static readonly int requiredMaxHcpToBid4Diamond = 17;
         public static readonly List<Fase> signOffFases = new List<Fase> {Fase.Pull3NTNoAsk, Fase.Pull3NTOneAsk, Fase.Pull3NTTwoAsks, Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAsk};
+        public static readonly List<Fase> signOffFasesWithout3NTNoAsk = new List<Fase> { Fase.Pull3NTOneAsk, Fase.Pull3NTTwoAsks, Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAsk };
 
         private readonly RelayBidKindFunc getRelayBidKindFunc = (auction, northHand, southHandShape, controls, trumpSuit) => { return RelayBidKind.Relay; };
-        private readonly RelayBidFunc getRelayBidFunc = (BiddingState biddingState, Auction auction, string northHand) => { return Bid.NextBid(biddingState.CurrentBid); };
 
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -96,19 +96,11 @@ namespace Tosr
             this.useSingleDummySolver = useSingleDummySolver;
         }
 
-        // Constructor used for generate reverse dictionaries for sign-off auctions
-        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, RelayBidFunc getRelayBidFunc) :
-            this(bidGenerator, fasesWithOffset)
-        {
-            this.getRelayBidFunc = getRelayBidFunc;
-        }
-
         // Constructor used for generate reverse dictionaries
         public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset)
         {
             this.bidGenerator = bidGenerator;
             this.fasesWithOffset = fasesWithOffset;
-            this.getRelayBidFunc = GetRelayBid;
             this.getRelayBidKindFunc = GetRelayBidKind;
         }
 
@@ -160,7 +152,7 @@ namespace Tosr
         public void NorthBid(BiddingState biddingState, Auction auction, string northHand)
         {
             if (biddingState.Fase != Fase.End)
-                biddingState.CurrentBid = getRelayBidFunc(biddingState, auction, northHand);
+                biddingState.CurrentBid = GetRelayBid(biddingState, auction, northHand);
             else
             {
                 biddingState.EndOfBidding = true;
@@ -383,24 +375,11 @@ namespace Tosr
                 throw SetOutcome(exception.Message, ConstructedSouthhandOutcome.AuctionNotFoundInControls);
             }
 
-            var fases = new List<Fase> { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther }.Concat(signOffFases).ToArray();
+            var fases = new [] { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther };
             var controls = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffset, fases);
             var strControls = string.Join("", controls);
 
-            var signOffBids = auction.GetBids(Player.South, signOffFases.ToArray());
-            var sigOffFase = signOffBids.Any() ? signOffBids.First().fase : Fase.Unknown;
-            var controlScanningAuctions = sigOffFase switch
-            {
-                Fase.Unknown => reverseDictionaries.ControlsAuctions,
-                Fase.Pull3NTNoAsk => reverseDictionaries.ControlsPullAuctions3NT,
-                Fase.Pull3NTOneAsk => reverseDictionaries.ControlsPullAuctions3NT,
-                Fase.Pull3NTTwoAsks => reverseDictionaries.ControlsPullAuctions3NT,
-                Fase.Pull4DiamondsNoAsk => reverseDictionaries.ControlsPullAuctions4Di,
-                Fase.Pull4DiamondsOneAsk => reverseDictionaries.ControlsPullAuctions4Di,
-                _ => null,
-            };
-
-            if (!controlScanningAuctions.TryGetValue(strControls, out var possibleControls))
+            if (!reverseDictionaries.ControlsAuctions.TryGetValue(strControls, out var possibleControls))
             {
                 throw SetOutcome($"Auction not found in controls. controls: {strControls}. NorthHand: {northHand}.", ConstructedSouthhandOutcome.AuctionNotFoundInControls);
             }
@@ -503,21 +482,11 @@ namespace Tosr
         /// <returns></returns>
         public static (List<string> controls, int zoomOffset) GetControlsScanningStrFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, int zoomOffsetShape)
         {
-            var fases = new List<Fase> { Fase.Controls, Fase.ScanningControls }.Concat(signOffFases).ToArray();
-            var bidsForFase = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffsetShape, fases);
-            var signOffBids = auction.GetBids(Player.South, signOffFases.ToArray());
-            var sigOffFase = signOffBids.Any() ? signOffBids.First().fase : Fase.Unknown;
-            var controlScanningAuctions = sigOffFase switch
-            {
-                Fase.Unknown => reverseDictionaries.ControlScanningAuctions,
-                Fase.Pull3NTNoAsk => reverseDictionaries.ControlScanningPullAuctions3NT,
-                Fase.Pull3NTOneAsk => reverseDictionaries.ControlScanningPullAuctions3NT,
-                Fase.Pull3NTTwoAsks => reverseDictionaries.ControlScanningPullAuctions3NT,
-                Fase.Pull4DiamondsNoAsk => reverseDictionaries.ControlScanningPullAuctions4Di,
-                Fase.Pull4DiamondsOneAsk => reverseDictionaries.ControlScanningPullAuctions4Di,
-                _ => null,
-            };
-            if (controlScanningAuctions.TryGetValue(string.Join("", bidsForFase), out var controls))
+            var fases = new [] { Fase.Controls, Fase.ScanningControls };
+            var bidsForFase = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffsetShape, fases).ToList();
+            var controlScanningAuctions = reverseDictionaries.ControlScanningAuctions;
+            var bidsForFaseStr = string.Join("", bidsForFase);
+            if (controlScanningAuctions.TryGetValue(bidsForFaseStr, out var controls))
                 return (controls.controlsScanning, controls.zoom ? 1 : 0);
 
             var lastBid = bidsForFase.Last();
@@ -532,7 +501,7 @@ namespace Tosr
             }
 
             throw new InvalidOperationException($"{ string.Join("", bidsForFase) } not found in controls scanning dictionary. Auction:{auction.GetPrettyAuction("|")}. " +
-                $"Sign-off fase:{sigOffFase}. zoom-offset shape:{zoomOffsetShape}");
+                $"zoom-offset shape:{zoomOffsetShape}");
         }
 
         /// <summary>
@@ -545,35 +514,45 @@ namespace Tosr
         public static IEnumerable<Bid> GetAuctionForFaseWithOffset(Auction auction, Bid offsetBid, int zoomOffset, Fase[] fases)
         {
             var lastBidShape = auction.GetBids(Player.South, Fase.Shape).Last();
-            var bidsForFases = auction.GetBids(Player.South, fases);
+            var bidsForFases = auction.GetBids(Player.South, fases.Concat(signOffFasesWithout3NTNoAsk).ToArray());
             var offSet = lastBidShape - offsetBid;
             if (zoomOffset != 0)
                 bidsForFases = new List<Bid> { lastBidShape }.Concat(bidsForFases);
 
             var used4ClAsRelay = Used4ClAsRelay(auction);
-            var signOffBids = auction.GetBids(Player.South).Select((bid, Index) => (bid, Index)).Where(bid => signOffFases.Contains(bid.bid.fase));
-            Debug.Assert(signOffBids.Count() <= 1);
-            var usedSignOffBid = signOffBids.Count() == 1;
-            int signOffOffset = 0;
-            if (usedSignOffBid)
-            {
-                var signoffBidSouth = auction.bids[signOffBids.Single().Index][Player.North];
-                if (signoffBidSouth.suit == Suit.NoTrump)
-                {
-                    signOffOffset = signoffBidSouth - Bid.threeNTBid;
-                    Debug.Assert(signOffOffset % 5 == 0);
-                }
-            }
+            var fourCLubsRelayOffSet = 0;
+            var signOffOffset = 0;
+            var previousBid = lastBidShape;
+            var bidPull3NTNoAsk = auction.GetBids(Player.South).Where(bid => bid.fase == Fase.Pull3NTNoAsk);
 
-            bidsForFases = bidsForFases.Select(b =>
+            var bidsForFasesResult = bidsForFases.Select(b =>
             {
-                var bidAfterSignOff = usedSignOffBid && b >= signOffBids.Single().bid;
-                var bidAfter4ClRelay = used4ClAsRelay && b > Bid.fourClubBid;
+                if (signOffFases.Contains(b.fase) || (bidPull3NTNoAsk.Count() == 1 && signOffOffset == 0 && b > bidPull3NTNoAsk.Single()))
+                    signOffOffset = GetSignOffBid(b) - previousBid;
 
-                return b -= bidAfterSignOff ? signOffOffset : offSet - zoomOffset + (bidAfter4ClRelay ? 1 : 0);
+                if (used4ClAsRelay && b > Bid.fourClubBid)
+                    fourCLubsRelayOffSet = 1;
+                previousBid = b;
+
+                return b += zoomOffset - fourCLubsRelayOffSet - offSet - signOffOffset;
             });
 
-            return bidsForFases;
+            return bidsForFasesResult;
+
+            Bid GetSignOffBid(Bid b)
+            {
+                var signOffBiddingRounds = auction.bids.Where(bids => bids.Value.TryGetValue(Player.South, out var bid) && signOffFases.Contains(bid.fase));
+                if (signOffBiddingRounds.Count() == 0)
+                    return Bid.PassBid;
+                var signOffBiddingRound = signOffBiddingRounds.Single();
+                // Return the next bid. The sign-off bid only shows points
+                if (signOffBiddingRound.Value[Player.South].fase == Fase.Pull3NTNoAsk)
+                    return auction.bids[signOffBiddingRound.Key + 1][Player.North] - 1;
+
+                var signoffBidNorth = signOffBiddingRound.Value[Player.North];
+                var bid = signoffBidNorth.suit == Suit.NoTrump ? signoffBidNorth - 1 : signoffBidNorth;
+                return bid;
+            }
         }
 
         private static bool Used4ClAsRelay(Auction auction)
