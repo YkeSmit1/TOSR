@@ -95,7 +95,8 @@ namespace Common
         {
             return currentBid == bid ? PassBid : 
                 currentBid < bid ? bid : 
-                currentBid.suit < bid.suit ? new Bid(currentBid.rank, bid.suit) : 
+                currentBid.suit < bid.suit ? new Bid(currentBid.rank, bid.suit) :
+                currentBid.suit == bid.suit ? PassBid :
                 new Bid(currentBid.rank + 1, bid.suit);
         }
 
