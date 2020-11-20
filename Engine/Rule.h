@@ -48,6 +48,7 @@ struct HandCharacteristic
 	int Hcp = 0;
 	bool isMax = false;
 	int Queens = 0;
+	int Shortages;
 
 	static bool CalcuateIsReverse(const std::unordered_map<int, size_t>& suitLength);
 	static bool Calcuate65IsReverse(const std::unordered_map<int, size_t>& suitLength);

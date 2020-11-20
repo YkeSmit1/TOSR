@@ -93,7 +93,7 @@ namespace Common
 
         private static Bid CheapestContract(Bid currentBid, Bid bid)
         {
-            return currentBid.suit == bid.suit ? PassBid : 
+            return currentBid == bid ? PassBid : 
                 currentBid < bid ? bid : 
                 currentBid.suit < bid.suit ? new Bid(currentBid.rank, bid.suit) : 
                 new Bid(currentBid.rank + 1, bid.suit);

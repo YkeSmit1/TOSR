@@ -43,6 +43,7 @@ void HandCharacteristic::Initialize(const std::string& hand)
     QueensSuit = CalculateQueensSuit(suits);
     isMax = Controls >= 5 || (Controls == 4 && Hcp >= 12);
     Queens = NumberOfCards(hand, 'Q');
+    Shortages = (int)std::count_if(suits.begin(), suits.end(), [](const auto& x) {return x.length() <= 1; });
 }
 
 bool HandCharacteristic::CalcuateIsReverse(const std::unordered_map<int, size_t>& suitLength)

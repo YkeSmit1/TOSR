@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using ObjectCloner;
 
 namespace Tosr
 {
@@ -17,37 +18,56 @@ namespace Tosr
     public class ReverseDictionaries
     {
         public ShapeDictionary ShapeAuctions { get; }
-        public ControlsDictionary ControlsAuctions { get; }
+        public ControlsDictionary ControlsAuctions0 { get; }
+        public ControlsDictionary ControlsAuctions1 { get; }
+        public ControlsDictionary ControlsAuctions2 { get; }
         public ControlsOnlyDictionary ControlsOnlyAuctions { get; }
-        public ControlScanningDictionary ControlScanningAuctions { get; }
+        public ControlScanningDictionary ControlScanningAuctions0 { get; }
+        public ControlScanningDictionary ControlScanningAuctions1 { get; }
+        public ControlScanningDictionary ControlScanningAuctions2 { get; }
 
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private static readonly int[] suitLengthNoSingleton = new[] { 4, 3, 3, 3 };
+        private static readonly int[] suitLengthSingleton = new[] { 5, 4, 3, 1 };
+        private static readonly int[] suitLength2Singletons = new[] { 6, 5, 1, 1 };
 
         public ReverseDictionaries(ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions, ControlsOnlyDictionary controlsOnlyAuctions, 
             ControlScanningDictionary controlScanningAuctions)
         {
             ShapeAuctions = shapeAuctions;
-            ControlsAuctions = controlsAuctions;
+            ControlsAuctions0 = controlsAuctions;
             ControlsOnlyAuctions = controlsOnlyAuctions;
-            ControlScanningAuctions = controlScanningAuctions;
+            ControlScanningAuctions0 = controlScanningAuctions;
         }
 
         public ReverseDictionaries(Dictionary<Fase, bool> fasesWithOffset, IProgress<string> progress)
         {
             this.fasesWithOffset = fasesWithOffset;
+
             progress.Report(nameof(ShapeAuctions));
-            ShapeAuctions = Util.LoadAuctions("txt\\AuctionsByShape.txt", GenerateAuctionsForShape);
+            ShapeAuctions = Util.LoadAuctions("txt\\AuctionsByShape.txt", GenerateAuctionsForShape, 0);
             progress.Report(nameof(ControlsOnlyAuctions));
-            ControlsOnlyAuctions = Util.LoadAuctions("txt\\AuctionsByControlsOnly.txt", GenerateAuctionsForControlsOnly);
-            progress.Report(nameof(ControlScanningAuctions));
-            ControlScanningAuctions = Util.LoadAuctions("txt\\AuctionsByControlsScanning.txt", GenerateAuctionsForControlsScanning);
-            progress.Report(nameof(ControlsAuctions));
-            ControlsAuctions = Util.LoadAuctions("txt\\AuctionsByControls.txt", GenerateAuctionsForControls);
+            ControlsOnlyAuctions = Util.LoadAuctions("txt\\AuctionsByControlsOnly.txt", GenerateAuctionsForControlsOnly, 0);
+
+            progress.Report(nameof(ControlScanningAuctions0));
+            ControlScanningAuctions0 = Util.LoadAuctions("txt\\AuctionsByControlsScanning0.txt", GenerateAuctionsForControlsScanning, 0);
+            progress.Report(nameof(ControlScanningAuctions1));
+            ControlScanningAuctions1 = Util.LoadAuctions("txt\\AuctionsByControlsScanning1.txt", GenerateAuctionsForControlsScanning, 1);
+            progress.Report(nameof(ControlScanningAuctions2));
+            ControlScanningAuctions2 = Util.LoadAuctions("txt\\AuctionsByControlsScanning2.txt", GenerateAuctionsForControlsScanning, 2);
+
+            progress.Report(nameof(ControlsAuctions0));
+            ControlsAuctions0 = Util.LoadAuctions("txt\\AuctionsByControls0.txt", GenerateAuctionsForControls, 0);
+            progress.Report(nameof(ControlsAuctions1));
+            ControlsAuctions1 = Util.LoadAuctions("txt\\AuctionsByControls1.txt", GenerateAuctionsForControls, 1);
+            progress.Report(nameof(ControlsAuctions2));
+            ControlsAuctions2 = Util.LoadAuctions("txt\\AuctionsByControls2.txt", GenerateAuctionsForControls, 2);
         }
 
-        public ShapeDictionary GenerateAuctionsForShape()
+        public ShapeDictionary GenerateAuctionsForShape(int nrOfShortages)
         {
+            logger.Info("Generating dictionaries for shape");
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
             var auctions = new ShapeDictionary();
             var regex = new Regex("x");
@@ -78,8 +98,9 @@ namespace Tosr
             return auctions;
         }
 
-        public ControlsOnlyDictionary GenerateAuctionsForControlsOnly()
+        public ControlsOnlyDictionary GenerateAuctionsForControlsOnly(int nrOfShortages)
         {
+            logger.Info("Generating dictionaries for controls only");
             var auctions = new ControlsOnlyDictionary();
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
 
@@ -134,82 +155,100 @@ namespace Tosr
             }
         }
 
-        public ControlScanningDictionary GenerateAuctionsForControlsScanning()
+        public ControlScanningDictionary GenerateAuctionsForControlsScanning(int nrOfShortages)
         {
+            logger.Info($"Generating dictionaries for controlsScanning. Shortages:{nrOfShortages}");
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
             var auctions = new ControlScanningDictionary();
-            var suitLength = new[] { 4, 3, 3, 3 };
             var controls = new[] { "", "A", "K", "AK"};
 
             foreach (var spades in controls)
                 foreach (var hearts in controls)
                     foreach (var diamonds in controls)
                         foreach (var clubs in controls)
-                        {
-                            var hand = ConstructHand(suitLength, spades, hearts, diamonds, clubs);
-
-                            foreach (var hcp in GetHcpGeneratorGeneral().Invoke(hand))
-                            {
-                                var suits = new string[] { spades, hearts, diamonds, clubs };
-                                if (Util.TryAddQuacksTillHCP(hcp, ref suits))
-                                    BidAndStoreHand(ConstructHand(suitLength, suits), hand);
-                            }
-                        }
+                            BidAndStoreHandsByHcp(GetSuitLength(nrOfShortages), spades, hearts, diamonds, clubs);
             return auctions;
+
+            void BidAndStoreHandsByHcp(int[] suitLengthBid, params string[] suits)
+            {
+                var lsuits =  ObjectCloner.ObjectCloner.DeepClone(suits);
+                var hand = ConstructHand(suitLengthNoSingleton, lsuits);
+                if (Util.GetControlCount(hand) > 1)
+                {
+                    foreach (var hcp in GetHcpGeneratorGeneral().Invoke(hand))
+                    {
+                        if (Util.TryAddQuacksTillHCP(hcp, ref lsuits))
+                            BidAndStoreHand(ConstructHand(suitLengthBid, lsuits), hand);
+                    }
+                }
+            }
 
             void BidAndStoreHand(string hand, string handToStore)
             {
-                Debug.Assert(hand.Length == 16);
-                if (Util.GetControlCount(hand) > 1 && Util.GetHcpCount(hand) < 25)
-                {
-                    var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
-                    var fases = new List<Fase> { Fase.Controls, Fase.ScanningControls }.Concat(BidManager.signOffFases).ToArray();
-                    var key = auction.GetBidsAsString(fases);
-                    var isZoom = auction.GetBids(Player.South, Fase.ScanningControls).Any(x => x.zoom);
-                    if (!auctions.ContainsKey(key))
-                        auctions.Add(key, (new List<string>() { handToStore }, isZoom));
-                    else if (!auctions[key].controlsScanning.Contains(handToStore))
-                        auctions[key].controlsScanning.Add(handToStore);
-                }
+                if (hand.Length != 16)
+                    return;
+                var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
+                var key = string.Join("", auction.GetBids(Player.South, new[] { Fase.Controls, Fase.ScanningControls }).
+                    Select(bid => bid - (auction.GetBids(Player.South, Fase.Shape).Last() - Bid.threeDiamondBid)));
+                var isZoom = auction.GetBids(Player.South, Fase.ScanningControls).Any(x => x.zoom);
+                if (!auctions.ContainsKey(key))
+                    auctions.Add(key, (new List<string>() { handToStore }, isZoom));
+                else if (!auctions[key].controlsScanning.Contains(handToStore))
+                    auctions[key].controlsScanning.Add(handToStore);
             }
         }
 
-        public ControlsDictionary GenerateAuctionsForControls()
+        public ControlsDictionary GenerateAuctionsForControls(int nrOfShortages)
         {
+            logger.Info($"Generating dictionaries for controls. Shortages:{nrOfShortages}");
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
             var auctions = new ControlsDictionary();
-            var suitLength = new[] { 4, 3, 3, 3 };
             var controls = new[] { "", "A", "K", "Q", "AK", "AQ", "KQ", "AKQ" };
 
             foreach (var spades in controls)
                 foreach (var hearts in controls)
                     foreach (var diamonds in controls)
                         foreach (var clubs in controls)
-                        {
-                            var hand = ConstructHand(suitLength, spades, hearts, diamonds, clubs);
-
-                            foreach (var hcp in GetHcpGeneratorGeneral().Invoke(hand))
-                            {
-                                var suits = new string[] { spades, hearts, diamonds, clubs };
-                                if (Util.TryAddJacksTillHCP(hcp, ref suits))
-                                    BidAndStoreHand(ConstructHand(suitLength, suits), hand);
-                            }
-                        }
+                            BidAndStoreHandsByHcp(GetSuitLength(nrOfShortages), spades, hearts, diamonds, clubs);
             return auctions;
+
+            void BidAndStoreHandsByHcp(int[] suitLength, params string[] suits)
+            {
+                var lsuits = ObjectCloner.ObjectCloner.DeepClone(suits);
+                var hand = ConstructHand(suitLengthNoSingleton, lsuits);
+                if (Util.GetControlCount(hand) > 1)
+                {
+                    foreach (var hcp in GetHcpGeneratorGeneral().Invoke(hand))
+                    {
+                        if (Util.TryAddJacksTillHCP(hcp, ref lsuits))
+                            BidAndStoreHand(ConstructHand(suitLength, lsuits), hand);
+                    }
+                }
+            }
 
             void BidAndStoreHand(string hand, string handToStore)
             {
-                Debug.Assert(hand.Length == 16);
-                if (Util.GetControlCount(hand) > 1 && Util.GetHcpCount(hand) < 25)
-                {
-                    var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
-                    var key = auction.GetBidsAsString(new List<Fase> { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther }.Concat(BidManager.signOffFases).ToArray());
-                    if (!auctions.ContainsKey(key))
-                        auctions.Add(key, new List<string>());
-                    if (!auctions[key].Contains(handToStore))
-                        auctions[key].Add(handToStore);
-                }
+                if (hand.Length != 16)
+                    return;
+                var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
+                var key = string.Join("", auction.GetBids(Player.South, new[] { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther }).
+                    Select(bid => bid - (auction.GetBids(Player.South, Fase.Shape).Last() - Bid.threeDiamondBid)));
+                if (!auctions.ContainsKey(key))
+                    auctions.Add(key, new List<string>());
+                if (!auctions[key].Contains(handToStore))
+                    auctions[key].Add(handToStore);
             }
+        }
+
+        private static int[] GetSuitLength(int nrOfShortages)
+        {
+            return nrOfShortages switch
+            {
+                0 => suitLengthNoSingleton,
+                1 => suitLengthSingleton,
+                2 => suitLength2Singletons,
+                _ => throw new ArgumentException("nrOfshortages should be 0, 1 or 2")
+            };
         }
 
         private static Func<string, int[]> GetHcpGeneratorGeneral()

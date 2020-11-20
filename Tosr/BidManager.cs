@@ -12,12 +12,8 @@ using Solver;
 namespace Tosr
 {
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
-    using ControlsOnlyDictionary = Dictionary<string, List<int>>;
-    using ControlsDictionary = Dictionary<string, List<string>>;
-    using ControlScanningDictionary = Dictionary<string, (List<string> controlsScanning, bool zoom)>;
 
     using RelayBidKindFunc = Func<Auction, string, string, IEnumerable<Bid>, Suit, BidManager.RelayBidKind>;
-    using RelayBidFunc = Func<BiddingState, Auction, string, Bid>;
 
     public class BidManager
     {
@@ -76,7 +72,7 @@ namespace Tosr
         public static readonly List<Fase> signOffFases = new List<Fase> {Fase.Pull3NTNoAsk, Fase.Pull3NTOneAsk, Fase.Pull3NTTwoAsks, Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAsk};
         public static readonly List<Fase> signOffFasesWithout3NTNoAsk = new List<Fase> { Fase.Pull3NTOneAsk, Fase.Pull3NTTwoAsks, Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAsk };
 
-        private readonly RelayBidKindFunc getRelayBidKindFunc = (auction, northHand, southHandShape, controls, trumpSuit) => { return RelayBidKind.Relay; };
+        private readonly RelayBidKindFunc getRelayBidKindFunc = null;
 
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -94,6 +90,8 @@ namespace Tosr
         {
             this.reverseDictionaries = reverseDictionaries;
             this.useSingleDummySolver = useSingleDummySolver;
+            if (useSingleDummySolver)
+                this.getRelayBidKindFunc = GetRelayBidKindSolver;
         }
 
         // Constructor used for generate reverse dictionaries
@@ -107,7 +105,8 @@ namespace Tosr
         public void Init(Auction auction)
         {
             shape = new Lazy<(List<string> shapes, int zoomOffset)>(() => GetShapeStrFromAuction(auction, reverseDictionaries.ShapeAuctions));
-            controlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() => GetControlsScanningStrFromAuction(auction, reverseDictionaries, shape.Value.zoomOffset));
+            controlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() => GetControlsScanningStrFromAuction(auction, reverseDictionaries, 
+                shape.Value.zoomOffset, Util.NrOfShortages(shape.Value.shapes.First())));
         }
 
         public Auction GetAuction(string northHand, string southHand)
@@ -274,15 +273,16 @@ namespace Tosr
             return Bid.NextBid(biddingState.CurrentBid);
         }
 
+        public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, string southHandShape, IEnumerable<Bid> controls, Suit trumpSuit)
+        {
+            Player declarer = auction.GetDeclarer(trumpSuit);
+            var averageTricks = GetAverageTricks(northHand, southHandShape, controls, trumpSuit, declarer != Player.UnKnown ? declarer : Player.North);
+            var relayBidkind = requirementsForRelayBid.Where(x => averageTricks > x.range.min && averageTricks < x.range.max).First().relayBidKind;
+            return relayBidkind;
+        }
+
         public RelayBidKind GetRelayBidKind(Auction auction, string northHand, string southHandShape, IEnumerable<Bid> controls, Suit trumpSuit)
         {
-            if (useSingleDummySolver)
-            {
-                Player declarer = auction.GetDeclarer(trumpSuit);
-                var averageTricks = GetAverageTricks(northHand, southHandShape, controls, trumpSuit, declarer != Player.UnKnown ? declarer : Player.North);
-                var relayBidkind = requirementsForRelayBid.Where(x => averageTricks > x.range.min && averageTricks < x.range.max).First().relayBidKind;
-                return relayBidkind;
-            }
             return (Util.GetHcpCount(northHand)) switch
             {
                 var x when x < 19 => RelayBidKind.gameBid,
@@ -379,7 +379,14 @@ namespace Tosr
             var controls = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffset, fases);
             var strControls = string.Join("", controls);
 
-            if (!reverseDictionaries.ControlsAuctions.TryGetValue(strControls, out var possibleControls))
+            var controlsAuctions = Util.NrOfShortages(shape.Value.shapes.First()) switch
+            {
+                0 => reverseDictionaries.ControlsAuctions0,
+                1 => reverseDictionaries.ControlsAuctions1,
+                2 => reverseDictionaries.ControlsAuctions2,
+                _ => throw new ArgumentException("nrOfshortages should be 0, 1 or 2"),
+            };
+            if (!controlsAuctions.TryGetValue(strControls, out var possibleControls))
             {
                 throw SetOutcome($"Auction not found in controls. controls: {strControls}. NorthHand: {northHand}.", ConstructedSouthhandOutcome.AuctionNotFoundInControls);
             }
@@ -480,12 +487,20 @@ namespace Tosr
         /// <param name="controlScanningAuctions"></param>
         /// <param name="zoomOffsetShape"></param>
         /// <returns></returns>
-        public static (List<string> controls, int zoomOffset) GetControlsScanningStrFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, int zoomOffsetShape)
+        public static (List<string> controls, int zoomOffset) GetControlsScanningStrFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, int zoomOffsetShape, int nrOfShortagess)
         {
             var fases = new [] { Fase.Controls, Fase.ScanningControls };
             var bidsForFase = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffsetShape, fases).ToList();
-            var controlScanningAuctions = reverseDictionaries.ControlScanningAuctions;
             var bidsForFaseStr = string.Join("", bidsForFase);
+
+            var controlScanningAuctions = nrOfShortagess switch
+            {
+                0 => reverseDictionaries.ControlScanningAuctions0,
+                1 => reverseDictionaries.ControlScanningAuctions1,
+                2 => reverseDictionaries.ControlScanningAuctions2,
+                _ => throw new ArgumentException("nrOfshortages should be 0, 1 or 2"),
+            };
+
             if (controlScanningAuctions.TryGetValue(bidsForFaseStr, out var controls))
                 return (controls.controlsScanning, controls.zoom ? 1 : 0);
 
@@ -568,7 +583,7 @@ namespace Tosr
             return false;
         }
 
-        public static IEnumerable<string> GetMatchesWithNorthHand(List<string> shapeLengthStrs, List<string> possibleControls, string northHandStr)
+        private static IEnumerable<string> GetMatchesWithNorthHand(List<string> shapeLengthStrs, List<string> possibleControls, string northHandStr)
         {
             var northHand = northHandStr.Split(',');
             foreach (var controlStr in possibleControls)
@@ -605,7 +620,7 @@ namespace Tosr
             return true;
         }
 
-        public BidManager.CorrectnessContract CheckContract(Bid contract, HandsNorthSouth strHand, Player declarer)
+        public CorrectnessContract CheckContract(Bid contract, HandsNorthSouth strHand, Player declarer)
         {
             if (!useSingleDummySolver)
                 return CorrectnessContract.Unknonwn;

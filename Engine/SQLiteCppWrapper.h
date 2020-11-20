@@ -7,14 +7,10 @@ class SQLiteCppWrapper : public ISQLiteWrapper
 {
     constexpr static std::string_view shapeSql = R"(SELECT bidId, EndFase, Zoom, Id, IFNULL(Description, Distribution) FROM Rules 
         WHERE (bidId > ?)
-        AND MinSpades <= ?
-        AND MaxSpades >= ?
-        AND MinHearts <= ?
-        AND MaxHearts >= ?
-        AND MinDiamonds <= ?
-        AND MaxDiamonds >= ?
-        AND MinClubs <= ?
-        AND MaxClubs >= ?
+        AND ? BETWEEN MinSpades AND MaxSpades
+        AND ? BETWEEN MinHearts AND MaxHearts
+        AND ? BETWEEN MinDiamonds AND MaxDiamonds
+        AND ? BETWEEN MinClubs AND MaxClubs
         AND (Distribution IS NULL or Distribution = ?)
         AND (IsBalanced IS NULL or IsBalanced = ?)
         AND (IsReverse IS NULL or IsReverse = ?)
@@ -25,10 +21,8 @@ class SQLiteCppWrapper : public ISQLiteWrapper
 
     constexpr static std::string_view controlsSql = R"(SELECT RelBidId, EndFase, Id, Description FROM Controls 
         WHERE RelbidId > ?
-        AND MinControls <= ?
-        AND MaxControls >= ?
-        AND MinHcp <= ?
-        AND MaxHcp >= ?
+        AND ? BETWEEN MinControls AND MaxControls
+        AND ? BETWEEN MinHcp AND MaxHcp
         ORDER BY RelBidId ASC)";
 
     constexpr static std::string_view scanningControlsSql = R"(SELECT RelBidId, EndFase, Zoom, Id, Description FROM ScanningControls
@@ -37,6 +31,7 @@ class SQLiteCppWrapper : public ISQLiteWrapper
         AND (Controls2Suit = ? or Controls2Suit is null)
         AND (Controls3Suit = ? or Controls3Suit is null)
         AND (Controls4Suit = ? or Controls4Suit is null)
+        AND ((? BETWEEN MinShortages AND MaxShortages) OR (MinShortages IS NULL AND MaxShortages IS null))
         ORDER BY RelBidId ASC)";
 
     constexpr static std::string_view scanningOtherSql = R"(SELECT RelBidId, EndFase, Id, Description FROM ScanningOther 
@@ -45,16 +40,15 @@ class SQLiteCppWrapper : public ISQLiteWrapper
         AND (Queen2Suit = ? or Queen2Suit is null)
         AND (Queen3Suit = ? or Queen3Suit is null)
         AND (Queen4Suit = ? or Queen4Suit is null)
+        AND ((? BETWEEN MinShortages AND MaxShortages) OR (MinShortages IS NULL AND MaxShortages IS null))
         ORDER BY RelBidId ASC)";
 
 
     constexpr static std::string_view signOffsSql = R"(SELECT RelBidId, Zoom, Id, Description FROM SignOffs
         WHERE Fase = ?
         AND (Max = ? or Max is null)
-        AND (MinHcp <= ? or MinHcp is null)
-        AND (MaxHcp >= ? or MaxHcp is null)
-        AND (MinQueens <= ? or MinQueens is null)
-        AND (MaxQueens >= ? or MaxQueens is null))";
+        AND ((? BETWEEN MinHcp AND MaxHcp) OR (MinHcp is null AND MaxHcp is null))
+        AND ((? BETWEEN MinQueens AND MaxQueens) OR (MinQueens is null AND MaxQueens is null)))";
 
     std::unique_ptr<SQLite::Database> db;
     std::unique_ptr<SQLite::Statement> queryShape;

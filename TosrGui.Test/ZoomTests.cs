@@ -12,7 +12,7 @@ namespace TosrGui.Test
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
     using ControlsOnlyDictionary = Dictionary<string, List<int>>;
     using ControlsDictionary = Dictionary<string, List<string>>;
-    using ControlScanningDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
+    using ControlScanningDictionary = Dictionary<string, (List<string> controlsScanning, bool zoom)>;
 
     public class ZoomTests
     {

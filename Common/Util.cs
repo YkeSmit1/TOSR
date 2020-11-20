@@ -175,7 +175,7 @@ namespace Common
             return int.Parse(handPattern[0].ToString()) >= 8 ||
                 int.Parse(handPattern[0].ToString()) + int.Parse(handPattern[1].ToString()) >= 12;
         }
-        public static Dictionary<T, U> LoadAuctions<T, U>(string fileName, Func<Dictionary<T, U>> generateAuctions)
+        public static Dictionary<T, U> LoadAuctions<T, U>(string fileName, Func<int, Dictionary<T, U>> generateAuctions, int nrOfShortage)
         {
             var logger = LogManager.GetCurrentClassLogger();
 
@@ -188,7 +188,7 @@ namespace Common
             else
             {
                 logger.Info($"File {fileName} is too old or does not exist. File will be generated");
-                auctions = generateAuctions();
+                auctions = generateAuctions(nrOfShortage);
                 var sortedAuctions = auctions.ToImmutableSortedDictionary();
                 var path = Path.GetDirectoryName(fileName);
                 if (!string.IsNullOrWhiteSpace(path))
@@ -282,6 +282,11 @@ namespace Common
             };
 
             return hcp == GetHcpCount(suits);
+        }
+
+        public static int NrOfShortages(string hand)
+        {
+            return hand.Select(x => int.Parse(x.ToString())).Count(y => y <= 1);
         }
     }
 }

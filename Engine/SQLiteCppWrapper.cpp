@@ -122,20 +122,16 @@ std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleShape(const Ha
         queryShape->reset();
         queryShape->bind(1, lastBidId);
         queryShape->bind(2, hand.Spades);
-        queryShape->bind(3, hand.Spades);
-        queryShape->bind(4, hand.Hearts);
-        queryShape->bind(5, hand.Hearts);
-        queryShape->bind(6, hand.Diamonds);
-        queryShape->bind(7, hand.Diamonds);
-        queryShape->bind(8, hand.Clubs);
-        queryShape->bind(9, hand.Clubs);
+        queryShape->bind(3, hand.Hearts);
+        queryShape->bind(4, hand.Diamonds);
+        queryShape->bind(5, hand.Clubs);
 
-        queryShape->bindNoCopy(10, hand.distribution);
-        queryShape->bind(11, hand.isBalanced);
-        queryShape->bind(12, hand.isReverse);
-        queryShape->bindNoCopy(13, hand.shortageString);
-        queryShape->bind(14, hand.isThreeSuiter);
-        queryShape->bind(15, hand.is65Reverse);
+        queryShape->bindNoCopy(6, hand.distribution);
+        queryShape->bind(7, hand.isBalanced);
+        queryShape->bind(8, hand.isReverse);
+        queryShape->bindNoCopy(9, hand.shortageString);
+        queryShape->bind(10, hand.isThreeSuiter);
+        queryShape->bind(11, hand.is65Reverse);
 
         if (!queryShape->executeStep())
             throw std::runtime_error("No row found in rules table.");
@@ -165,12 +161,8 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleControls(const HandC
         queryControls->reset();
 
         queryControls->bind(1, lastBidId);
-
         queryControls->bind(2, hand.Controls);
-        queryControls->bind(3, hand.Controls);
-
-        queryControls->bind(4, hand.Hcp);
-        queryControls->bind(5, hand.Hcp);
+        queryControls->bind(3, hand.Hcp);
 
         if (!queryControls->executeStep())
         {
@@ -207,6 +199,7 @@ std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleScanningContro
         queryScanningControls->bind(3, hand.ControlsSuit[1]);
         queryScanningControls->bind(4, hand.ControlsSuit[2]);
         queryScanningControls->bind(5, hand.ControlsSuit[3]);
+        queryScanningControls->bind(6, hand.Shortages);
 
         if (!queryScanningControls->executeStep())
             throw std::runtime_error("No row found in scanning table.");
@@ -241,6 +234,7 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleScanningOther(const 
         queryScanningOther->bind(3, hand.QueensSuit[1]);
         queryScanningOther->bind(4, hand.QueensSuit[2]);
         queryScanningOther->bind(5, hand.QueensSuit[3]);
+        queryScanningOther->bind(6, hand.Shortages);
 
         if (!queryScanningOther->executeStep())
             throw std::runtime_error("No row found in scanning table.");
@@ -272,9 +266,7 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleSignOff(const HandCh
 
         querySignOffs->bind(2, hand.isMax);
         querySignOffs->bind(3, hand.Hcp);
-        querySignOffs->bind(4, hand.Hcp);
-        querySignOffs->bind(5, hand.Queens);
-        querySignOffs->bind(6, hand.Queens);
+        querySignOffs->bind(4, hand.Queens);
 
         if (!querySignOffs->executeStep())
             throw std::runtime_error("No row found in SignOff table.");
