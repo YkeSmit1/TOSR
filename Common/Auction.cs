@@ -13,7 +13,7 @@ namespace Common
         private int currentBiddingRound;
         public readonly Dictionary<int, Dictionary<Player, Bid>> bids = new Dictionary<int, Dictionary<Player, Bid>>();
         public Bid currentContract = Bid.PassBid;
-        public bool hasSignedOff = false;
+        public bool responderHasSignedOff = false;
 
         private string DebuggerDisplay
         {
@@ -37,6 +37,13 @@ namespace Common
             }
             return Player.UnKnown;
         }
+
+        public Player GetDeclarerOrNorth(Suit suit)
+        {
+            var declarer = GetDeclarer(suit);
+            return declarer == Player.UnKnown ? Player.North : declarer;
+        }
+
 
         public void AddBid(Bid bid)
         {

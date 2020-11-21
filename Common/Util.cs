@@ -234,7 +234,7 @@ namespace Common
                 Select((x, index) => Regex.Replace(x, $"[^{honors}]", string.Empty).PadRight(index == 0 ? 4 : 3, 'x'))));
         }
 
-        public static bool TryAddQuacksTillHCP(int hcp, ref string[] suits)
+        public static bool TryAddQuacksTillHCP(int hcp, ref string[] suits, int[] suitLength)
         {
             if (hcp <= GetHcpCount(suits))
                 return true;
@@ -245,7 +245,8 @@ namespace Common
                 if (suitToAdd == 0)
                     break;
 
-                suits[suitToAdd] += 'Q';
+                if (suits[suitToAdd].Length < suitLength[suitToAdd])
+                    suits[suitToAdd] += 'Q';
                 suitToAdd--;
             };
 
@@ -255,7 +256,7 @@ namespace Common
                 if (suitToAdd == 0)
                     return false;
 
-                if (suits[suitToAdd].Length < 3)
+                if (suits[suitToAdd].Length < suitLength[suitToAdd])
                     suits[suitToAdd] += 'J';
 
                 suitToAdd--;
@@ -264,7 +265,7 @@ namespace Common
             return hcp == GetHcpCount(suits);
         }
 
-        public static bool TryAddJacksTillHCP(int hcp, ref string[] suits)
+        public static bool TryAddJacksTillHCP(int hcp, ref string[] suits, int[] suitLength)
         {
             if (hcp <= GetHcpCount(suits))
                 return true;
@@ -275,7 +276,7 @@ namespace Common
                 if (suitToAdd == 0)
                     return false;
 
-                if (suits[suitToAdd].Length < 3)
+                if (suits[suitToAdd].Length < suitLength[suitToAdd])
                     suits[suitToAdd] += 'J';
 
                 suitToAdd--;
@@ -299,5 +300,9 @@ namespace Common
             return suit == Suit.NoTrump ? (int)suit : 3 - (int)suit;
         }
 
+        public static int GetMostFrequentScore(List<int> scores)
+        {
+            return scores.GroupBy(x => x).OrderByDescending(y => y.Count()).Take(1).Select(z => z.Key).First();
+        }
     }
 }

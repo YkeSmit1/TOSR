@@ -20,12 +20,15 @@ namespace Tosr
         public enum ConstructedSouthhandOutcome
         {
             NotSet,
-            SouthhandMatches,
             AuctionNotFoundInShape,
             AuctionNotFoundInControls,
             NoMatchFound,
+            SouthhandMatches,
             MultipleMatchesFound,
             IncorrectSouthhand,
+            NoMatchFoundNoQueens,
+            SouthhandMatchesNoQueens,
+            MultipleMatchesFoundNoQueens,
         }
 
         public enum RelayBidKind
@@ -33,19 +36,6 @@ namespace Tosr
             Relay,
             fourDiamondEndSignal,
             gameBid,
-        }
-
-        public enum CorrectnessContract
-        {
-            WrongTrumpSuit,
-            GameCorrect,
-            MissedSmallSlam,
-            SmallSlamCorrect,
-            SmallSlamTooHigh,
-            MissedGrandSlam,
-            GrandSlamCorrect,
-            GrandSlamTooHigh,
-            Unknonwn,
         }
 
         private readonly IBidGenerator bidGenerator;
@@ -163,12 +153,8 @@ namespace Tosr
                 {
                     try
                     {
-                        var bid = CalculateEndContract(auction, northHand);
-                        if (bid > biddingState.CurrentBid)
-                        {
-                            biddingState.CurrentBid = bid;
-                            return;
-                        }
+                        biddingState.CurrentBid = CalculateEndContract(auction, northHand, biddingState.CurrentBid);
+                        return;
                     }
                     catch (Exception e)
                     {
@@ -195,7 +181,7 @@ namespace Tosr
                         return biddingState.CurrentBid == game ? Bid.PassBid : game;
                     }
 
-                    if (!biddingState.HasSignedOff)
+                    if (!biddingState.RelayerHasSignedOff)
                     {
                         var controls = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, shape.Value.zoomOffset, new Fase[] { Fase.Controls });
                         var controlBidCount = controls.Count();
@@ -233,7 +219,7 @@ namespace Tosr
                                     case RelayBidKind.gameBid:
                                         {
                                             biddingState.Fase = Fase.End;
-                                            auction.hasSignedOff = true;
+                                            auction.responderHasSignedOff = true;
                                             return Bid.GetGameContract(trumpSuit, biddingState.CurrentBid);
                                         }
                                     default:
@@ -253,7 +239,8 @@ namespace Tosr
                             if (GetConfidenceToBidSlam(confidenceTricks) < 60.0)
                             {
                                 biddingState.Fase = Fase.End;
-                                auction.hasSignedOff = true;
+                                constructedSouthhandOutcome = BidManager.ConstructedSouthhandOutcome.SouthhandMatchesNoQueens;
+                                auction.responderHasSignedOff = true;
                                 return Bid.GetGameContract(trumpSuit, biddingState.CurrentBid);
                             }
                         }
@@ -312,16 +299,24 @@ namespace Tosr
             return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (int)(100 * (double)g.ToList().Count() / ((double)tricks.Count)));
         }
 
-        private Bid CalculateEndContract(Auction auction, string northHand)
+        private Bid CalculateEndContract(Auction auction, string northHand, Bid currentBid)
         {
             var constructedSouthHand = ConstructSouthHand(northHand, auction);
             var suit = Util.GetLongestSuit(northHand, constructedSouthHand);
             if (useSingleDummySolver)
             {
-                var scores = SingleDummySolver.SolveSingleDummy(Util.GetDDSSuit(suit.Item1), Util.GetDDSPlayer(auction.GetDeclarer(suit.Item1)), northHand, constructedSouthHand);
-                var mostFrequent = scores.GroupBy(x => x).OrderByDescending(y => y.Count()).Take(1).Select(z => z.Key).First();
-                var bid = new Bid(mostFrequent - 6, suit.Item1);
-                return bid;
+                var scores = SingleDummySolver.SolveSingleDummy(Util.GetDDSSuit(suit.Item1), Util.GetDDSPlayer(auction.GetDeclarerOrNorth(suit.Item1)), northHand, constructedSouthHand);
+                var bid = new Bid(Util.GetMostFrequentScore(scores) - 6, suit.Item1);
+                // Try NT
+                if (bid > currentBid)
+                {
+                    var scoresNT = SingleDummySolver.SolveSingleDummy(Util.GetDDSSuit(Suit.NoTrump), Util.GetDDSPlayer(auction.GetDeclarerOrNorth(Suit.NoTrump)), northHand, constructedSouthHand);
+                    var mostFrequentNT = Util.GetMostFrequentScore(scoresNT);
+                    if (mostFrequentNT - 6 >= currentBid.rank)
+                        return new Bid(mostFrequentNT - 6, Suit.NoTrump);
+                }
+                if (bid < currentBid)
+                    return bid;
             }
             return Bid.PassBid;
         }
@@ -354,7 +349,7 @@ namespace Tosr
             }
             biddingState.UpdateBiddingState(bidIdFromRule, nextfase, bidId, lzoomOffset);
             if (nextfase == Fase.BidGame)
-                auction.hasSignedOff = true;
+                auction.responderHasSignedOff = true;
 
         }
 
@@ -622,27 +617,6 @@ namespace Tosr
                 if (relevantCards.Any(c => suit.x.Contains(c) && suit.y.Contains(c)))
                     return false; 
             return true;
-        }
-
-        public CorrectnessContract CheckContract(Bid contract, HandsNorthSouth strHand, Player declarer)
-        {
-            if (!useSingleDummySolver)
-                return CorrectnessContract.Unknonwn;
-            var tricks = SingleDummySolver.SolveSingleDummy(Util.GetDDSSuit(contract.suit), Util.GetDDSPlayer(declarer), strHand.NorthHand, strHand.SouthHand);
-            var mostFrequentRank = tricks.GroupBy(x => x).OrderByDescending(g => g.Count()).Take(1).Select(y => y.Key).Single() - 6;
-            if (mostFrequentRank == 7 && contract.rank < 7)
-                return CorrectnessContract.MissedGrandSlam;
-            if (mostFrequentRank == 6 && contract.rank < 6)
-                return CorrectnessContract.MissedSmallSlam;
-            if (mostFrequentRank < 7 && contract.rank == 7)
-                return CorrectnessContract.GrandSlamTooHigh;
-            if (mostFrequentRank < 6 && contract.rank == 6)
-                return CorrectnessContract.SmallSlamTooHigh;
-            if (mostFrequentRank == 7 && contract.rank == 7)
-                return CorrectnessContract.GrandSlamCorrect;
-            if (mostFrequentRank == 6 && contract.rank == 6)
-                return CorrectnessContract.SmallSlamCorrect;
-            return CorrectnessContract.GameCorrect;
         }
     }
 }

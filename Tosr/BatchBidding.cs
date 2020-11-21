@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using Newtonsoft.Json;
 using Common;
 using NLog;
+using Solver;
 
 namespace Tosr
 {
@@ -24,6 +25,28 @@ namespace Tosr
     }
     public class BatchBidding
     {
+        public enum CorrectnessContractBreakdown
+        {
+            WrongTrumpSuit,
+            GameCorrect,
+            MissedSmallSlam,
+            SmallSlamCorrect,
+            SmallSlamTooHigh,
+            MissedGrandSlam,
+            GrandSlamCorrect,
+            GrandSlamTooHigh,
+            Unknonwn,
+        }
+
+        public enum CorrectnessContract
+        {
+            InCorrect,
+            GameCorrect,
+            SmallSlamCorrect,
+            GrandSlamCorrect,
+        }
+
+
         class Statistics
         {
             public int handsBid;
@@ -33,7 +56,10 @@ namespace Tosr
             public SortedDictionary<BidManager.ConstructedSouthhandOutcome, int> outcomes = new SortedDictionary<BidManager.ConstructedSouthhandOutcome, int>();
             public SortedDictionary<Player, int> dealers = new SortedDictionary<Player, int>();
             public SortedDictionary<int, int> bidsNonShape = new SortedDictionary<int, int>();
-            public SortedDictionary<BidManager.CorrectnessContract, int> ContractCorrectness = new SortedDictionary<BidManager.CorrectnessContract, int>();
+            public SortedDictionary<(CorrectnessContractBreakdown, BidManager.ConstructedSouthhandOutcome), int> ContractCorrectnessBreakdown = 
+                new SortedDictionary<(CorrectnessContractBreakdown, BidManager.ConstructedSouthhandOutcome), int>();
+            public SortedDictionary<CorrectnessContract, int> ContractCorrectness = new SortedDictionary<CorrectnessContract, int>();
+
         }
 
         private readonly Statistics statistics = new Statistics();
@@ -41,10 +67,12 @@ namespace Tosr
         private readonly StringBuilder expectedSouthHands = new StringBuilder();
         private readonly BidManager bidManager;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly bool useSingleDummySolver;
 
         public BatchBidding(ReverseDictionaries reverseDictionaries, Dictionary<Fase, bool> fasesWithOffset, bool useSingleDummySolver)
         {
             bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, useSingleDummySolver);
+            this.useSingleDummySolver = useSingleDummySolver;
         }
 
         public void Execute(HandsNorthSouth[] hands, IProgress<int> progress)
@@ -108,7 +136,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             AddHandPerAuction(str, strAuction);
 
             // Start calculating hand
-            if (!auction.hasSignedOff)
+            if (!auction.responderHasSignedOff)
                 expectedSouthHands.AppendLine(bidManager.ConstructSouthHandSafe(strHand, auction));
 
             var longestSuit = Util.GetLongestSuit(strHand.NorthHand, strHand.SouthHand);
@@ -116,10 +144,34 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             statistics.dealers.AddOrUpdateDictionary(dealer);
             var contract = auction.currentContract > new Bid(7, Suit.NoTrump) ? new Bid(7, Suit.NoTrump) : auction.currentContract;
             statistics.contracts.AddOrUpdateDictionary(contract);
-            if (!auction.hasSignedOff)
+            if (!auction.responderHasSignedOff)
                 statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Where(bid => bid.bidType == BidType.bid).Last() - auction.GetBids(Player.South, Fase.Shape).Last());
             statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthhandOutcome);
-            statistics.ContractCorrectness.AddOrUpdateDictionary(bidManager.CheckContract(contract, strHand, dealer == Player.UnKnown ? Player.North : dealer));
+            var correctnessContractBreakdown = CheckContract(contract, strHand, dealer == Player.UnKnown ? Player.North : dealer);
+            statistics.ContractCorrectnessBreakdown.AddOrUpdateDictionary((correctnessContractBreakdown, bidManager.constructedSouthhandOutcome));
+            statistics.ContractCorrectness.AddOrUpdateDictionary(GetCorrectness(correctnessContractBreakdown));
+        }
+
+        private CorrectnessContract GetCorrectness(CorrectnessContractBreakdown correctnessContractBreakdown)
+        {
+            switch (correctnessContractBreakdown)
+            {
+                case CorrectnessContractBreakdown.WrongTrumpSuit:
+                case CorrectnessContractBreakdown.MissedSmallSlam:
+                case CorrectnessContractBreakdown.SmallSlamTooHigh:
+                case CorrectnessContractBreakdown.MissedGrandSlam:
+                case CorrectnessContractBreakdown.GrandSlamTooHigh:
+                case CorrectnessContractBreakdown.Unknonwn:
+                    return CorrectnessContract.InCorrect;
+                case CorrectnessContractBreakdown.GameCorrect:
+                    return CorrectnessContract.GameCorrect;
+                case CorrectnessContractBreakdown.SmallSlamCorrect:
+                    return CorrectnessContract.SmallSlamCorrect;
+                case CorrectnessContractBreakdown.GrandSlamCorrect:
+                    return CorrectnessContract.GrandSlamCorrect;
+                default:
+                    throw new ArgumentException(nameof(correctnessContractBreakdown));
+            }
         }
 
         private void AddHandPerAuction(string str, string strAuction)
@@ -138,5 +190,27 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             File.WriteAllText("txt\\Statistics.txt", JsonConvert.SerializeObject(statistics, Formatting.Indented));
             File.WriteAllText("txt\\ExpectedSouthHands.txt", expectedSouthHands.ToString());
         }
+
+        private CorrectnessContractBreakdown CheckContract(Bid contract, HandsNorthSouth strHand, Player declarer)
+        {
+            if (!useSingleDummySolver)
+                return CorrectnessContractBreakdown.Unknonwn;
+            var tricks = SingleDummySolver.SolveSingleDummy(Util.GetDDSSuit(contract.suit), Util.GetDDSPlayer(declarer), strHand.NorthHand, strHand.SouthHand);
+            var mostFrequentRank = Util.GetMostFrequentScore(tricks) - 6;
+            if (mostFrequentRank == 7 && contract.rank < 7)
+                return CorrectnessContractBreakdown.MissedGrandSlam;
+            if (mostFrequentRank == 6 && contract.rank < 6)
+                return CorrectnessContractBreakdown.MissedSmallSlam;
+            if (mostFrequentRank < 7 && contract.rank == 7)
+                return CorrectnessContractBreakdown.GrandSlamTooHigh;
+            if (mostFrequentRank < 6 && contract.rank == 6)
+                return CorrectnessContractBreakdown.SmallSlamTooHigh;
+            if (mostFrequentRank == 7 && contract.rank == 7)
+                return CorrectnessContractBreakdown.GrandSlamCorrect;
+            if (mostFrequentRank == 6 && contract.rank == 6)
+                return CorrectnessContractBreakdown.SmallSlamCorrect;
+            return CorrectnessContractBreakdown.GameCorrect;
+        }
+
     }
 }

@@ -169,7 +169,7 @@ namespace Tosr
                             BidAndStoreHandsByHcp(GetSuitLength(nrOfShortages), spades, hearts, diamonds, clubs);
             return auctions;
 
-            void BidAndStoreHandsByHcp(int[] suitLengthBid, params string[] suits)
+            void BidAndStoreHandsByHcp(int[] suitLength, params string[] suits)
             {
                 var lsuits =  ObjectCloner.ObjectCloner.DeepClone(suits);
                 var hand = ConstructHand(suitLengthNoSingleton, lsuits);
@@ -177,8 +177,8 @@ namespace Tosr
                 {
                     foreach (var hcp in GetHcpGeneratorGeneral().Invoke(hand))
                     {
-                        if (Util.TryAddQuacksTillHCP(hcp, ref lsuits))
-                            BidAndStoreHand(ConstructHand(suitLengthBid, lsuits), hand);
+                        if (Util.TryAddQuacksTillHCP(hcp, ref lsuits, suitLength))
+                            BidAndStoreHand(ConstructHand(suitLength, lsuits), hand);
                     }
                 }
             }
@@ -220,7 +220,7 @@ namespace Tosr
                 {
                     foreach (var hcp in GetHcpGeneratorGeneral().Invoke(hand))
                     {
-                        if (Util.TryAddJacksTillHCP(hcp, ref lsuits))
+                        if (Util.TryAddJacksTillHCP(hcp, ref lsuits, suitLength))
                             BidAndStoreHand(ConstructHand(suitLength, lsuits), hand);
                     }
                 }
