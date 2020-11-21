@@ -84,7 +84,7 @@ namespace Tosr
                 {
                     statistics.handsNotBidBecauseOfError++;
                     logger.Warn(exception, $"Error:{exception.Message} North hand:{hand.NorthHand}. South hand:{hand.SouthHand}. Controls:{Util.GetControlCount(hand.SouthHand)}. " +
-                        $"HCP: {Util.GetHcpCount(hand.SouthHand)}. Controls in suit: {Util.GetHandWithOnlyControlsAs4333(hand.SouthHand, "AK")}");
+                        $"HCP: {Util.GetHcpCount(hand.SouthHand)}. Projected AK as 4333: {Util.GetHandWithOnlyControlsAs4333(hand.SouthHand, "AK")}");
                     stringbuilder.AppendLine(exception.Message);
                 }
             }
