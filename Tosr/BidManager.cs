@@ -38,13 +38,13 @@ namespace Tosr
         public enum CorrectnessContract
         {
             WrongTrumpSuit,
-            MissedSmallSlam,
-            MissedGrandSlam,
-            GrandSlamTooHigh,
-            SmallSlamTooHigh,
-            SmallSlamCorrect,
-            GrandSlamCorrect,
             GameCorrect,
+            MissedSmallSlam,
+            SmallSlamCorrect,
+            SmallSlamTooHigh,
+            MissedGrandSlam,
+            GrandSlamCorrect,
+            GrandSlamTooHigh,
             Unknonwn,
         }
 
@@ -64,6 +64,7 @@ namespace Tosr
             {1, Enumerable.Range(21, 2).ToList()},
             {2, Enumerable.Range(23, 2).ToList()}};
 
+        // Special TOSR logic. Should be in a JSON file as parameters
         static readonly List<((double min, double max) range, RelayBidKind relayBidKind)> requirementsForRelayBid = new List<((double, double), RelayBidKind)> {
             {((-0.01, 30.01) , RelayBidKind.gameBid )},
             {((30.0, 70.01) , RelayBidKind.fourDiamondEndSignal)},
@@ -301,13 +302,13 @@ namespace Tosr
 
         private Dictionary<int, int> GetConfidenceTricks(string northHand, string southHandShape, int minControls, int maxControls, Suit trumpSuit, Player declarer)
         {
-            var tricks = SingleDummySolver.SolveSingleDummy(3 - (int)trumpSuit, 3 - (int)declarer, northHand, southHandShape, minControls, maxControls);
+            var tricks = SingleDummySolver.SolveSingleDummy(Util.GetDDSSuit(trumpSuit), Util.GetDDSPlayer(declarer), northHand, southHandShape, minControls, maxControls);
             return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (int)(100 * (double)g.ToList().Count() / ((double)tricks.Count)));
         }
 
         private Dictionary<int, int> GetConfidenceTricks(string northHand, string southHandControlScanning, Suit trumpSuit, Player declarer)
         {
-            var tricks = SingleDummySolver.SolveSingleDummy(3 - (int)trumpSuit, 3 - (int)declarer, northHand, southHandControlScanning);
+            var tricks = SingleDummySolver.SolveSingleDummy(Util.GetDDSSuit(trumpSuit), Util.GetDDSPlayer(declarer), northHand, southHandControlScanning);
             return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (int)(100 * (double)g.ToList().Count() / ((double)tricks.Count)));
         }
 
@@ -317,7 +318,7 @@ namespace Tosr
             var suit = Util.GetLongestSuit(northHand, constructedSouthHand);
             if (useSingleDummySolver)
             {
-                var scores = SingleDummySolver.SolveSingleDummy(3 - (int)suit.Item1, 3 - (int)auction.GetDeclarer(suit.Item1), northHand, constructedSouthHand);
+                var scores = SingleDummySolver.SolveSingleDummy(Util.GetDDSSuit(suit.Item1), Util.GetDDSPlayer(auction.GetDeclarer(suit.Item1)), northHand, constructedSouthHand);
                 var mostFrequent = scores.GroupBy(x => x).OrderByDescending(y => y.Count()).Take(1).Select(z => z.Key).First();
                 var bid = new Bid(mostFrequent - 6, suit.Item1);
                 return bid;
@@ -627,7 +628,7 @@ namespace Tosr
         {
             if (!useSingleDummySolver)
                 return CorrectnessContract.Unknonwn;
-            var tricks = SingleDummySolver.SolveSingleDummy(3 - (int)contract.suit, 3 - (int)declarer, strHand.NorthHand, strHand.SouthHand);
+            var tricks = SingleDummySolver.SolveSingleDummy(Util.GetDDSSuit(contract.suit), Util.GetDDSPlayer(declarer), strHand.NorthHand, strHand.SouthHand);
             var mostFrequentRank = tricks.GroupBy(x => x).OrderByDescending(g => g.Count()).Take(1).Select(y => y.Key).Single() - 6;
             if (mostFrequentRank == 7 && contract.rank < 7)
                 return CorrectnessContract.MissedGrandSlam;

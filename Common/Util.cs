@@ -288,5 +288,16 @@ namespace Common
         {
             return hand.Select(x => int.Parse(x.ToString())).Count(y => y <= 1);
         }
+
+        public static int GetDDSPlayer(Player declarer)
+        {
+            return 3 - (int)declarer;
+        }
+
+        public static int GetDDSSuit(Suit suit)
+        {
+            return suit == Suit.NoTrump ? (int)suit : 3 - (int)suit;
+        }
+
     }
 }

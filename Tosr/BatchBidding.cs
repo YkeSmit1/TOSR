@@ -30,11 +30,10 @@ namespace Tosr
             public int handsNotBidBecauseofFreakhand = 0;
             public int handsNotBidBecauseOfError = 0;
             public SortedDictionary<Bid, int> contracts = new SortedDictionary<Bid, int>();
-            public Dictionary<BidManager.ConstructedSouthhandOutcome, int> outcomes = new Dictionary<BidManager.ConstructedSouthhandOutcome, int>();
-            public Dictionary<Player, int> dealers = new Dictionary<Player, int>();
+            public SortedDictionary<BidManager.ConstructedSouthhandOutcome, int> outcomes = new SortedDictionary<BidManager.ConstructedSouthhandOutcome, int>();
+            public SortedDictionary<Player, int> dealers = new SortedDictionary<Player, int>();
             public SortedDictionary<int, int> bidsNonShape = new SortedDictionary<int, int>();
-            public Dictionary<BidManager.CorrectnessContract, int> ContractCorrectness = new Dictionary<BidManager.CorrectnessContract, int>();
-
+            public SortedDictionary<BidManager.CorrectnessContract, int> ContractCorrectness = new SortedDictionary<BidManager.CorrectnessContract, int>();
         }
 
         private readonly Statistics statistics = new Statistics();
