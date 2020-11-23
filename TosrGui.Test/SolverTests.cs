@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Xunit;
 using Solver;
+using Common;
 
 namespace TosrGui.Test
 {
@@ -11,8 +12,8 @@ namespace TosrGui.Test
         [Fact()]
         public void ExecuteTest()
         {
-            int trumpSuit = 0; // Spades
-            int declarer = 0; // North
+            var trumpSuit = Suit.Spades;
+            var declarer = Player.North;
             var northHand = "KT98,AK96,AKJ9,4";
             var southHand = "Axxx,Qxxx,xx,KQx";
 

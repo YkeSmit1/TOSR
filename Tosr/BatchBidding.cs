@@ -195,7 +195,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
         {
             if (!useSingleDummySolver)
                 return CorrectnessContractBreakdown.Unknonwn;
-            var tricks = SingleDummySolver.SolveSingleDummy(Util.GetDDSSuit(contract.suit), Util.GetDDSPlayer(declarer), strHand.NorthHand, strHand.SouthHand);
+            var tricks = SingleDummySolver.SolveSingleDummy(contract.suit, declarer, strHand.NorthHand, strHand.SouthHand);
             var mostFrequentRank = Util.GetMostFrequentScore(tricks) - 6;
             if (mostFrequentRank == 7 && contract.rank < 7)
                 return CorrectnessContractBreakdown.MissedGrandSlam;

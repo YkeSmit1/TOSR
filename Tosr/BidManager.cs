@@ -289,13 +289,13 @@ namespace Tosr
 
         private Dictionary<int, int> GetConfidenceTricks(string northHand, string southHandShape, int minControls, int maxControls, Suit trumpSuit, Player declarer)
         {
-            var tricks = SingleDummySolver.SolveSingleDummy(Util.GetDDSSuit(trumpSuit), Util.GetDDSPlayer(declarer), northHand, southHandShape, minControls, maxControls);
+            var tricks = SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, southHandShape, minControls, maxControls);
             return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (int)(100 * (double)g.ToList().Count() / ((double)tricks.Count)));
         }
 
         private Dictionary<int, int> GetConfidenceTricks(string northHand, string southHandControlScanning, Suit trumpSuit, Player declarer)
         {
-            var tricks = SingleDummySolver.SolveSingleDummy(Util.GetDDSSuit(trumpSuit), Util.GetDDSPlayer(declarer), northHand, southHandControlScanning);
+            var tricks = SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, southHandControlScanning);
             return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (int)(100 * (double)g.ToList().Count() / ((double)tricks.Count)));
         }
 
@@ -305,12 +305,12 @@ namespace Tosr
             var suit = Util.GetLongestSuit(northHand, constructedSouthHand);
             if (useSingleDummySolver)
             {
-                var scores = SingleDummySolver.SolveSingleDummy(Util.GetDDSSuit(suit.Item1), Util.GetDDSPlayer(auction.GetDeclarerOrNorth(suit.Item1)), northHand, constructedSouthHand);
+                var scores = SingleDummySolver.SolveSingleDummy(suit.Item1, auction.GetDeclarerOrNorth(suit.Item1), northHand, constructedSouthHand);
                 var bid = new Bid(Util.GetMostFrequentScore(scores) - 6, suit.Item1);
                 // Try NT
                 if (bid > currentBid)
                 {
-                    var scoresNT = SingleDummySolver.SolveSingleDummy(Util.GetDDSSuit(Suit.NoTrump), Util.GetDDSPlayer(auction.GetDeclarerOrNorth(Suit.NoTrump)), northHand, constructedSouthHand);
+                    var scoresNT = SingleDummySolver.SolveSingleDummy(Suit.NoTrump, auction.GetDeclarerOrNorth(Suit.NoTrump), northHand, constructedSouthHand);
                     var mostFrequentNT = Util.GetMostFrequentScore(scoresNT);
                     if (mostFrequentNT - 6 >= currentBid.rank)
                         return new Bid(mostFrequentNT - 6, Suit.NoTrump);

@@ -290,9 +290,10 @@ namespace Common
             return hand.Select(x => int.Parse(x.ToString())).Count(y => y <= 1);
         }
 
-        public static int GetDDSPlayer(Player declarer)
+        public static int GetDDSFirst(Player declarer)
         {
-            return 3 - (int)declarer;
+            int declarerDDS = 3 - (int)declarer;
+            return declarerDDS == 3 ? 0 : declarerDDS + 1;            
         }
 
         public static int GetDDSSuit(Suit suit)

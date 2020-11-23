@@ -10,10 +10,10 @@ namespace Solver
 {
     public class SingleDummySolver
     {
-        public static List<int> SolveSingleDummy(int trumpSuit, int declarer, string northHand, string southHand)
+        public static List<int> SolveSingleDummy(Suit trumpSuit, Player declarer, string northHand, string southHand)
         {
             var handsForSolver = GetHandsForSolver(northHand, southHand, 10).ToArray();
-            return Api.SolveAllBoards(handsForSolver, trumpSuit, declarer).ToList();
+            return Api.SolveAllBoards(handsForSolver, Util.GetDDSSuit(trumpSuit), Util.GetDDSFirst(declarer)).ToList();
         }
 
         private static IEnumerable<string> GetHandsForSolver(string northHandStr, string southHandStr, int nrOfHands)
@@ -33,10 +33,10 @@ namespace Solver
             }
         }
 
-        public static List<int> SolveSingleDummy(int trumpSuit, int declarer, string northHand, string southHandShape, int minControls, int maxControls)
+        public static List<int> SolveSingleDummy(Suit trumpSuit, Player declarer, string northHand, string southHandShape, int minControls, int maxControls)
         {
             var handsForSolver = GetHandsForSolver(northHand, southHandShape, minControls, maxControls, 10).ToArray();
-            return Api.SolveAllBoards(handsForSolver, trumpSuit, declarer).ToList();
+            return Api.SolveAllBoards(handsForSolver, Util.GetDDSSuit(trumpSuit), Util.GetDDSFirst(declarer)).ToList();
         }
 
         /// <summary>
