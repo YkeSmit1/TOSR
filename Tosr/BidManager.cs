@@ -3,7 +3,6 @@ using System;
 using System.Text;
 using System.Linq;
 using System.Collections.Generic;
-using System.Diagnostics;
 using NLog;
 using NLog.Filters;
 using Common;
@@ -13,7 +12,7 @@ namespace Tosr
 {
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
 
-    using RelayBidKindFunc = Func<Auction, string, string, IEnumerable<Bid>, Suit, BidManager.RelayBidKind>;
+    using RelayBidKindFunc = Func<Auction, string, IEnumerable<string>, IEnumerable<Bid>, Suit, BidManager.RelayBidKind>;
 
     public class BidManager
     {
@@ -84,7 +83,7 @@ namespace Tosr
             this.reverseDictionaries = reverseDictionaries;
             this.useSingleDummySolver = useSingleDummySolver;
             if (useSingleDummySolver)
-                this.getRelayBidKindFunc = GetRelayBidKindSolver;
+                getRelayBidKindFunc = GetRelayBidKindSolver;
         }
 
         // Constructor used for generate reverse dictionaries
@@ -92,7 +91,7 @@ namespace Tosr
         {
             this.bidGenerator = bidGenerator;
             this.fasesWithOffset = fasesWithOffset;
-            this.getRelayBidKindFunc = GetRelayBidKind;
+            getRelayBidKindFunc = GetRelayBidKind;
         }
 
         public void Init(Auction auction)
@@ -197,14 +196,14 @@ namespace Tosr
                         }
                         else
                         {
-                            if (controlBidCount == 0 && hcp <= requiredMaxHcpToBid4Diamond)
+                            if (controlBidCount == 0 && hcp <= requiredMaxHcpToBid4Diamond && biddingState.CurrentBid >= Bid.threeSpadeBid)
                             {
                                 biddingState.UpdateBiddingStateSignOff(controlBidCount, Bid.fourDiamondBid);
                                 return Bid.fourDiamondBid;
                             }
                             if (controlBidCount == 1)
                             {
-                                var relayBidkind = getRelayBidKindFunc(auction, northHand, southHandShape, controls, trumpSuit);
+                                var relayBidkind = getRelayBidKindFunc(auction, northHand, shape.Value.shapes, controls, trumpSuit);
                                 switch (relayBidkind)
                                 {
                                     case RelayBidKind.Relay:
@@ -233,13 +232,13 @@ namespace Tosr
                     {
                         var declarer = auction.GetDeclarer(trumpSuit);
                         var matches = GetMatchesWithNorthHand(shape.Value.shapes, controlsScanning.Value.controls, northHand);
-                        if (matches.Count() == 1)
+                        if (matches.Count() >= 1)
                         {
-                            var confidenceTricks = GetConfidenceTricks(northHand, matches.First(), trumpSuit, declarer != Player.UnKnown ? declarer : Player.North);
+                            var confidenceTricks = GetConfidenceTricks(northHand, matches, trumpSuit, declarer != Player.UnKnown ? declarer : Player.North);
                             if (GetConfidenceToBidSlam(confidenceTricks) < 60.0)
                             {
                                 biddingState.Fase = Fase.End;
-                                constructedSouthhandOutcome = BidManager.ConstructedSouthhandOutcome.SouthhandMatchesNoQueens;
+                                constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatchesNoQueens;
                                 auction.responderHasSignedOff = true;
                                 return Bid.GetGameContract(trumpSuit, biddingState.CurrentBid);
                             }
@@ -261,18 +260,18 @@ namespace Tosr
             return Bid.NextBid(biddingState.CurrentBid);
         }
 
-        public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, string southHandShape, IEnumerable<Bid> controls, Suit trumpSuit)
+        public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, IEnumerable<string> southHandShapes, IEnumerable<Bid> controls, Suit trumpSuit)
         {
             Player declarer = auction.GetDeclarer(trumpSuit);
             var strControls = string.Join("", controls);
-            List<int> possibleControls = reverseDictionaries.ControlsOnlyAuctions[strControls];
-            var confidence = GetConfidenceTricks(northHand, southHandShape, possibleControls.First(), possibleControls.Last(), trumpSuit, declarer != Player.UnKnown ? declarer : Player.North);
+            var possibleControls = reverseDictionaries.ControlsOnlyAuctions[strControls];
+            var confidence = GetConfidenceTricks(northHand, southHandShapes, possibleControls.First(), possibleControls.Last(), trumpSuit, declarer != Player.UnKnown ? declarer : Player.North);
             int confidenceToBidSlam = GetConfidenceToBidSlam(confidence);
             var relayBidkind = requirementsForRelayBid.Where(x =>confidenceToBidSlam > x.range.min && confidenceToBidSlam < x.range.max).First().relayBidKind;
             return relayBidkind;
         }
 
-        public RelayBidKind GetRelayBidKind(Auction auction, string northHand, string southHandShape, IEnumerable<Bid> controls, Suit trumpSuit)
+        public RelayBidKind GetRelayBidKind(Auction auction, string northHand, IEnumerable<string> southHandShapes, IEnumerable<Bid> controls, Suit trumpSuit)
         {
             return (Util.GetHcpCount(northHand)) switch
             {
@@ -287,30 +286,38 @@ namespace Tosr
             return (confidenceTricks.TryGetValue(12, out var smallSlamTricks) ? smallSlamTricks : 0) + (confidenceTricks.TryGetValue(13, out var grandSlamTricks) ? grandSlamTricks : 0);
         }
 
-        private Dictionary<int, int> GetConfidenceTricks(string northHand, string southHandShape, int minControls, int maxControls, Suit trumpSuit, Player declarer)
+        private Dictionary<int, int> GetConfidenceTricks(string northHand, IEnumerable<string> matches, int minControls, int maxControls, Suit trumpSuit, Player declarer)
         {
-            var tricks = SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, southHandShape, minControls, maxControls);
-            return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (int)(100 * (double)g.ToList().Count() / ((double)tricks.Count)));
+            var tricks = new List<int>();
+            foreach (var match in matches)
+                tricks.AddRange(SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, minControls, maxControls));
+            return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (int)(100 * (double)g.ToList().Count() / tricks.Count));
         }
 
-        private Dictionary<int, int> GetConfidenceTricks(string northHand, string southHandControlScanning, Suit trumpSuit, Player declarer)
+        private Dictionary<int, int> GetConfidenceTricks(string northHand, IEnumerable<string> matches, Suit trumpSuit, Player declarer)
         {
-            var tricks = SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, southHandControlScanning);
-            return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (int)(100 * (double)g.ToList().Count() / ((double)tricks.Count)));
+            var tricks = new List<int>();
+            foreach (var match in matches)
+                tricks.AddRange(SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match));
+            return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (int)(100 * (double)g.ToList().Count() / tricks.Count));
         }
 
         private Bid CalculateEndContract(Auction auction, string northHand, Bid currentBid)
         {
-            var constructedSouthHand = ConstructSouthHand(northHand, auction);
-            var suit = Util.GetLongestSuit(northHand, constructedSouthHand);
+            var constructedSouthHands = ConstructSouthHand(northHand, auction);
             if (useSingleDummySolver)
             {
-                var scores = SingleDummySolver.SolveSingleDummy(suit.Item1, auction.GetDeclarerOrNorth(suit.Item1), northHand, constructedSouthHand);
+                var suit = Util.GetLongestSuit(northHand, constructedSouthHands.First());
+                var scores = new List<int>();
+                foreach (var match in constructedSouthHands)
+                    scores.AddRange(SingleDummySolver.SolveSingleDummy(suit.Item1, auction.GetDeclarerOrNorth(suit.Item1), northHand, match));
                 var bid = new Bid(Util.GetMostFrequentScore(scores) - 6, suit.Item1);
                 // Try NT
                 if (bid > currentBid)
                 {
-                    var scoresNT = SingleDummySolver.SolveSingleDummy(Suit.NoTrump, auction.GetDeclarerOrNorth(Suit.NoTrump), northHand, constructedSouthHand);
+                    var scoresNT = new List<int>();
+                    foreach (var match in constructedSouthHands)
+                        scoresNT.AddRange(SingleDummySolver.SolveSingleDummy(Suit.NoTrump, auction.GetDeclarerOrNorth(Suit.NoTrump), northHand, match));
                     var mostFrequentNT = Util.GetMostFrequentScore(scoresNT);
                     if (mostFrequentNT - 6 >= currentBid.rank)
                         return new Bid(mostFrequentNT - 6, Suit.NoTrump);
@@ -360,7 +367,7 @@ namespace Tosr
         /// <param name="northHand"></param>
         /// <param name="auction"></param>
         /// <returns></returns>
-        public string ConstructSouthHand(string northHand, Auction auction)
+        public IEnumerable<string> ConstructSouthHand(string northHand, Auction auction)
         {
             logger.Debug($"Starting ConstructSouthHand for northhand : {northHand}");
 
@@ -390,15 +397,11 @@ namespace Tosr
                 throw SetOutcome($"Auction not found in controls. controls: {strControls}. NorthHand: {northHand}.", ConstructedSouthhandOutcome.AuctionNotFoundInControls);
             }
             var matches = GetMatchesWithNorthHand(shape.Value.shapes, possibleControls, northHand);
-            if (matches.Count() == 1)
-                logger.Debug($"Ending ConstructSouthHand. southhand : {matches.First()}");
+            if (matches.Count() == 0)
+                throw SetOutcome($"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {northHand}.", ConstructedSouthhandOutcome.NoMatchFound);
 
-            return (matches.Count()) switch
-            {
-                0 => throw SetOutcome($"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {northHand}.", ConstructedSouthhandOutcome.NoMatchFound),
-                1 => matches.First(),
-                _ => throw SetOutcome($"Multiple matches found. Matches: {string.Join('|', matches)}. NorthHand: {northHand}.", ConstructedSouthhandOutcome.MultipleMatchesFound),
-            };
+            logger.Debug($"Ending ConstructSouthHand. southhand : {string.Join("|", matches)}");
+            return matches;
         }
 
         private Exception SetOutcome(string message, ConstructedSouthhandOutcome outcome)
@@ -419,12 +422,18 @@ namespace Tosr
             try
             {
                 var southHand = ConstructSouthHand(hand.NorthHand, auction);
-                var southHandStr = HandWithx(hand.SouthHand);
 
-                if (southHand == southHandStr)
+                if (southHand.Count() > 1)
+                {
+                    constructedSouthhandOutcome = ConstructedSouthhandOutcome.MultipleMatchesFound;
+                    return $"Multiple matches found. Matches: {string.Join('|', southHand)}. NorthHand: {hand.NorthHand}. SouthHand: {hand.SouthHand}";
+                }
+
+                var southHandStr = HandWithx(hand.SouthHand);
+                if (southHand.First() == southHandStr)
                 {
                     constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
-                    return $"Match is found: {southHand}. NorthHand: {hand.NorthHand}. SouthHand: {hand.SouthHand}";
+                    return $"Match is found: {southHand.First()}. NorthHand: {hand.NorthHand}. SouthHand: {hand.SouthHand}";
                 }
                 else
                 {

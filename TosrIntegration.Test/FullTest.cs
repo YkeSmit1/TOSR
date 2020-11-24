@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Tosr;
 using Common;
 using NLog;
+using System.Linq;
 
 namespace TosrIntegration.Test
 {
@@ -70,7 +71,7 @@ namespace TosrIntegration.Test
             Assert.Equal(expectedBidsNorth, actualBidsNorth);
 
             var constructedSouthHand = bidManager.ConstructSouthHand(northHand, auction);
-            Assert.Equal(southHand, constructedSouthHand);
+            Assert.Equal(southHand, constructedSouthHand.First());
         }
     }
 }
