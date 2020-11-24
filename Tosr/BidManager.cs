@@ -311,16 +311,18 @@ namespace Tosr
                 var scores = new List<int>();
                 foreach (var match in constructedSouthHands)
                     scores.AddRange(SingleDummySolver.SolveSingleDummy(suit.Item1, auction.GetDeclarerOrNorth(suit.Item1), northHand, match));
-                var bid = new Bid(Util.GetMostFrequentScore(scores) - 6, suit.Item1);
+                var expectedContract = Util.GetExpectedContract(scores);
+                var bid = Bid.GetBestContract(expectedContract, suit.Item1, currentBid);
                 // Try NT
                 if (bid > currentBid)
                 {
                     var scoresNT = new List<int>();
                     foreach (var match in constructedSouthHands)
                         scoresNT.AddRange(SingleDummySolver.SolveSingleDummy(Suit.NoTrump, auction.GetDeclarerOrNorth(Suit.NoTrump), northHand, match));
-                    var mostFrequentNT = Util.GetMostFrequentScore(scoresNT);
-                    if (mostFrequentNT - 6 >= currentBid.rank)
-                        return new Bid(mostFrequentNT - 6, Suit.NoTrump);
+                    var expectedContractNT = Util.GetExpectedContract(scoresNT);
+                    var bidNT = Bid.GetBestContract(expectedContractNT, Suit.NoTrump, currentBid);
+                    if (bid > currentBid)
+                        return bidNT;
                 }
                 if (bid < currentBid)
                     return bid;

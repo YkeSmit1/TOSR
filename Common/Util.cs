@@ -65,6 +65,12 @@ namespace Common
         BidGame,
     };
 
+    public enum ExpectedContract
+    {
+        Game,
+        SmallSlam,
+        GrandSlam,
+    }
 
     public static class Util
     {
@@ -301,9 +307,16 @@ namespace Common
             return suit == Suit.NoTrump ? (int)suit : 3 - (int)suit;
         }
 
-        public static int GetMostFrequentScore(List<int> scores)
+        public static ExpectedContract GetExpectedContract(List<int> scores)
         {
-            return scores.GroupBy(x => x).OrderByDescending(y => y.Count()).Take(1).Select(z => z.Key).First();
+            if (scores.Count(x => x == 13) / scores.Count() > .6)
+                return ExpectedContract.GrandSlam;
+            if (scores.Count(x => x == 12) / scores.Count() > .6)
+                return ExpectedContract.SmallSlam;
+            if (scores.Count(x => x == 12 || x == 13) / scores.Count() > .6)
+                return scores.Count(x => x == 12) >= scores.Count(x => x == 13) ? ExpectedContract.SmallSlam : ExpectedContract.GrandSlam;
+
+            return ExpectedContract.Game;
         }
     }
 }

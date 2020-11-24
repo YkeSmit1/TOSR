@@ -65,6 +65,7 @@ namespace Tosr
         private readonly Statistics statistics = new Statistics();
         private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
         private readonly StringBuilder expectedSouthHands = new StringBuilder();
+        private readonly StringBuilder inCorrectContracts = new StringBuilder();
         private readonly BidManager bidManager;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         private readonly bool useSingleDummySolver;
@@ -118,7 +119,8 @@ namespace Tosr
             stringbuilder.AppendLine(@$"Seconds elapsed: {stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture)}
 Duplicate auctions are written to ""HandPerAuction.txt""
 Statistics are written to ""Statistics.txt""
-Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
+Error info for hand-matching is written to ""ExpectedSouthHands.txt""
+Incorrect contract hands are written to ""IncorrectContract.txt""");
             SaveAuctions();
 
             logger.Info($"End batchbidding");
@@ -149,7 +151,12 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthhandOutcome);
             var correctnessContractBreakdown = CheckContract(contract, strHand, dealer == Player.UnKnown ? Player.North : dealer);
             statistics.ContractCorrectnessBreakdown.AddOrUpdateDictionary((correctnessContractBreakdown, bidManager.constructedSouthhandOutcome));
-            statistics.ContractCorrectness.AddOrUpdateDictionary(GetCorrectness(correctnessContractBreakdown));
+            var correctnessContract = GetCorrectness(correctnessContractBreakdown);
+            statistics.ContractCorrectness.AddOrUpdateDictionary(correctnessContract);
+            if (correctnessContract == CorrectnessContract.InCorrect)
+                inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.constructedSouthhandOutcome}) " +
+                    $"Auction:{auction.GetPrettyAuction("|")} Northand: {strHand.NorthHand} Southhand:{strHand.SouthHand}");
+
         }
 
         private CorrectnessContract GetCorrectness(CorrectnessContractBreakdown correctnessContractBreakdown)
@@ -189,6 +196,7 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             File.WriteAllText("txt\\HandPerAuction.txt", JsonConvert.SerializeObject(multiHandPerAuction, Formatting.Indented));
             File.WriteAllText("txt\\Statistics.txt", JsonConvert.SerializeObject(statistics, Formatting.Indented));
             File.WriteAllText("txt\\ExpectedSouthHands.txt", expectedSouthHands.ToString());
+            File.WriteAllText("txt\\IncorrectContract.txt", inCorrectContracts.ToString());
         }
 
         private CorrectnessContractBreakdown CheckContract(Bid contract, HandsNorthSouth strHand, Player declarer)
@@ -196,21 +204,24 @@ Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             if (!useSingleDummySolver)
                 return CorrectnessContractBreakdown.Unknonwn;
             var tricks = SingleDummySolver.SolveSingleDummy(contract.suit, declarer, strHand.NorthHand, strHand.SouthHand);
-            var mostFrequentRank = Util.GetMostFrequentScore(tricks) - 6;
-            if (mostFrequentRank == 7 && contract.rank < 7)
-                return CorrectnessContractBreakdown.MissedGrandSlam;
-            if (mostFrequentRank == 6 && contract.rank < 6)
-                return CorrectnessContractBreakdown.MissedSmallSlam;
-            if (mostFrequentRank < 7 && contract.rank == 7)
-                return CorrectnessContractBreakdown.GrandSlamTooHigh;
-            if (mostFrequentRank < 6 && contract.rank == 6)
-                return CorrectnessContractBreakdown.SmallSlamTooHigh;
-            if (mostFrequentRank == 7 && contract.rank == 7)
+            var expectedContractType = Util.GetExpectedContract(tricks);
+
+            if (expectedContractType == ExpectedContract.GrandSlam && contract.rank == 7)
                 return CorrectnessContractBreakdown.GrandSlamCorrect;
-            if (mostFrequentRank == 6 && contract.rank == 6)
+            if (expectedContractType == ExpectedContract.GrandSlam && contract.rank < 7)
+                return CorrectnessContractBreakdown.MissedGrandSlam;
+
+            if (expectedContractType == ExpectedContract.SmallSlam && contract.rank == 6)
                 return CorrectnessContractBreakdown.SmallSlamCorrect;
+            if (expectedContractType == ExpectedContract.SmallSlam && contract.rank < 6)
+                return CorrectnessContractBreakdown.MissedSmallSlam;
+
+            if (expectedContractType != ExpectedContract.GrandSlam && contract.rank == 7)
+                return CorrectnessContractBreakdown.GrandSlamTooHigh;
+            if (expectedContractType != ExpectedContract.SmallSlam && contract.rank == 6)
+                return CorrectnessContractBreakdown.SmallSlamTooHigh;
+
             return CorrectnessContractBreakdown.GameCorrect;
         }
-
     }
 }

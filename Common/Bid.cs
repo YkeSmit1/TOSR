@@ -100,6 +100,17 @@ namespace Common
                 new Bid(currentBid.rank + 1, bid.suit);
         }
 
+        public static Bid GetBestContract(ExpectedContract expectedContract, Suit item1, Bid currentBid)
+        {
+            return expectedContract switch
+            {
+                ExpectedContract.Game => Bid.GetGameContract(item1, currentBid),
+                ExpectedContract.SmallSlam => new Bid(6, item1),
+                ExpectedContract.GrandSlam => new Bid(7, item1),
+                _ => throw new ArgumentException(nameof(expectedContract)),
+            };
+        }
+
         // Operators
         public bool Equals(Bid other) => !(other is null) && suit == other.suit && bidType == other.bidType && rank == other.rank;
         public override bool Equals(object obj) => obj is Bid other && Equals(other);

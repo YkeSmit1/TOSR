@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Common;
 
 namespace Solver
@@ -60,18 +62,23 @@ namespace Solver
 
             for (int i = 0; i < nrOfHands; i++)
             {
-                string southHand;
-                List<CardDto> cards;
-                do
+                var cancellationTokenSource = new CancellationTokenSource(500);
+                var task = Task.Run(() =>
                 {
-                    cards = Shuffling.FisherYates(northHandCards, new List<CardDto>{ }).ToList();
-                    var orderedCardsSouth = cards.Skip(13).Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-                    southHand = Util.GetDeckAsString(orderedCardsSouth);
-                }
-                while
-                    (!shuffleRestrictions.Match(southHand));
-
-                var handStrs = GetDealAsString(cards);
+                    string southHand;
+                    List<CardDto> cards;
+                    do
+                    {
+                        cards = Shuffling.FisherYates(northHandCards, new List<CardDto>{ }).ToList();
+                        var orderedCardsSouth = cards.Skip(13).Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
+                        southHand = Util.GetDeckAsString(orderedCardsSouth);
+                        cancellationTokenSource.Token.ThrowIfCancellationRequested();
+                    }
+                    while
+                        (!shuffleRestrictions.Match(southHand));
+                    return cards;
+                }, cancellationTokenSource.Token);
+                var handStrs = GetDealAsString(task.Result);
                 yield return handStrs.Aggregate("W:", (current, hand) => current + hand.handStr.Replace(',', '.') + " ");
             }
         }
