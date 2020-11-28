@@ -62,7 +62,7 @@ namespace Solver
 
             for (int i = 0; i < nrOfHands; i++)
             {
-                var cancellationTokenSource = new CancellationTokenSource(500);
+                var cancellationTokenSource = new CancellationTokenSource(2000);
                 var task = Task.Run(() =>
                 {
                     string southHand;

@@ -132,7 +132,7 @@ namespace TosrGui.Test
             new[]{
                 Fase.Unknown, Fase.Shape,
                 Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.Pull3NTOneAsk },
+                Fase.Unknown, Fase.Pull3NTOneAskMin },
                 "3♠4♣" };
 
             // ♣♦♥♠
@@ -155,7 +155,7 @@ namespace TosrGui.Test
             new[]{
                 Fase.Unknown, Fase.Shape,
                 Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.Pull3NTOneAsk },
+                Fase.Unknown, Fase.Pull3NTOneAskMin },
                 "3♠4♣" };
 
             // Zoom test
@@ -178,7 +178,7 @@ namespace TosrGui.Test
             new[]{
                 Fase.Unknown, Fase.Shape,
                 Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.Pull3NTOneAsk },
+                Fase.Unknown, Fase.Pull3NTOneAskMin },
                 "3♠4♣4♥" };
 
             // ♣♦♥♠
@@ -201,7 +201,7 @@ namespace TosrGui.Test
             new[]{
                 Fase.Unknown, Fase.Shape,
                 Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.Pull3NTOneAsk },
+                Fase.Unknown, Fase.Pull3NTOneAskMin },
                 "3♠4♣4♥" };
 
             // Pull tests
@@ -226,7 +226,7 @@ namespace TosrGui.Test
             new[]{
                 Fase.Unknown, Fase.Shape,
                 Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.Pull4DiamondsOneAsk },
+                Fase.Unknown, Fase.Pull4DiamondsOneAskMax },
                 "3NT4♦" };
 
             yield return new object[] { "OffSet0", 0, new[]{
@@ -246,7 +246,7 @@ namespace TosrGui.Test
             new[]{
                 Fase.Unknown, Fase.Shape,
                 Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.Pull4DiamondsOneAsk },
+                Fase.Unknown, Fase.Pull4DiamondsOneAskMin },
                 "3♠4♣" };
 
             // Zoom test
@@ -256,7 +256,7 @@ namespace TosrGui.Test
                 "5♣", "5♦" },
             new[]{
                 Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Pull4DiamondsOneAsk,
+                Fase.Unknown, Fase.Pull4DiamondsOneAskMax,
                 Fase.Unknown, Fase.ScanningControls },
                 "3♠4♦4♠" };
 
@@ -266,7 +266,7 @@ namespace TosrGui.Test
                 "4NT", "5♣" },
             new[]{
                 Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Pull4DiamondsOneAsk,
+                Fase.Unknown, Fase.Pull4DiamondsOneAskMin,
                 Fase.Unknown, Fase.ScanningControls },
                 "3♠4♣4♥" };
         }

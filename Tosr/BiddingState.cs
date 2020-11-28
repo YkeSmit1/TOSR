@@ -39,7 +39,7 @@ namespace Tosr
             var bidId = bidIdFromRule + RelayBidIdLastFase + FaseOffset;
             if (bidIdFromRule == 0)
             {
-                if (Fase == Fase.Pull4DiamondsNoAsk || Fase == Fase.Pull4DiamondsOneAsk)
+                if (BidManager.signOffFasesFor4Di.Contains(Fase))
                 {
                     CurrentBid = Bid.fourHeartsBid;
                 }
@@ -100,7 +100,7 @@ namespace Tosr
                 Fase = controlBidCount switch
                 {
                     0 => Fase.Pull3NTNoAsk,
-                    1 => Fase.Pull3NTOneAsk,
+                    1 => Fase == Fase.Controls ? Fase.Pull3NTOneAskMin : Fase.Pull3NTOneAskMax,
                     2 => Fase.Pull3NTTwoAsks,
                     _ => throw new ArgumentException(nameof(controlBidCount)),
                 };
@@ -110,7 +110,7 @@ namespace Tosr
                 Fase = controlBidCount switch
                 {
                     0 => Fase.Pull4DiamondsNoAsk,
-                    1 => Fase.Pull4DiamondsOneAsk,
+                    1 => Fase == Fase.Controls ? Fase.Pull4DiamondsOneAskMin : Fase.Pull4DiamondsOneAskMax,
                     _ => throw new ArgumentException(nameof(controlBidCount)),
                 };
             }

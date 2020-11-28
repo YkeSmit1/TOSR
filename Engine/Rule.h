@@ -46,7 +46,6 @@ struct HandCharacteristic
 	std::vector<bool> QueensSuit;
 
 	int Hcp = 0;
-	bool isMax = false;
 	int Queens = 0;
 	int Shortages;
 

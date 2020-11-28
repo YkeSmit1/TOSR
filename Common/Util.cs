@@ -58,10 +58,12 @@ namespace Common
         ScanningOther,
         End,
         Pull3NTNoAsk,
-        Pull3NTOneAsk,
+        Pull3NTOneAskMin,
+        Pull3NTOneAskMax,
         Pull3NTTwoAsks,
         Pull4DiamondsNoAsk,
-        Pull4DiamondsOneAsk,
+        Pull4DiamondsOneAskMin,
+        Pull4DiamondsOneAskMax,
         BidGame,
     };
 

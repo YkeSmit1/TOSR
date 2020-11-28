@@ -59,10 +59,12 @@ std::tuple<int, Fase, std::string, int> SQLiteCppWrapper::GetRule(const HandChar
             return std::make_tuple(bidId, GetNextFase(endfase, fase), str, 0);
         }
         case Fase::Pull3NTNoAsk:
-        case Fase::Pull3NTOneAsk:
+        case Fase::Pull3NTOneAskMin:
+        case Fase::Pull3NTOneAskMax:
         case Fase::Pull3NTTwoAsks:
         case Fase::Pull4DiamondsNoAsk:
-        case Fase::Pull4DiamondsOneAsk:
+        case Fase::Pull4DiamondsOneAskMin:
+        case Fase::Pull4DiamondsOneAskMax:
         {
             auto [bidId, zoom, str] = GetRuleSignOff(hand, fase);
             if (zoom)
@@ -264,9 +266,8 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleSignOff(const HandCh
 
         querySignOffs->bind(1, (int)fase);
 
-        querySignOffs->bind(2, hand.isMax);
-        querySignOffs->bind(3, hand.Hcp);
-        querySignOffs->bind(4, hand.Queens);
+        querySignOffs->bind(2, hand.Hcp);
+        querySignOffs->bind(3, hand.Queens);
 
         if (!querySignOffs->executeStep())
             throw std::runtime_error("No row found in SignOff table.");

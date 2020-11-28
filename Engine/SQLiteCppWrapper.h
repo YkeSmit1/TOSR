@@ -46,7 +46,6 @@ class SQLiteCppWrapper : public ISQLiteWrapper
 
     constexpr static std::string_view signOffsSql = R"(SELECT RelBidId, Zoom, Id, Description FROM SignOffs
         WHERE Fase = ?
-        AND (Max = ? or Max is null)
         AND ((? BETWEEN MinHcp AND MaxHcp) OR (MinHcp is null AND MaxHcp is null))
         AND ((? BETWEEN MinQueens AND MaxQueens) OR (MinQueens is null AND MaxQueens is null)))";
 

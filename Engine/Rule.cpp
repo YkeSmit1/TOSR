@@ -41,7 +41,6 @@ void HandCharacteristic::Initialize(const std::string& hand)
     Hcp = CalculateHcp(hand);
     ControlsSuit = CalculateControlsSuit(suits);
     QueensSuit = CalculateQueensSuit(suits);
-    isMax = Controls >= 5 || (Controls == 4 && Hcp >= 12);
     Queens = NumberOfCards(hand, 'Q');
     Shortages = (int)std::count_if(suits.begin(), suits.end(), [](const auto& x) {return x.length() <= 1; });
 }
