@@ -14,6 +14,7 @@ namespace Tosr
     using ControlsOnlyDictionary = Dictionary<string, List<int>>;
     using ControlsDictionary = Dictionary<string, List<string>>;
     using ControlScanningDictionary = Dictionary<string, (List<string> controlsScanning, bool zoom)>;
+    using SignOffFasesDictionary = Dictionary<Fase, Dictionary<string, List<int>>>;
 
     public class ReverseDictionaries
     {
@@ -25,6 +26,7 @@ namespace Tosr
         public ControlScanningDictionary ControlScanningAuctions0 { get; }
         public ControlScanningDictionary ControlScanningAuctions1 { get; }
         public ControlScanningDictionary ControlScanningAuctions2 { get; }
+        public SignOffFasesDictionary SignOffFasesAuctions { get;  }
 
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
@@ -32,13 +34,14 @@ namespace Tosr
         private static readonly int[] suitLengthSingleton = new[] { 5, 4, 3, 1 };
         private static readonly int[] suitLength2Singletons = new[] { 6, 5, 1, 1 };
 
-        public ReverseDictionaries(ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions, ControlsOnlyDictionary controlsOnlyAuctions, 
-            ControlScanningDictionary controlScanningAuctions)
+        public ReverseDictionaries(ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions, ControlsOnlyDictionary controlsOnlyAuctions,
+            ControlScanningDictionary controlScanningAuctions, SignOffFasesDictionary signOffFasesAuctions)
         {
             ShapeAuctions = shapeAuctions;
             ControlsAuctions0 = controlsAuctions;
             ControlsOnlyAuctions = controlsOnlyAuctions;
             ControlScanningAuctions0 = controlScanningAuctions;
+            SignOffFasesAuctions = signOffFasesAuctions;
         }
 
         public ReverseDictionaries(Dictionary<Fase, bool> fasesWithOffset, IProgress<string> progress)
@@ -63,6 +66,9 @@ namespace Tosr
             ControlsAuctions1 = Util.LoadAuctions("txt\\AuctionsByControls1.txt", GenerateAuctionsForControls, 1);
             progress.Report(nameof(ControlsAuctions2));
             ControlsAuctions2 = Util.LoadAuctions("txt\\AuctionsByControls2.txt", GenerateAuctionsForControls, 2);
+
+            progress.Report(nameof(SignOffFasesAuctions));
+            SignOffFasesAuctions = Util.LoadAuctions("txt\\AuctionsBySignOffFases.txt", GenerateAuctionsForSignOffFases, 0);
         }
 
         public ShapeDictionary GenerateAuctionsForShape(int nrOfShortages)
@@ -140,15 +146,7 @@ namespace Tosr
             void BidAndStoreHand(int control)
             {
                 shuffleRestrictions.SetControls(control, control);
-                string hand;
-                do
-                {
-                    var cards = Shuffling.FisherYates(13).ToList();
-                    var orderedCards = cards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-                    hand = Util.GetDeckAsString(orderedCards);
-                }
-                while
-                    (!shuffleRestrictions.Match(hand));
+                string hand = Shuffling.FisherYates(shuffleRestrictions);
 
                 var auction = bidManager.GetAuction(string.Empty, hand); // No northhand. Just for generating reverse dictionaries
                 auctions.Add(auction.GetBidsAsString(Fase.Controls), new List<int> { control });
@@ -238,6 +236,42 @@ namespace Tosr
                 if (!auctions[key].Contains(handToStore))
                     auctions[key].Add(handToStore);
             }
+        }
+
+        private SignOffFasesDictionary GenerateAuctionsForSignOffFases(int nrOfShortages)
+        {
+            var signOfffasesAuctions = new SignOffFasesDictionary();
+            var shuffleRestriction = new ShuffleRestrictions() { minControls = 2, maxControls = 12, restrictControls = true };
+            foreach (var fase in BidManager.signOffFases)
+            {
+                var dictionaryForFase = new Dictionary<string, List<int>>();
+                foreach (var hcp in Enumerable.Range(8, 15))
+                {
+                    shuffleRestriction.SetHcp(hcp, hcp);
+                    var hand = Shuffling.FisherYates(shuffleRestriction);
+                    var bidFromRule = Pinvoke.GetBidFromRule(fase, Fase.Controls, hand, 0, out _, out _);
+                    if (bidFromRule != 0)
+                    {
+                        var bid = (fase switch
+                        {
+                            Fase.Pull3NTNoAsk => Bid.threeNTBid + bidFromRule,
+                            Fase.Pull3NTOneAskMin => Bid.threeNTBid + 1,
+                            Fase.Pull3NTOneAskMax => Bid.threeNTBid + 1,
+                            Fase.Pull3NTTwoAsks => Bid.threeNTBid + 1,
+                            Fase.Pull4DiamondsNoAsk => Bid.fourDiamondBid + 2,
+                            Fase.Pull4DiamondsOneAskMin => Bid.fourDiamondBid + 2,
+                            Fase.Pull4DiamondsOneAskMax => Bid.fourDiamondBid + 2,
+                            _ => throw new ArgumentException(nameof(fase)),
+                        }).ToString();
+                        if (!dictionaryForFase.ContainsKey(bid))
+                            dictionaryForFase.Add(bid, new List<int>());
+                        if (!dictionaryForFase[bid].Contains(hcp))
+                            dictionaryForFase[bid].Add(hcp);
+                    }
+                }
+                signOfffasesAuctions.Add(fase, dictionaryForFase);
+            }
+            return signOfffasesAuctions;
         }
 
         private static int[] GetSuitLength(int nrOfShortages)

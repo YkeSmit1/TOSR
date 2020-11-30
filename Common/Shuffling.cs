@@ -46,5 +46,20 @@ namespace Common
                 yield return new CardDto() { Face = (Face)(deck[i] % 13), Suit = (Suit)(deck[i] / 13) };
             }
         }
+
+        public static string FisherYates(ShuffleRestrictions shuffleRestrictions)
+        {
+            string hand;
+            do
+            {
+                var cards = Shuffling.FisherYates(13).ToList();
+                var orderedCards = cards.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
+                hand = Util.GetDeckAsString(orderedCards);
+            }
+            while
+                (!shuffleRestrictions.Match(hand));
+            return hand;
+        }
+
     }
 }

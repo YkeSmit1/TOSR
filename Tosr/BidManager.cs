@@ -4,13 +4,13 @@ using System.Text;
 using System.Linq;
 using System.Collections.Generic;
 using NLog;
-using NLog.Filters;
 using Common;
 using Solver;
 
 namespace Tosr
 {
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
+    using FaseDictionary = Dictionary<Fase, Dictionary<string, List<int>>>;
 
     using RelayBidKindFunc = Func<Auction, string, IEnumerable<string>, IEnumerable<Bid>, Suit, BidManager.RelayBidKind>;
 
@@ -232,11 +232,13 @@ namespace Tosr
 
                     if (biddingState.Fase == Fase.ScanningOther && !auction.GetBids(Player.South, Fase.ScanningOther).Any() && useSingleDummySolver)
                     {
-                        var declarer = auction.GetDeclarer(trumpSuit);
+                        var declarer = auction.GetDeclarerOrNorth(trumpSuit);
                         var matches = GetMatchesWithNorthHand(shape.Value.shapes, controlsScanning.Value.controls, northHand);
                         if (matches.Count() >= 1)
                         {
-                            var confidenceTricks = GetConfidenceTricks(northHand, matches, trumpSuit, declarer != Player.UnKnown ? declarer : Player.North);
+                            var hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions);
+                            // TODO pass hcp to dds
+                            var confidenceTricks = GetConfidenceTricks(northHand, matches, trumpSuit, declarer);
                             if (GetConfidenceToBidSlam(confidenceTricks) < 60.0)
                             {
                                 biddingState.Fase = Fase.End;
@@ -260,6 +262,31 @@ namespace Tosr
             }
 
             return Bid.NextBid(biddingState.CurrentBid);
+        }
+
+        private static ShuffleRestrictions GetHcpFromAuction(Auction auction, FaseDictionary faseAuctions)
+        {
+            var shuffleRestrictions = new ShuffleRestrictions();
+            var signOffBids = auction.GetBids(Player.South, signOffFases.ToArray());
+            if (signOffBids.Count() == 1)
+            {
+                var signOffBid = signOffBids.Single();
+                var sigOffBidStr = (signOffBid.fase switch
+                {
+                    Fase.Pull3NTNoAsk => signOffBid,
+                    Fase.Pull3NTOneAskMin => Bid.threeNTBid + 1,
+                    Fase.Pull3NTOneAskMax => Bid.threeNTBid + 1,
+                    Fase.Pull3NTTwoAsks => Bid.threeNTBid + 1,
+                    Fase.Pull4DiamondsNoAsk => Bid.fourDiamondBid + 2,
+                    Fase.Pull4DiamondsOneAskMin => Bid.fourDiamondBid + 2,
+                    Fase.Pull4DiamondsOneAskMax => Bid.fourDiamondBid + 2,
+                    _ => throw new ArgumentException(nameof(signOffBid.fase)),
+                }).ToString();
+                var hcps = faseAuctions[signOffBid.fase][sigOffBidStr];
+                shuffleRestrictions.SetHcp(hcps.Min(), hcps.Max());
+            }
+
+            return shuffleRestrictions;
         }
 
         public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, IEnumerable<string> southHandShapes, IEnumerable<Bid> controls, Suit trumpSuit)
