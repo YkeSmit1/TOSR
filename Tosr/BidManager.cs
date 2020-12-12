@@ -99,8 +99,7 @@ namespace Tosr
         public void Init(Auction auction)
         {
             shape = new Lazy<(List<string> shapes, int zoomOffset)>(() => GetShapeStrFromAuction(auction, reverseDictionaries.ShapeAuctions));
-            controlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() => GetControlsScanningStrFromAuction(auction, reverseDictionaries, 
-                shape.Value.zoomOffset, Util.NrOfShortages(shape.Value.shapes.First())));
+            controlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() => GetControlsScanningStrFromAuction(auction, reverseDictionaries, shape.Value.zoomOffset, shape.Value.shapes.First()));
         }
 
         public Auction GetAuction(string northHand, string southHand)
@@ -184,7 +183,7 @@ namespace Tosr
 
                     if (!biddingState.RelayerHasSignedOff)
                     {
-                        var controls = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, shape.Value.zoomOffset, new Fase[] { Fase.Controls });
+                        var controls = GetAuctionForFaseWithOffset(auction, shape.Value.zoomOffset, new Fase[] { Fase.Controls });
                         var controlBidCount = controls.Count();
                         var hcp = Util.GetHcpCount(northHand);
                         if (trumpSuit == Suit.NoTrump)
@@ -230,14 +229,21 @@ namespace Tosr
                         }
                     }
 
-                    if (biddingState.Fase == Fase.ScanningOther && !auction.GetBids(Player.South, Fase.ScanningOther).Any() && useSingleDummySolver)
+                    if (biddingState.Fase == Fase.ScanningOther && useSingleDummySolver)
                     {
-                        var declarer = auction.GetDeclarerOrNorth(trumpSuit);
                         var matches = GetMatchesWithNorthHand(shape.Value.shapes, controlsScanning.Value.controls, northHand);
                         if (matches.Count() >= 1)
                         {
-                            var hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions);
+                            var bidsScanningOther = auction.GetBids(Player.South, Fase.ScanningOther);
+                            // TODO also call this function when some part of the queens is known. Ie. when control scanning has used zoom
+                            if (bidsScanningOther.Any())
+                            {
+                                // TODO pass queens to dds
+                                var queens = GetQueensFromAuction(auction, reverseDictionaries, shape.Value.shapes.First(), controlsScanning.Value.zoomOffset);
+                            }
                             // TODO pass hcp to dds
+                            var hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions);
+                            var declarer = auction.GetDeclarerOrNorth(trumpSuit);
                             var confidenceTricks = GetConfidenceTricks(northHand, matches, trumpSuit, declarer);
                             if (GetConfidenceToBidSlam(confidenceTricks) < 60.0)
                             {
@@ -282,8 +288,9 @@ namespace Tosr
                     Fase.Pull4DiamondsOneAskMax => Bid.fourDiamondBid + 2,
                     _ => throw new ArgumentException(nameof(signOffBid.fase)),
                 }).ToString();
-                var hcps = faseAuctions[signOffBid.fase][sigOffBidStr];
-                shuffleRestrictions.SetHcp(hcps.Min(), hcps.Max());
+                // TODO handle case where sign-off bid is 4NT
+                if (faseAuctions[signOffBid.fase].TryGetValue(sigOffBidStr, out var hcps))
+                    shuffleRestrictions.SetHcp(hcps.Min(), hcps.Max());
             }
 
             return shuffleRestrictions;
@@ -393,11 +400,8 @@ namespace Tosr
 
         /// <summary>
         /// Construct southhand to use for single dummy analyses
-        /// Does throw
+        /// Can throw
         /// </summary>
-        /// <param name="northHand"></param>
-        /// <param name="auction"></param>
-        /// <returns></returns>
         public IEnumerable<string> ConstructSouthHand(string northHand, Auction auction)
         {
             logger.Debug($"Starting ConstructSouthHand for northhand : {northHand}");
@@ -412,17 +416,11 @@ namespace Tosr
                 throw SetOutcome(exception.Message, ConstructedSouthhandOutcome.AuctionNotFoundInControls);
             }
 
-            var fases = new [] { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther };
-            var controls = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffset, fases);
+            var fases = new[] { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther };
+            var controls = GetAuctionForFaseWithOffset(auction, zoomOffset, fases);
             var strControls = string.Join("", controls);
 
-            var controlsAuctions = Util.NrOfShortages(shape.Value.shapes.First()) switch
-            {
-                0 => reverseDictionaries.ControlsAuctions0,
-                1 => reverseDictionaries.ControlsAuctions1,
-                2 => reverseDictionaries.ControlsAuctions2,
-                _ => throw new ArgumentException("nrOfshortages should be 0, 1 or 2"),
-            };
+            var controlsAuctions = reverseDictionaries.GetControlDictionary(shape.Value.shapes.First());
             if (!controlsAuctions.TryGetValue(strControls, out var possibleControls))
             {
                 throw SetOutcome($"Auction not found in controls. controls: {strControls}. NorthHand: {northHand}.", ConstructedSouthhandOutcome.AuctionNotFoundInControls);
@@ -445,9 +443,6 @@ namespace Tosr
         /// <summary>
         /// Construct southhand to compare with the actual southhand
         /// </summary>
-        /// <param name="hand"></param>
-        /// <param name="auction"></param>
-        /// <returns></returns>
         public string ConstructSouthHandSafe(HandsNorthSouth hand, Auction auction)
         {
             try
@@ -482,8 +477,6 @@ namespace Tosr
         /// <summary>
         /// Replaces cards smaller then queen into x's;
         /// </summary>
-        /// <param name="hand"></param>
-        /// <returns></returns>
         public static string HandWithx(string hand)
         {
             var southHand = new string(hand).ToList();
@@ -495,10 +488,6 @@ namespace Tosr
 
         /// <summary>
         /// Lookup in the shape dictionary. If not found, it tries to find an auction when the last bid was done with zoom
-        /// </summary>
-        /// <param name="auction"></param>
-        /// <param name="shapeAuctions"></param>
-        /// <returns></returns>
         public static (List<string> shapes, int zoomOffset) GetShapeStrFromAuction(Auction auction, ShapeDictionary shapeAuctions)
         {
             var allBids = auction.GetBids(Player.South, Fase.Shape);
@@ -522,25 +511,13 @@ namespace Tosr
         /// <summary>
         /// Lookup in the controlScanning dictionary. If not found, it tries to find an auction when the last bid was done with zoom
         /// </summary>
-        /// <param name="auction"></param>
-        /// <param name="controlScanningAuctions"></param>
-        /// <param name="zoomOffsetShape"></param>
-        /// <returns></returns>
-        public static (List<string> controls, int zoomOffset) GetControlsScanningStrFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, int zoomOffsetShape, int nrOfShortagess)
+        public static (List<string> controls, int zoomOffset) GetControlsScanningStrFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, int zoomOffsetShape, string shapeStr)
         {
-            var fases = new [] { Fase.Controls, Fase.ScanningControls };
-            var bidsForFase = GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffsetShape, fases).ToList();
-            var bidsForFaseStr = string.Join("", bidsForFase);
+            var fases = new[] { Fase.Controls, Fase.ScanningControls };
+            var bidsForFase = GetAuctionForFaseWithOffset(auction, zoomOffsetShape, fases).ToList();
+            var controlScanningAuctions = reverseDictionaries.GetControlScanningDictionary(shapeStr);
 
-            var controlScanningAuctions = nrOfShortagess switch
-            {
-                0 => reverseDictionaries.ControlScanningAuctions0,
-                1 => reverseDictionaries.ControlScanningAuctions1,
-                2 => reverseDictionaries.ControlScanningAuctions2,
-                _ => throw new ArgumentException("nrOfshortages should be 0, 1 or 2"),
-            };
-
-            if (controlScanningAuctions.TryGetValue(bidsForFaseStr, out var controls))
+            if (controlScanningAuctions.TryGetValue(string.Join("", bidsForFase), out var controls))
                 return (controls.controlsScanning, controls.zoom ? 1 : 0);
 
             var lastBid = bidsForFase.Last();
@@ -562,14 +539,13 @@ namespace Tosr
         /// Extracts the control and scanning part of the auction and applies an offset of offsetBid
         /// </summary>
         /// <param name="auction">Generated auction </param>
-        /// <param name="offsetBid">Offset used to generate AuctionsByControl.txt</param>
         /// <param name="fase">Which fases to get the offset from</param>
         /// <returns></returns>
-        public static IEnumerable<Bid> GetAuctionForFaseWithOffset(Auction auction, Bid offsetBid, int zoomOffset, Fase[] fases)
+        public static IEnumerable<Bid> GetAuctionForFaseWithOffset(Auction auction, int zoomOffset, Fase[] fases)
         {
             var lastBidShape = auction.GetBids(Player.South, Fase.Shape).Last();
             var bidsForFases = auction.GetBids(Player.South, fases.Concat(signOffFasesWithout3NTNoAsk).ToArray());
-            var offSet = lastBidShape - offsetBid;
+            var offSet = lastBidShape - Bid.threeDiamondBid;
             if (zoomOffset != 0)
                 bidsForFases = new List<Bid> { lastBidShape }.Concat(bidsForFases);
 
@@ -609,6 +585,34 @@ namespace Tosr
             }
         }
 
+        /// <summary>
+        /// Returns a string of 4 characters when each character is "Y" "N" "X". "X" means not yet known.
+        /// </summary>
+        public static string GetQueensFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, string shapeStr, int zoomOffset)
+        {
+            var lastBidPreviousFase = auction.GetBids(Player.South, new[] { Fase.Controls, Fase.ScanningControls }).Last();
+            var queensBids = auction.GetBids(Player.South, Fase.ScanningOther);
+            var offset = lastBidPreviousFase - ReverseDictionaries.GetOffsetBidForQueens(shapeStr);
+            if (zoomOffset != 0)
+            {
+                queensBids = new List<Bid> { lastBidPreviousFase - zoomOffset + 1}.Concat(queensBids);
+                offset -= (zoomOffset + 1);
+            }
+
+            queensBids = queensBids.Select(bid => bid - offset);
+            var queensAuctions = reverseDictionaries.GetQueensDictionary(shapeStr);
+            var bidsForFaseQueens = string.Join("", queensBids);
+
+            if (queensAuctions.TryGetValue(bidsForFaseQueens, out var scanningOther))
+            {
+                logger.Debug($"Found queens for auction. Queens:{scanningOther}. QueensBids:{bidsForFaseQueens}. Auction:{auction.GetPrettyAuction("|")}");
+                return scanningOther;
+            }
+
+            throw new InvalidOperationException($"{ bidsForFaseQueens } not found in queens dictionary. Auction:{auction.GetPrettyAuction("|")}. " +
+                $"zoom-offset shape:{zoomOffset}");
+        }
+
         private static bool Used4ClAsRelay(Auction auction)
         {
             var previousBiddingRound = auction.bids.First();
@@ -631,9 +635,7 @@ namespace Tosr
                 var controlByShapes = shapeLengthStrs.Select(shapeLengthStr => MergeControlAndShape(controls, shapeLengthStr)).Where(x => x.Sum(x => x.Length) == 13);
                 var southHands = controlByShapes.Where(controlByShape => Match(controlByShape.ToArray(), northHand));
                 foreach (var southHand in southHands)
-                {
                     yield return string.Join(',', southHand);
-                }
             }
         }
 

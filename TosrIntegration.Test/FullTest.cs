@@ -40,7 +40,7 @@ namespace TosrIntegration.Test
     public class FullTest
     {
         private readonly Dictionary<Fase, bool> fasesWithOffset;
-        ReverseDictionaries reverseDictionaries;
+        private readonly ReverseDictionaries reverseDictionaries;
 
         private readonly ITestOutputHelper output;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();

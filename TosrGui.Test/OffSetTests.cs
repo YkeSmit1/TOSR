@@ -306,7 +306,7 @@ namespace TosrGui.Test
             var auction = new Auction();
             Assert.Equal(bids.Length, fases.Length);
             SetBids(auction, bids.Zip(fases, (x, y) => (x, y)));
-            var actual = string.Join("", BidManager.GetAuctionForFaseWithOffset(auction, Bid.threeDiamondBid, zoomOffset, new Fase[] { Fase.Controls, Fase.ScanningControls }));
+            var actual = string.Join("", BidManager.GetAuctionForFaseWithOffset(auction, zoomOffset, new Fase[] { Fase.Controls, Fase.ScanningControls }));
             Assert.Equal(expected, actual);
         }
 

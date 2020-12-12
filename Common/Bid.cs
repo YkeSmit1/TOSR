@@ -24,6 +24,9 @@ namespace Common
         public static readonly Bid fourDiamondBid = new Bid(4, Suit.Diamonds);
         public static readonly Bid fourHeartsBid = new Bid(4, Suit.Hearts);
         public static readonly Bid fourNTBid = new Bid(4, Suit.NoTrump);
+        public static readonly Bid fiveClubBid = new Bid(5, Suit.Clubs);
+        public static readonly Bid fiveDiamondBid = new Bid(5, Suit.Diamonds);
+        public static readonly Bid fiveHeartsBid = new Bid(5, Suit.Hearts);
 
         public readonly BidType bidType;
         public readonly int rank;

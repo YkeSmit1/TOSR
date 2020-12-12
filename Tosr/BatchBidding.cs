@@ -116,11 +116,11 @@ namespace Tosr
                     stringbuilder.AppendLine(exception.Message);
                 }
             }
-            stringbuilder.AppendLine(@$"Seconds elapsed: {stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture)}
-Duplicate auctions are written to ""HandPerAuction.txt""
-Statistics are written to ""Statistics.txt""
-Error info for hand-matching is written to ""ExpectedSouthHands.txt""
-Incorrect contract hands are written to ""IncorrectContract.txt""");
+            stringbuilder.AppendLine(@$"Seconds elapsed: {stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture)}");
+            stringbuilder.AppendLine(@"Duplicate auctions are written to ""HandPerAuction.txt""");
+            stringbuilder.AppendLine(@"Statistics are written to ""Statistics.txt""");
+            stringbuilder.AppendLine(@"Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
+            stringbuilder.AppendLine(@"Incorrect contract hands are written to ""IncorrectContract.txt""");
             SaveAuctions();
 
             logger.Info($"End batchbidding");
