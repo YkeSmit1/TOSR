@@ -1,6 +1,5 @@
 ﻿
 using System;
-using System.Text;
 using System.Linq;
 using System.Collections.Generic;
 using NLog;
@@ -443,33 +442,33 @@ namespace Tosr
         /// <summary>
         /// Construct southhand to compare with the actual southhand
         /// </summary>
-        public string ConstructSouthHandSafe(HandsNorthSouth hand, Auction auction)
+        public string ConstructSouthHandSafe(string[] hand, Auction auction)
         {
             try
             {
-                var southHand = ConstructSouthHand(hand.NorthHand, auction);
+                var southHand = ConstructSouthHand(hand[(int)Player.North], auction);
 
                 if (southHand.Count() > 1)
                 {
                     constructedSouthhandOutcome = ConstructedSouthhandOutcome.MultipleMatchesFound;
-                    return $"Multiple matches found. Matches: {string.Join('|', southHand)}. NorthHand: {hand.NorthHand}. SouthHand: {hand.SouthHand}";
+                    return $"Multiple matches found. Matches: {string.Join('|', southHand)}. NorthHand: {hand[(int)Player.North]}. SouthHand: {hand[(int)Player.South]}";
                 }
 
-                var southHandStr = HandWithx(hand.SouthHand);
+                var southHandStr = HandWithx(hand[(int)Player.South]);
                 if (southHand.First() == southHandStr)
                 {
                     constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
-                    return $"Match is found: {southHand.First()}. NorthHand: {hand.NorthHand}. SouthHand: {hand.SouthHand}";
+                    return $"Match is found: {southHand.First()}. NorthHand: {hand[(int)Player.North]}. SouthHand: {hand[(int)Player.South]}";
                 }
                 else
                 {
                     constructedSouthhandOutcome = ConstructedSouthhandOutcome.IncorrectSouthhand;
-                    return $"SouthHand is not equal to expected. Expected: {southHand}. Actual {southHandStr}. NorthHand: {hand.NorthHand}. SouthHand: {hand.SouthHand}";
+                    return $"SouthHand is not equal to expected. Expected: {southHand}. Actual {southHandStr}. NorthHand: {hand[(int)Player.North]}. SouthHand: {hand[(int)Player.South]}";
                 }
             }
             catch (Exception e)
             {
-                return $"{e.Message} SouthHand: {hand.SouthHand}. Projected AKQ controls as 4333:{Util.GetHandWithOnlyControlsAs4333(hand.SouthHand, "AKQ")}. " +
+                return $"{e.Message} SouthHand: {hand[(int)Player.South]}. Projected AKQ controls as 4333:{Util.GetHandWithOnlyControlsAs4333(hand[(int)Player.South], "AKQ")}. " +
                     $"Sign-off fases:{auction.GetBids(Player.South, signOffFases.ToArray()).FirstOrDefault()?.fase}";
             }
         }

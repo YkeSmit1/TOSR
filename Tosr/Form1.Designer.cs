@@ -33,6 +33,9 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem11 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMenuItemLoadSet = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemSaveSet = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem12 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem13 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripMenuItem();
@@ -58,6 +61,9 @@
             this.panelSouth = new System.Windows.Forms.Panel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.openFileDialog2 = new System.Windows.Forms.OpenFileDialog();
+            this.toolStripMenuItemGoToBoard = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
@@ -92,7 +98,10 @@
             // toolStripMenuItem4
             // 
             this.toolStripMenuItem4.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem11});
+            this.toolStripMenuItem11,
+            this.toolStripSeparator2,
+            this.toolStripMenuItemLoadSet,
+            this.toolStripMenuItemSaveSet});
             this.toolStripMenuItem4.Name = "toolStripMenuItem4";
             this.toolStripMenuItem4.Size = new System.Drawing.Size(37, 20);
             this.toolStripMenuItem4.Text = "File";
@@ -101,14 +110,34 @@
             // 
             this.toolStripMenuItem11.Name = "toolStripMenuItem11";
             this.toolStripMenuItem11.ShortcutKeys = System.Windows.Forms.Keys.F7;
-            this.toolStripMenuItem11.Size = new System.Drawing.Size(171, 22);
+            this.toolStripMenuItem11.Size = new System.Drawing.Size(173, 22);
             this.toolStripMenuItem11.Text = "Rules database";
             this.toolStripMenuItem11.Click += new System.EventHandler(this.ToolStripMenuItem11Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(170, 6);
+            // 
+            // toolStripMenuItemLoadSet
+            // 
+            this.toolStripMenuItemLoadSet.Name = "toolStripMenuItemLoadSet";
+            this.toolStripMenuItemLoadSet.Size = new System.Drawing.Size(173, 22);
+            this.toolStripMenuItemLoadSet.Text = "Load set from PBN";
+            this.toolStripMenuItemLoadSet.Click += new System.EventHandler(this.ToolStripMenuItemLoadSetClick);
+            // 
+            // toolStripMenuItemSaveSet
+            // 
+            this.toolStripMenuItemSaveSet.Name = "toolStripMenuItemSaveSet";
+            this.toolStripMenuItemSaveSet.Size = new System.Drawing.Size(173, 22);
+            this.toolStripMenuItemSaveSet.Text = "Save set to PBN";
+            this.toolStripMenuItemSaveSet.Click += new System.EventHandler(this.ToolStripMenuItemSaveSetClick);
             // 
             // toolStripMenuItem12
             // 
             this.toolStripMenuItem12.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem13});
+            this.toolStripMenuItem13,
+            this.toolStripMenuItemGoToBoard});
             this.toolStripMenuItem12.Name = "toolStripMenuItem12";
             this.toolStripMenuItem12.Size = new System.Drawing.Size(44, 20);
             this.toolStripMenuItem12.Text = "View";
@@ -312,6 +341,22 @@
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(118, 17);
             this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
             // 
+            // saveFileDialog1
+            // 
+            this.saveFileDialog1.DefaultExt = "pbn";
+            // 
+            // openFileDialog2
+            // 
+            this.openFileDialog2.DefaultExt = "pbn";
+            this.openFileDialog2.FileName = "openFileDialog2";
+            // 
+            // toolStripMenuItemGoToBoard
+            // 
+            this.toolStripMenuItemGoToBoard.Name = "toolStripMenuItemGoToBoard";
+            this.toolStripMenuItemGoToBoard.Size = new System.Drawing.Size(162, 22);
+            this.toolStripMenuItemGoToBoard.Text = "Go To Board";
+            this.toolStripMenuItemGoToBoard.Click += new System.EventHandler(this.ToolStripMenuItemGoToBoardClick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -372,6 +417,12 @@
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemUseSolver;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemLoadSet;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSaveSet;
+        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
+        private System.Windows.Forms.OpenFileDialog openFileDialog2;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemGoToBoard;
     }
 }
 

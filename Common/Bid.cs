@@ -57,8 +57,32 @@ namespace Common
                 BidType.pass => "Pass",
                 BidType.dbl => "Dbl",
                 BidType.rdbl => "Rdbl",
-                _ => throw new ArgumentOutOfRangeException(),
+                _ => throw new ArgumentOutOfRangeException(nameof(bidType)),
             };
+        }
+
+        public string ToStringASCII()
+        {
+            return bidType switch
+            {
+                BidType.bid => rank + Util.GetSuitDescriptionASCII(suit),
+                BidType.pass => "Pass",
+                BidType.dbl => "X",
+                BidType.rdbl => "XX",
+                _ => throw new ArgumentOutOfRangeException(nameof(bidType)),
+            };
+        }
+
+        public static Bid FromStringASCII(string bid)
+        {
+            switch (bid)
+            {
+                case "Pass": return Bid.PassBid;
+                case "X": return Bid.Dbl;
+                case "XX": return Bid.Rdbl;
+                default:
+                    return new Bid(int.Parse(bid.Substring(0, 1)), Util.GetSuitASCII(bid.Substring(1)));
+            }
         }
 
         public static Bid GetBid(int bidId)

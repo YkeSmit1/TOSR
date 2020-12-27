@@ -28,4 +28,13 @@
     <ProjectReference Include="..\Tosr\Tosr.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="CursusSlotdrive.pbn">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Example.pbn">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

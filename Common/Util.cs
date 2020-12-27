@@ -89,6 +89,20 @@ namespace Common
             };
         }
 
+        public static string GetSuitDescriptionASCII(Suit suit)
+        {
+            return suit switch
+            {
+                Suit.Clubs => "C",
+                Suit.Diamonds => "D",
+                Suit.Hearts => "H",
+                Suit.Spades => "S",
+                Suit.NoTrump => "NT",
+                _ => throw new ArgumentOutOfRangeException(nameof(suit), suit, null),
+            };
+        }
+
+
         public static Suit GetSuit(string suit)
         {
             return suit switch
@@ -102,6 +116,18 @@ namespace Common
             };
         }
 
+        public static Suit GetSuitASCII(string suit)
+        {
+            return suit switch
+            {
+                "C" => Suit.Clubs,
+                "D" => Suit.Diamonds,
+                "H" => Suit.Hearts,
+                "S" => Suit.Spades,
+                "NT" => Suit.NoTrump,
+                _ => throw new ArgumentOutOfRangeException(nameof(suit), suit, null),
+            };
+        }
 
         public static char GetFaceDescription(Face face)
         {
@@ -319,6 +345,36 @@ namespace Common
                 return scores.Count(x => x == 12) >= scores.Count(x => x == 13) ? ExpectedContract.SmallSlam : ExpectedContract.GrandSlam;
 
             return ExpectedContract.Game;
+        }
+
+        public static Player GetPlayer(string player) => player switch
+        {
+            "N" => Player.North,
+            "E" => Player.East,
+            "S" => Player.South,
+            "W" => Player.West,
+            _ => Player.UnKnown,
+        };
+
+        public static string GetPlayerString(Player player) => player switch
+        {
+            Player.North => "N",
+            Player.East => "E",
+            Player.South => "S",
+            Player.West => "W",
+            _ => throw new ArgumentException("Unknown player"),
+        };
+
+        public static IEnumerable<CardDto> GetOrderdCards(string hand)
+        {
+            var suits = hand.Split(',');
+            var suit = Suit.Spades;
+            foreach (var suitStr in suits)
+            {
+                foreach (var card in suitStr)
+                    yield return new CardDto() { Face = Util.GetFaceFromDescription(card), Suit = suit };
+                suit--;
+            }
         }
     }
 }

@@ -5,8 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using Newtonsoft.Json;
 using NLog;
@@ -14,19 +12,12 @@ using Common;
 
 namespace Tosr
 {
-    public struct HandsNorthSouth
-    {
-        public string NorthHand;
-        public string SouthHand;
-    }
-
     public partial class Form1 : Form
     {
         private BiddingBox biddingBox;
         private AuctionControl auctionControl;
 
-        private HandsNorthSouth hand;
-        private HandsNorthSouth[] hands;
+        private string[] deal;
         private readonly ShuffleRestrictions shuffleRestrictionsSouth = new ShuffleRestrictions();
         private readonly ShuffleRestrictions shuffleRestrictionsNorth = new ShuffleRestrictions();
 
@@ -38,6 +29,7 @@ namespace Tosr
         private readonly BiddingState biddingState = new BiddingState(fasesWithOffset);
         private readonly static Logger logger = LogManager.GetCurrentClassLogger();
         private readonly ManualResetEvent resetEvent = new ManualResetEvent(false);
+        private Pbn pbn = new Pbn();
 
         public Form1()
         {
@@ -80,7 +72,7 @@ namespace Tosr
             void handler(object x, EventArgs y)
             {
                 var biddingBoxButton = (BiddingBoxButton)x;
-                bidManager.SouthBid(biddingState, auctionControl.auction, hand.SouthHand);
+                bidManager.SouthBid(biddingState, auctionControl.auction, deal[(int)Player.South]);
                 if (biddingBoxButton.bid != biddingState.CurrentBid)
                 {
                     MessageBox.Show($"The correct bid is {biddingState.CurrentBid}. Description: {biddingState.CurrentBid.description}.", "Incorrect bid");
@@ -116,7 +108,7 @@ namespace Tosr
             auction.AddBid(Bid.PassBid);
 
             // North
-            bidManager.NorthBid(biddingState, auction, hand.NorthHand);
+            bidManager.NorthBid(biddingState, auction, deal[(int)Player.North]);
             auction.AddBid(biddingState.CurrentBid);
 
             // East
@@ -140,19 +132,18 @@ namespace Tosr
 
         private void Shuffle()
         {
-            IOrderedEnumerable<CardDto> cardsSouth;
-            IOrderedEnumerable<CardDto> cardsNorth;
+            Dictionary<Player, IOrderedEnumerable<CardDto>> cards;
 
             do
             {
-                (hand, cardsSouth, cardsNorth) = ShuffleRandomHand();
+                (deal, cards) = ShuffleRandomHand();
             }
             while
-                (!shuffleRestrictionsSouth.Match(hand.SouthHand) || !shuffleRestrictionsNorth.Match(hand.NorthHand));
+                (!shuffleRestrictionsSouth.Match(deal[(int)Player.South]) || !shuffleRestrictionsNorth.Match(deal[(int)Player.North]));
 
-            ShowHand(cardsNorth, panelNorth);
+            ShowHand(cards[Player.North], panelNorth);
             panelNorth.Visible = false;
-            ShowHand(cardsSouth, panelSouth);
+            ShowHand(cards[Player.South], panelSouth);
         }
 
         private void ShowHand(IOrderedEnumerable<CardDto> cards, Panel parent)
@@ -188,7 +179,7 @@ namespace Tosr
             {
                 _ = resetEvent.WaitOne();
                 Clear();
-                auctionControl.auction = bidManager.GetAuction(hand.NorthHand, hand.SouthHand);
+                auctionControl.auction = bidManager.GetAuction(deal[(int)Player.North], deal[(int)Player.South]);
                 auctionControl.ReDraw();
                 biddingBox.Enabled = false;
                 panelNorth.Visible = true;
@@ -212,7 +203,7 @@ namespace Tosr
                 await Task.Run(() =>
                 {
                     var progress = new Progress<int>(report => toolStripStatusLabel1.Text = $"Hands done: {report}");
-                    batchBidding.Execute(hands, progress);
+                    pbn = batchBidding.Execute(pbn.Boards.Select(x => x.Deal), progress);
                 });
                 toolStripStatusLabel1.Text = "Batch bidding done";
             }
@@ -222,36 +213,37 @@ namespace Tosr
             }
         }
 
-        private HandsNorthSouth[] GenerateHandStrings(int batchSize)
+        private void GenerateHandStrings(int batchSize)
         {
-            hands = new HandsNorthSouth[batchSize];
             var localshuffleRestrictions = new ShuffleRestrictions();
             localshuffleRestrictions.SetControls(2, 12);
+            pbn.Boards.Clear();
 
             for (int i = 0; i < batchSize; ++i)
             {
+                string[] deal;
                 do
-                    (hands[i], _, _) = ShuffleRandomHand();
+                    (deal, _) = ShuffleRandomHand();
                 while
-                    (!localshuffleRestrictions.Match(hands[i].SouthHand) || Util.GetHcpCount(hands[i].NorthHand) < 16);
+                    (!localshuffleRestrictions.Match(deal[(int)Player.South]) || Util.GetHcpCount(deal[(int)Player.North]) < 16);
+                pbn.Boards.Add(new BoardDto { Deal = deal });
             }
-
-            return hands;
         }
 
-        private (HandsNorthSouth, IOrderedEnumerable<CardDto>, IOrderedEnumerable<CardDto>) ShuffleRandomHand()
+        private (string[], Dictionary<Player, IOrderedEnumerable<CardDto>>) ShuffleRandomHand()
         {
-            var cards = Shuffling.FisherYates(26).ToList();
-            var orderedCardsNorth = cards.Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-            var orderedCardsSouth = cards.Skip(13).Take(13).ToList().OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-
-            var handsNorthSouth = new HandsNorthSouth
+            var cards = Shuffling.FisherYates(52).ToList();
+            var hands = new string [4];
+            var orderedCards = new Dictionary<Player, IOrderedEnumerable<CardDto>>();
+            var offset = 0;
+            foreach (var player in new[] { Player.West, Player.North, Player.East, Player.South})
             {
-                NorthHand = Util.GetDeckAsString(orderedCardsNorth),
-                SouthHand = Util.GetDeckAsString(orderedCardsSouth)
-            };
-
-            return (handsNorthSouth, orderedCardsSouth, orderedCardsNorth);
+                var orderedCardForPlayer = cards.Skip(offset).Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
+                orderedCards.Add(player, orderedCardForPlayer);
+                hands[(int)player] = Util.GetDeckAsString(orderedCardForPlayer);
+                offset += 13;
+            }
+            return (hands, orderedCards);
         }
 
         private void ButtonGenerateHandsClick(object sender, EventArgs e)
@@ -260,7 +252,7 @@ namespace Tosr
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
-                hands = GenerateHandStrings((int)numericUpDown1.Value);
+                GenerateHandStrings((int)numericUpDown1.Value);
             }
             finally
             {
@@ -290,6 +282,45 @@ namespace Tosr
                 stringBuilder.AppendLine($"{bid} {bid.description} ");
             }
             MessageBox.Show(stringBuilder.ToString(), "Auction");
+        }
+
+        private void ToolStripMenuItemSaveSetClick(object sender, EventArgs e)
+        {
+            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+                pbn.Save(saveFileDialog1.FileName);
+        }
+
+        private void ToolStripMenuItemLoadSetClick(object sender, EventArgs e)
+        {
+            if (openFileDialog2.ShowDialog() == DialogResult.OK)
+                pbn.Load(openFileDialog2.FileName);
+        }
+
+        private void ToolStripMenuItemGoToBoardClick(object sender, EventArgs e)
+        {
+            if (pbn.Boards.Count() == 0)
+            {
+                MessageBox.Show("No PBN file is loaded.", "Error");
+                return;
+            }
+            var goToBoardForm = new GoToBoardForm(pbn.Boards.Count());
+            if (goToBoardForm.ShowDialog() == DialogResult.OK)
+            {
+                var board = pbn.Boards[goToBoardForm.BoardNumber - 1];
+                deal = board.Deal;
+                ShowPanel(Player.North, panelNorth);
+                panelNorth.Visible = true;
+                ShowPanel(Player.South, panelSouth);
+                auctionControl.auction = board.Auction;
+                auctionControl.ReDraw();
+            }
+        }
+
+        private void ShowPanel(Player player, Panel panel)
+        {
+            var cardDtosNorth = Util.GetOrderdCards(deal[(int)player]);
+            var orderedCardsNorth = cardDtosNorth.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
+            ShowHand(orderedCardsNorth, panel);
         }
     }
 }
