@@ -72,6 +72,8 @@ namespace Tosr
             void handler(object x, EventArgs y)
             {
                 var biddingBoxButton = (BiddingBoxButton)x;
+                // TODO consider to use the solution proposed in
+                // https://stackoverflow.com/questions/981776/using-an-enum-as-an-array-index-in-c-sharp Ian Goldby solution
                 bidManager.SouthBid(biddingState, auctionControl.auction, deal[(int)Player.South]);
                 if (biddingBoxButton.bid != biddingState.CurrentBid)
                 {
@@ -308,19 +310,19 @@ namespace Tosr
             {
                 var board = pbn.Boards[goToBoardForm.BoardNumber - 1];
                 deal = board.Deal;
-                ShowPanel(Player.North, panelNorth);
+                ShowHand(Player.North, panelNorth);
                 panelNorth.Visible = true;
-                ShowPanel(Player.South, panelSouth);
+                ShowHand(Player.South, panelSouth);
                 auctionControl.auction = board.Auction;
                 auctionControl.ReDraw();
             }
         }
 
-        private void ShowPanel(Player player, Panel panel)
+        private void ShowHand(Player player, Panel panel)
         {
-            var cardDtosNorth = Util.GetOrderdCards(deal[(int)player]);
-            var orderedCardsNorth = cardDtosNorth.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-            ShowHand(orderedCardsNorth, panel);
+            var cardDtos = Util.GetOrderdCards(deal[(int)player]);
+            var orderedCards = cardDtos.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
+            ShowHand(orderedCards, panel);
         }
     }
 }
