@@ -21,6 +21,9 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.101
+    - uses: montudor/action-zip@v0.1.1
+      with:
+        args: unzip -qq .\solver\deal319win.zip
     - name: Install dependencies
       run: dotnet restore
     - name: NuGet Restore
