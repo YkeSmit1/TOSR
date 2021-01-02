@@ -51,7 +51,7 @@
     <Copy SourceFiles="$(TosrBuildDirectory)\Engine.dll;$(TosrBuildDirectory)\sqlite3.dll" DestinationFolder="$(TosrIntegrationTestBuildDirectory)" />
   </Target>
 
-  <Target Name="UnzipArchive" BeforeTargets="Build">
+  <Target Name="UnzipArchive" AfterTargets="Build">
     <Unzip
         SourceFiles=".\..\deal319win.zip"
         DestinationFolder="$(OutputPath)"

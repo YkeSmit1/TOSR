@@ -37,7 +37,7 @@
     </None>
   </ItemGroup>
 
-  <Target Name="UnzipArchive" BeforeTargets="Build">
+  <Target Name="UnzipArchive" AfterTargets="Build">
     <Unzip
         SourceFiles=".\..\deal319win.zip"
         DestinationFolder="$(OutputPath)"
