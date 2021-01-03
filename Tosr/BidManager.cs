@@ -269,9 +269,8 @@ namespace Tosr
             return Bid.NextBid(biddingState.CurrentBid);
         }
 
-        private static ShuffleRestrictions GetHcpFromAuction(Auction auction, FaseDictionary faseAuctions)
+        private static MinMax GetHcpFromAuction(Auction auction, FaseDictionary faseAuctions)
         {
-            var shuffleRestrictions = new ShuffleRestrictions();
             var signOffBids = auction.GetBids(Player.South, signOffFases.ToArray());
             if (signOffBids.Count() == 1)
             {
@@ -289,10 +288,10 @@ namespace Tosr
                 }).ToString();
                 // TODO handle case where sign-off bid is 4NT
                 if (faseAuctions[signOffBid.fase].TryGetValue(sigOffBidStr, out var hcps))
-                    shuffleRestrictions.SetHcp(hcps.Min(), hcps.Max());
+                    return new MinMax(hcps.Min(), hcps.Max());
             }
 
-            return shuffleRestrictions;
+            return new MinMax();
         }
 
         public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, IEnumerable<string> southHandShapes, IEnumerable<Bid> controls, Suit trumpSuit)

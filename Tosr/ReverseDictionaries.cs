@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using ObjectCloner;
+using Solver;
 
 namespace Tosr
 {
@@ -127,21 +127,21 @@ namespace Tosr
             var auctions = new ControlsOnlyDictionary();
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
 
-            var shuffleRestrictions = new ShuffleRestrictions
+            var shufflingDeal = new ShufflingDeal
             {
-                shape = "4333",
-                restrictShape = true,
+                NrOfHands = 1,
+                South = new South { Shape = "4333"}
             };
 
             foreach (var control in Enumerable.Range(2, 9))
             {
                 if (control == 4)
                 {
-                    shuffleRestrictions.SetHcp(0, 11);
+                    shufflingDeal.South.Hcp = new MinMax(0, 11);
                     BidAndStoreHand(control);
-                    shuffleRestrictions.SetHcp(12, 37);
+                    shufflingDeal.South.Hcp = new MinMax(12, 37);
                     BidAndStoreHand(control);
-                    shuffleRestrictions.restrictHcp = false;
+                    shufflingDeal.South.Hcp = null;
                 }
                 else
                     BidAndStoreHand(control);
@@ -162,10 +162,10 @@ namespace Tosr
 
             void BidAndStoreHand(int control)
             {
-                shuffleRestrictions.SetControls(control, control);
-                string hand = Shuffling.FisherYates(shuffleRestrictions);
+                shufflingDeal.South.Controls = new MinMax(control, control);
+                var board = Util.GetBoardsTosr(shufflingDeal.Execute().First());
 
-                var auction = bidManager.GetAuction(string.Empty, hand); // No northhand. Just for generating reverse dictionaries
+                var auction = bidManager.GetAuction(string.Empty, board[(int)Player.South]); // No northhand. Just for generating reverse dictionaries
                 auctions.Add(auction.GetBidsAsString(Fase.Controls), new List<int> { control });
             }
         }
@@ -259,15 +259,15 @@ namespace Tosr
         {
             logger.Info("Generating dictionaries for sign-off fases");
             var signOfffasesAuctions = new SignOffFasesDictionary();
-            var shuffleRestriction = new ShuffleRestrictions() { minControls = 2, maxControls = 12, restrictControls = true };
+            var shuffleRestriction = new ShufflingDeal() { South = new South { Controls = new MinMax(2, 12) } };
             foreach (var fase in BidManager.signOffFases)
             {
-                var dictionaryForFase = new Dictionary<string, List<int>>();
+                var dictionaryForFase = new ControlsOnlyDictionary();
                 foreach (var hcp in Enumerable.Range(8, 15))
                 {
-                    shuffleRestriction.SetHcp(hcp, hcp);
-                    var hand = Shuffling.FisherYates(shuffleRestriction);
-                    var bidFromRule = Pinvoke.GetBidFromRule(fase, Fase.Controls, hand, 0, out _, out _);
+                    shuffleRestriction.South.Hcp = new MinMax(hcp, hcp);
+                    var board = Util.GetBoardsTosr(shuffleRestriction.Execute().First());
+                    var bidFromRule = Pinvoke.GetBidFromRule(fase, Fase.Controls, board[(int)Player.South], 0, out _, out _);
                     if (bidFromRule != 0)
                     {
                         var bid = (fase switch

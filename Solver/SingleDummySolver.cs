@@ -4,8 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using Common;
 
 namespace Solver
@@ -14,30 +13,29 @@ namespace Solver
     {
         public static List<int> SolveSingleDummy(Suit trumpSuit, Player declarer, string northHand, string southHand)
         {
-            var handsForSolver = GetHandsForSolver(northHand, southHand, 10).ToArray();
+            var handsForSolver = GetHandsForSolver(northHand, southHand).ToArray();
             return Api.SolveAllBoards(handsForSolver, Util.GetDDSSuit(trumpSuit), Util.GetDDSFirst(declarer)).ToList();
         }
 
-        private static IEnumerable<string> GetHandsForSolver(string northHandStr, string southHandStr, int nrOfHands)
+        private static IEnumerable<string> GetHandsForSolver(string northHandStr, string southHandStr)
         {
-            var northHand = northHandStr.Split(',');
             var southHand = southHandStr.Split(',');
-            var northHandCards = GetCardDtosFromString(northHand);
+            var queens = new string(southHand.Select(x => x.Contains('Q') ? 'Y' : 'N').ToArray());
+            var controlsSpecific = southHand.Select(x => Regex.Match(x, "[AK]").ToString()).ToArray();
+            var controls = Util.GetControlCount(southHandStr);
 
-            for (int i = 0; i < nrOfHands; i++)
+            var shuflingDeal = new ShufflingDeal
             {
-                // Also randomize partners hand
-                var southHandCards = GetCardDtosFromStringWithx(southHand, northHand);
-                // Shuffle
-                var deal = Shuffling.FisherYates(northHandCards, southHandCards).ToList();
-                var handStrs = GetDealAsString(deal);
-                yield return handStrs.Aggregate("W:", (current, hand) => current + hand.handStr.Replace(',', '.') + " ");
-            }
+                North = new North { Hand = northHandStr.Split(',') },
+                South = new South { Shape = string.Join("", southHand.Select(x => x.Length.ToString())), 
+                    Controls = new MinMax(controls, controls), SpecificControls = controlsSpecific, Queens = queens}
+            };
+            return shuflingDeal.Execute();
         }
 
         public static List<int> SolveSingleDummy(Suit trumpSuit, Player declarer, string northHand, string southHandShape, int minControls, int maxControls)
         {
-            var handsForSolver = GetHandsForSolver(northHand, southHandShape, minControls, maxControls, 10).ToArray();
+            var handsForSolver = GetHandsForSolver(northHand, southHandShape, minControls, maxControls).ToArray();
             return Api.SolveAllBoards(handsForSolver, Util.GetDDSSuit(trumpSuit), Util.GetDDSFirst(declarer)).ToList();
         }
 
@@ -49,127 +47,15 @@ namespace Solver
         /// <param name="minControls">Number of controls in the southhand</param>
         /// <param name="nrOfHands"></param>
         /// <returns></returns>
-        private static IEnumerable<string> GetHandsForSolver(string northHandStr, string southHandShape, int minControls, int maxControls, int nrOfHands)
+        private static IEnumerable<string> GetHandsForSolver(string northHandStr, string southHandShape, int minControls, int maxControls)
         {
-            var shuffleRestrictions = new ShuffleRestrictions
+            var shufflingDeal = new ShufflingDeal
             {
-                shape = southHandShape,
-                restrictShape = true,
+                North = new North { Hand = northHandStr.Split(',')},
+                South = new South { Shape = southHandShape, Controls = new MinMax(minControls, maxControls) },
             };
-            shuffleRestrictions.SetControls(minControls, maxControls);
 
-            var northHandCards = GetCardDtosFromString(northHandStr.Split(','));
-
-            for (int i = 0; i < nrOfHands; i++)
-            {
-                var cancellationTokenSource = new CancellationTokenSource(2000);
-                var task = Task.Run(() =>
-                {
-                    string southHand;
-                    List<CardDto> cards;
-                    do
-                    {
-                        cards = Shuffling.FisherYates(northHandCards, new List<CardDto>{ }).ToList();
-                        var orderedCardsSouth = cards.Skip(13).Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-                        southHand = Util.GetDeckAsString(orderedCardsSouth);
-                        cancellationTokenSource.Token.ThrowIfCancellationRequested();
-                    }
-                    while
-                        (!shuffleRestrictions.Match(southHand));
-                    return cards;
-                }, cancellationTokenSource.Token);
-                var handStrs = GetDealAsString(task.Result);
-                yield return handStrs.Aggregate("W:", (current, hand) => current + hand.handStr.Replace(',', '.') + " ");
-            }
-        }
-
-        public static List<int> SolveSingleDummy2(int trumpSuit, int declarer)
-        {
-            var handsForSolver = GetHandsForSolver2(10);
-            //var scores = Api.SolveAllBoards(handsForSolver, trumpSuit, declarer).ToList();
-            //for (int i = 0; i < scores.Count; i++)
-            //{
-            //    Console.WriteLine($"Deal: {handsForSolver[i]} Nr of tricks:{scores[i]}");
-            //}
-            return new List<int>();
-        }
-
-        private static string[] GetHandsForSolver2(int nrOfHands)
-        {
-            var directory = "C:/Users/Administrator/Downloads/andrews-deal-master/andrews-deal-master";
-            //Environment.CurrentDirectory = directory;
-
-            ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.WorkingDirectory = directory;
-            startInfo.FileName = Path.Combine(directory, "Dealer.exe");
-            startInfo.UseShellExecute = false;
-            startInfo.Arguments = "-i format/pbn -i ex/custom.tcl " + nrOfHands.ToString() + $" >> {directory}/deal.txt";
-            startInfo.RedirectStandardOutput = true;
-            startInfo.RedirectStandardError = true;
-            Process process = new Process { StartInfo = startInfo };
-
-            process.Start();
-            process.WaitForExit();
-            if (process.ExitCode != 0)
-            {
-                throw new Exception($"Dealer has incorrect exit code: {process.ExitCode}");
-            }
-            return null;
-            //return process.StandardOutput.ReadToEnd().Split("\n").Where(x => x.StartsWith("[")).Select(x => x.Substring(6, 71)).ToArray();
-        }
-
-        private static IEnumerable<(Player player, string handStr)> GetDealAsString(IEnumerable<CardDto> deal)
-        {
-            foreach (Player player in Enum.GetValues(typeof(Player)))
-            {
-                if (player == Player.UnKnown)
-                    continue;
-                var cardsPlayer = player switch
-                {
-                    Player.West => deal.Skip(26).Take(13),
-                    Player.North => deal.Take(13),
-                    Player.East => deal.Skip(39).Take(13),
-                    Player.South => deal.Skip(13).Take(13),
-                    _ => throw new ArgumentException(nameof(player)),
-                };
-                var orderedCards = cardsPlayer.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-                var dealStr = Util.GetDeckAsString(orderedCards);
-                yield return (player, dealStr);
-            }
-        }
-
-        private static IEnumerable<CardDto> GetCardDtosFromString(string[] hand)
-        {
-            for (var suit = 0; suit < hand.Count(); ++suit)
-                foreach (var card in hand[suit])
-                {
-                    yield return new CardDto() { Suit = (Suit)(3 - suit), Face = Util.GetFaceFromDescription(card) };
-                }
-        }
-
-        private static IEnumerable<CardDto> GetCardDtosFromStringWithx(string[] hand, string[] partnersHand)
-        {
-            var random = new Random();
-
-            for (var suit = 0; suit < hand.Count(); ++suit)
-            {
-                var remainingCards = Enumerable.Range(1, 10).Where(x => !partnersHand[suit].Contains(Util.GetFaceDescription((Face)x))).Select(x => (Face)x).ToList();
-                foreach (var card in hand[suit])
-                {
-                    Face face;
-                    if (card != 'x')
-                    {
-                        face = Util.GetFaceFromDescription(card);
-                    }
-                    else
-                    {
-                        var c = random.Next(0, remainingCards.Count());
-                        face = remainingCards.ElementAt(c);
-                        remainingCards.RemoveAt(c);
-                    }
-                    yield return new CardDto() { Suit = (Suit)(3 - suit), Face = face };
-                }
-            }
+            return shufflingDeal.Execute().ToArray();
         }
     }
 }

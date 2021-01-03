@@ -9,6 +9,7 @@ using System.Threading;
 using Newtonsoft.Json;
 using NLog;
 using Common;
+using Solver;
 
 namespace Tosr
 {
@@ -18,8 +19,7 @@ namespace Tosr
         private AuctionControl auctionControl;
 
         private string[] deal;
-        private readonly ShuffleRestrictions shuffleRestrictionsSouth = new ShuffleRestrictions();
-        private readonly ShuffleRestrictions shuffleRestrictionsNorth = new ShuffleRestrictions();
+        private ShufflingDeal shufflingDeal = new ShufflingDeal() { NrOfHands = 1};
 
         private BidManager bidManager;
 
@@ -59,8 +59,8 @@ namespace Tosr
 
             bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, true);
             bidManager.Init(auctionControl.auction);
-            shuffleRestrictionsSouth.SetControls(2, 12);
-            shuffleRestrictionsNorth.SetHcp(16, 37);
+            shufflingDeal.North = new North { Hcp = new MinMax(16, 37) };
+            shufflingDeal.South = new South { Hcp = new MinMax(7, 37), Controls = new MinMax(2, 12) };
 
             Shuffle();
             BidTillSouth(auctionControl.auction, biddingState);
@@ -134,35 +134,35 @@ namespace Tosr
 
         private void Shuffle()
         {
-            Dictionary<Player, IOrderedEnumerable<CardDto>> cards;
-
-            do
-            {
-                (deal, cards) = ShuffleRandomHand();
-            }
-            while
-                (!shuffleRestrictionsSouth.Match(deal[(int)Player.South]) || !shuffleRestrictionsNorth.Match(deal[(int)Player.North]));
-
-            ShowHand(cards[Player.North], panelNorth);
+            deal = Util.GetBoardsTosr(shufflingDeal.Execute().First());
+            ShowHand(deal[(int)Player.North], panelNorth);
             panelNorth.Visible = false;
-            ShowHand(cards[Player.South], panelSouth);
+            ShowHand(deal[(int)Player.South], panelSouth);
         }
 
-        private void ShowHand(IOrderedEnumerable<CardDto> cards, Panel parent)
+        private void ShowHand(string hand, Panel parent)
         {
             parent.Controls.OfType<Card>().ToList().ForEach((card) =>
             {
                 parent.Controls.Remove(card);
                 card.Dispose();
             });
-            var left = 20 * 12;
-            foreach (var cardDto in cards.Reverse())
+            var suits = hand.Split(',');
+            var suit = Suit.Spades;
+            var cards = new List<Card>();
+            foreach (var suitStr in suits)
             {
-                var card = new Card(cardDto.Face, cardDto.Suit, Back.Crosshatch, false, false)
-                {
-                    Left = left,
-                    Parent = parent
-                };
+                foreach (var card in suitStr)
+                    cards.Add(new Card() { Face = Util.GetFaceFromDescription(card), Suit = suit });
+                suit--;
+            }
+            cards.Reverse();
+
+            var left = 20 * 12;
+            foreach (var card in cards)
+            {
+                card.Left = left;
+                card.Parent = parent;
                 card.Show();
                 left -= 20;
             }
@@ -217,35 +217,12 @@ namespace Tosr
 
         private void GenerateHandStrings(int batchSize)
         {
-            var localshuffleRestrictions = new ShuffleRestrictions();
-            localshuffleRestrictions.SetControls(2, 12);
-            pbn.Boards.Clear();
+            var shufflingDeal = new ShufflingDeal() { NrOfHands = batchSize, 
+                North = new North { Hcp = new MinMax(16, 37) }, 
+                South = new South { Hcp = new MinMax(7, 37), Controls = new MinMax(2, 12) } };
 
-            for (int i = 0; i < batchSize; ++i)
-            {
-                string[] deal;
-                do
-                    (deal, _) = ShuffleRandomHand();
-                while
-                    (!localshuffleRestrictions.Match(deal[(int)Player.South]) || Util.GetHcpCount(deal[(int)Player.North]) < 16);
-                pbn.Boards.Add(new BoardDto { Deal = deal });
-            }
-        }
-
-        private (string[], Dictionary<Player, IOrderedEnumerable<CardDto>>) ShuffleRandomHand()
-        {
-            var cards = Shuffling.FisherYates(52).ToList();
-            var hands = new string [4];
-            var orderedCards = new Dictionary<Player, IOrderedEnumerable<CardDto>>();
-            var offset = 0;
-            foreach (var player in new[] { Player.West, Player.North, Player.East, Player.South})
-            {
-                var orderedCardForPlayer = cards.Skip(offset).Take(13).OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-                orderedCards.Add(player, orderedCardForPlayer);
-                hands[(int)player] = Util.GetDeckAsString(orderedCardForPlayer);
-                offset += 13;
-            }
-            return (hands, orderedCards);
+            var boards = shufflingDeal.Execute();
+            pbn.Boards = boards.Select(board => new BoardDto { Deal = Util.GetBoardsTosr(board) }).ToList();
         }
 
         private void ButtonGenerateHandsClick(object sender, EventArgs e)
@@ -264,7 +241,7 @@ namespace Tosr
 
         private void ToolStripButton4Click(object sender, EventArgs e)
         {
-            using ShuffleRestrictionsForm shuffleRestrictionsForm = new ShuffleRestrictionsForm(shuffleRestrictionsSouth);
+            using ShuffleRestrictionsForm shuffleRestrictionsForm = new ShuffleRestrictionsForm(shufflingDeal);
             shuffleRestrictionsForm.ShowDialog();
         }
 
@@ -310,19 +287,12 @@ namespace Tosr
             {
                 var board = pbn.Boards[goToBoardForm.BoardNumber - 1];
                 deal = board.Deal;
-                ShowHand(Player.North, panelNorth);
+                ShowHand(deal[(int)Player.North], panelNorth);
                 panelNorth.Visible = true;
-                ShowHand(Player.South, panelSouth);
+                ShowHand(deal[(int)Player.South], panelSouth);
                 auctionControl.auction = board.Auction;
                 auctionControl.ReDraw();
             }
-        }
-
-        private void ShowHand(Player player, Panel panel)
-        {
-            var cardDtos = Util.GetOrderdCards(deal[(int)player]);
-            var orderedCards = cardDtos.OrderByDescending(x => x.Suit).ThenByDescending(c => c.Face, new FaceComparer());
-            ShowHand(orderedCards, panel);
         }
     }
 }

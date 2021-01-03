@@ -178,21 +178,6 @@ namespace Common
                 (player2 == Player.UnKnown || player1 == Player.UnKnown);
         }
 
-        public static string GetDeckAsString(IEnumerable<CardDto> orderedCards)
-        {
-            var listCards = orderedCards.ToList();
-            var suitAsString = SuitAsString(listCards, Suit.Spades) + "," +
-                               SuitAsString(listCards, Suit.Hearts) + "," +
-                               SuitAsString(listCards, Suit.Diamonds) + "," +
-                               SuitAsString(listCards, Suit.Clubs);
-            return suitAsString;
-        }
-
-        public static string SuitAsString(IEnumerable<CardDto> cards, Suit suit)
-        {
-            return cards.Where(c => c.Suit == suit).Aggregate("", (x, y) => x + GetFaceDescription(y.Face));
-        }
-
         public static (Suit, int) GetLongestSuit(string northHand, string southHand)
         {
             var suitLengthNorth = northHand.Split(',').Select(x => x.Length);
@@ -365,16 +350,12 @@ namespace Common
             _ => throw new ArgumentException("Unknown player"),
         };
 
-        public static IEnumerable<CardDto> GetOrderdCards(string hand)
+        public static string[] GetBoardsTosr(string board)
         {
-            var suits = hand.Split(',');
-            var suit = Suit.Spades;
-            foreach (var suitStr in suits)
-            {
-                foreach (var card in suitStr)
-                    yield return new CardDto() { Face = Util.GetFaceFromDescription(card), Suit = suit };
-                suit--;
-            }
+            var boardNoDealer = board[2..].Replace('.', ',');
+            var suits = boardNoDealer.Split(" ");
+            var suitsNFirst = suits.ToList().Rotate(3);
+            return suitsNFirst.ToArray();
         }
     }
 }

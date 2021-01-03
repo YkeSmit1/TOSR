@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,14 @@ namespace Solver
 {
     public class MinMax
     {
+        public MinMax() { }
+
+        public MinMax(int min, int max)
+        {
+            Min = min;
+            Max = max;
+        }
+
         public int Min { get; set; }
         public int Max { get; set; }
     }
@@ -33,15 +42,23 @@ namespace Solver
         public string[] Execute()
         {
             GenerateTclScript();
-            return RunDeal();
+            var boards = new List<string>();
+            while (NrOfHands != boards.Count())
+            {
+                var batchSize = Math.Min(40, NrOfHands - boards.Count());
+                boards.AddRange(RunDeal(batchSize));
+            }
+            Debug.Assert(NrOfHands == boards.Count());
+            return boards.ToArray();
         }
-        public int NrOfHands { get; set; }
+
+        public int NrOfHands { get; set; } = 10;
 
         private void GenerateTclScript()
         {
             var sb = new StringBuilder();
             if (North.Hand != null)
-                sb.AppendLine($"stack_hand north {{{string.Join(" ", North.Hand)}}}");
+                sb.AppendLine($"stack_hand north {{{string.Join(" ", North.Hand.Select(suit => suit == "" ? "-" : suit))}}}");
             if (South.SpecificControls != null)
             {
                 var topCards = !string.IsNullOrWhiteSpace(South.Queens)
@@ -114,7 +131,7 @@ namespace Solver
 
         }
 
-        private string[] RunDeal()
+        private static string[] RunDeal(int nrOfHands)
         {
             var directory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "deal319");
 
@@ -123,19 +140,26 @@ namespace Solver
                 WorkingDirectory = directory,
                 FileName = Path.Combine(directory, "deal.exe"),
                 UseShellExecute = false,
-                Arguments = $"{NrOfHands} -i format/pbn -i shuffle.tcl ",
+                Arguments = $"{nrOfHands} -i format/pbn -i shuffle.tcl ",
                 RedirectStandardOutput = true,
-                RedirectStandardError = true
+                RedirectStandardError = true,
+                CreateNoWindow = true,
             };
             Process process = new Process { StartInfo = startInfo };
             process.Start();
             process.WaitForExit();
             if (process.ExitCode != 0)
-                throw new Exception($"Dealer has incorrect exit code: {process.ExitCode}");
+            {
+                using var errorReader = process.StandardError;
+                throw new Exception($"Dealer has incorrect exit code: {process.ExitCode}. Error:{errorReader.ReadToEnd()}");
+            }
 
-            var output = process.StandardOutput.ReadToEnd().Split("\n");
-            var boards = output.Where(x => x.StartsWith("[")).Select(x => x.Substring(9, 67)).ToArray();
+            using var reader = process.StandardOutput;
+            var output = reader.ReadToEnd().Split("\n");
+            var boards = output.Where(x => x.StartsWith("[")).Select(x => x.Substring(7, 69)).ToArray();
             return boards;
+
+
         }
     }
 }

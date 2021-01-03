@@ -7,26 +7,29 @@ using System.Linq;
 
 namespace TosrGui.Test
 {
+    [Collection("Sequential")]
     public class ShufflingDealTests
     {
         [Fact()]
         public void ExecuteShuffleTest()
         {
-            var shufflingDeal = new ShufflingDeal { NrOfHands = 10};
-            shufflingDeal.North = new North { Hcp = new MinMax { Min = 16, Max = 37 } };
-            shufflingDeal.South = new South { Hcp = new MinMax { Min = 7, Max = 37 }, Controls = new MinMax { Min = 2, Max = 12 } };
+            var shufflingDeal = new ShufflingDeal
+            {
+                North = new North { Hcp = new MinMax(16, 37) },
+                South = new South { Hcp = new MinMax(7, 37), Controls = new MinMax(2, 12) }
+            };
 
             var boards = shufflingDeal.Execute();
             Assert.Equal(10, boards.Length);
             Assert.All(boards, (board) => 
             {
-                var hands = board.Split(' ');
+                var hands = Util.GetBoardsTosr(board);
                 Assert.All(hands, (hand) => Assert.Equal(16, hand.Length));
                 // Check north
-                var handNorth = hands[(int)Player.North - 1];
+                var handNorth = hands[(int)Player.North];
                 Assert.InRange(Util.GetHcpCount(handNorth), 16, 37);
                 // Check south
-                var handSouth = hands[(int)Player.South - 1];
+                var handSouth = hands[(int)Player.South];
                 Assert.InRange(Util.GetHcpCount(handSouth), 7, 37);
                 Assert.InRange(Util.GetControlCount(handSouth), 2, 12);
             });
@@ -39,9 +42,11 @@ namespace TosrGui.Test
             const string shape = "5413";
             const int controls = 3;
 
-            var shufflingDeal = new ShufflingDeal() { NrOfHands = 10 };
-            shufflingDeal.North = new North { Hand = expectedNorthHand.Split(".") };
-            shufflingDeal.South = new South { Hcp = new MinMax { Min = 7, Max = 37 }, Controls = new MinMax { Min = controls, Max = controls }, Shape = shape };
+            var shufflingDeal = new ShufflingDeal
+            {
+                North = new North { Hand = expectedNorthHand.Split(".") },
+                South = new South { Hcp = new MinMax (7, 37), Controls = new MinMax(controls, controls), Shape = shape }
+            };
 
             var boards = shufflingDeal.Execute();
             Assert.Equal(10, boards.Length);
@@ -58,9 +63,8 @@ namespace TosrGui.Test
 
             var shufflingDeal = new ShufflingDeal()
             {
-                NrOfHands = 10,
                 North = new North { Hand = expectedNorthHand.Split(".") },
-                South = new South { Controls = new MinMax { Min = controls, Max = controls }, Shape = shape, SpecificControls = specificControls }
+                South = new South { Controls = new MinMax(controls, controls), Shape = shape, SpecificControls = specificControls }
             };
 
             var boards = shufflingDeal.Execute();
@@ -79,15 +83,8 @@ namespace TosrGui.Test
 
             var shufflingDeal = new ShufflingDeal()
             {
-                NrOfHands = 10,
                 North = new North { Hand = expectedNorthHand.Split(".") },
-                South = new South
-                {
-                    Controls = new MinMax { Min = controls, Max = controls },
-                    Shape = shape,
-                    SpecificControls = specificControls,
-                    Queens = queens
-                }
+                South = new South { Controls = new MinMax(controls, controls), Shape = shape, SpecificControls = specificControls, Queens = queens }
             };
 
             var boards = shufflingDeal.Execute();
@@ -108,16 +105,8 @@ namespace TosrGui.Test
 
             var shufflingDeal = new ShufflingDeal()
             {
-                NrOfHands = 10,
                 North = new North { Hand = expectedNorthHand.Split(".") },
-                South = new South
-                {
-                    Hcp = new MinMax { Min = minHcp, Max = maxHcp },
-                    Controls = new MinMax { Min = controls, Max = controls },
-                    Shape = shape,
-                    SpecificControls = specificControls,
-                    Queens = queens,
-                }
+                South = new South {Hcp = new MinMax(minHcp, maxHcp), Controls = new MinMax(controls, controls), Shape = shape, SpecificControls = specificControls, Queens = queens, }
             };
 
             var boards = shufflingDeal.Execute();
@@ -127,18 +116,18 @@ namespace TosrGui.Test
 
         private static void CheckBoard(string board, ShufflingDeal shufflingDeal)
         {
-            var hands = board.Split(' ');
+            var hands = Util.GetBoardsTosr(board);
             Assert.All(hands, (hand) => Assert.Equal(16, hand.Length));
             // Check north
-            var actualNandNorth = hands[(int)Player.North - 1];
-            Assert.Equal(string.Join(".", shufflingDeal.North.Hand), actualNandNorth);
+            var actualNandNorth = hands[(int)Player.North];
+            Assert.Equal(string.Join(",", shufflingDeal.North.Hand), actualNandNorth);
             // Check south
-            var actualNandSouth = hands[(int)Player.South - 1];
-            Assert.Equal(shufflingDeal.South.Controls.Min, Util.GetControlCount(actualNandSouth));
-            var suits = actualNandSouth.Split('.');
+            var actualHandSouth = hands[(int)Player.South];
+            Assert.Equal(shufflingDeal.South.Controls.Min, Util.GetControlCount(actualHandSouth));
+            var suits = actualHandSouth.Split(',');
             Assert.Equal(shufflingDeal.South.Shape, string.Join("", suits.Select(suit => suit.Length.ToString())));
             if (shufflingDeal.South.Hcp != null)
-                Assert.InRange(Util.GetHcpCount(hands[(int)Player.South - 1]), shufflingDeal.South.Hcp.Min, shufflingDeal.South.Hcp.Max);
+                Assert.InRange(Util.GetHcpCount(hands[(int)Player.South]), shufflingDeal.South.Hcp.Min, shufflingDeal.South.Hcp.Max);
 
             foreach (var suit in suits.Select((x, Index) => (x, Index)))
             {

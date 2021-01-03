@@ -5,41 +5,39 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-using Common;
+using Solver;
 
 namespace Tosr
 {
     public partial class ShuffleRestrictionsForm : Form
     {
-        private readonly ShuffleRestrictions shuffleRestrictions;
-        public ShuffleRestrictions ShuffleRestrictions => shuffleRestrictions;
+        private readonly ShufflingDeal shufflingDeal;
+        public ShufflingDeal ShufflingDeal => shufflingDeal;
 
-        public ShuffleRestrictionsForm(ShuffleRestrictions shuffleRestrictions)
+        public ShuffleRestrictionsForm(ShufflingDeal shufflingDeal)
         {
             InitializeComponent();
-            this.shuffleRestrictions = shuffleRestrictions;
-            ObjectToForm(shuffleRestrictions);
+            this.shufflingDeal = shufflingDeal;
+            ObjectToForm();
         }
 
         private void ShuffleRestrictionsForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             FormToObject();
         }
-        private void ObjectToForm(ShuffleRestrictions shuffleRestrictions)
+        private void ObjectToForm()
         {
-            checkBoxControls.Checked = shuffleRestrictions.restrictControls;
-            checkBoxShape.Checked = shuffleRestrictions.restrictShape;
-            numericUpDownControls.Value = shuffleRestrictions.minControls;
-            textBoxShape.Text = shuffleRestrictions.shape;
+            checkBoxControls.Checked = shufflingDeal.South.Controls != null;
+            checkBoxShape.Checked = shufflingDeal.South.Shape != null;
+            if (checkBoxControls.Checked)
+                numericUpDownControls.Value = shufflingDeal.South.Controls.Min;
+            if (checkBoxShape.Checked)
+                textBoxShape.Text = shufflingDeal.South.Shape;
         }
         private void FormToObject()
         {
-            shuffleRestrictions.restrictControls = checkBoxControls.Checked;
-            shuffleRestrictions.restrictShape = checkBoxShape.Checked;
-            shuffleRestrictions.minControls = (int)numericUpDownControls.Value;
-            shuffleRestrictions.maxControls = (int)numericUpDownControls.Value;
-            shuffleRestrictions.shape = textBoxShape.Text;
+            shufflingDeal.South.Controls = checkBoxControls.Checked ? new MinMax { Min = (int)numericUpDownControls.Value, Max = (int)numericUpDownControls.Value } : null;
+            shufflingDeal.South.Shape = checkBoxShape.Checked ? textBoxShape.Text : null;
         }
-
     }
 }
