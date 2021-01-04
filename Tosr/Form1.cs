@@ -19,7 +19,7 @@ namespace Tosr
         private AuctionControl auctionControl;
 
         private string[] deal;
-        private ShufflingDeal shufflingDeal = new ShufflingDeal() { NrOfHands = 1};
+        private readonly ShufflingDeal shufflingDeal = new ShufflingDeal() { NrOfHands = 1};
 
         private BidManager bidManager;
 
@@ -55,7 +55,6 @@ namespace Tosr
                 var progress = new Progress<string>(report => toolStripStatusLabel1.Text = $"Generating dictionary {report}...");
                 reverseDictionaries = new ReverseDictionaries(fasesWithOffset, progress);
             });
-            toolStripStatusLabel1.Text = "Generating reverse dictionaries done";
 
             bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, true);
             bidManager.Init(auctionControl.auction);
@@ -290,7 +289,7 @@ namespace Tosr
                 ShowHand(deal[(int)Player.North], panelNorth);
                 panelNorth.Visible = true;
                 ShowHand(deal[(int)Player.South], panelSouth);
-                auctionControl.auction = board.Auction;
+                auctionControl.auction = board.Auction ?? new Auction();
                 auctionControl.ReDraw();
             }
         }

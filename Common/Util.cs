@@ -188,6 +188,14 @@ namespace Common
             return ((Suit)(3 - longestSuit), maxSuitLength);
         }
 
+        public static int GetNumberOfTrumps(Suit suit, string northHand, string southHand)
+        {
+            Debug.Assert(suit != Suit.NoTrump);
+            var suitLengthNorth = northHand.Split(',')[3 - (int)suit].Length;
+            var suitLengthSouth = southHand.Split(',')[3 - (int)suit].Length;
+            return suitLengthNorth + suitLengthSouth;
+        }
+
         public static bool IsFreakHand(IEnumerable<int> handLength)
         {
             var handPattern = handLength.OrderByDescending(y => y).ToArray();
@@ -320,7 +328,7 @@ namespace Common
             return suit == Suit.NoTrump ? (int)suit : 3 - (int)suit;
         }
 
-        public static ExpectedContract GetExpectedContract(List<int> scores)
+        public static ExpectedContract GetExpectedContract(IEnumerable<int> scores)
         {
             if (scores.Count(x => x == 13) / scores.Count() > .6)
                 return ExpectedContract.GrandSlam;

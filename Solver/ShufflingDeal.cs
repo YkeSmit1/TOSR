@@ -39,6 +39,7 @@ namespace Solver
     {
         public North North { get; set; } = new North();
         public South South { get; set; } = new South();
+        private Random seed = new Random();
         public string[] Execute()
         {
             GenerateTclScript();
@@ -131,7 +132,7 @@ namespace Solver
 
         }
 
-        private static string[] RunDeal(int nrOfHands)
+        private string[] RunDeal(int nrOfHands)
         {
             var directory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "deal319");
 
@@ -140,7 +141,7 @@ namespace Solver
                 WorkingDirectory = directory,
                 FileName = Path.Combine(directory, "deal.exe"),
                 UseShellExecute = false,
-                Arguments = $"{nrOfHands} -i format/pbn -i shuffle.tcl ",
+                Arguments = $"{nrOfHands} -s {seed.Next()} -i format/pbn -i shuffle.tcl ",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 CreateNoWindow = true,

@@ -22,7 +22,9 @@ namespace Common
 
         public string GetPrettyAuction(string separator)
         {
-            return string.Join(separator, GetBids(Player.North).Zip(GetBids(Player.South), (x, y) => $"{x}{y} {y.description}"));
+            var bidsNorth = GetBids(Player.North);
+            var bidsSouth = GetBids(Player.South);
+            return string.Join(separator, bidsNorth.Zip(bidsSouth, (x, y) => $"{x}{y} {y.description}")) + (bidsNorth.Count() > bidsSouth.Count() ? separator + bidsNorth.Last() : "");
         }
 
         public Player GetDeclarer(Suit suit)

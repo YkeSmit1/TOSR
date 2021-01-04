@@ -86,6 +86,7 @@ namespace Tosr
             QueensAuction1 = Util.LoadAuctions("txt\\AuctionsByQueen1.txt", GenerateQueensDictionary, 1);
             progress.Report(nameof(QueensAuction2));
             QueensAuction2 = Util.LoadAuctions("txt\\AuctionsByQueen2.txt", GenerateQueensDictionary, 2);
+            progress.Report("done");
         }
 
         public ShapeDictionary GenerateAuctionsForShape(int nrOfShortages)

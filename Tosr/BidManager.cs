@@ -234,16 +234,11 @@ namespace Tosr
                         if (matches.Count() >= 1)
                         {
                             var bidsScanningOther = auction.GetBids(Player.South, Fase.ScanningOther);
-                            // TODO also call this function when some part of the queens is known. Ie. when control scanning has used zoom
-                            if (bidsScanningOther.Any())
-                            {
-                                // TODO pass queens to dds
-                                var queens = GetQueensFromAuction(auction, reverseDictionaries, shape.Value.shapes.First(), controlsScanning.Value.zoomOffset);
-                            }
-                            // TODO pass hcp to dds
+                            // TODO also call this function when some part of the queens is known. I.e. when control scanning has used zoom
+                            var queens = bidsScanningOther.Any() ? GetQueensFromAuction(auction, reverseDictionaries, shape.Value.shapes.First(), controlsScanning.Value.zoomOffset): null;
                             var hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions);
                             var declarer = auction.GetDeclarerOrNorth(trumpSuit);
-                            var confidenceTricks = GetConfidenceTricks(northHand, matches, trumpSuit, declarer);
+                            var confidenceTricks = GetConfidenceTricks(northHand, matches, hcp, queens, trumpSuit, declarer);
                             if (GetConfidenceToBidSlam(confidenceTricks) < 60.0)
                             {
                                 biddingState.Fase = Fase.End;
@@ -291,7 +286,7 @@ namespace Tosr
                     return new MinMax(hcps.Min(), hcps.Max());
             }
 
-            return new MinMax();
+            return null;
         }
 
         public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, IEnumerable<string> southHandShapes, IEnumerable<Bid> controls, Suit trumpSuit)
@@ -322,46 +317,34 @@ namespace Tosr
 
         private Dictionary<int, int> GetConfidenceTricks(string northHand, IEnumerable<string> matches, int minControls, int maxControls, Suit trumpSuit, Player declarer)
         {
-            var tricks = new List<int>();
-            foreach (var match in matches)
-                tricks.AddRange(SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, minControls, maxControls));
+            var tricks = matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, minControls, maxControls)).ToList();
             return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (int)(100 * (double)g.ToList().Count() / tricks.Count));
         }
 
-        private Dictionary<int, int> GetConfidenceTricks(string northHand, IEnumerable<string> matches, Suit trumpSuit, Player declarer)
+        private Dictionary<int, int> GetConfidenceTricks(string northHand, IEnumerable<string> matches, MinMax hcp, string queens, Suit trumpSuit, Player declarer)
         {
-            var tricks = new List<int>();
-            foreach (var match in matches)
-                tricks.AddRange(SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match));
+            var tricks = matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, hcp, queens)).ToList();
             return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (int)(100 * (double)g.ToList().Count() / tricks.Count));
         }
 
         private Bid CalculateEndContract(Auction auction, string northHand, Bid currentBid)
         {
+            if (!useSingleDummySolver)
+                return Bid.PassBid;
+
             var constructedSouthHands = ConstructSouthHand(northHand, auction);
-            if (useSingleDummySolver)
-            {
-                var suit = Util.GetLongestSuit(northHand, constructedSouthHands.First());
-                var scores = new List<int>();
-                foreach (var match in constructedSouthHands)
-                    scores.AddRange(SingleDummySolver.SolveSingleDummy(suit.Item1, auction.GetDeclarerOrNorth(suit.Item1), northHand, match));
-                var expectedContract = Util.GetExpectedContract(scores);
-                var bid = Bid.GetBestContract(expectedContract, suit.Item1, currentBid);
-                // Try NT
-                if (bid > currentBid)
-                {
-                    var scoresNT = new List<int>();
-                    foreach (var match in constructedSouthHands)
-                        scoresNT.AddRange(SingleDummySolver.SolveSingleDummy(Suit.NoTrump, auction.GetDeclarerOrNorth(Suit.NoTrump), northHand, match));
-                    var expectedContractNT = Util.GetExpectedContract(scoresNT);
-                    var bidNT = Bid.GetBestContract(expectedContractNT, Suit.NoTrump, currentBid);
-                    if (bid > currentBid)
-                        return bidNT;
-                }
-                if (bid < currentBid)
-                    return bid;
-            }
-            return Bid.PassBid;
+            var suit = Util.GetLongestSuit(northHand, constructedSouthHands.First()).Item1;
+            var scores = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(suit, auction.GetDeclarerOrNorth(suit), northHand, match));
+            var bid = Bid.GetBestContract(Util.GetExpectedContract(scores), suit, currentBid);
+            if (bid > currentBid)
+                return bid;
+            if (bid == currentBid)
+                return Bid.PassBid;
+
+            // Try NT
+            var scoresNT = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(Suit.NoTrump, auction.GetDeclarerOrNorth(Suit.NoTrump), northHand, match));
+            var bidNT = Bid.GetBestContract(Util.GetExpectedContract(scoresNT), Suit.NoTrump, currentBid);
+            return bidNT > currentBid ? bidNT : Bid.PassBid;
         }
 
         public void SouthBid(BiddingState biddingState, Auction auction, string handsString)
@@ -603,8 +586,13 @@ namespace Tosr
 
             if (queensAuctions.TryGetValue(bidsForFaseQueens, out var scanningOther))
             {
+                var shapes = shapeStr.ToArray().Select((x, index) => (int.Parse(x.ToString()), index)); // {3,4,5,1}
+                var shapesOrdered = shapes.OrderByDescending(x => x.Item1).ThenBy(x => x.index).ToList(); // {5,4,3,1}
+                var queensOrdered = new string(shapes.Select(x => scanningOther[shapesOrdered.IndexOf(x)]).ToArray());
+
                 logger.Debug($"Found queens for auction. Queens:{scanningOther}. QueensBids:{bidsForFaseQueens}. Auction:{auction.GetPrettyAuction("|")}");
-                return scanningOther;
+
+                return queensOrdered;
             }
 
             throw new InvalidOperationException($"{ bidsForFaseQueens } not found in queens dictionary. Auction:{auction.GetPrettyAuction("|")}. " +

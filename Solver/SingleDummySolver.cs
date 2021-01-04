@@ -57,5 +57,33 @@ namespace Solver
 
             return shufflingDeal.Execute().ToArray();
         }
+
+        public static List<int> SolveSingleDummy(Suit trumpSuit, Player declarer, string northHand, string southHand, MinMax hcp, string queens)
+        {
+            var handsForSolver = GetHandsForSolver(northHand, southHand, hcp, queens).ToArray();
+            return Api.SolveAllBoards(handsForSolver, Util.GetDDSSuit(trumpSuit), Util.GetDDSFirst(declarer)).ToList();
+        }
+
+        private static IEnumerable<string> GetHandsForSolver(string northHandStr, string southHandStr, MinMax hcp, string queens)
+        {
+            var southHand = southHandStr.Split(',');
+            var controlsSpecific = southHand.Select(x => Regex.Match(x, "[AK]").ToString()).ToArray();
+            var controls = Util.GetControlCount(southHandStr);
+
+            var shuflingDeal = new ShufflingDeal
+            {
+                North = new North { Hand = northHandStr.Split(',') },
+                South = new South
+                {
+                    Shape = string.Join("", southHand.Select(x => x.Length.ToString())),
+                    Hcp = hcp,
+                    Controls = new MinMax(controls, controls),
+                    SpecificControls = controlsSpecific,
+                    Queens = queens
+                }
+            };
+            return shuflingDeal.Execute();
+        }
+
     }
 }
