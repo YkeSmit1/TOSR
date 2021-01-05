@@ -330,11 +330,11 @@ namespace Common
 
         public static ExpectedContract GetExpectedContract(IEnumerable<int> scores)
         {
-            if (scores.Count(x => x == 13) / scores.Count() > .6)
+            if ((double)scores.Count(x => x == 13) / (double)scores.Count() > .6)
                 return ExpectedContract.GrandSlam;
-            if (scores.Count(x => x == 12) / scores.Count() > .6)
+            if ((double)scores.Count(x => x == 12) / (double)scores.Count() > .6)
                 return ExpectedContract.SmallSlam;
-            if (scores.Count(x => x == 12 || x == 13) / scores.Count() > .6)
+            if ((double)scores.Count(x => x == 12 || x == 13) / (double)scores.Count() > .6)
                 return scores.Count(x => x == 12) >= scores.Count(x => x == 13) ? ExpectedContract.SmallSlam : ExpectedContract.GrandSlam;
 
             return ExpectedContract.Game;

@@ -276,22 +276,41 @@ namespace Tosr
 
         private void ToolStripMenuItemGoToBoardClick(object sender, EventArgs e)
         {
+            LoadBoard(out _);
+        }
+
+        private void ToolStripMenuItemOneBoardClick(object sender, EventArgs e)
+        {
+            if (LoadBoard(out var board))
+            {
+                var batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, true);
+                var pbn = batchBidding.Execute(new[] { board.Deal}, new Progress<int>());
+                auctionControl.auction = pbn.Boards.First().Auction ?? new Auction();
+                auctionControl.ReDraw();
+            }
+        }
+
+        private bool LoadBoard(out BoardDto board)
+        {
+            board = null;
             if (pbn.Boards.Count() == 0)
             {
                 MessageBox.Show("No PBN file is loaded.", "Error");
-                return;
+                return false;
             }
             var goToBoardForm = new GoToBoardForm(pbn.Boards.Count());
             if (goToBoardForm.ShowDialog() == DialogResult.OK)
             {
-                var board = pbn.Boards[goToBoardForm.BoardNumber - 1];
+                board = pbn.Boards[goToBoardForm.BoardNumber - 1];
                 deal = board.Deal;
                 ShowHand(deal[(int)Player.North], panelNorth);
                 panelNorth.Visible = true;
                 ShowHand(deal[(int)Player.South], panelSouth);
                 auctionControl.auction = board.Auction ?? new Auction();
                 auctionControl.ReDraw();
+                return true;
             }
+            return false;
         }
     }
 }
