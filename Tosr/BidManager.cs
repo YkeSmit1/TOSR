@@ -40,8 +40,8 @@ namespace Tosr
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries = null;
         readonly bool useSingleDummySolver = false;
-        private Lazy<(List<string> shapes, int zoomOffset)> shape;
-        private Lazy<(List<string> controls, int zoomOffset)> controlsScanning;
+        public Lazy<(List<string> shapes, int zoomOffset)> shape;
+        public Lazy<(List<string> controls, int zoomOffset)> controlsScanning;
 
         static readonly char[] relevantCards = new[] { 'A', 'K', 'Q' };
         public ConstructedSouthhandOutcome constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
@@ -528,7 +528,7 @@ namespace Tosr
             var bidsForFases = auction.GetBids(Player.South, fases.Concat(signOffFasesWithout3NTNoAsk).ToArray());
             var offSet = lastBidShape - Bid.threeDiamondBid;
             if (zoomOffset != 0)
-                bidsForFases = new List<Bid> { lastBidShape }.Concat(bidsForFases);
+                bidsForFases = new [] { lastBidShape }.Concat(bidsForFases);
 
             var used4ClAsRelay = Used4ClAsRelay(auction);
             var fourCLubsRelayOffSet = 0;
@@ -571,12 +571,12 @@ namespace Tosr
         /// </summary>
         public static string GetQueensFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, string shapeStr, int zoomOffset)
         {
-            var lastBidPreviousFase = auction.GetBids(Player.South, new[] { Fase.Controls, Fase.ScanningControls }).Last();
+            var lastBidPreviousFase = auction.GetBids(Player.South, (new[] { Fase.Controls, Fase.ScanningControls }).Concat(signOffFasesWithout3NTNoAsk).ToArray()).Last();
             var queensBids = auction.GetBids(Player.South, Fase.ScanningOther);
             var offset = lastBidPreviousFase - ReverseDictionaries.GetOffsetBidForQueens(shapeStr);
             if (zoomOffset != 0)
             {
-                queensBids = new List<Bid> { lastBidPreviousFase - zoomOffset + 1}.Concat(queensBids);
+                queensBids = new [] { lastBidPreviousFase}.Concat(queensBids);
                 offset -= (zoomOffset + 1);
             }
 
@@ -584,19 +584,22 @@ namespace Tosr
             var queensAuctions = reverseDictionaries.GetQueensDictionary(shapeStr);
             var bidsForFaseQueens = string.Join("", queensBids);
 
-            if (queensAuctions.TryGetValue(bidsForFaseQueens, out var scanningOther))
+            if (queensAuctions.TryGetValue(bidsForFaseQueens, out var queens))
             {
-                var shapes = shapeStr.ToArray().Select((x, index) => (int.Parse(x.ToString()), index)); // {3,4,5,1}
-                var shapesOrdered = shapes.OrderByDescending(x => x.Item1).ThenBy(x => x.index).ToList(); // {5,4,3,1}
-                var queensOrdered = new string(shapes.Select(x => scanningOther[shapesOrdered.IndexOf(x)]).ToArray());
-
-                logger.Debug($"Found queens for auction. Queens:{scanningOther}. QueensBids:{bidsForFaseQueens}. Auction:{auction.GetPrettyAuction("|")}");
-
-                return queensOrdered;
+                logger.Debug($"Found queens for auction. Queens:{queens}. QueensBids:{bidsForFaseQueens}. Auction:{auction.GetPrettyAuction("|")}");
+                return GetQueensOrdered(shapeStr, queens);
             }
 
             throw new InvalidOperationException($"{ bidsForFaseQueens } not found in queens dictionary. Auction:{auction.GetPrettyAuction("|")}. " +
                 $"zoom-offset shape:{zoomOffset}");
+        }
+
+        private static string GetQueensOrdered(string shapeStr, string queens)
+        {
+            var shapes = shapeStr.ToArray().Select((x, index) => (int.Parse(x.ToString()), index)); // {3,4,5,1}
+            var shapesOrdered = shapes.OrderByDescending(x => x.Item1).ThenBy(x => x.index).ToList(); // {5,4,3,1}
+            var queensOrdered = new string(shapes.Select(x => queens[shapesOrdered.IndexOf(x)]).ToArray());
+            return queensOrdered;
         }
 
         private static bool Used4ClAsRelay(Auction auction)
@@ -633,7 +636,7 @@ namespace Tosr
         /// <returns>{"Qxx","xxxx","Axxxx","K"}</returns>
         public static IEnumerable<string> MergeControlAndShape(string[] controls, string shapeLengthStr)
         {
-            var shapes = shapeLengthStr.ToArray().Select((x, index) => (float.Parse(x.ToString()), index)); // {3,4,5,1}
+            var shapes = shapeLengthStr.ToArray().Select((x, index) => (int.Parse(x.ToString()), index)); // {3,4,5,1}
             // Sort by length, then by position 
             var shapesOrdered = shapes.OrderByDescending(x => x.Item1).ThenBy(x => x.index).ToList(); // {5,4,3,1}
             return shapes.Select(shape => controls[shapesOrdered.IndexOf(shape)].PadRight((int)shape.Item1, 'x'));
