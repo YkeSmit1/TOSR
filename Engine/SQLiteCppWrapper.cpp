@@ -82,7 +82,7 @@ std::tuple<int, Fase, std::string, int> SQLiteCppWrapper::GetRule(const HandChar
                     if (zoom)
                     {
                         auto [bidIdScanningOther, endfaseScanningOther, strScanningOther] = GetRuleScanningOther(hand, 0);
-                        return std::make_tuple(bidId + bidIdCtrlsScanning + bidIdScanningOther - 1, 
+                        return std::make_tuple(bidId + (bidIdCtrlsScanning - 1) + (bidIdScanningOther - 1), 
                             GetNextFase(endfaseScanningOther, NextFase(previousFase)), str + "\n" + strCtrlScanning + "\n" + strScanningOther, bidIdScanningOther);
                     }
                     return std::make_tuple(bidId + bidIdCtrlsScanning - 1, GetNextFase(endfaseCtrlsScanning, previousFase), str + "\n" + strCtrlScanning, 0);

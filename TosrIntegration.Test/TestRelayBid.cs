@@ -34,8 +34,7 @@ namespace TosrIntegration.Test
             yield return new object[] { "TestNoAskCtrl3_", "AKQ2,AK2,A32,432", "x,Qxxx,KQxxx,AQx", "1♣1NT2♦2♠3♣3NT4♦4♠5♦5NTPass", "1♠2♣2♥2NT3♦4♣4♥5♣5♠6NT" };
             yield return new object[] { "TestNoAskCtrl5", "KJx,KJxxx,Kx,AJx", "AQ,Qx,Axxxx,KQxx", "1♣3NT4♠5♥6♥6NTPass", "3♣4♥5♦6♦6♠7♠" };
             yield return new object[] { "TestOneAskCtrl3", "AKQ2,AK2,A32,K32", "x,Qxxx,KQxxx,AQx", "1♣1NT2♦2♠3♣3♥4♣4NT5♥Pass", "1♠2♣2♥2NT3♦3♠4♥5♦6♥" };
-            // TODO fix double zoom. Should ask for queens once after zoom twice.
-            //yield return new object[] { "TestOneAskCtrl5ZoomScan", "AQJ2,AQJ,A32,K32", "K,Kxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4NT6♥6NT7♦Pass", "1♠2♣2♥2NT3♦4♣6♦6♠7♣7♥" };
+            yield return new object[] { "TestOneAskCtrl5ZoomScan", "AQJ2,AQJ,A32,K32", "K,Kxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4NT6♣Pass", "1♠2♣2♥2NT3♦4♣5NT6♦" };
             yield return new object[] { "TestOneAskCtrl5", "AQJ2,AQJ,AK2,432", "K,Kxxx,Qxxxx,AKx", "1♣1NT2♦2♠3♣3♥4NT5♦5NT6♥Pass", "1♠2♣2♥2NT3♦4♣5♣5♠6♦6♠" };
             yield return new object[] { "TestTwoAskCtrl3", "AKQ2,AK2,A32,KQ2", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4♣4♠5♦6♣Pass", "1♠2♣2♥2NT3♦3♠4♥5♣5NT6♦" };
             yield return new object[] { "TestTwoAskCtrl5", "KQ32,AKQ,A32,KQ2", "A,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4♦4NT5♠Pass", "1♠2♣2♥2NT3♦4♣4♠5♥5NT" };
@@ -63,6 +62,10 @@ namespace TosrIntegration.Test
 
             // Test with zoom
             yield return new object[] { "TestFitWithZoom", "KJ743,K,A84,AQT4", "Axxx,AQ,Qxx,Kxxx", "1♣1NT2♥4♦5♦5NT6♦Pass", "1♠2♦3NT5♣5♠6♣6NT" };
+
+            // Special case, double zoom
+            yield return new object[] { "TestFitWithDoubleZoom", "AJT3,KQ74,AQT5,5", "Kxx,Axxx,J,KQxxx", "1♣2♣2♠3♥4♦5♠Pass", "1NT2♥3♦3NT5♥5NT" };
+
         }
     }
 

@@ -148,7 +148,9 @@ namespace Solver
             };
             Process process = new Process { StartInfo = startInfo };
             process.Start();
-            process.WaitForExit();
+            // 1 second timeout
+            if (!process.WaitForExit(1000))
+                throw new TimeoutException("Deal.exe timed out");
             if (process.ExitCode != 0)
             {
                 using var errorReader = process.StandardError;
