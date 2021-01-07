@@ -14,11 +14,12 @@ TODO
 
 How to build
 - Clone or download the sources.
-- Use vcpkg to install SQLiteCpp and Sqlite-orm. Use "vcpkg integrate install" to use it in VS.
+- Use vcpkg to install SQLiteCpp. Use "vcpkg integrate install" to use it in VS.
 - Make sure .Net Core 3.1 is installed.
 - Install nuget packages newtonsoft and xunit.
 
 How to run without building
+- Download distribute on page actions -> clock latest build -> distribute
 - Make sure .Net Core 3.1 is installed.
 - Download the artifacts directory from GitHub
 - Download cards.dll and copy it to the outputdirectory.
