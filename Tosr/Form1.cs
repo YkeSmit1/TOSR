@@ -19,7 +19,7 @@ namespace Tosr
         private AuctionControl auctionControl;
 
         private string[] deal;
-        private readonly ShufflingDeal shufflingDeal = new ShufflingDeal() { NrOfHands = 1};
+        private ShufflingDeal shufflingDeal = new ShufflingDeal() { NrOfHands = 1};
 
         private BidManager bidManager;
 
@@ -133,7 +133,12 @@ namespace Tosr
 
         private void Shuffle()
         {
-            deal = Util.GetBoardsTosr(shufflingDeal.Execute().First());
+            do
+            {
+                var board = shufflingDeal.Execute().First();
+                deal = Util.GetBoardsTosr(board);
+            } 
+            while (Util.IsFreakHand(deal[(int)Player.South].Split(',').Select(x => x.Length)));
             ShowHand(deal[(int)Player.North], panelNorth);
             panelNorth.Visible = false;
             ShowHand(deal[(int)Player.South], panelSouth);
@@ -240,8 +245,10 @@ namespace Tosr
 
         private void ToolStripButton4Click(object sender, EventArgs e)
         {
-            using ShuffleRestrictionsForm shuffleRestrictionsForm = new ShuffleRestrictionsForm(shufflingDeal);
-            shuffleRestrictionsForm.ShowDialog();
+            var localShufflingDeal = ObjectCloner.ObjectCloner.DeepClone(shufflingDeal);
+            using var shuffleRestrictionsForm = new ShuffleRestrictionsForm(localShufflingDeal);
+            if (shuffleRestrictionsForm.ShowDialog() == DialogResult.OK)
+                shufflingDeal = localShufflingDeal;
         }
 
         private void ToolStripMenuItem11Click(object sender, EventArgs e)
@@ -298,7 +305,7 @@ namespace Tosr
                 MessageBox.Show("No PBN file is loaded.", "Error");
                 return false;
             }
-            var goToBoardForm = new GoToBoardForm(pbn.Boards.Count());
+            using (var goToBoardForm = new GoToBoardForm(pbn.Boards.Count()))
             if (goToBoardForm.ShowDialog() == DialogResult.OK)
             {
                 board = pbn.Boards[goToBoardForm.BoardNumber - 1];
