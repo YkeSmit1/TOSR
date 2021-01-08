@@ -154,7 +154,7 @@ namespace TosrGui.Test
                             break;
                         case 'N': Assert.DoesNotContain("Q", suit.x);
                             break;
-                        case 'X': // TODO not sure what to do;
+                        case 'X': // TODO not sure what to do
                             break;
                         default:
                             throw new ArgumentException(queens[suit.Index].ToString());

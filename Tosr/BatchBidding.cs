@@ -58,9 +58,10 @@ namespace Tosr
             public SortedDictionary<BidManager.ConstructedSouthhandOutcome, int> outcomes = new SortedDictionary<BidManager.ConstructedSouthhandOutcome, int>();
             public SortedDictionary<Player, int> dealers = new SortedDictionary<Player, int>();
             public SortedDictionary<int, int> bidsNonShape = new SortedDictionary<int, int>();
-            public SortedDictionary<(CorrectnessContractBreakdown, BidManager.ConstructedSouthhandOutcome), int> ContractCorrectnessBreakdown = 
+            public SortedDictionary<(CorrectnessContractBreakdown, BidManager.ConstructedSouthhandOutcome), int> ContractCorrectnessBreakdownOutcome = 
                 new SortedDictionary<(CorrectnessContractBreakdown, BidManager.ConstructedSouthhandOutcome), int>();
             public SortedDictionary<CorrectnessContract, int> ContractCorrectness = new SortedDictionary<CorrectnessContract, int>();
+            public SortedDictionary<CorrectnessContractBreakdown, int> ContractCorrectnessBreakdown = new SortedDictionary<CorrectnessContractBreakdown, int>();
 
         }
 
@@ -174,8 +175,9 @@ namespace Tosr
                 statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Where(bid => bid.bidType == BidType.bid).Last() - auction.GetBids(Player.South, Fase.Shape).Last());
             statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthhandOutcome);
             var correctnessContractBreakdown = CheckContract(contract, board, dealer == Player.UnKnown ? Player.North : dealer);
-            statistics.ContractCorrectnessBreakdown.AddOrUpdateDictionary((correctnessContractBreakdown, bidManager.constructedSouthhandOutcome));
+            statistics.ContractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, bidManager.constructedSouthhandOutcome));
             var correctnessContract = GetCorrectness(correctnessContractBreakdown);
+            statistics.ContractCorrectnessBreakdown.AddOrUpdateDictionary(correctnessContractBreakdown);
             statistics.ContractCorrectness.AddOrUpdateDictionary(correctnessContract);
             if (correctnessContract == CorrectnessContract.InCorrect || correctnessContract == CorrectnessContract.NoFit)
                 inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.constructedSouthhandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
@@ -223,7 +225,9 @@ namespace Tosr
             File.WriteAllText("txt\\HandPerAuction.txt", JsonConvert.SerializeObject(multiHandPerAuction, Formatting.Indented));
             File.WriteAllText("txt\\Statistics.txt", JsonConvert.SerializeObject(statistics, Formatting.Indented));
             File.WriteAllText("txt\\ExpectedSouthHands.txt", expectedSouthHands.ToString());
-            File.WriteAllText("txt\\IncorrectContract.txt", inCorrectContracts.ToString());
+            var list = new List<string>(inCorrectContracts.ToString().Split('\n'));
+            list.Sort();
+            File.WriteAllText("txt\\IncorrectContract.txt", string.Join('\n', list));
         }
 
         private CorrectnessContractBreakdown CheckContract(Bid contract, string[] board, Player declarer)

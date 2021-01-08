@@ -104,10 +104,10 @@ namespace Tosr
         public Auction GetAuction(string northHand, string southHand)
         {
             logger.Debug($"Starting GetAuction for hand : {southHand}");
-            Auction auction = new Auction();
+            var auction = new Auction();
 
-            BiddingState biddingState = new BiddingState(fasesWithOffset);
-            Player currentPlayer = Player.West;
+            var biddingState = new BiddingState(fasesWithOffset);
+            var currentPlayer = Player.West;
             constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
             Init(auction);
 
@@ -291,12 +291,12 @@ namespace Tosr
 
         public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, IEnumerable<string> southHandShapes, IEnumerable<Bid> controls, Suit trumpSuit)
         {
-            Player declarer = auction.GetDeclarer(trumpSuit);
+            var declarer = auction.GetDeclarer(trumpSuit);
             var strControls = string.Join("", controls);
             var possibleControls = reverseDictionaries.ControlsOnlyAuctions[strControls];
             var confidence = GetConfidenceTricks(northHand, southHandShapes, possibleControls.First(), possibleControls.Last(), trumpSuit, declarer != Player.UnKnown ? declarer : Player.North);
-            int confidenceToBidSlam = GetConfidenceToBidSlam(confidence);
-            var relayBidkind = requirementsForRelayBid.Where(x =>confidenceToBidSlam > x.range.min && confidenceToBidSlam < x.range.max).First().relayBidKind;
+            var confidenceToBidSlam = GetConfidenceToBidSlam(confidence);
+            var relayBidkind = requirementsForRelayBid.Where(x =>confidenceToBidSlam >= x.range.min && confidenceToBidSlam <= x.range.max).First().relayBidKind;
             return relayBidkind;
         }
 
@@ -310,21 +310,24 @@ namespace Tosr
             };
         }
 
-        private static int GetConfidenceToBidSlam(Dictionary<int, int> confidenceTricks)
+        private static Dictionary<int, double> GetConfidenceTricks(string northHand, IEnumerable<string> matches, int minControls, int maxControls, Suit trumpSuit, Player declarer)
         {
-            return (confidenceTricks.TryGetValue(12, out var smallSlamTricks) ? smallSlamTricks : 0) + (confidenceTricks.TryGetValue(13, out var grandSlamTricks) ? grandSlamTricks : 0);
+            return GroupTricks(matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, minControls, maxControls)));
         }
 
-        private Dictionary<int, int> GetConfidenceTricks(string northHand, IEnumerable<string> matches, int minControls, int maxControls, Suit trumpSuit, Player declarer)
+        private static Dictionary<int, double> GetConfidenceTricks(string northHand, IEnumerable<string> matches, MinMax hcp, string queens, Suit trumpSuit, Player declarer)
         {
-            var tricks = matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, minControls, maxControls)).ToList();
-            return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (int)(100 * (double)g.ToList().Count() / tricks.Count));
+            return GroupTricks(matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, hcp, queens)));
         }
 
-        private Dictionary<int, int> GetConfidenceTricks(string northHand, IEnumerable<string> matches, MinMax hcp, string queens, Suit trumpSuit, Player declarer)
+        private static Dictionary<int, double> GroupTricks(IEnumerable<int> tricks)
         {
-            var tricks = matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, hcp, queens)).ToList();
-            return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (int)(100 * (double)g.ToList().Count() / tricks.Count));
+            return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (100 * (double)g.ToList().Count() / tricks.Count()));
+        }
+
+        private static double GetConfidenceToBidSlam(Dictionary<int, double> confidenceTricks)
+        {
+            return (confidenceTricks.TryGetValue(12, out var smallSlamTricks) ? smallSlamTricks : 0.0) + (confidenceTricks.TryGetValue(13, out var grandSlamTricks) ? grandSlamTricks : 0.0);
         }
 
         private Bid CalculateEndContract(Auction auction, string northHand, Bid currentBid)
@@ -333,7 +336,8 @@ namespace Tosr
                 return Bid.PassBid;
 
             var constructedSouthHands = ConstructSouthHand(northHand, auction);
-            var suit = Util.GetLongestSuit(northHand, constructedSouthHands.First()).Item1;
+            var suitAndLength = Util.GetLongestSuit(northHand, constructedSouthHands.First());
+            var suit = suitAndLength.Item2 >= 8 ? suitAndLength.Item1 : Suit.NoTrump;
             var scores = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(suit, auction.GetDeclarerOrNorth(suit), northHand, match));
             var bid = Bid.GetBestContract(Util.GetExpectedContract(scores), suit, currentBid);
             if (bid > currentBid)
