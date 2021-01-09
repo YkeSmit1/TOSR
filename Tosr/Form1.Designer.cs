@@ -42,10 +42,12 @@
             this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem10 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemBidAgain = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem8 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem9 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemUseSolver = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemOneBoard = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
@@ -64,7 +66,6 @@
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.openFileDialog2 = new System.Windows.Forms.OpenFileDialog();
-            this.toolStripMenuItemOneBoard = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
@@ -162,7 +163,8 @@
             // 
             this.toolStripMenuItem5.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem7,
-            this.toolStripMenuItem10});
+            this.toolStripMenuItem10,
+            this.toolStripMenuItemBidAgain});
             this.toolStripMenuItem5.Name = "toolStripMenuItem5";
             this.toolStripMenuItem5.Size = new System.Drawing.Size(56, 20);
             this.toolStripMenuItem5.Text = "Shuffle";
@@ -182,6 +184,13 @@
             this.toolStripMenuItem10.Size = new System.Drawing.Size(185, 22);
             this.toolStripMenuItem10.Text = "Restrictions";
             this.toolStripMenuItem10.Click += new System.EventHandler(this.ToolStripButton4Click);
+            // 
+            // toolStripMenuItemBidAgain
+            // 
+            this.toolStripMenuItemBidAgain.Name = "toolStripMenuItemBidAgain";
+            this.toolStripMenuItemBidAgain.Size = new System.Drawing.Size(185, 22);
+            this.toolStripMenuItemBidAgain.Text = "Bid Again";
+            this.toolStripMenuItemBidAgain.Click += new System.EventHandler(this.ToolStripMenuItemBidAgainClick);
             // 
             // toolStripMenuItem6
             // 
@@ -216,6 +225,13 @@
             this.toolStripMenuItemUseSolver.Name = "toolStripMenuItemUseSolver";
             this.toolStripMenuItemUseSolver.Size = new System.Drawing.Size(234, 22);
             this.toolStripMenuItemUseSolver.Text = "Use Solver";
+            // 
+            // toolStripMenuItemOneBoard
+            // 
+            this.toolStripMenuItemOneBoard.Name = "toolStripMenuItemOneBoard";
+            this.toolStripMenuItemOneBoard.Size = new System.Drawing.Size(234, 22);
+            this.toolStripMenuItemOneBoard.Text = "Batch bid one board";
+            this.toolStripMenuItemOneBoard.Click += new System.EventHandler(this.ToolStripMenuItemOneBoardClick);
             // 
             // toolStripMenuItem1
             // 
@@ -359,13 +375,6 @@
             this.openFileDialog2.DefaultExt = "pbn";
             this.openFileDialog2.FileName = "openFileDialog2";
             // 
-            // toolStripMenuItemOneBoard
-            // 
-            this.toolStripMenuItemOneBoard.Name = "toolStripMenuItemOneBoard";
-            this.toolStripMenuItemOneBoard.Size = new System.Drawing.Size(234, 22);
-            this.toolStripMenuItemOneBoard.Text = "Batch bid one board";
-            this.toolStripMenuItemOneBoard.Click += new System.EventHandler(this.ToolStripMenuItemOneBoardClick);
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -433,6 +442,7 @@
         private System.Windows.Forms.OpenFileDialog openFileDialog2;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemGoToBoard;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemOneBoard;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemBidAgain;
     }
 }
 

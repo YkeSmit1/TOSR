@@ -57,12 +57,11 @@ namespace Tosr
             });
 
             bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, true);
-            bidManager.Init(auctionControl.auction);
             shufflingDeal.North = new North { Hcp = new MinMax(16, 37) };
             shufflingDeal.South = new South { Hcp = new MinMax(7, 37), Controls = new MinMax(2, 12) };
 
             Shuffle();
-            BidTillSouth(auctionControl.auction, biddingState);
+            StartBidding();
             resetEvent.Set();
         }
 
@@ -124,6 +123,12 @@ namespace Tosr
         private void ButtonShuffleClick(object sender, EventArgs e)
         {
             Shuffle();
+            StartBidding();
+        }
+
+        private void StartBidding()
+        {
+            panelNorth.Visible = false;
             biddingState.Init();
             bidManager.Init(auctionControl.auction);
             Clear();
@@ -140,7 +145,6 @@ namespace Tosr
             } 
             while (Util.IsFreakHand(deal[(int)Player.South].Split(',').Select(x => x.Length)));
             ShowHand(deal[(int)Player.North], panelNorth);
-            panelNorth.Visible = false;
             ShowHand(deal[(int)Player.South], panelSouth);
         }
 
@@ -305,7 +309,7 @@ namespace Tosr
                 MessageBox.Show("No PBN file is loaded.", "Error");
                 return false;
             }
-            using (var goToBoardForm = new GoToBoardForm(pbn.Boards.Count()))
+            using var goToBoardForm = new GoToBoardForm(pbn.Boards.Count());
             if (goToBoardForm.ShowDialog() == DialogResult.OK)
             {
                 board = pbn.Boards[goToBoardForm.BoardNumber - 1];
@@ -318,6 +322,11 @@ namespace Tosr
                 return true;
             }
             return false;
+        }
+
+        private void ToolStripMenuItemBidAgainClick(object sender, EventArgs e)
+        {
+            StartBidding();
         }
     }
 }

@@ -142,6 +142,9 @@ namespace Tosr
 
         public void NorthBid(BiddingState biddingState, Auction auction, string northHand)
         {
+            if (biddingState.EndOfBidding)
+                return;
+
             if (biddingState.Fase != Fase.End)
                 biddingState.CurrentBid = GetRelayBid(biddingState, auction, northHand);
             else
@@ -356,6 +359,7 @@ namespace Tosr
             if (biddingState.Fase == Fase.End)
             {
                 auction.AddBid(Bid.PassBid);
+                biddingState.CurrentBid = Bid.PassBid;
                 biddingState.EndOfBidding = true;
                 return;
             }
