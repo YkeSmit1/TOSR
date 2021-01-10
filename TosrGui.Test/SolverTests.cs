@@ -7,6 +7,7 @@ using Common;
 
 namespace TosrGui.Test
 {
+    [Collection("Sequential")]
     public class SolverTests
     {
         [Fact()]

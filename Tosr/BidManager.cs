@@ -325,7 +325,7 @@ namespace Tosr
 
         private static Dictionary<int, double> GroupTricks(IEnumerable<int> tricks)
         {
-            return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => (100 * (double)g.ToList().Count() / tricks.Count()));
+            return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => 100 * (double)g.ToList().Count() / tricks.Count());
         }
 
         private static double GetConfidenceToBidSlam(Dictionary<int, double> confidenceTricks)
@@ -647,7 +647,7 @@ namespace Tosr
             var shapes = shapeLengthStr.ToArray().Select((x, index) => (int.Parse(x.ToString()), index)); // {3,4,5,1}
             // Sort by length, then by position 
             var shapesOrdered = shapes.OrderByDescending(x => x.Item1).ThenBy(x => x.index).ToList(); // {5,4,3,1}
-            return shapes.Select(shape => controls[shapesOrdered.IndexOf(shape)].PadRight((int)shape.Item1, 'x'));
+            return shapes.Select(shape => controls[shapesOrdered.IndexOf(shape)].PadRight(shape.Item1, 'x'));
         }
 
         private static bool Match(string[] hand1, string[] hand2)

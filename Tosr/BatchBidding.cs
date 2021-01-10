@@ -36,7 +36,7 @@ namespace Tosr
             GrandSlamCorrect,
             GrandSlamTooHigh,
             NoFit,
-            Unknonwn,
+            Unknown,
         }
 
         public enum CorrectnessContract
@@ -194,7 +194,7 @@ namespace Tosr
                 case CorrectnessContractBreakdown.SmallSlamTooHigh:
                 case CorrectnessContractBreakdown.MissedGrandSlam:
                 case CorrectnessContractBreakdown.GrandSlamTooHigh:
-                case CorrectnessContractBreakdown.Unknonwn:
+                case CorrectnessContractBreakdown.Unknown:
                     return CorrectnessContract.InCorrect;
                 case CorrectnessContractBreakdown.GameCorrect:
                     return CorrectnessContract.GameCorrect;
@@ -233,7 +233,7 @@ namespace Tosr
         private CorrectnessContractBreakdown CheckContract(Bid contract, string[] board, Player declarer)
         {
             if (!useSingleDummySolver)
-                return CorrectnessContractBreakdown.Unknonwn;
+                return CorrectnessContractBreakdown.Unknown;
             var northHand = board[(int)Player.North];
             var southHand = board[(int)Player.South];
             if (contract.suit != Suit.NoTrump && Util.GetNumberOfTrumps(contract.suit, northHand, southHand) < 8)
