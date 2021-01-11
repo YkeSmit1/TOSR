@@ -13,9 +13,6 @@
     <Compile Update="BiddingBoxButton.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Update="Card.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
     <Compile Update="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

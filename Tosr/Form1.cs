@@ -150,29 +150,31 @@ namespace Tosr
 
         private void ShowHand(string hand, Panel parent)
         {
-            parent.Controls.OfType<Card>().ToList().ForEach((card) =>
+            parent.Controls.OfType<PictureBox>().ToList().ForEach((card) =>
             {
                 parent.Controls.Remove(card);
                 card.Dispose();
             });
             var suits = hand.Split(',');
-            var suit = Suit.Spades;
-            var cards = new List<Card>();
-            foreach (var suitStr in suits)
-            {
-                foreach (var card in suitStr)
-                    cards.Add(new Card() { Face = Util.GetFaceFromDescription(card), Suit = suit });
-                suit--;
-            }
-            cards.Reverse();
-
+            var suit = Suit.Clubs;
             var left = 20 * 12;
-            foreach (var card in cards)
+            foreach (var suitStr in suits.Reverse())
             {
-                card.Left = left;
-                card.Parent = parent;
-                card.Show();
-                left -= 20;
+                foreach (var card in suitStr.Reverse())
+                {
+                    var pictureBox = new PictureBox
+                    {
+                        Image = CardControl.GetFaceImageForCard(suit, Util.GetFaceFromDescription(card)),
+                        Left = left,
+                        Parent = parent,
+                        Height = 97,
+                        Width = 73,
+                        SizeMode = PictureBoxSizeMode.StretchImage,
+                    };
+                    pictureBox.Show();
+                    left -= 20;
+                }
+                suit++;
             }
         }
 

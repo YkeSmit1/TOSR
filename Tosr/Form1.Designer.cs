@@ -338,7 +338,7 @@
             this.panelNorth.BackColor = System.Drawing.Color.Green;
             this.panelNorth.Location = new System.Drawing.Point(41, 77);
             this.panelNorth.Name = "panelNorth";
-            this.panelNorth.Size = new System.Drawing.Size(311, 95);
+            this.panelNorth.Size = new System.Drawing.Size(313, 97);
             this.panelNorth.TabIndex = 18;
             // 
             // panelSouth
@@ -346,7 +346,7 @@
             this.panelSouth.BackColor = System.Drawing.Color.Green;
             this.panelSouth.Location = new System.Drawing.Point(41, 418);
             this.panelSouth.Name = "panelSouth";
-            this.panelSouth.Size = new System.Drawing.Size(311, 95);
+            this.panelSouth.Size = new System.Drawing.Size(313, 97);
             this.panelSouth.TabIndex = 18;
             // 
             // statusStrip1
