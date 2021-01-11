@@ -37,4 +37,12 @@
     </None>
   </ItemGroup>
 
+  <Target Name="UnzipArchive" BeforeTargets="Build">
+    <Unzip
+        SourceFiles=".\..\deal319win.zip"
+        DestinationFolder="$(OutputPath)"
+        OverwriteReadOnlyFiles="true"
+        />
+  </Target>
+
 </Project>
