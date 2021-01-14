@@ -19,7 +19,5 @@ How to build
 - Install nuget packages newtonsoft and xunit.
 
 How to run without building
-- Download distribute on page actions -> clock latest build -> distribute
 - Make sure .Net Core 3.1 is installed.
-- Download the artifacts directory from GitHub
-- Download cards.dll and copy it to the outputdirectory.
+- Download distribute on page actions -> latest build -> distribute

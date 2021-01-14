@@ -140,6 +140,7 @@ namespace Tosr
 
                 }
             }
+            progress.Report(statistics.handsBid);
             stringbuilder.AppendLine(@$"Seconds elapsed: {stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture)}");
             stringbuilder.AppendLine(@"Duplicate auctions are written to ""HandPerAuction.txt""");
             stringbuilder.AppendLine(@"Statistics are written to ""Statistics.txt""");

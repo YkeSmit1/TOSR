@@ -16,6 +16,7 @@ namespace Common
         public static readonly Bid Dbl = new Bid(BidType.dbl);
         public static readonly Bid Rdbl = new Bid(BidType.rdbl);
 
+        public static readonly Bid OneClub = new Bid(1, Suit.Clubs);
         public static readonly Bid twoNTBid = new Bid(2, Suit.NoTrump);
         public static readonly Bid threeDiamondBid = new Bid(3, Suit.Diamonds);
         public static readonly Bid threeSpadeBid = new Bid(3, Suit.Spades);

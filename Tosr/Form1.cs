@@ -49,26 +49,27 @@ namespace Tosr
             logger.Info($"Initialized engine with database '{"Tosr.db3"}'");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
+            shufflingDeal.North = new North { Hcp = new MinMax(16, 37) };
+            shufflingDeal.South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) };
+            Shuffle();
+            StartBidding();
+
             toolStripStatusLabel1.Text = "Generating reverse dictionaries...";
             await Task.Run(() =>
             {
                 var progress = new Progress<string>(report => toolStripStatusLabel1.Text = $"Generating dictionary {report}...");
                 reverseDictionaries = new ReverseDictionaries(fasesWithOffset, progress);
+                bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, true);
+                bidManager.Init(auctionControl.auction);
+                resetEvent.Set();
             });
-
-            bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, true);
-            shufflingDeal.North = new North { Hcp = new MinMax(16, 37) };
-            shufflingDeal.South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) };
-
-            Shuffle();
-            StartBidding();
-            resetEvent.Set();
         }
 
         private void ShowBiddingBox()
         {
             void handler(object x, EventArgs y)
             {
+                _ = resetEvent.WaitOne();
                 var biddingBoxButton = (BiddingBoxButton)x;
                 // TODO consider to use the solution proposed in
                 // https://stackoverflow.com/questions/981776/using-an-enum-as-an-array-index-in-c-sharp Ian Goldby solution
@@ -124,15 +125,22 @@ namespace Tosr
         {
             Shuffle();
             StartBidding();
+            _ = resetEvent.WaitOne();
+            bidManager.Init(auctionControl.auction);
         }
 
         private void StartBidding()
         {
-            panelNorth.Visible = false;
             biddingState.Init();
-            bidManager.Init(auctionControl.auction);
-            Clear();
-            BidTillSouth(auctionControl.auction, biddingState);
+
+            auctionControl.auction.Clear();
+            auctionControl.auction.AddBid(Bid.PassBid);
+            auctionControl.auction.AddBid(Bid.OneClub);
+            auctionControl.auction.AddBid(Bid.PassBid);
+            auctionControl.ReDraw();
+
+            biddingBox.Clear();
+            biddingBox.UpdateButtons(Bid.OneClub, auctionControl.auction.currentPlayer);
             biddingBox.Enabled = true;
         }
 
@@ -146,6 +154,7 @@ namespace Tosr
             while (Util.IsFreakHand(deal[(int)Player.South].Split(',').Select(x => x.Length)));
             ShowHand(deal[(int)Player.North], panelNorth);
             ShowHand(deal[(int)Player.South], panelSouth);
+            panelNorth.Visible = false;
         }
 
         private void ShowHand(string hand, Panel parent)
@@ -178,21 +187,14 @@ namespace Tosr
             }
         }
 
-        private void Clear()
-        {
-            auctionControl.auction.Clear();
-            auctionControl.ReDraw();
-            biddingBox.Clear();
-        }
-
         private void ButtonGetAuctionClick(object sender, EventArgs e)
         {
             try
             {
                 _ = resetEvent.WaitOne();
-                Clear();
                 auctionControl.auction = bidManager.GetAuction(deal[(int)Player.North], deal[(int)Player.South]);
                 auctionControl.ReDraw();
+                biddingBox.Clear();
                 biddingBox.Enabled = false;
                 panelNorth.Visible = true;
             }
@@ -329,6 +331,8 @@ namespace Tosr
         private void ToolStripMenuItemBidAgainClick(object sender, EventArgs e)
         {
             StartBidding();
+            _ = resetEvent.WaitOne();
+            bidManager.Init(auctionControl.auction);
         }
     }
 }
