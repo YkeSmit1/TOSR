@@ -58,7 +58,7 @@ namespace Tosr
 
             bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, true);
             shufflingDeal.North = new North { Hcp = new MinMax(16, 37) };
-            shufflingDeal.South = new South { Hcp = new MinMax(7, 37), Controls = new MinMax(2, 12) };
+            shufflingDeal.South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) };
 
             Shuffle();
             StartBidding();
