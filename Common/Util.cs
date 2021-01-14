@@ -102,7 +102,6 @@ namespace Common
             };
         }
 
-
         public static Suit GetSuit(string suit)
         {
             return suit switch

@@ -49,6 +49,9 @@ namespace Tosr
             if (!textBoxShape.Text.All(x => char.IsDigit(x)))
                 HandleError("Shape should be all digits");
             else
+            if (textBoxShape.Text.Length != 4)
+                HandleError("Shape should be length 4");
+            else
             if (textBoxShape.Text.ToCharArray().Select(x => int.Parse(x.ToString())).Sum() != 13)
                 HandleError("Sum of suit lengths should be 13");
             else
