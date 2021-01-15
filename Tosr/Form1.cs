@@ -367,7 +367,7 @@ namespace Tosr
         {
             if (pbn.Boards.Count() == 0)
             {
-                MessageBox.Show("No PBN file is loaded.", "Error");
+                MessageBox.Show("No valid PBN file is loaded.", "Error");
                 return;
             }
             Text = $"{pbnFilename} Board: {boardNumber} from {pbn.Boards.Count}";

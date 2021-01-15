@@ -18,16 +18,17 @@ namespace Common
             string line;
             while ((line = streamReader.ReadLine()) != null)
             {
-                if (line.Contains("[Event"))
+                if (string.IsNullOrWhiteSpace(line))
                 {
                     if (!string.IsNullOrWhiteSpace(sb.ToString()))
                         Boards.Add(BoardDto.FromString(sb.ToString()));
                     sb.Clear();
                 }
-                if (!string.IsNullOrWhiteSpace(line) && line[0] != '%')
+                else if (line[0] != '%')
                     sb.AppendLine(line);
             }
-            Boards.Add(BoardDto.FromString(sb.ToString()));
+            if (!string.IsNullOrWhiteSpace(sb.ToString()))
+                Boards.Add(BoardDto.FromString(sb.ToString()));
         }
         public void Save(string filePath)
         {
@@ -35,7 +36,10 @@ namespace Common
             using var fileStream = File.OpenWrite(filePath);
             using var streamWriter = new StreamWriter(fileStream);
             foreach (var board in Boards)
+            {
                 streamWriter.Write(board.ToString());
+                streamWriter.Write(Environment.NewLine);
+            }
         }
     }
 }
