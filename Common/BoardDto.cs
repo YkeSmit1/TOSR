@@ -24,6 +24,8 @@ namespace Common
         public string[] Deal { get; set; }
         public Player Declarer { get; set; }
         public Auction Auction { get; set; }
+
+        public string Description { get; set; }
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -33,6 +35,8 @@ namespace Common
             sb.AppendLine($@"[Board ""{BoardNumber}""]");
             sb.AppendLine($@"[Dealer ""{Util.GetPlayerString(Dealer)}""]");
             sb.AppendLine($@"[Vulnerable ""{Vulnerable}""]");
+            if (!string.IsNullOrWhiteSpace(Description))
+                sb.AppendLine($@"[Description ""{Description}""]");
             sb.AppendLine($@"[Deal ""{Util.GetPlayerString(Dealer)}:{string.Join(' ', Deal.ToList().Rotate(GetOffSetForPlayerToPbn(Dealer)).Select(x => x.Replace(',', '.')))}""]");
             if (Declarer != Player.UnKnown)
                 sb.AppendLine($@"[Declarer ""{Util.GetPlayerString(Declarer)}""]");
@@ -104,6 +108,9 @@ namespace Common
                                 biddingRound++;
                             }
                         }
+                        break;
+                    case "Description":
+                        board.Description = value;
                         break;
                     default:
                         break;

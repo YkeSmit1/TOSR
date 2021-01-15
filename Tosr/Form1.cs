@@ -30,6 +30,8 @@ namespace Tosr
         private readonly static Logger logger = LogManager.GetCurrentClassLogger();
         private readonly ManualResetEvent resetEvent = new ManualResetEvent(false);
         private Pbn pbn = new Pbn();
+        private int boardNumber;
+        private string pbnFilename;
 
         public Form1()
         {
@@ -153,8 +155,8 @@ namespace Tosr
             } 
             while (Util.IsFreakHand(deal[(int)Player.South].Split(',').Select(x => x.Length)));
             ShowHand(deal[(int)Player.North], panelNorth);
-            ShowHand(deal[(int)Player.South], panelSouth);
             panelNorth.Visible = false;
+            ShowHand(deal[(int)Player.South], panelSouth);
         }
 
         private void ShowHand(string hand, Panel parent)
@@ -219,7 +221,9 @@ namespace Tosr
                     var progress = new Progress<int>(report => toolStripStatusLabel1.Text = $"Hands done: {report}");
                     pbn = batchBidding.Execute(pbn.Boards.Select(x => x.Deal), progress);
                 });
-                toolStripStatusLabel1.Text = "Batch bidding done";
+                pbnFilename = "";
+                boardNumber = 1;
+                LoadCurrentBoard();
             }
             finally
             {
@@ -227,7 +231,7 @@ namespace Tosr
             }
         }
 
-        private void GenerateHandStrings(int batchSize)
+        private void GenerateBoards(int batchSize)
         {
             var shufflingDeal = new ShufflingDeal() { NrOfHands = batchSize, 
                 North = new North { Hcp = new MinMax(16, 37) }, 
@@ -243,7 +247,7 @@ namespace Tosr
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
-                GenerateHandStrings((int)numericUpDown1.Value);
+                GenerateBoards((int)numericUpDown1.Value);
             }
             finally
             {
@@ -280,52 +284,37 @@ namespace Tosr
         private void ToolStripMenuItemSaveSetClick(object sender, EventArgs e)
         {
             if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                pbnFilename = Path.GetFileName(saveFileDialog1.FileName);
+                Text = $"{pbnFilename} Board: {1} from {pbn.Boards.Count}";
                 pbn.Save(saveFileDialog1.FileName);
+            }
         }
 
         private void ToolStripMenuItemLoadSetClick(object sender, EventArgs e)
         {
             if (openFileDialog2.ShowDialog() == DialogResult.OK)
+            {
                 pbn.Load(openFileDialog2.FileName);
-        }
-
-        private void ToolStripMenuItemGoToBoardClick(object sender, EventArgs e)
-        {
-            LoadBoard(out _);
+                pbnFilename = Path.GetFileName(openFileDialog2.FileName);
+                boardNumber = 1;
+                LoadCurrentBoard();
+            }
         }
 
         private void ToolStripMenuItemOneBoardClick(object sender, EventArgs e)
         {
-            if (LoadBoard(out var board))
+            if (int.TryParse(toolStripTextBoxBoard.Text, out var board) && board <= pbn.Boards.Count - 1)
             {
-                var batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, true);
-                var pbn = batchBidding.Execute(new[] { board.Deal}, new Progress<int>());
-                auctionControl.auction = pbn.Boards.First().Auction ?? new Auction();
-                auctionControl.ReDraw();
-            }
-        }
+                boardNumber = board;
+                LoadCurrentBoard();
 
-        private bool LoadBoard(out BoardDto board)
-        {
-            board = null;
-            if (pbn.Boards.Count() == 0)
-            {
-                MessageBox.Show("No PBN file is loaded.", "Error");
-                return false;
-            }
-            using var goToBoardForm = new GoToBoardForm(pbn.Boards.Count());
-            if (goToBoardForm.ShowDialog() == DialogResult.OK)
-            {
-                board = pbn.Boards[goToBoardForm.BoardNumber - 1];
-                deal = board.Deal;
-                ShowHand(deal[(int)Player.North], panelNorth);
-                panelNorth.Visible = true;
-                ShowHand(deal[(int)Player.South], panelSouth);
-                auctionControl.auction = board.Auction ?? new Auction();
+                var batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, true);
+                var localPbn = batchBidding.Execute(new[] { pbn.Boards[boardNumber - 1].Deal}, new Progress<int>());
+                auctionControl.auction = localPbn.Boards.First().Auction ?? new Auction();
                 auctionControl.ReDraw();
-                return true;
+                toolStripStatusLabel1.Text = localPbn.Boards.First().Description;
             }
-            return false;
         }
 
         private void ToolStripMenuItemBidAgainClick(object sender, EventArgs e)
@@ -334,5 +323,63 @@ namespace Tosr
             _ = resetEvent.WaitOne();
             bidManager.Init(auctionControl.auction);
         }
+
+        private void ToolStripButtonFirstClick(object sender, EventArgs e)
+        {
+            boardNumber = 1;
+            LoadCurrentBoard();
+        }
+
+        private void ToolStripButtonLastClick(object sender, EventArgs e)
+        {
+            boardNumber = pbn.Boards.Count;
+            LoadCurrentBoard();
+        }
+
+        private void ToolStripButtonNextClick(object sender, EventArgs e)
+        {
+            if (boardNumber < pbn.Boards.Count)
+            {
+                boardNumber++;
+                LoadCurrentBoard();
+            }
+        }
+
+        private void ToolStripButtonPreviousClick(object sender, EventArgs e)
+        {
+            if (boardNumber > 1)
+            {
+                boardNumber--;
+                LoadCurrentBoard();
+            }
+        }
+
+        private void ToolStripTextBoxBoardLeave(object sender, EventArgs e)
+        {
+            if (int.TryParse(toolStripTextBoxBoard.Text, out var board) && board <= pbn.Boards.Count - 1)
+            {
+                boardNumber = board;
+                LoadCurrentBoard();
+            }
+        }
+
+        private void LoadCurrentBoard()
+        {
+            if (pbn.Boards.Count() == 0)
+            {
+                MessageBox.Show("No PBN file is loaded.", "Error");
+                return;
+            }
+            Text = $"{pbnFilename} Board: {boardNumber} from {pbn.Boards.Count}";
+            toolStripTextBoxBoard.Text = Convert.ToString(boardNumber);
+            var board = pbn.Boards[boardNumber - 1];
+            ShowHand(board.Deal[(int)Player.North], panelNorth);
+            panelNorth.Visible = true;
+            ShowHand(board.Deal[(int)Player.South], panelSouth);
+            auctionControl.auction = board.Auction ?? new Auction();
+            auctionControl.ReDraw();
+            toolStripStatusLabel1.Text = board.Description;
+        }
+
     }
 }

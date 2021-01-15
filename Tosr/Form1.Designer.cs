@@ -38,7 +38,6 @@
             this.toolStripMenuItemSaveSet = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem12 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem13 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItemGoToBoard = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem10 = new System.Windows.Forms.ToolStripMenuItem();
@@ -57,6 +56,12 @@
             this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButtonFirst = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonPrevious = new System.Windows.Forms.ToolStripButton();
+            this.toolStripTextBoxBoard = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripButtonNext = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonLast = new System.Windows.Forms.ToolStripButton();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
@@ -138,8 +143,7 @@
             // toolStripMenuItem12
             // 
             this.toolStripMenuItem12.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem13,
-            this.toolStripMenuItemGoToBoard});
+            this.toolStripMenuItem13});
             this.toolStripMenuItem12.Name = "toolStripMenuItem12";
             this.toolStripMenuItem12.Size = new System.Drawing.Size(44, 20);
             this.toolStripMenuItem12.Text = "View";
@@ -151,13 +155,6 @@
             this.toolStripMenuItem13.Size = new System.Drawing.Size(162, 22);
             this.toolStripMenuItem13.Text = "View bidding";
             this.toolStripMenuItem13.Click += new System.EventHandler(this.ViewAuctionClick);
-            // 
-            // toolStripMenuItemGoToBoard
-            // 
-            this.toolStripMenuItemGoToBoard.Name = "toolStripMenuItemGoToBoard";
-            this.toolStripMenuItemGoToBoard.Size = new System.Drawing.Size(162, 22);
-            this.toolStripMenuItemGoToBoard.Text = "Go To Board";
-            this.toolStripMenuItemGoToBoard.Click += new System.EventHandler(this.ToolStripMenuItemGoToBoardClick);
             // 
             // toolStripMenuItem5
             // 
@@ -258,7 +255,13 @@
             this.toolStripSeparator1,
             this.toolStripButton2,
             this.toolStripButton3,
-            this.toolStripButton4});
+            this.toolStripButton4,
+            this.toolStripSeparator3,
+            this.toolStripButtonFirst,
+            this.toolStripButtonPrevious,
+            this.toolStripTextBoxBoard,
+            this.toolStripButtonNext,
+            this.toolStripButtonLast});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(730, 25);
@@ -309,6 +312,57 @@
             this.toolStripButton4.Size = new System.Drawing.Size(23, 22);
             this.toolStripButton4.Text = "Restrictions";
             this.toolStripButton4.Click += new System.EventHandler(this.ToolStripButton4Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripButtonFirst
+            // 
+            this.toolStripButtonFirst.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonFirst.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonFirst.Image")));
+            this.toolStripButtonFirst.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonFirst.Name = "toolStripButtonFirst";
+            this.toolStripButtonFirst.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButtonFirst.Text = "First";
+            this.toolStripButtonFirst.Click += new System.EventHandler(this.ToolStripButtonFirstClick);
+            // 
+            // toolStripButtonPrevious
+            // 
+            this.toolStripButtonPrevious.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonPrevious.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonPrevious.Image")));
+            this.toolStripButtonPrevious.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonPrevious.Name = "toolStripButtonPrevious";
+            this.toolStripButtonPrevious.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButtonPrevious.Text = "Previous";
+            this.toolStripButtonPrevious.Click += new System.EventHandler(this.ToolStripButtonPreviousClick);
+            // 
+            // toolStripTextBoxBoard
+            // 
+            this.toolStripTextBoxBoard.Name = "toolStripTextBoxBoard";
+            this.toolStripTextBoxBoard.Size = new System.Drawing.Size(30, 25);
+            this.toolStripTextBoxBoard.Leave += new System.EventHandler(this.ToolStripTextBoxBoardLeave);
+            // 
+            // toolStripButtonNext
+            // 
+            this.toolStripButtonNext.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonNext.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonNext.Image")));
+            this.toolStripButtonNext.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonNext.Name = "toolStripButtonNext";
+            this.toolStripButtonNext.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButtonNext.Text = "Next";
+            this.toolStripButtonNext.Click += new System.EventHandler(this.ToolStripButtonNextClick);
+            // 
+            // toolStripButtonLast
+            // 
+            this.toolStripButtonLast.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonLast.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonLast.Image")));
+            this.toolStripButtonLast.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonLast.Name = "toolStripButtonLast";
+            this.toolStripButtonLast.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButtonLast.Text = "Last";
+            this.toolStripButtonLast.Click += new System.EventHandler(this.ToolStripButtonLastClick);
             // 
             // numericUpDown1
             // 
@@ -373,7 +427,6 @@
             // openFileDialog2
             // 
             this.openFileDialog2.DefaultExt = "pbn";
-            this.openFileDialog2.FileName = "openFileDialog2";
             // 
             // Form1
             // 
@@ -440,9 +493,14 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSaveSet;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.OpenFileDialog openFileDialog2;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemGoToBoard;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemOneBoard;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemBidAgain;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripButton toolStripButtonFirst;
+        private System.Windows.Forms.ToolStripButton toolStripButtonPrevious;
+        private System.Windows.Forms.ToolStripTextBox toolStripTextBoxBoard;
+        private System.Windows.Forms.ToolStripButton toolStripButtonNext;
+        private System.Windows.Forms.ToolStripButton toolStripButtonLast;
     }
 }
 

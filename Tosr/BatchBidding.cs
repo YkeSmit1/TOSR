@@ -72,6 +72,7 @@ namespace Tosr
         private readonly BidManager bidManager;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         private readonly bool useSingleDummySolver;
+        private CorrectnessContractBreakdown correctnessContractBreakdown;
 
         public BatchBidding(ReverseDictionaries reverseDictionaries, Dictionary<Fase, bool> fasesWithOffset, bool useSingleDummySolver)
         {
@@ -108,6 +109,7 @@ namespace Tosr
 
                     statistics.handsBid++;
                     var auction = bidManager.GetAuction(board[(int)Player.North], board[(int)Player.South]);
+                    AddHandAndAuction(board, auction, statistics.handsBid);
                     pbn.Boards.Add(new BoardDto { 
                         Deal = board, 
                         Auction = auction, 
@@ -116,9 +118,8 @@ namespace Tosr
                         Date = DateTime.Now, 
                         Declarer = auction.GetDeclarerOrNorth(auction.currentContract.suit),
                         Dealer = Player.West,
-                        Vulnerable = "None"});
-
-                    AddHandAndAuction(board, auction, statistics.handsBid);
+                        Vulnerable = "None",
+                        Description = correctnessContractBreakdown.ToString()});
                     if (statistics.handsBid % 100 == 0)
                         progress.Report(statistics.handsBid);
                 }
@@ -137,7 +138,6 @@ namespace Tosr
                         Dealer = Player.West,
                         Vulnerable = "None"
                     });
-
                 }
             }
             progress.Report(statistics.handsBid);
@@ -175,7 +175,7 @@ namespace Tosr
             if (!auction.responderHasSignedOff)
                 statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Where(bid => bid.bidType == BidType.bid).Last() - auction.GetBids(Player.South, Fase.Shape).Last());
             statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthhandOutcome);
-            var correctnessContractBreakdown = CheckContract(contract, board, dealer == Player.UnKnown ? Player.North : dealer);
+            correctnessContractBreakdown = CheckContract(contract, board, dealer == Player.UnKnown ? Player.North : dealer);
             statistics.ContractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, bidManager.constructedSouthhandOutcome));
             var correctnessContract = GetCorrectness(correctnessContractBreakdown);
             statistics.ContractCorrectnessBreakdown.AddOrUpdateDictionary(correctnessContractBreakdown);
