@@ -32,7 +32,8 @@ namespace TosrGui.Test
             var actual = File.ReadAllLines(filePathActual);
             foreach (var line in actual)
             {
-                Assert.Contains(line, expected);
+                if (!string.IsNullOrWhiteSpace(line))
+                    Assert.Contains(line, expected);
             }
         }
     }
