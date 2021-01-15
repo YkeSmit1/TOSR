@@ -239,7 +239,7 @@ namespace Tosr
             var southHand = board[(int)Player.South];
             if (contract.suit != Suit.NoTrump && Util.GetNumberOfTrumps(contract.suit, northHand, southHand) < 8)
                 return CorrectnessContractBreakdown.NoFit;
-            var tricks = SingleDummySolver.SolveSingleDummy(contract.suit, declarer, northHand, southHand);
+            var tricks = SingleDummySolver.SolveSingleDummyExactHands(contract.suit, declarer, northHand, southHand);
             var expectedContractType = Util.GetExpectedContract(tricks);
 
             if (expectedContractType == ExpectedContract.GrandSlam && contract.rank == 7)

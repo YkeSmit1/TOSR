@@ -28,6 +28,7 @@ namespace Solver
     }
     public class South
     {
+        public string[] Hand { get; set; }
         public MinMax Hcp { get; set; }
         public MinMax Controls { get; set; }
         public string[] SpecificControls { get; set; }
@@ -60,6 +61,9 @@ namespace Solver
             var sb = new StringBuilder();
             if (North.Hand != null)
                 sb.AppendLine($"stack_hand north {{{string.Join(" ", North.Hand.Select(suit => suit == "" ? "-" : suit))}}}");
+            if (South.Hand != null)
+                sb.AppendLine($"stack_hand south {{{string.Join(" ", South.Hand.Select(suit => suit == "" ? "-" : suit))}}}");
+
             if (South.SpecificControls != null)
             {
                 var topCards = !string.IsNullOrWhiteSpace(South.Queens)

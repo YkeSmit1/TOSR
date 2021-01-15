@@ -11,6 +11,22 @@ namespace Solver
 {
     public class SingleDummySolver
     {
+        public static List<int> SolveSingleDummyExactHands(Suit trumpSuit, Player declarer, string northHand, string southHand)
+        {
+            var handsForSolver = GetHandsForSolverExactHands(northHand, southHand).ToArray();
+            return Api.SolveAllBoards(handsForSolver, Util.GetDDSSuit(trumpSuit), Util.GetDDSFirst(declarer)).ToList();
+        }
+
+        private static IEnumerable<string> GetHandsForSolverExactHands(string northHandStr, string southHandStr)
+        {
+            var shuflingDeal = new ShufflingDeal
+            {
+                North = new North { Hand = northHandStr.Split(',') },
+                South = new South { Hand = southHandStr.Split(',') }
+            };
+            return shuflingDeal.Execute();
+        }
+
         public static List<int> SolveSingleDummy(Suit trumpSuit, Player declarer, string northHand, string southHand)
         {
             var handsForSolver = GetHandsForSolver(northHand, southHand).ToArray();
