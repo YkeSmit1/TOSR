@@ -51,6 +51,9 @@ namespace Tosr
             logger.Info($"Initialized engine with database '{"Tosr.db3"}'");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
+            // Load user settings
+            toolStripMenuItemUseSolver.Checked = UserConfig.Default.useSolver;
+
             shufflingDeal.North = new North { Hcp = new MinMax(16, 37) };
             shufflingDeal.South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) };
             Shuffle();
@@ -382,5 +385,14 @@ namespace Tosr
             toolStripStatusLabel1.Text = board.Description;
         }
 
+        private void ToolStripMenuItemUseSolverClick(object sender, EventArgs e)
+        {
+            UserConfig.Default.useSolver = toolStripMenuItemUseSolver.Checked;
+        }
+
+        private void Form1Closed(object sender, FormClosedEventArgs e)
+        {
+            UserConfig.Default.Save();
+        }
     }
 }
