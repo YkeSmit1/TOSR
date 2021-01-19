@@ -18,8 +18,8 @@ namespace TosrIntegration.Test
             // ♣♦♥♠
             yield return new object[] { "5NT", "AKQ2,AK2,AKQ,KQ2", "xxxx,Qxx,xx,Axxx", "1♣1NT2♥3♥4♣4♥4NT5♥5NT6♦6♠7♠", "1♠2♦3♦3♠4♦4♠5♦5♠6♣6♥7♣" };
             yield return new object[] { "Zoom5NT", "AKQ2,AK2,KQ2,AKQ", "xxxx,Qxx,Ax,xxxx", "1♣1NT2♥3♥4♣4♥4NT5♦5♠6♦6♠7♠", "1♠2♦3♦3♠4♦4♠5♣5♥6♣6♥7♣" };
-            yield return new object[] { "6C", "AK32,AKQ,AKQ,KQ2", "Qxxx,xxx,xx,Axxx", "1♣1NT2♥3♥4♣4♥4NT5♥5NT6♥6NT7♠", "1♠2♦3♦3♠4♦4♠5♦5♠6♦6♠7♣" };
-            yield return new object[] { "Zoom6C", "AKJ2,AKQ,K32,AKQ", "Qxxx,xxx,AQ,xxxx", "1♣1NT2♥3♥4♣4♥4NT5♦5♠6♥6NT7♠", "1♠2♦3♦3♠4♦4♠5♣5♥6♦6♠7♦" };
+            yield return new object[] { "6C", "AK32,AKQ,AKQ,KQ2", "Qxxx,xxx,xx,Axxx", "1♣1NT2♥3♥4♣4♥4NT5♥5NT6♥7♠", "1♠2♦3♦3♠4♦4♠5♦5♠6♦6♠" };
+            yield return new object[] { "Zoom6C", "AKJ2,AKQ,K32,AKQ", "Qxxx,xxx,AQ,xxxx", "1♣1NT2♥3♥4♣4♥4NT5♦5♠6♥7♠", "1♠2♦3♦3♠4♦4♠5♣5♥6♦6♠" };
             // With Singleton
             yield return new object[] { "1Singleton5NT", "AKQ2,AK2,AKQ,KQ2", "xxxx,Qxxx,x,Axxx", "1♣1♠2♣2♥2NT3♥4♣4♥4NT5♥7♠", "1♥1NT2♦2♠3♦3♠4♦4♠5♦5NT" };
             yield return new object[] { "1SingletonZoom5NT", "AKQ2,AK2,KQ2,AKQ", "xxxx,Qxx,A,xxxxx", "1♣1♠2♠3♥4♣4♥4NT5♦5♠6♣6♥7♠", "1♥2♥3♦3♠4♦4♠5♣5♥5NT6♦6NT" };
@@ -66,12 +66,11 @@ namespace TosrIntegration.Test
             var actualBidsNorth = auction.GetBidsAsString(Player.North);
             Assert.Equal(expectedBidsNorth, actualBidsNorth);
 
-            var constructedSouthHand = bidManager.ConstructSouthHand(northHand, auction);
-            Assert.Equal(southHand, constructedSouthHand.First());
+            var constructedSouthHand = bidManager.ConstructSouthHand(northHand);
+            Assert.Equal(Util.HandWithx(southHand), constructedSouthHand.First());
 
-            var queens = BidManager.GetQueensFromAuction(auction, reverseDictionaries, bidManager.shape.Value.shapes.First(), bidManager.controlsScanning.Value.zoomOffset);
-            var zip = queens.Zip(southHand.Split(',').Select(x => x.Contains('Q') ? 'Y' : 'N'), (q1, q2) => (q1, q2));
-            Assert.All(zip, (x) => Assert.True(x.q1 == x.q2 || x.q1 == 'X'));
+            var queens = bidManager.GetQueensFromAuction(auction, reverseDictionaries);
+            Assert.True(BidManager.CheckQueens(queens, southHand));
         }
     }
 }

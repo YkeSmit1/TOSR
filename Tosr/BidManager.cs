@@ -18,15 +18,12 @@ namespace Tosr
         public enum ConstructedSouthhandOutcome
         {
             NotSet,
-            AuctionNotFoundInShape,
             AuctionNotFoundInControls,
             NoMatchFound,
             SouthhandMatches,
             MultipleMatchesFound,
             IncorrectSouthhand,
             NoMatchFoundNoQueens,
-            SouthhandMatchesNoQueens,
-            MultipleMatchesFoundNoQueens,
         }
 
         public enum RelayBidKind
@@ -43,7 +40,7 @@ namespace Tosr
         public Lazy<(List<string> shapes, int zoomOffset)> shape;
         public Lazy<(List<string> controls, int zoomOffset)> controlsScanning;
 
-        static readonly char[] relevantCards = new[] { 'A', 'K', 'Q' };
+        static readonly char[] relevantCards = new[] { 'A', 'K' };
         public ConstructedSouthhandOutcome constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
 
         // Special TOSR logic. Should be in a JSON file as parameters
@@ -135,6 +132,8 @@ namespace Tosr
                     throw new InvalidOperationException("Bidding is stuck in a loop");
             }
             while (!biddingState.EndOfBidding);
+            // Add final pass
+            auction.AddBid(Bid.PassBid);
 
             logger.Debug($"Ending GetAuction for hand : {southHand}");
             return auction;
@@ -145,7 +144,7 @@ namespace Tosr
             if (biddingState.EndOfBidding)
                 return;
 
-            if (biddingState.Fase != Fase.End)
+            if (biddingState.Fase != Fase.End && (biddingState.CurrentBid == Bid.PassBid || biddingState.CurrentBid < Bid.sixSpadeBid || !useSingleDummySolver))
                 biddingState.CurrentBid = GetRelayBid(biddingState, auction, northHand);
             else
             {
@@ -180,7 +179,9 @@ namespace Tosr
                     {
                         biddingState.Fase = Fase.End;
                         var game = Bid.GetGameContract(trumpSuit, biddingState.CurrentBid);
-                        return biddingState.CurrentBid == game ? Bid.PassBid : game;
+                        if (game == Bid.PassBid)
+                            biddingState.EndOfBidding = true;
+                        return game;
                     }
 
                     if (!biddingState.RelayerHasSignedOff)
@@ -222,7 +223,10 @@ namespace Tosr
                                         {
                                             biddingState.Fase = Fase.End;
                                             auction.responderHasSignedOff = true;
-                                            return Bid.GetGameContract(trumpSuit, biddingState.CurrentBid);
+                                            var game = Bid.GetGameContract(trumpSuit, biddingState.CurrentBid);
+                                            if (game == Bid.PassBid)
+                                                biddingState.EndOfBidding = true;
+                                            return game;
                                         }
                                     default:
                                         throw new ArgumentException(nameof(relayBidkind));
@@ -238,14 +242,14 @@ namespace Tosr
                         {
                             var bidsScanningOther = auction.GetBids(Player.South, Fase.ScanningOther);
                             // TODO also call this function when some part of the queens is known. I.e. when control scanning has used zoom
-                            var queens = bidsScanningOther.Any() ? GetQueensFromAuction(auction, reverseDictionaries, shape.Value.shapes.First(), controlsScanning.Value.zoomOffset): null;
+                            var queens = GetQueensFromAuction(auction, reverseDictionaries);
                             var hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions);
                             var declarer = auction.GetDeclarerOrNorth(trumpSuit);
                             var confidenceTricks = GetConfidenceTricks(northHand, matches, hcp, queens, trumpSuit, declarer);
                             if (GetConfidenceToBidSlam(confidenceTricks) < 60.0)
                             {
                                 biddingState.Fase = Fase.End;
-                                constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatchesNoQueens;
+                                constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
                                 auction.responderHasSignedOff = true;
                                 return Bid.GetGameContract(trumpSuit, biddingState.CurrentBid);
                             }
@@ -338,10 +342,12 @@ namespace Tosr
             if (!useSingleDummySolver)
                 return Bid.PassBid;
 
-            var constructedSouthHands = ConstructSouthHand(northHand, auction);
+            var constructedSouthHands = ConstructSouthHand(northHand);
             var suitAndLength = Util.GetLongestSuit(northHand, constructedSouthHands.First());
             var suit = suitAndLength.Item2 >= 8 ? suitAndLength.Item1 : Suit.NoTrump;
-            var scores = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(suit, auction.GetDeclarerOrNorth(suit), northHand, match));
+            var queens = GetQueensFromAuction(auction, reverseDictionaries);
+            var hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions);
+            var scores = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(suit, auction.GetDeclarerOrNorth(suit), northHand, match, hcp, queens));
             var bid = Bid.GetBestContract(Util.GetExpectedContract(scores), suit, currentBid);
             if (bid > currentBid)
                 return bid;
@@ -349,7 +355,7 @@ namespace Tosr
                 return Bid.PassBid;
 
             // Try NT
-            var scoresNT = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(Suit.NoTrump, auction.GetDeclarerOrNorth(Suit.NoTrump), northHand, match));
+            var scoresNT = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(Suit.NoTrump, auction.GetDeclarerOrNorth(Suit.NoTrump), northHand, match, hcp, queens));
             var bidNT = Bid.GetBestContract(Util.GetExpectedContract(scoresNT), Suit.NoTrump, currentBid);
             return bidNT > currentBid ? bidNT : Bid.PassBid;
         }
@@ -388,55 +394,13 @@ namespace Tosr
         }
 
         /// <summary>
-        /// Construct southhand to use for single dummy analyses
-        /// Can throw
-        /// </summary>
-        public IEnumerable<string> ConstructSouthHand(string northHand, Auction auction)
-        {
-            logger.Debug($"Starting ConstructSouthHand for northhand : {northHand}");
-
-            int zoomOffset;
-            try
-            {
-                zoomOffset = shape.Value.zoomOffset;
-            }
-            catch (Exception exception)
-            {
-                throw SetOutcome(exception.Message, ConstructedSouthhandOutcome.AuctionNotFoundInControls);
-            }
-
-            var fases = new[] { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther };
-            var controls = GetAuctionForFaseWithOffset(auction, zoomOffset, fases);
-            var strControls = string.Join("", controls);
-
-            var controlsAuctions = reverseDictionaries.GetControlDictionary(shape.Value.shapes.First());
-            if (!controlsAuctions.TryGetValue(strControls, out var possibleControls))
-            {
-                throw SetOutcome($"Auction not found in controls. controls: {strControls}. NorthHand: {northHand}.", ConstructedSouthhandOutcome.AuctionNotFoundInControls);
-            }
-            var matches = GetMatchesWithNorthHand(shape.Value.shapes, possibleControls, northHand);
-            if (matches.Count() == 0)
-                throw SetOutcome($"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {northHand}.", ConstructedSouthhandOutcome.NoMatchFound);
-
-            logger.Debug($"Ending ConstructSouthHand. southhand : {string.Join("|", matches)}");
-            return matches;
-        }
-
-        private Exception SetOutcome(string message, ConstructedSouthhandOutcome outcome)
-        {
-            logger.Warn($"Outcome not satisfied. {outcome}. Message : {message}");
-            constructedSouthhandOutcome = outcome;
-            return new InvalidOperationException(message);
-        }
-
-        /// <summary>
         /// Construct southhand to compare with the actual southhand
         /// </summary>
         public string ConstructSouthHandSafe(string[] hand, Auction auction)
         {
             try
             {
-                var southHand = ConstructSouthHand(hand[(int)Player.North], auction);
+                var southHand = ConstructSouthHand(hand[(int)Player.North]);
 
                 if (southHand.Count() > 1)
                 {
@@ -444,10 +408,13 @@ namespace Tosr
                     return $"Multiple matches found. Matches: {string.Join('|', southHand)}. NorthHand: {hand[(int)Player.North]}. SouthHand: {hand[(int)Player.South]}";
                 }
 
-                var southHandStr = HandWithx(hand[(int)Player.South]);
+                var southHandStr = Util.HandWithx(hand[(int)Player.South]);
                 if (southHand.First() == southHandStr)
                 {
                     constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
+                    if (!CheckQueens(GetQueensFromAuction(auction, reverseDictionaries), hand[(int)Player.South]))
+                        return $"Match is found but queens are wrong : Expected queens: {GetQueensFromAuction(auction, reverseDictionaries)}. SouthHand: {hand[(int)Player.South]}";
+
                     return $"Match is found: {southHand.First()}. NorthHand: {hand[(int)Player.North]}. SouthHand: {hand[(int)Player.South]}";
                 }
                 else
@@ -464,15 +431,35 @@ namespace Tosr
         }
 
         /// <summary>
-        /// Replaces cards smaller then queen into x's;
+        /// Construct southhand to use for single dummy analyses
+        /// Can throw
         /// </summary>
-        public static string HandWithx(string hand)
+        public IEnumerable<string> ConstructSouthHand(string northHand)
         {
-            var southHand = new string(hand).ToList();
-            var relevantCards = new[] { 'A', 'K', 'Q', ',' };
-            southHand = southHand.Select(x => x = !relevantCards.Contains(x) ? 'x' : x).ToList();
-            var southHandStr = new string(southHand.ToArray());
-            return southHandStr;
+            logger.Debug($"Starting ConstructSouthHand for northhand : {northHand}");
+
+            List<string> possibleControls;
+            try
+            {
+                possibleControls = controlsScanning.Value.controls;
+            }
+            catch (Exception exception)
+            {
+                throw SetOutcome(exception.Message, ConstructedSouthhandOutcome.AuctionNotFoundInControls);
+            }
+            var matches = GetMatchesWithNorthHand(shape.Value.shapes, possibleControls, northHand);
+            if (matches.Count() == 0)
+                throw SetOutcome($"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {northHand}.", ConstructedSouthhandOutcome.NoMatchFound);
+
+            logger.Debug($"Ending ConstructSouthHand. southhand : {string.Join("|", matches)}");
+            return matches;
+        }
+
+        private Exception SetOutcome(string message, ConstructedSouthhandOutcome outcome)
+        {
+            logger.Warn($"Outcome not satisfied. {outcome}. Message : {message}");
+            constructedSouthhandOutcome = outcome;
+            return new InvalidOperationException(message);
         }
 
         /// <summary>
@@ -577,8 +564,10 @@ namespace Tosr
         /// <summary>
         /// Returns a string of 4 characters when each character is "Y" "N" "X". "X" means not yet known.
         /// </summary>
-        public static string GetQueensFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, string shapeStr, int zoomOffset)
+        public string GetQueensFromAuction(Auction auction, ReverseDictionaries reverseDictionaries)
         {
+            string shapeStr = shape.Value.shapes.First();
+            int zoomOffset = controlsScanning.Value.zoomOffset;
             var lastBidPreviousFase = auction.GetBids(Player.South, (new[] { Fase.Controls, Fase.ScanningControls }).Concat(signOffFasesWithout3NTNoAsk).ToArray()).Last();
             var queensBids = auction.GetBids(Player.South, Fase.ScanningOther);
             var offset = lastBidPreviousFase - ReverseDictionaries.GetOffsetBidForQueens(shapeStr);
@@ -587,6 +576,9 @@ namespace Tosr
                 queensBids = new [] { lastBidPreviousFase}.Concat(queensBids);
                 offset -= (zoomOffset + 1);
             }
+
+            if (queensBids.Count() == 0)
+                return null;
 
             queensBids = queensBids.Select(bid => bid - offset);
             var queensAuctions = reverseDictionaries.GetQueensDictionary(shapeStr);
@@ -599,7 +591,7 @@ namespace Tosr
             }
 
             throw new InvalidOperationException($"{ bidsForFaseQueens } not found in queens dictionary. Auction:{auction.GetPrettyAuction("|")}. " +
-                $"zoom-offset shape:{zoomOffset}");
+                $"zoom-offset control scanning:{zoomOffset}");
         }
 
         private static string GetQueensOrdered(string shapeStr, string queens)
@@ -655,6 +647,21 @@ namespace Tosr
             foreach (var suit in hand1.Zip(hand2, (x, y) => (x, y)))
                 if (relevantCards.Any(c => suit.x.Contains(c) && suit.y.Contains(c)))
                     return false; 
+            return true;
+        }
+
+        public static bool CheckQueens(string queens, string hand)
+        {
+            if (queens == null)
+                return true;
+            var zip = hand.Split(",").Zip(queens.ToCharArray(), (suit, queen) => (suit, queen));
+            foreach (var (suit, queen) in zip)
+            {
+                if (queen == 'Y' && !suit.Contains('Q'))
+                    return false;
+                if (queen == 'N' && suit.Contains('Q'))
+                    return false;
+            }
             return true;
         }
     }

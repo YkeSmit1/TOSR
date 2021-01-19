@@ -12,7 +12,6 @@ namespace Tosr
 {
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
     using ControlsOnlyDictionary = Dictionary<string, List<int>>;
-    using ControlsDictionary = Dictionary<string, List<string>>;
     using ControlScanningDictionary = Dictionary<string, (List<string> controlsScanning, bool zoom)>;
     using SignOffFasesDictionary = Dictionary<Fase, Dictionary<string, List<int>>>;
     using QueensDictionary = Dictionary<string, string>;
@@ -26,9 +25,6 @@ namespace Tosr
     public class ReverseDictionaries
     {
         public ShapeDictionary ShapeAuctions { get; }
-        private ControlsDictionary ControlsAuctions0 { get; }
-        private ControlsDictionary ControlsAuctions1 { get; }
-        private ControlsDictionary ControlsAuctions2 { get; }
         public ControlsOnlyDictionary ControlsOnlyAuctions { get; }
         private ControlScanningDictionary ControlScanningAuctions0 { get; }
         private ControlScanningDictionary ControlScanningAuctions1 { get; }
@@ -44,11 +40,10 @@ namespace Tosr
         private static readonly int[] suitLengthSingleton = new[] { 5, 4, 3, 1 };
         private static readonly int[] suitLength2Singletons = new[] { 6, 5, 1, 1 };
 
-        public ReverseDictionaries(ShapeDictionary shapeAuctions, ControlsDictionary controlsAuctions, ControlsOnlyDictionary controlsOnlyAuctions,
+        public ReverseDictionaries(ShapeDictionary shapeAuctions, ControlsOnlyDictionary controlsOnlyAuctions,
             ControlScanningDictionary controlScanningAuctions, SignOffFasesDictionary signOffFasesAuctions)
         {
             ShapeAuctions = shapeAuctions;
-            ControlsAuctions0 = controlsAuctions;
             ControlsOnlyAuctions = controlsOnlyAuctions;
             ControlScanningAuctions0 = controlScanningAuctions;
             SignOffFasesAuctions = signOffFasesAuctions;
@@ -69,13 +64,6 @@ namespace Tosr
             ControlScanningAuctions1 = Util.LoadAuctions("txt\\AuctionsByControlsScanning1.txt", GenerateAuctionsForControlsScanning, 1);
             progress.Report(nameof(ControlScanningAuctions2));
             ControlScanningAuctions2 = Util.LoadAuctions("txt\\AuctionsByControlsScanning2.txt", GenerateAuctionsForControlsScanning, 2);
-
-            progress.Report(nameof(ControlsAuctions0));
-            ControlsAuctions0 = Util.LoadAuctions("txt\\AuctionsByControls0.txt", GenerateAuctionsForControls, 0);
-            progress.Report(nameof(ControlsAuctions1));
-            ControlsAuctions1 = Util.LoadAuctions("txt\\AuctionsByControls1.txt", GenerateAuctionsForControls, 1);
-            progress.Report(nameof(ControlsAuctions2));
-            ControlsAuctions2 = Util.LoadAuctions("txt\\AuctionsByControls2.txt", GenerateAuctionsForControls, 2);
 
             progress.Report(nameof(SignOffFasesAuctions));
             SignOffFasesAuctions = Util.LoadAuctions("txt\\AuctionsBySignOffFases.txt", GenerateAuctionsForSignOffFases, 0);
@@ -211,48 +199,6 @@ namespace Tosr
                     auctions.Add(key, (new List<string>() { handToStore }, isZoom));
                 else if (!auctions[key].controlsScanning.Contains(handToStore))
                     auctions[key].controlsScanning.Add(handToStore);
-            }
-        }
-
-        public ControlsDictionary GenerateAuctionsForControls(int nrOfShortages)
-        {
-            logger.Info($"Generating dictionaries for controls. Shortages:{nrOfShortages}");
-            var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
-            var auctions = new ControlsDictionary();
-            var controls = new[] { "", "A", "K", "Q", "AK", "AQ", "KQ", "AKQ" };
-
-            foreach (var spades in controls)
-                foreach (var hearts in controls)
-                    foreach (var diamonds in controls)
-                        foreach (var clubs in controls)
-                            BidAndStoreHandsByHcp(GetSuitLength(nrOfShortages), spades, hearts, diamonds, clubs);
-            return auctions;
-
-            void BidAndStoreHandsByHcp(int[] suitLength, params string[] suits)
-            {
-                var lsuits = ObjectCloner.ObjectCloner.DeepClone(suits);
-                var hand = ConstructHand(suitLengthNoSingleton, lsuits);
-                if (Util.GetControlCount(hand) > 1)
-                {
-                    foreach (var hcp in GetHcpGeneratorGeneral().Invoke(hand))
-                    {
-                        if (Util.TryAddJacksTillHCP(hcp, ref lsuits, suitLength))
-                            BidAndStoreHand(ConstructHand(suitLength, lsuits), hand);
-                    }
-                }
-            }
-
-            void BidAndStoreHand(string hand, string handToStore)
-            {
-                if (hand.Length != 16)
-                    return;
-                var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
-                var key = string.Join("", auction.GetBids(Player.South, new[] { Fase.Controls, Fase.ScanningControls, Fase.ScanningOther }).
-                    Select(bid => bid - (auction.GetBids(Player.South, Fase.Shape).Last() - Bid.threeDiamondBid)));
-                if (!auctions.ContainsKey(key))
-                    auctions.Add(key, new List<string>());
-                if (!auctions[key].Contains(handToStore))
-                    auctions[key].Add(handToStore);
             }
         }
 
@@ -394,16 +340,7 @@ namespace Tosr
             };
             return queensAuctions;
         }
-        public ControlsDictionary GetControlDictionary(string handShape)
-        {   
-            return Util.NrOfShortages(handShape) switch
-            {
-                0 => ControlsAuctions0,
-                1 => ControlsAuctions1,
-                2 => ControlsAuctions2,
-                _ => throw new ArgumentException("nrOfshortages should be 0, 1 or 2"),
-            };
-        }
+
         public ControlScanningDictionary GetControlScanningDictionary(string handShape)
         {
             return Util.NrOfShortages(handShape) switch
@@ -414,6 +351,7 @@ namespace Tosr
                 _ => throw new ArgumentException("nrOfshortages should be 0, 1 or 2"),
             };
         }
+
         public static Bid GetOffsetBidForQueens(string shapeStr)
         {
             // TODO this should be determined when creating queens dictionaries

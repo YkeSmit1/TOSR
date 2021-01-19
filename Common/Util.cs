@@ -364,5 +364,10 @@ namespace Common
             var suitsNFirst = suits.ToList().Rotate(3);
             return suitsNFirst.ToArray();
         }
+
+        public static string HandWithx(string hand)
+        {
+            return Regex.Replace(hand, "[QJT98765432]", "x");
+        }
     }
 }

@@ -165,7 +165,7 @@ namespace Tosr
 
             // Start calculating hand
             if (!auction.responderHasSignedOff)
-                expectedSouthHands.AppendLine(bidManager.ConstructSouthHandSafe(board, auction));
+                expectedSouthHands.AppendLine($"Board:{boardNumber} {bidManager.ConstructSouthHandSafe(board, auction)}");
 
             var longestSuit = Util.GetLongestSuit(board[(int)Player.North], board[(int)Player.South]);
             var dealer = auction.GetDeclarer(3 - longestSuit.Item1);

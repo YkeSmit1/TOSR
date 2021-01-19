@@ -12,8 +12,6 @@ using Xunit.Abstractions;
 
 namespace TosrIntegration.Test
 {
-    using RelayBidKindFunc = Func<Auction, string, string, IEnumerable<Bid>, Suit, BidManager.RelayBidKind>;
-
     public class TestCaseProviderRelayBid
     {
         public static IEnumerable<object[]> TestCases3NT()
@@ -44,9 +42,9 @@ namespace TosrIntegration.Test
         {
             // ♣♦♥♠
             // Test with major fit no pull
-            yield return new object[] { "Test17HCP", "AK32,A5432,A2,Q2", ",xxxx,KQxxxx,Kxx", "1♣1NT2♦2♠3♣4♦Pass", "1♠2♣2♥2NT3♠4♥Pass" };
-            yield return new object[] { "Test20HCPMin", "AQ32,A432,A2,AQ2", "xx,xxxx,KQxxx,Kx", "1♣1NT2♦2♠3♦4♦Pass", "1♠2♣2♥3♣3♥4♥Pass" };
-            yield return new object[] { "Test18HCPMax", "Q432,Q432,AJ,AKQ", "Kx,AJxx,Kxxxx,Jx", "1♣1NT2♦2♠3♦4♦Pass", "1♠2♣2♥3♣3♠4♥Pass" };
+            yield return new object[] { "Test17HCP", "AK32,A5432,A2,Q2", ",xxxx,KQxxxx,Kxx", "1♣1NT2♦2♠3♣4♦Pass", "1♠2♣2♥2NT3♠4♥" };
+            yield return new object[] { "Test20HCPMin", "AQ32,A432,A2,AQ2", "xx,xxxx,KQxxx,Kx", "1♣1NT2♦2♠3♦4♦Pass", "1♠2♣2♥3♣3♥4♥" };
+            yield return new object[] { "Test18HCPMax", "Q432,Q432,AJ,AKQ", "Kx,AJxx,Kxxxx,Jx", "1♣1NT2♦2♠3♦4♦Pass", "1♠2♣2♥3♣3♠4♥" };
         }
 
         public static IEnumerable<object[]> TestCases4DiamondPull()
@@ -144,10 +142,13 @@ namespace TosrIntegration.Test
             Assert.Equal(expectedBidsNorth, actualBidsNorth);
         }
 
-        private static void AssertHand(BidManager bidManager, Auction auction, string northHand, string southHand)
+        private void AssertHand(BidManager bidManager, Auction auction, string northHand, string southHand)
         {
-            var constructedSouthHand = bidManager.ConstructSouthHand(northHand, auction);
-            Assert.Equal(southHand.Replace("J", "x"), constructedSouthHand.First());
+            var constructedSouthHand = bidManager.ConstructSouthHand(northHand);
+            Assert.Equal(Util.HandWithx(southHand), constructedSouthHand.First());
+
+            var queens = bidManager.GetQueensFromAuction(auction, reverseDictionaries);
+            Assert.True(BidManager.CheckQueens(queens, southHand));
         }
     }
 }

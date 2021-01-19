@@ -57,7 +57,7 @@ namespace TosrGui.Test
         [Fact()]
         public void SouthHandWithxTest()
         {
-            Assert.Equal("Ax,KQxx,Qxxxx,xx", BidManager.HandWithx("A5,KQ65,QT987,42"));
+            Assert.Equal("Ax,Kxxx,xxxxx,xx", Util.HandWithx("A5,KQ65,QT987,42"));
         }
 
         [Fact()]

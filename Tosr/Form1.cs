@@ -373,6 +373,7 @@ namespace Tosr
             Text = $"{pbnFilename} Board: {boardNumber} from {pbn.Boards.Count}";
             toolStripTextBoxBoard.Text = Convert.ToString(boardNumber);
             var board = pbn.Boards[boardNumber - 1];
+            deal = board.Deal;
             ShowHand(board.Deal[(int)Player.North], panelNorth);
             panelNorth.Visible = true;
             ShowHand(board.Deal[(int)Player.South], panelSouth);
