@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using NLog;
 using Common;
 using Solver;
+using Microsoft.Extensions.Hosting;
 
 namespace Tosr
 {
@@ -38,6 +39,7 @@ namespace Tosr
             InitializeComponent();
         }
 
+
         private async void Form1LoadAsync(object sender, EventArgs e)
         {
             logger.Info("Starting program");
@@ -52,7 +54,8 @@ namespace Tosr
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
             // Load user settings
-            toolStripMenuItemUseSolver.Checked = UserConfig.Default.useSolver;
+            toolStripMenuItemUseSolver.Checked = Properties.UserConfig.Default.useSolver;
+
 
             shufflingDeal.North = new North { Hcp = new MinMax(16, 37) };
             shufflingDeal.South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) };
@@ -387,12 +390,12 @@ namespace Tosr
 
         private void ToolStripMenuItemUseSolverClick(object sender, EventArgs e)
         {
-            UserConfig.Default.useSolver = toolStripMenuItemUseSolver.Checked;
+            Properties.UserConfig.Default.useSolver = toolStripMenuItemUseSolver.Checked;
         }
 
         private void Form1Closed(object sender, FormClosedEventArgs e)
         {
-            UserConfig.Default.Save();
+            Properties.UserConfig.Default.Save();
         }
     }
 }
