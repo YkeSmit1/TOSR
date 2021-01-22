@@ -31,22 +31,23 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.buttonGetAuction = new System.Windows.Forms.Button();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemFile = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem11 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItemLoadSet = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemSaveSet = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem12 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemView = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem13 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemShuffle = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem10 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemBidAgain = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem8 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem9 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemBatch = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemGenerateHands = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemBatchBid = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemUseSolver = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemOneBoard = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemAbort = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
@@ -92,26 +93,26 @@
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem4,
-            this.toolStripMenuItem12,
-            this.toolStripMenuItem5,
-            this.toolStripMenuItem6});
+            this.toolStripMenuItemFile,
+            this.toolStripMenuItemView,
+            this.toolStripMenuItemShuffle,
+            this.toolStripMenuItemBatch});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(730, 24);
             this.menuStrip1.TabIndex = 14;
             this.menuStrip1.Text = "File";
             // 
-            // toolStripMenuItem4
+            // toolStripMenuItemFile
             // 
-            this.toolStripMenuItem4.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem11,
             this.toolStripSeparator2,
             this.toolStripMenuItemLoadSet,
             this.toolStripMenuItemSaveSet});
-            this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-            this.toolStripMenuItem4.Size = new System.Drawing.Size(37, 20);
-            this.toolStripMenuItem4.Text = "File";
+            this.toolStripMenuItemFile.Name = "toolStripMenuItemFile";
+            this.toolStripMenuItemFile.Size = new System.Drawing.Size(37, 20);
+            this.toolStripMenuItemFile.Text = "File";
             // 
             // toolStripMenuItem11
             // 
@@ -140,13 +141,13 @@
             this.toolStripMenuItemSaveSet.Text = "Save set to PBN";
             this.toolStripMenuItemSaveSet.Click += new System.EventHandler(this.ToolStripMenuItemSaveSetClick);
             // 
-            // toolStripMenuItem12
+            // toolStripMenuItemView
             // 
-            this.toolStripMenuItem12.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemView.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem13});
-            this.toolStripMenuItem12.Name = "toolStripMenuItem12";
-            this.toolStripMenuItem12.Size = new System.Drawing.Size(44, 20);
-            this.toolStripMenuItem12.Text = "View";
+            this.toolStripMenuItemView.Name = "toolStripMenuItemView";
+            this.toolStripMenuItemView.Size = new System.Drawing.Size(44, 20);
+            this.toolStripMenuItemView.Text = "View";
             // 
             // toolStripMenuItem13
             // 
@@ -156,15 +157,15 @@
             this.toolStripMenuItem13.Text = "View bidding";
             this.toolStripMenuItem13.Click += new System.EventHandler(this.ViewAuctionClick);
             // 
-            // toolStripMenuItem5
+            // toolStripMenuItemShuffle
             // 
-            this.toolStripMenuItem5.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemShuffle.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem7,
             this.toolStripMenuItem10,
             this.toolStripMenuItemBidAgain});
-            this.toolStripMenuItem5.Name = "toolStripMenuItem5";
-            this.toolStripMenuItem5.Size = new System.Drawing.Size(56, 20);
-            this.toolStripMenuItem5.Text = "Shuffle";
+            this.toolStripMenuItemShuffle.Name = "toolStripMenuItemShuffle";
+            this.toolStripMenuItemShuffle.Size = new System.Drawing.Size(56, 20);
+            this.toolStripMenuItemShuffle.Text = "Shuffle";
             // 
             // toolStripMenuItem7
             // 
@@ -189,32 +190,33 @@
             this.toolStripMenuItemBidAgain.Text = "Bid Again";
             this.toolStripMenuItemBidAgain.Click += new System.EventHandler(this.ToolStripMenuItemBidAgainClick);
             // 
-            // toolStripMenuItem6
+            // toolStripMenuItemBatch
             // 
-            this.toolStripMenuItem6.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem8,
-            this.toolStripMenuItem9,
+            this.toolStripMenuItemBatch.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemGenerateHands,
+            this.toolStripMenuItemBatchBid,
             this.toolStripMenuItemUseSolver,
-            this.toolStripMenuItemOneBoard});
-            this.toolStripMenuItem6.Name = "toolStripMenuItem6";
-            this.toolStripMenuItem6.Size = new System.Drawing.Size(49, 20);
-            this.toolStripMenuItem6.Text = "Batch";
+            this.toolStripMenuItemOneBoard,
+            this.toolStripMenuItemAbort});
+            this.toolStripMenuItemBatch.Name = "toolStripMenuItemBatch";
+            this.toolStripMenuItemBatch.Size = new System.Drawing.Size(49, 20);
+            this.toolStripMenuItemBatch.Text = "Batch";
             // 
-            // toolStripMenuItem8
+            // toolStripMenuItemGenerateHands
             // 
-            this.toolStripMenuItem8.Name = "toolStripMenuItem8";
-            this.toolStripMenuItem8.ShortcutKeys = System.Windows.Forms.Keys.F4;
-            this.toolStripMenuItem8.Size = new System.Drawing.Size(234, 22);
-            this.toolStripMenuItem8.Text = "Generate Hands";
-            this.toolStripMenuItem8.Click += new System.EventHandler(this.ButtonGenerateHandsClick);
+            this.toolStripMenuItemGenerateHands.Name = "toolStripMenuItemGenerateHands";
+            this.toolStripMenuItemGenerateHands.ShortcutKeys = System.Windows.Forms.Keys.F4;
+            this.toolStripMenuItemGenerateHands.Size = new System.Drawing.Size(234, 22);
+            this.toolStripMenuItemGenerateHands.Text = "Generate Hands";
+            this.toolStripMenuItemGenerateHands.Click += new System.EventHandler(this.ButtonGenerateHandsClick);
             // 
-            // toolStripMenuItem9
+            // toolStripMenuItemBatchBid
             // 
-            this.toolStripMenuItem9.Name = "toolStripMenuItem9";
-            this.toolStripMenuItem9.ShortcutKeys = System.Windows.Forms.Keys.F5;
-            this.toolStripMenuItem9.Size = new System.Drawing.Size(234, 22);
-            this.toolStripMenuItem9.Text = "Batch bid generated hands";
-            this.toolStripMenuItem9.Click += new System.EventHandler(this.ButtonBatchBiddingClickAsync);
+            this.toolStripMenuItemBatchBid.Name = "toolStripMenuItemBatchBid";
+            this.toolStripMenuItemBatchBid.ShortcutKeys = System.Windows.Forms.Keys.F5;
+            this.toolStripMenuItemBatchBid.Size = new System.Drawing.Size(234, 22);
+            this.toolStripMenuItemBatchBid.Text = "Batch bid generated hands";
+            this.toolStripMenuItemBatchBid.Click += new System.EventHandler(this.ButtonBatchBiddingClickAsync);
             // 
             // toolStripMenuItemUseSolver
             // 
@@ -229,6 +231,14 @@
             this.toolStripMenuItemOneBoard.Size = new System.Drawing.Size(234, 22);
             this.toolStripMenuItemOneBoard.Text = "Batch bid one board";
             this.toolStripMenuItemOneBoard.Click += new System.EventHandler(this.ToolStripMenuItemOneBoardClick);
+            // 
+            // toolStripMenuItemAbort
+            // 
+            this.toolStripMenuItemAbort.Name = "toolStripMenuItemAbort";
+            this.toolStripMenuItemAbort.ShortcutKeys = System.Windows.Forms.Keys.F12;
+            this.toolStripMenuItemAbort.Size = new System.Drawing.Size(234, 22);
+            this.toolStripMenuItemAbort.Text = "Cancel batch bidding";
+            this.toolStripMenuItemAbort.Click += new System.EventHandler(this.ToolStripMenuItemAbortClick);
             // 
             // toolStripMenuItem1
             // 
@@ -464,12 +474,12 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem4;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem5;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemFile;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemView;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem7;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem6;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem8;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem9;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemShuffle;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemBatch;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemGenerateHands;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton toolStripButton1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
@@ -481,7 +491,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem11;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem12;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemBatchBid;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem13;
         private System.Windows.Forms.Panel panelNorth;
         private System.Windows.Forms.Panel panelSouth;
@@ -501,6 +511,8 @@
         private System.Windows.Forms.ToolStripTextBox toolStripTextBoxBoard;
         private System.Windows.Forms.ToolStripButton toolStripButtonNext;
         private System.Windows.Forms.ToolStripButton toolStripButtonLast;
+
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemAbort;
     }
 }
 

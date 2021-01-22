@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using NLog;
 using Common;
 using Solver;
+using System.Threading;
 
 namespace Tosr
 {
@@ -80,7 +81,7 @@ namespace Tosr
             this.useSingleDummySolver = useSingleDummySolver;
         }
 
-        public Pbn Execute(IEnumerable<string[]> boards, IProgress<int> progress)
+        public Pbn Execute(IEnumerable<string[]> boards, IProgress<int> progress, CancellationToken token)
         {
             var pbn = new Pbn();
             handPerAuction.Clear();
@@ -122,6 +123,11 @@ namespace Tosr
                         Description = correctnessContractBreakdown.ToString()});
                     if (statistics.handsBid % 100 == 0)
                         progress.Report(statistics.handsBid);
+                    if (token.IsCancellationRequested)
+                    {
+                        MessageBox.Show($"Batch bidding canceled after board {statistics.handsBid}", "Batch bidding");
+                        break;
+                    }
                 }
                 catch (Exception exception)
                 {

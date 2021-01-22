@@ -32,6 +32,7 @@ namespace Tosr
         private Pbn pbn = new Pbn();
         private int boardNumber;
         private string pbnFilename;
+        private CancellationTokenSource cancelBatchbidding = new CancellationTokenSource();
 
         public Form1()
         {
@@ -216,10 +217,12 @@ namespace Tosr
                 panelNorth.Visible = false;
                 BatchBidding batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, toolStripMenuItemUseSolver.Checked);
                 toolStripStatusLabel1.Text = "Batch bidding hands...";
+                cancelBatchbidding.Dispose();
+                cancelBatchbidding = new CancellationTokenSource();
                 await Task.Run(() =>
                 {
                     var progress = new Progress<int>(report => toolStripStatusLabel1.Text = $"Hands done: {report}");
-                    pbn = batchBidding.Execute(pbn.Boards.Select(x => x.Deal), progress);
+                    pbn = batchBidding.Execute(pbn.Boards.Select(x => x.Deal), progress, cancelBatchbidding.Token);
                 });
                 pbnFilename = "";
                 boardNumber = 1;
@@ -310,7 +313,7 @@ namespace Tosr
                 LoadCurrentBoard();
 
                 var batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, true);
-                var localPbn = batchBidding.Execute(new[] { pbn.Boards[boardNumber - 1].Deal}, new Progress<int>());
+                var localPbn = batchBidding.Execute(new[] { pbn.Boards[boardNumber - 1].Deal}, new Progress<int>(), CancellationToken.None);
                 auctionControl.auction = localPbn.Boards.First().Auction ?? new Auction();
                 auctionControl.ReDraw();
                 toolStripStatusLabel1.Text = localPbn.Boards.First().Description;
@@ -382,5 +385,9 @@ namespace Tosr
             toolStripStatusLabel1.Text = board.Description;
         }
 
+        private void ToolStripMenuItemAbortClick(object sender, EventArgs e)
+        {
+            cancelBatchbidding.Cancel();
+        }
     }
 }
