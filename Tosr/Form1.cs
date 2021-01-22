@@ -235,7 +235,7 @@ namespace Tosr
         {
             var shufflingDeal = new ShufflingDeal() { NrOfHands = batchSize, 
                 North = new North { Hcp = new MinMax(16, 37) }, 
-                South = new South { Hcp = new MinMax(7, 37), Controls = new MinMax(2, 12) } };
+                South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) } };
 
             var boards = shufflingDeal.Execute();
             pbn.Boards = boards.Select(board => new BoardDto { Deal = Util.GetBoardsTosr(board) }).ToList();
