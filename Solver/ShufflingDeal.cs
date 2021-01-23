@@ -154,7 +154,10 @@ namespace Solver
             process.Start();
             // 5 second timeout
             if (!process.WaitForExit(5 * 1000))
+            {
+                process.Kill();
                 throw new TimeoutException("Deal.exe timed out");
+            }
             if (process.ExitCode != 0)
             {
                 using var errorReader = process.StandardError;

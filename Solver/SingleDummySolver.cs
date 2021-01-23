@@ -18,12 +18,12 @@ namespace Solver
 
         private static IEnumerable<string> GetHandsForSolverExactHands(string northHandStr, string southHandStr)
         {
-            var shuflingDeal = new ShufflingDeal
+            var shufflingDeal = new ShufflingDeal
             {
                 North = new North { Hand = northHandStr.Split(',') },
                 South = new South { Hand = southHandStr.Split(',') }
             };
-            return shuflingDeal.Execute();
+            return shufflingDeal.Execute();
         }
 
         public static List<int> SolveSingleDummy(Suit trumpSuit, Player declarer, string northHand, string southHandShape, int minControls, int maxControls)
@@ -47,6 +47,8 @@ namespace Solver
                 North = new North { Hand = northHandStr.Split(',')},
                 South = new South { Shape = southHandShape, Controls = new MinMax(minControls, maxControls) },
             };
+            if (minControls == 2)
+                shufflingDeal.South.Hcp = new MinMax(8, 37);
 
             return shufflingDeal.Execute().ToArray();
         }
@@ -63,7 +65,7 @@ namespace Solver
             var controlsSpecific = southHand.Select(x => Regex.Match(x, "[AK]").ToString()).ToArray();
             var controls = Util.GetControlCount(southHandStr);
 
-            var shuflingDeal = new ShufflingDeal
+            var shufflingDeal = new ShufflingDeal
             {
                 North = new North { Hand = northHandStr.Split(',') },
                 South = new South
@@ -75,7 +77,10 @@ namespace Solver
                     Queens = queens
                 }
             };
-            return shuflingDeal.Execute();
+            if (controls == 2 && shufflingDeal.South.Hcp == null)
+                shufflingDeal.South.Hcp = new MinMax(8, 37);
+
+            return shufflingDeal.Execute();
         }
 
     }
