@@ -238,6 +238,7 @@ namespace Tosr
                     var progress = new Progress<int>(report => toolStripStatusLabel1.Text = $"Hands done: {report}");
                     pbn = batchBidding.Execute(pbn.Boards.Select(x => x.Deal), progress, cancelBatchbidding.Token);
                 });
+                Settings.Default.pbnFilePath = "";
                 pbnFilename = "";
                 boardNumber = 1;
                 LoadCurrentBoard();
@@ -305,6 +306,10 @@ namespace Tosr
                 pbnFilename = Path.GetFileName(saveFileDialog1.FileName);
                 Text = $"{pbnFilename} Board: {1} from {pbn.Boards.Count}";
                 pbn.Save(saveFileDialog1.FileName);
+                if (pbn.Boards.Count > 0)
+                {
+                    Settings.Default.pbnFilePath = saveFileDialog1.FileName;
+                }
             }
         }
 
