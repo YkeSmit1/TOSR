@@ -5,7 +5,7 @@
     <Setting Name="useSolver" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="pbnFileName" Type="System.String" Scope="User">
+    <Setting Name="pbnFilePath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="boardNumber" Type="System.Int32" Scope="User">

@@ -10,7 +10,6 @@ using Newtonsoft.Json;
 using NLog;
 using Common;
 using Solver;
-using Microsoft.Extensions.Hosting;
 using Tosr.Properties;
 
 namespace Tosr
@@ -41,7 +40,6 @@ namespace Tosr
             InitializeComponent();
         }
 
-
         private async void Form1LoadAsync(object sender, EventArgs e)
         {
             logger.Info("Starting program");
@@ -55,19 +53,23 @@ namespace Tosr
             logger.Info($"Initialized engine with database '{"Tosr.db3"}'");
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
-            // Load user settings
-            toolStripMenuItemUseSolver.Checked = Settings.Default.useSolver;
-            if (!string.IsNullOrEmpty(Settings.Default.pbnFileName))
-            {
-                pbn.Load(Settings.Default.pbnFileName);
-            }
-
-
-
             shufflingDeal.North = new North { Hcp = new MinMax(16, 37) };
             shufflingDeal.South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) };
-            Shuffle();
-            StartBidding();
+
+            // Load user settings
+            toolStripMenuItemUseSolver.Checked = Settings.Default.useSolver;
+            if (File.Exists(Settings.Default.pbnFilePath))
+            {
+                pbn.Load(Settings.Default.pbnFilePath);
+                pbnFilename = Path.GetFileName(Settings.Default.pbnFilePath);
+                boardNumber = Settings.Default.boardNumber;
+                LoadCurrentBoard();
+            }
+            if (pbn.Boards.Count == 0)
+            {
+                Shuffle();
+                StartBidding();
+            }
 
             toolStripStatusLabel1.Text = "Generating reverse dictionaries...";
             await Task.Run(() =>
@@ -312,7 +314,10 @@ namespace Tosr
             {
                 pbn.Load(openFileDialog2.FileName);
                 pbnFilename = Path.GetFileName(openFileDialog2.FileName);
-                Settings.Default.pbnFileName = pbnFilename;
+                if (pbn.Boards.Count > 0)
+                {
+                    Settings.Default.pbnFilePath = openFileDialog2.FileName;
+                }
                 boardNumber = 1;
                 LoadCurrentBoard();
             }
@@ -398,20 +403,13 @@ namespace Tosr
             toolStripStatusLabel1.Text = board.Description;
         }
 
-        private void ToolStripMenuItemUseSolverClick(object sender, EventArgs e)
-        {
-            Properties.UserConfig.Default.useSolver = toolStripMenuItemUseSolver.Checked;
-        }
-
         private void Form1Closed(object sender, FormClosedEventArgs e)
         {
-            Properties.UserConfig.Default.Save();
+            Settings.Default.useSolver = toolStripMenuItemUseSolver.Checked;
+            Settings.Default.boardNumber = boardNumber;
+            Settings.Default.Save();
         }
 
-        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
-
-        }
         private void ToolStripMenuItemAbortClick(object sender, EventArgs e)
         {
             cancelBatchbidding.Cancel();

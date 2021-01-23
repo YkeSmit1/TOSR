@@ -224,7 +224,6 @@
             this.toolStripMenuItemUseSolver.Name = "toolStripMenuItemUseSolver";
             this.toolStripMenuItemUseSolver.Size = new System.Drawing.Size(234, 22);
             this.toolStripMenuItemUseSolver.Text = "Use Solver";
-            this.toolStripMenuItemUseSolver.Click += new System.EventHandler(this.ToolStripMenuItemUseSolverClick);
             // 
             // toolStripMenuItemOneBoard
             // 

@@ -38,12 +38,12 @@ namespace Tosr.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string pbnFileName {
+        public string pbnFilePath {
             get {
-                return ((string)(this["pbnFileName"]));
+                return ((string)(this["pbnFilePath"]));
             }
             set {
-                this["pbnFileName"] = value;
+                this["pbnFilePath"] = value;
             }
         }
         
