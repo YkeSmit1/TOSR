@@ -11,6 +11,7 @@ using NLog;
 using Common;
 using Solver;
 using Microsoft.Extensions.Hosting;
+using Tosr.Properties;
 
 namespace Tosr
 {
@@ -54,7 +55,12 @@ namespace Tosr
             openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
 
             // Load user settings
-            toolStripMenuItemUseSolver.Checked = Properties.UserConfig.Default.useSolver;
+            toolStripMenuItemUseSolver.Checked = Settings.Default.useSolver;
+            if (!string.IsNullOrEmpty(Settings.Default.pbnFileName))
+            {
+                pbn.Load(Settings.Default.pbnFileName);
+            }
+
 
 
             shufflingDeal.North = new North { Hcp = new MinMax(16, 37) };
@@ -303,6 +309,7 @@ namespace Tosr
             {
                 pbn.Load(openFileDialog2.FileName);
                 pbnFilename = Path.GetFileName(openFileDialog2.FileName);
+                Settings.Default.pbnFileName = pbnFilename;
                 boardNumber = 1;
                 LoadCurrentBoard();
             }
@@ -396,6 +403,11 @@ namespace Tosr
         private void Form1Closed(object sender, FormClosedEventArgs e)
         {
             Properties.UserConfig.Default.Save();
+        }
+
+        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+
         }
     }
 }
