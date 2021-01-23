@@ -58,6 +58,7 @@ namespace Tosr
 
             // Load user settings
             toolStripMenuItemUseSolver.Checked = Settings.Default.useSolver;
+            numericUpDown1.Value = Settings.Default.numberOfHandsToBid;
             if (File.Exists(Settings.Default.pbnFilePath))
             {
                 pbn.Load(Settings.Default.pbnFilePath);
@@ -412,6 +413,7 @@ namespace Tosr
         {
             Settings.Default.useSolver = toolStripMenuItemUseSolver.Checked;
             Settings.Default.boardNumber = boardNumber;
+            Settings.Default.numberOfHandsToBid = (int)numericUpDown1.Value;
             Settings.Default.Save();
         }
 

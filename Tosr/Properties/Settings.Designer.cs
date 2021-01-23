@@ -58,5 +58,17 @@ namespace Tosr.Properties {
                 this["boardNumber"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public int numberOfHandsToBid {
+            get {
+                return ((int)(this["numberOfHandsToBid"]));
+            }
+            set {
+                this["numberOfHandsToBid"] = value;
+            }
+        }
     }
 }
