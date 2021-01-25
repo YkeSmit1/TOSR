@@ -63,7 +63,7 @@ namespace Tosr
             {
                 pbnFilepath = Settings.Default.pbnFilePath;
                 pbn.Load(pbnFilepath);
-                boardNumber = Settings.Default.boardNumber;
+                boardNumber = Math.Min(Settings.Default.boardNumber, pbn.Boards.Count());
                 LoadCurrentBoard();
             }
             if (pbn.Boards.Count == 0)
@@ -388,10 +388,6 @@ namespace Tosr
             {
                 MessageBox.Show("No valid PBN file is loaded.", "Error");
                 return;
-            }
-            if (boardNumber > pbn.Boards.Count() || boardNumber < 1)
-            {
-                boardNumber = 1;
             }
             Text = $"{Path.GetFileName(pbnFilepath)} Board: {boardNumber} from {pbn.Boards.Count}";
             toolStripTextBoxBoard.Text = Convert.ToString(boardNumber);
