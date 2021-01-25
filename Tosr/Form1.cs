@@ -32,7 +32,7 @@ namespace Tosr
         private readonly ManualResetEvent resetEvent = new ManualResetEvent(false);
         private Pbn pbn = new Pbn();
         private int boardNumber;
-        private string pbnFilename;
+        private string pbnFilepath;
         private CancellationTokenSource cancelBatchbidding = new CancellationTokenSource();
 
         public Form1()
@@ -61,13 +61,14 @@ namespace Tosr
             numericUpDown1.Value = Settings.Default.numberOfHandsToBid;
             if (File.Exists(Settings.Default.pbnFilePath))
             {
-                pbn.Load(Settings.Default.pbnFilePath);
-                pbnFilename = Path.GetFileName(Settings.Default.pbnFilePath);
+                pbnFilepath = Settings.Default.pbnFilePath;
+                pbn.Load(pbnFilepath);
                 boardNumber = Settings.Default.boardNumber;
                 LoadCurrentBoard();
             }
             if (pbn.Boards.Count == 0)
             {
+                pbnFilepath = "";
                 Shuffle();
                 StartBidding();
             }
@@ -239,8 +240,7 @@ namespace Tosr
                     var progress = new Progress<int>(report => toolStripStatusLabel1.Text = $"Hands done: {report}");
                     pbn = batchBidding.Execute(pbn.Boards.Select(x => x.Deal), progress, cancelBatchbidding.Token);
                 });
-                Settings.Default.pbnFilePath = "";
-                pbnFilename = "";
+                pbnFilepath = "";
                 boardNumber = 1;
                 LoadCurrentBoard();
             }
@@ -304,13 +304,9 @@ namespace Tosr
         {
             if (saveFileDialog1.ShowDialog() == DialogResult.OK)
             {
-                pbnFilename = Path.GetFileName(saveFileDialog1.FileName);
-                Text = $"{pbnFilename} Board: {1} from {pbn.Boards.Count}";
-                pbn.Save(saveFileDialog1.FileName);
-                if (pbn.Boards.Count > 0)
-                {
-                    Settings.Default.pbnFilePath = saveFileDialog1.FileName;
-                }
+                pbnFilepath = saveFileDialog1.FileName;
+                pbn.Save(pbnFilepath);
+                Text = $"{Path.GetFileName(pbnFilepath)} Board: {boardNumber} from {pbn.Boards.Count}";
             }
         }
 
@@ -318,12 +314,8 @@ namespace Tosr
         {
             if (openFileDialog2.ShowDialog() == DialogResult.OK)
             {
-                pbn.Load(openFileDialog2.FileName);
-                pbnFilename = Path.GetFileName(openFileDialog2.FileName);
-                if (pbn.Boards.Count > 0)
-                {
-                    Settings.Default.pbnFilePath = openFileDialog2.FileName;
-                }
+                pbnFilepath = openFileDialog2.FileName;
+                pbn.Load(pbnFilepath);
                 boardNumber = 1;
                 LoadCurrentBoard();
             }
@@ -397,7 +389,11 @@ namespace Tosr
                 MessageBox.Show("No valid PBN file is loaded.", "Error");
                 return;
             }
-            Text = $"{pbnFilename} Board: {boardNumber} from {pbn.Boards.Count}";
+            if (boardNumber > pbn.Boards.Count() || boardNumber < 1)
+            {
+                boardNumber = 1;
+            }
+            Text = $"{Path.GetFileName(pbnFilepath)} Board: {boardNumber} from {pbn.Boards.Count}";
             toolStripTextBoxBoard.Text = Convert.ToString(boardNumber);
             var board = pbn.Boards[boardNumber - 1];
             deal = board.Deal;
@@ -414,6 +410,7 @@ namespace Tosr
             Settings.Default.useSolver = toolStripMenuItemUseSolver.Checked;
             Settings.Default.boardNumber = boardNumber;
             Settings.Default.numberOfHandsToBid = (int)numericUpDown1.Value;
+            Settings.Default.pbnFilePath = pbn.Boards.Count() > 0 ? pbnFilepath : "";
             Settings.Default.Save();
         }
 
