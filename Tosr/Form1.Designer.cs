@@ -455,6 +455,7 @@
             this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "Form1";
             this.Text = "TOSR";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1Closed);
             this.Load += new System.EventHandler(this.Form1LoadAsync);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();

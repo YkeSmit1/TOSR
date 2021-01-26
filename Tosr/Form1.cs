@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using NLog;
 using Common;
 using Solver;
+using Tosr.Properties;
 
 namespace Tosr
 {
@@ -31,7 +32,7 @@ namespace Tosr
         private readonly ManualResetEvent resetEvent = new ManualResetEvent(false);
         private Pbn pbn = new Pbn();
         private int boardNumber;
-        private string pbnFilename;
+        private string pbnFilepath;
         private CancellationTokenSource cancelBatchbidding = new CancellationTokenSource();
 
         public Form1()
@@ -54,8 +55,23 @@ namespace Tosr
 
             shufflingDeal.North = new North { Hcp = new MinMax(16, 37) };
             shufflingDeal.South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) };
-            Shuffle();
-            StartBidding();
+
+            // Load user settings
+            toolStripMenuItemUseSolver.Checked = Settings.Default.useSolver;
+            numericUpDown1.Value = Settings.Default.numberOfHandsToBid;
+            if (File.Exists(Settings.Default.pbnFilePath))
+            {
+                pbnFilepath = Settings.Default.pbnFilePath;
+                pbn.Load(pbnFilepath);
+                boardNumber = Math.Min(Settings.Default.boardNumber, pbn.Boards.Count());
+                LoadCurrentBoard();
+            }
+            if (pbn.Boards.Count == 0)
+            {
+                pbnFilepath = "";
+                Shuffle();
+                StartBidding();
+            }
 
             toolStripStatusLabel1.Text = "Generating reverse dictionaries...";
             await Task.Run(() =>
@@ -224,7 +240,7 @@ namespace Tosr
                     var progress = new Progress<int>(report => toolStripStatusLabel1.Text = $"Hands done: {report}");
                     pbn = batchBidding.Execute(pbn.Boards.Select(x => x.Deal), progress, cancelBatchbidding.Token);
                 });
-                pbnFilename = "";
+                pbnFilepath = "";
                 boardNumber = 1;
                 LoadCurrentBoard();
             }
@@ -288,9 +304,9 @@ namespace Tosr
         {
             if (saveFileDialog1.ShowDialog() == DialogResult.OK)
             {
-                pbnFilename = Path.GetFileName(saveFileDialog1.FileName);
-                Text = $"{pbnFilename} Board: {1} from {pbn.Boards.Count}";
-                pbn.Save(saveFileDialog1.FileName);
+                pbnFilepath = saveFileDialog1.FileName;
+                pbn.Save(pbnFilepath);
+                Text = $"{Path.GetFileName(pbnFilepath)} Board: {boardNumber} from {pbn.Boards.Count}";
             }
         }
 
@@ -298,8 +314,8 @@ namespace Tosr
         {
             if (openFileDialog2.ShowDialog() == DialogResult.OK)
             {
-                pbn.Load(openFileDialog2.FileName);
-                pbnFilename = Path.GetFileName(openFileDialog2.FileName);
+                pbnFilepath = openFileDialog2.FileName;
+                pbn.Load(pbnFilepath);
                 boardNumber = 1;
                 LoadCurrentBoard();
             }
@@ -373,7 +389,7 @@ namespace Tosr
                 MessageBox.Show("No valid PBN file is loaded.", "Error");
                 return;
             }
-            Text = $"{pbnFilename} Board: {boardNumber} from {pbn.Boards.Count}";
+            Text = $"{Path.GetFileName(pbnFilepath)} Board: {boardNumber} from {pbn.Boards.Count}";
             toolStripTextBoxBoard.Text = Convert.ToString(boardNumber);
             var board = pbn.Boards[boardNumber - 1];
             deal = board.Deal;
@@ -383,6 +399,15 @@ namespace Tosr
             auctionControl.auction = board.Auction ?? new Auction();
             auctionControl.ReDraw();
             toolStripStatusLabel1.Text = board.Description;
+        }
+
+        private void Form1Closed(object sender, FormClosedEventArgs e)
+        {
+            Settings.Default.useSolver = toolStripMenuItemUseSolver.Checked;
+            Settings.Default.boardNumber = boardNumber;
+            Settings.Default.numberOfHandsToBid = (int)numericUpDown1.Value;
+            Settings.Default.pbnFilePath = pbn.Boards.Count() > 0 ? pbnFilepath : "";
+            Settings.Default.Save();
         }
 
         private void ToolStripMenuItemAbortClick(object sender, EventArgs e)
