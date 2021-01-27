@@ -407,12 +407,46 @@ namespace Tosr
             Settings.Default.boardNumber = boardNumber;
             Settings.Default.numberOfHandsToBid = (int)numericUpDown1.Value;
             Settings.Default.pbnFilePath = pbn.Boards.Count() > 0 ? pbnFilepath : "";
+            Settings.Default.systemParametersPath = BidManager.systemParametersPath;
+            Settings.Default.optimizationParametersPath = BidManager.optimizationParametersPath;
             Settings.Default.Save();
         }
 
         private void ToolStripMenuItemAbortClick(object sender, EventArgs e)
         {
             cancelBatchbidding.Cancel();
+        }
+
+        private void toolStripMenuItemLoadSystemParametersClick(object sender, EventArgs e)
+        {
+            if (openFileDialog3.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    BidManager.systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(File.ReadAllText(openFileDialog3.FileName));
+                    BidManager.systemParametersPath = openFileDialog3.FileName;
+                }
+                catch
+                {
+                    MessageBox.Show("No valid system parameters file is loaded", "Error");
+                }
+            }
+        }
+
+        private void toolStripMenuItemLoadOptimizationParametersClick(object sender, EventArgs e)
+        {
+            if (openFileDialog4.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    BidManager.optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(File.ReadAllText(openFileDialog4.FileName));
+                    BidManager.optimizationParametersPath = openFileDialog4.FileName;
+                }
+                catch
+                {
+                    MessageBox.Show("No valid optimization parameters file is loaded", "Error");
+                }
+            }
         }
     }
 }
