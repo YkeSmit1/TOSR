@@ -448,5 +448,13 @@ namespace Tosr
                 }
             }
         }
+
+        private void toolStripMenuItemUseDefaultParametersClick(object sender, EventArgs e)
+        {
+            BidManager.systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(File.ReadAllText("SystemParameters.json"));
+            BidManager.optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(File.ReadAllText("OptimizationParameters.json"));
+            BidManager.systemParametersPath = "SystemParameters.json";
+            BidManager.optimizationParametersPath = "OptimizationParameters.json";
+        }
     }
 }

@@ -38,14 +38,22 @@ namespace Tosr
 
         public struct SystemParameters
         {
+            [JsonProperty(Required = Required.Always)]
             public Dictionary<int, List<int>> hcpRelayerToSignOffInNT;
+
+            [JsonProperty(Required = Required.Always)]
             public List<((double min, double max) range, RelayBidKind relayBidKind)> requirementsForRelayBid;
+
+            [JsonProperty(Required = Required.Always)]
             public int requiredMaxHcpToBid4Diamond;
         }
 
         public struct OptimizationParameters
         {
+            [JsonProperty(Required = Required.Always)]
             public double requiredConfidenceToContinueRelaying;
+
+            [JsonProperty(Required = Required.Always)]
             public int numberOfHandsForSolver;
         }
 

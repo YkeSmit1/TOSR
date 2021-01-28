@@ -33,6 +33,9 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItemFile = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem11 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemLoadSystemParameters = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemLoadOptimizationParameters = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemUseDefaultParameters = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItemLoadSet = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemSaveSet = new System.Windows.Forms.ToolStripMenuItem();
@@ -82,7 +85,7 @@
             // 
             // buttonGetAuction
             // 
-            this.buttonGetAuction.Location = new System.Drawing.Point(563, 756);
+            this.buttonGetAuction.Location = new System.Drawing.Point(587, 820);
             this.buttonGetAuction.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
             this.buttonGetAuction.Name = "buttonGetAuction";
             this.buttonGetAuction.Size = new System.Drawing.Size(150, 45);
@@ -110,6 +113,9 @@
             // 
             this.toolStripMenuItemFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem11,
+            this.toolStripMenuItemLoadSystemParameters,
+            this.toolStripMenuItemLoadOptimizationParameters,
+            this.toolStripMenuItemUseDefaultParameters,
             this.toolStripSeparator2,
             this.toolStripMenuItemLoadSet,
             this.toolStripMenuItemSaveSet});
@@ -121,26 +127,47 @@
             // 
             this.toolStripMenuItem11.Name = "toolStripMenuItem11";
             this.toolStripMenuItem11.ShortcutKeys = System.Windows.Forms.Keys.F7;
-            this.toolStripMenuItem11.Size = new System.Drawing.Size(264, 34);
+            this.toolStripMenuItem11.Size = new System.Drawing.Size(311, 34);
             this.toolStripMenuItem11.Text = "Rules database";
             this.toolStripMenuItem11.Click += new System.EventHandler(this.ToolStripMenuItem11Click);
+            // 
+            // toolStripMenuItemLoadSystemParameters
+            // 
+            this.toolStripMenuItemLoadSystemParameters.Name = "toolStripMenuItemLoadSystemParameters";
+            this.toolStripMenuItemLoadSystemParameters.Size = new System.Drawing.Size(311, 34);
+            this.toolStripMenuItemLoadSystemParameters.Text = "System parameters";
+            this.toolStripMenuItemLoadSystemParameters.Click += new System.EventHandler(this.toolStripMenuItemLoadSystemParametersClick);
+            // 
+            // toolStripMenuItemLoadOptimizationParameters
+            // 
+            this.toolStripMenuItemLoadOptimizationParameters.Name = "toolStripMenuItemLoadOptimizationParameters";
+            this.toolStripMenuItemLoadOptimizationParameters.Size = new System.Drawing.Size(311, 34);
+            this.toolStripMenuItemLoadOptimizationParameters.Text = "Optimization parameters";
+            this.toolStripMenuItemLoadOptimizationParameters.Click += new System.EventHandler(this.toolStripMenuItemLoadOptimizationParametersClick);
+            // 
+            // toolStripMenuItemUseDefaultParameters
+            // 
+            this.toolStripMenuItemUseDefaultParameters.Name = "toolStripMenuItemUseDefaultParameters";
+            this.toolStripMenuItemUseDefaultParameters.Size = new System.Drawing.Size(311, 34);
+            this.toolStripMenuItemUseDefaultParameters.Text = "Use default parameters";
+            this.toolStripMenuItemUseDefaultParameters.Click += new System.EventHandler(this.toolStripMenuItemUseDefaultParametersClick);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(261, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(308, 6);
             // 
             // toolStripMenuItemLoadSet
             // 
             this.toolStripMenuItemLoadSet.Name = "toolStripMenuItemLoadSet";
-            this.toolStripMenuItemLoadSet.Size = new System.Drawing.Size(264, 34);
+            this.toolStripMenuItemLoadSet.Size = new System.Drawing.Size(311, 34);
             this.toolStripMenuItemLoadSet.Text = "Load set from PBN";
             this.toolStripMenuItemLoadSet.Click += new System.EventHandler(this.ToolStripMenuItemLoadSetClick);
             // 
             // toolStripMenuItemSaveSet
             // 
             this.toolStripMenuItemSaveSet.Name = "toolStripMenuItemSaveSet";
-            this.toolStripMenuItemSaveSet.Size = new System.Drawing.Size(264, 34);
+            this.toolStripMenuItemSaveSet.Size = new System.Drawing.Size(311, 34);
             this.toolStripMenuItemSaveSet.Text = "Save set to PBN";
             this.toolStripMenuItemSaveSet.Click += new System.EventHandler(this.ToolStripMenuItemSaveSetClick);
             // 
@@ -381,7 +408,7 @@
             // 
             // numericUpDown1
             // 
-            this.numericUpDown1.Location = new System.Drawing.Point(743, 764);
+            this.numericUpDown1.Location = new System.Drawing.Point(767, 823);
             this.numericUpDown1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.numericUpDown1.Name = "numericUpDown1";
             this.numericUpDown1.Size = new System.Drawing.Size(171, 31);
@@ -390,7 +417,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(743, 724);
+            this.label1.Location = new System.Drawing.Point(767, 784);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(205, 25);
@@ -449,11 +476,11 @@
             // 
             // openFileDialog3
             // 
-            this.openFileDialog3.FileName = "openFileDialog3";
+            this.openFileDialog3.DefaultExt = "json";
             // 
             // openFileDialog4
             // 
-            this.openFileDialog4.FileName = "openFileDialog4";
+            this.openFileDialog4.DefaultExt = "json";
             // 
             // Form1
             // 
@@ -533,6 +560,9 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemAbort;
         private System.Windows.Forms.OpenFileDialog openFileDialog3;
         private System.Windows.Forms.OpenFileDialog openFileDialog4;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemLoadSystemParameters;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemLoadOptimizationParameters;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemUseDefaultParameters;
     }
 }
 
