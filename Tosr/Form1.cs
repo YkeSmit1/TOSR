@@ -137,7 +137,10 @@ namespace Tosr
             auctionControl.ReDraw();
             biddingBox.UpdateButtons(biddingState.CurrentBid, auctionControl.auction.currentPlayer);
             if (biddingState.EndOfBidding)
+            {
+                biddingBox.Enabled = false;
                 panelNorth.Visible = true;
+            }
         }
 
         private void ButtonShuffleClick(object sender, EventArgs e)
@@ -323,11 +326,12 @@ namespace Tosr
 
         private void ToolStripMenuItemOneBoardClick(object sender, EventArgs e)
         {
-            if (int.TryParse(toolStripTextBoxBoard.Text, out var board) && board <= pbn.Boards.Count - 1)
+            if (int.TryParse(toolStripTextBoxBoard.Text, out var board) && board <= pbn.Boards.Count)
             {
                 boardNumber = board;
                 LoadCurrentBoard();
 
+                _ = resetEvent.WaitOne();
                 var batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, true);
                 var localPbn = batchBidding.Execute(new[] { pbn.Boards[boardNumber - 1].Deal}, new Progress<int>(), CancellationToken.None);
                 auctionControl.auction = localPbn.Boards.First().Auction ?? new Auction();
@@ -339,6 +343,8 @@ namespace Tosr
         private void ToolStripMenuItemBidAgainClick(object sender, EventArgs e)
         {
             StartBidding();
+            panelNorth.Visible = false;
+            toolStripStatusLabel1.Text = "";
             _ = resetEvent.WaitOne();
             bidManager.Init(auctionControl.auction);
         }

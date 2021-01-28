@@ -178,7 +178,7 @@ namespace Tosr
                     if (biddingState.Fase == Fase.BidGame)
                     {
                         biddingState.Fase = Fase.End;
-                        var game = Bid.GetGameContract(trumpSuit, biddingState.CurrentBid);
+                        var game = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid);
                         if (game == Bid.PassBid)
                             biddingState.EndOfBidding = true;
                         return game;
@@ -223,7 +223,7 @@ namespace Tosr
                                         {
                                             biddingState.Fase = Fase.End;
                                             auction.responderHasSignedOff = true;
-                                            var game = Bid.GetGameContract(trumpSuit, biddingState.CurrentBid);
+                                            var game = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid);
                                             if (game == Bid.PassBid)
                                                 biddingState.EndOfBidding = true;
                                             return game;
@@ -251,7 +251,7 @@ namespace Tosr
                                 biddingState.Fase = Fase.End;
                                 constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
                                 auction.responderHasSignedOff = true;
-                                return Bid.GetGameContract(trumpSuit, biddingState.CurrentBid);
+                                return Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid);
                             }
                         }
                     }
@@ -347,17 +347,21 @@ namespace Tosr
             var suit = suitAndLength.Item2 >= 8 ? suitAndLength.Item1 : Suit.NoTrump;
             var queens = GetQueensFromAuction(auction, reverseDictionaries);
             var hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions);
-            var scores = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(suit, auction.GetDeclarerOrNorth(suit), northHand, match, hcp, queens));
-            var bid = Bid.GetBestContract(Util.GetExpectedContract(scores), suit, currentBid);
-            if (bid > currentBid)
-                return bid;
-            if (bid == currentBid)
-                return Bid.PassBid;
 
+            // Try Suit
+            if (TryGetEndContract(suit, out var bid))
+                return bid;
             // Try NT
-            var scoresNT = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(Suit.NoTrump, auction.GetDeclarerOrNorth(Suit.NoTrump), northHand, match, hcp, queens));
-            var bidNT = Bid.GetBestContract(Util.GetExpectedContract(scoresNT), Suit.NoTrump, currentBid);
-            return bidNT > currentBid ? bidNT : Bid.PassBid;
+            if (suit != Suit.NoTrump && TryGetEndContract(suit, out var bidNT))
+                return bidNT;
+            return Bid.PassBid;
+
+            bool TryGetEndContract(Suit triedSuit, out Bid bid)
+            {
+                var scores = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(triedSuit, auction.GetDeclarerOrNorth(triedSuit), northHand, match, hcp, queens));
+                bid = Bid.GetBestContract(Util.GetExpectedContract(scores), triedSuit, currentBid);
+                return (bid > currentBid || bid == Bid.PassBid) && bid != Bid.InvalidBid;
+            }
         }
 
         public void SouthBid(BiddingState biddingState, Auction auction, string handsString)

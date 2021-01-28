@@ -75,12 +75,18 @@ namespace TosrGui.Test
         [Fact()]
         public void GetGameContractTest()
         {
-            Assert.Equal(Bid.GetGameContract(Suit.Hearts, new Bid(4, Suit.Hearts)), Bid.PassBid);
-            Assert.Equal(Bid.GetGameContract(Suit.Hearts, new Bid(5, Suit.Hearts)), Bid.PassBid);
-            Assert.Equal(Bid.GetGameContract(Suit.Hearts, new Bid(4, Suit.Diamonds)), new Bid(4, Suit.Hearts));
-            Assert.Equal(Bid.GetGameContract(Suit.Hearts, new Bid(5, Suit.Diamonds)), new Bid(5, Suit.Hearts));
-            Assert.Equal(Bid.GetGameContract(Suit.Hearts, new Bid(3, Suit.Spades)), new Bid(4, Suit.Hearts));
-            Assert.Equal(Bid.GetGameContract(Suit.Hearts, new Bid(4, Suit.Spades)), new Bid(5, Suit.Hearts));
+            Assert.Equal(Bid.PassBid, Bid.GetGameContract(Suit.Hearts, new Bid(4, Suit.Hearts)));
+            Assert.Equal(Bid.PassBid, Bid.GetGameContract(Suit.Hearts, new Bid(5, Suit.Hearts)));
+            Assert.Equal(new Bid(4, Suit.Hearts), Bid.GetGameContract(Suit.Hearts, new Bid(4, Suit.Clubs)));
+            Assert.Equal(new Bid(5, Suit.Hearts), Bid.GetGameContract(Suit.Hearts, new Bid(4, Suit.Diamonds)));
+            Assert.Equal(new Bid(4, Suit.Hearts), Bid.GetGameContract(Suit.Hearts, new Bid(3, Suit.Spades)));
+            Assert.Equal(new Bid(5, Suit.Hearts), Bid.GetGameContract(Suit.Hearts, new Bid(4, Suit.Spades)));
+            Assert.Equal(new Bid(5, Suit.Hearts), Bid.GetGameContract(Suit.Hearts, new Bid(4, Suit.Spades)));
+            Assert.Equal(new Bid(5, Suit.NoTrump), Bid.GetGameContract(Suit.NoTrump, new Bid(4, Suit.Spades)));
+
+            Assert.Equal(Bid.InvalidBid, Bid.GetGameContract(Suit.Hearts, new Bid(5, Suit.Diamonds)));
+            Assert.Equal(Bid.InvalidBid, Bid.GetGameContract(Suit.Hearts, new Bid(6, Suit.Spades)));
+            Assert.Equal(Bid.InvalidBid, Bid.GetGameContract(Suit.Hearts, new Bid(6, Suit.Clubs)));
         }
     }
 }
