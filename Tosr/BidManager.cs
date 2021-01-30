@@ -71,13 +71,7 @@ namespace Tosr
         public static string optimizationParametersPath = Settings.Default.optimizationParametersPath;
 
         public static SystemParameters systemParameters = JsonConvert.DeserializeObject<SystemParameters>(File.ReadAllText(systemParametersPath));
-        static Dictionary<int, List<int>> hcpRelayerToSignOffInNT => systemParameters.hcpRelayerToSignOffInNT;
-        static List<((double min, double max) range, RelayBidKind relayBidKind)> requirementsForRelayBid => systemParameters.requirementsForRelayBid;
-        static int requiredMaxHcpToBid4Diamond => systemParameters.requiredMaxHcpToBid4Diamond;
-
         public static OptimizationParameters optimizationParameters = JsonConvert.DeserializeObject<OptimizationParameters>(File.ReadAllText(optimizationParametersPath));
-        static double requiredConfidenceToContinueRelaying => optimizationParameters.requiredConfidenceToContinueRelaying;
-        static int numberOfHandsForSolver => optimizationParameters.numberOfHandsForSolver;
 
         public static readonly List<Fase> signOffFasesFor3NT = new List<Fase> { Fase.Pull3NTNoAsk, Fase.Pull3NTOneAskMin, Fase.Pull3NTOneAskMax, Fase.Pull3NTTwoAsks };
         public static readonly List<Fase> signOffFasesFor4Di = new List<Fase> { Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAskMin, Fase.Pull4DiamondsOneAskMax };
@@ -213,7 +207,7 @@ namespace Tosr
                         var hcp = Util.GetHcpCount(northHand);
                         if (trumpSuit == Suit.NoTrump)
                         {
-                            if (hcpRelayerToSignOffInNT.TryGetValue(controlBidCount, out var hcps) && hcps.Contains(hcp))
+                            if (systemParameters.hcpRelayerToSignOffInNT.TryGetValue(controlBidCount, out var hcps) && hcps.Contains(hcp))
                             {
                                 var noTrumpBid = biddingState.CurrentBid < Bid.threeNTBid ? Bid.threeNTBid : Bid.fourNTBid;
                                 biddingState.UpdateBiddingStateSignOff(controlBidCount, noTrumpBid);
@@ -222,7 +216,7 @@ namespace Tosr
                         }
                         else
                         {
-                            if (controlBidCount == 0 && hcp <= requiredMaxHcpToBid4Diamond && biddingState.CurrentBid >= Bid.threeSpadeBid)
+                            if (controlBidCount == 0 && hcp <= systemParameters.requiredMaxHcpToBid4Diamond && biddingState.CurrentBid >= Bid.threeSpadeBid)
                             {
                                 biddingState.UpdateBiddingStateSignOff(controlBidCount, Bid.fourDiamondBid);
                                 return Bid.fourDiamondBid;
@@ -268,7 +262,7 @@ namespace Tosr
                             var hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions);
                             var declarer = auction.GetDeclarerOrNorth(trumpSuit);
                             var confidenceTricks = GetConfidenceTricks(northHand, matches, hcp, queens, trumpSuit, declarer);
-                            if (GetConfidenceToBidSlam(confidenceTricks) < requiredConfidenceToContinueRelaying)
+                            if (GetConfidenceToBidSlam(confidenceTricks) < optimizationParameters.requiredConfidenceToContinueRelaying)
                             {
                                 biddingState.Fase = Fase.End;
                                 constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
@@ -325,7 +319,7 @@ namespace Tosr
             var possibleControls = reverseDictionaries.ControlsOnlyAuctions[strControls];
             var confidence = GetConfidenceTricks(northHand, southHandShapes, possibleControls.First(), possibleControls.Last(), trumpSuit, declarer != Player.UnKnown ? declarer : Player.North);
             var confidenceToBidSlam = GetConfidenceToBidSlam(confidence);
-            var relayBidkind = requirementsForRelayBid.Where(x =>confidenceToBidSlam >= x.range.min && confidenceToBidSlam <= x.range.max).First().relayBidKind;
+            var relayBidkind = systemParameters.requirementsForRelayBid.Where(x =>confidenceToBidSlam >= x.range.min && confidenceToBidSlam <= x.range.max).First().relayBidKind;
             return relayBidkind;
         }
 
@@ -341,12 +335,12 @@ namespace Tosr
 
         private static Dictionary<int, double> GetConfidenceTricks(string northHand, IEnumerable<string> matches, int minControls, int maxControls, Suit trumpSuit, Player declarer)
         {
-            return GroupTricks(matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, minControls, maxControls, numberOfHandsForSolver)));
+            return GroupTricks(matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, minControls, maxControls, optimizationParameters.numberOfHandsForSolver)));
         }
 
         private static Dictionary<int, double> GetConfidenceTricks(string northHand, IEnumerable<string> matches, MinMax hcp, string queens, Suit trumpSuit, Player declarer)
         {
-            return GroupTricks(matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, hcp, queens, numberOfHandsForSolver)));
+            return GroupTricks(matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, hcp, queens, optimizationParameters.numberOfHandsForSolver)));
         }
 
         private static Dictionary<int, double> GroupTricks(IEnumerable<int> tricks)
@@ -369,7 +363,7 @@ namespace Tosr
             var suit = suitAndLength.Item2 >= 8 ? suitAndLength.Item1 : Suit.NoTrump;
             var queens = GetQueensFromAuction(auction, reverseDictionaries);
             var hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions);
-            var scores = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(suit, auction.GetDeclarerOrNorth(suit), northHand, match, hcp, queens, numberOfHandsForSolver));
+            var scores = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(suit, auction.GetDeclarerOrNorth(suit), northHand, match, hcp, queens, optimizationParameters.numberOfHandsForSolver));
             var bid = Bid.GetBestContract(Util.GetExpectedContract(scores), suit, currentBid);
             if (bid > currentBid)
                 return bid;
@@ -377,7 +371,7 @@ namespace Tosr
                 return Bid.PassBid;
 
             // Try NT
-            var scoresNT = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(Suit.NoTrump, auction.GetDeclarerOrNorth(Suit.NoTrump), northHand, match, hcp, queens, numberOfHandsForSolver));
+            var scoresNT = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(Suit.NoTrump, auction.GetDeclarerOrNorth(Suit.NoTrump), northHand, match, hcp, queens, optimizationParameters.numberOfHandsForSolver));
             var bidNT = Bid.GetBestContract(Util.GetExpectedContract(scoresNT), Suit.NoTrump, currentBid);
             return bidNT > currentBid ? bidNT : Bid.PassBid;
         }

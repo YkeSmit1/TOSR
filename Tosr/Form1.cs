@@ -11,6 +11,8 @@ using NLog;
 using Common;
 using Solver;
 using Tosr.Properties;
+using System.Resources;
+using static Common.ResourceReader;
 
 namespace Tosr
 {
@@ -426,9 +428,9 @@ namespace Tosr
                     BidManager.systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(File.ReadAllText(openFileDialog3.FileName));
                     BidManager.systemParametersPath = openFileDialog3.FileName;
                 }
-                catch
+                catch (Exception exception)
                 {
-                    MessageBox.Show("No valid system parameters file is loaded", "Error");
+                    MessageBox.Show($"No valid system parameters file is loaded. ({exception.Message})", "Error");
                 }
             }
         }
@@ -442,17 +444,17 @@ namespace Tosr
                     BidManager.optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(File.ReadAllText(openFileDialog4.FileName));
                     BidManager.optimizationParametersPath = openFileDialog4.FileName;
                 }
-                catch
+                catch (Exception exception)
                 {
-                    MessageBox.Show("No valid optimization parameters file is loaded", "Error");
+                    MessageBox.Show($"No valid optimization parameters file is loaded. ({exception.Message})", "Error");
                 }
             }
         }
 
         private void toolStripMenuItemUseDefaultParametersClick(object sender, EventArgs e)
         {
-            BidManager.systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(File.ReadAllText("SystemParameters.json"));
-            BidManager.optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(File.ReadAllText("OptimizationParameters.json"));
+            BidManager.systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(ReadResource("SystemParameters.json"));
+            BidManager.optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(ReadResource("OptimizationParameters.json"));
             BidManager.systemParametersPath = "SystemParameters.json";
             BidManager.optimizationParametersPath = "OptimizationParameters.json";
         }

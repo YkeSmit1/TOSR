@@ -16,12 +16,12 @@
     <Content Include="..\FasesWithOffset.json" Link="FasesWithOffset.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\OptimizationParameters.json" Link="OptimizationParameters.json">
+    <EmbeddedResource Include="..\OptimizationParameters.json" Link="OptimizationParameters.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\SystemParameters.json" Link="SystemParameters.json">
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\SystemParameters.json" Link="SystemParameters.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
