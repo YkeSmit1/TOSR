@@ -8,6 +8,7 @@ using Solver;
 using Newtonsoft.Json;
 using System.IO;
 using Tosr.Properties;
+using static Common.ResourceReader;
 
 namespace Tosr
 {
@@ -55,6 +56,14 @@ namespace Tosr
 
             [JsonProperty(Required = Required.Always)]
             public int numberOfHandsForSolver;
+        }
+
+        public static void useDefaultParameters()
+        {
+            systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(ReadResource("SystemParameters.json"));
+            optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(ReadResource("OptimizationParameters.json"));
+            systemParametersPath = "SystemParameters.json";
+            optimizationParametersPath = "OptimizationParameters.json";
         }
 
         private readonly IBidGenerator bidGenerator;

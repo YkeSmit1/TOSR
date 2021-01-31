@@ -304,9 +304,9 @@ namespace Tosr
 
         private void ToolStripMenuItemSaveSetClick(object sender, EventArgs e)
         {
-            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+            if (saveFileDialogPBN.ShowDialog() == DialogResult.OK)
             {
-                pbnFilepath = saveFileDialog1.FileName;
+                pbnFilepath = saveFileDialogPBN.FileName;
                 pbn.Save(pbnFilepath);
                 Text = $"{Path.GetFileName(pbnFilepath)} Board: {boardNumber} from {pbn.Boards.Count}";
             }
@@ -314,9 +314,9 @@ namespace Tosr
 
         private void ToolStripMenuItemLoadSetClick(object sender, EventArgs e)
         {
-            if (openFileDialog2.ShowDialog() == DialogResult.OK)
+            if (openFileDialogPBN.ShowDialog() == DialogResult.OK)
             {
-                pbnFilepath = openFileDialog2.FileName;
+                pbnFilepath = openFileDialogPBN.FileName;
                 pbn.Load(pbnFilepath);
                 boardNumber = 1;
                 LoadCurrentBoard();
@@ -421,12 +421,12 @@ namespace Tosr
 
         private void toolStripMenuItemLoadSystemParametersClick(object sender, EventArgs e)
         {
-            if (openFileDialog3.ShowDialog() == DialogResult.OK)
+            if (openFileDialogSystemParameters.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    BidManager.systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(File.ReadAllText(openFileDialog3.FileName));
-                    BidManager.systemParametersPath = openFileDialog3.FileName;
+                    BidManager.systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(File.ReadAllText(openFileDialogSystemParameters.FileName));
+                    BidManager.systemParametersPath = openFileDialogSystemParameters.FileName;
                 }
                 catch (Exception exception)
                 {
@@ -437,12 +437,12 @@ namespace Tosr
 
         private void toolStripMenuItemLoadOptimizationParametersClick(object sender, EventArgs e)
         {
-            if (openFileDialog4.ShowDialog() == DialogResult.OK)
+            if (openFileDialogOptimizationParameters.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    BidManager.optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(File.ReadAllText(openFileDialog4.FileName));
-                    BidManager.optimizationParametersPath = openFileDialog4.FileName;
+                    BidManager.optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(File.ReadAllText(openFileDialogOptimizationParameters.FileName));
+                    BidManager.optimizationParametersPath = openFileDialogOptimizationParameters.FileName;
                 }
                 catch (Exception exception)
                 {
@@ -453,10 +453,8 @@ namespace Tosr
 
         private void toolStripMenuItemUseDefaultParametersClick(object sender, EventArgs e)
         {
-            BidManager.systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(ReadResource("SystemParameters.json"));
-            BidManager.optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(ReadResource("OptimizationParameters.json"));
-            BidManager.systemParametersPath = "SystemParameters.json";
-            BidManager.optimizationParametersPath = "OptimizationParameters.json";
+            BidManager.useDefaultParameters();
         }
+
     }
 }

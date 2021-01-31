@@ -68,15 +68,15 @@
             this.toolStripButtonLast = new System.Windows.Forms.ToolStripButton();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.openFileDialogDatabase = new System.Windows.Forms.OpenFileDialog();
             this.panelNorth = new System.Windows.Forms.Panel();
             this.panelSouth = new System.Windows.Forms.Panel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-            this.openFileDialog2 = new System.Windows.Forms.OpenFileDialog();
-            this.openFileDialog3 = new System.Windows.Forms.OpenFileDialog();
-            this.openFileDialog4 = new System.Windows.Forms.OpenFileDialog();
+            this.saveFileDialogPBN = new System.Windows.Forms.SaveFileDialog();
+            this.openFileDialogPBN = new System.Windows.Forms.OpenFileDialog();
+            this.openFileDialogSystemParameters = new System.Windows.Forms.OpenFileDialog();
+            this.openFileDialogOptimizationParameters = new System.Windows.Forms.OpenFileDialog();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
@@ -85,10 +85,10 @@
             // 
             // buttonGetAuction
             // 
-            this.buttonGetAuction.Location = new System.Drawing.Point(587, 820);
-            this.buttonGetAuction.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
+            this.buttonGetAuction.Location = new System.Drawing.Point(411, 492);
+            this.buttonGetAuction.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.buttonGetAuction.Name = "buttonGetAuction";
-            this.buttonGetAuction.Size = new System.Drawing.Size(150, 45);
+            this.buttonGetAuction.Size = new System.Drawing.Size(105, 27);
             this.buttonGetAuction.TabIndex = 2;
             this.buttonGetAuction.Text = "Get Auction";
             this.buttonGetAuction.UseVisualStyleBackColor = true;
@@ -104,8 +104,7 @@
             this.toolStripMenuItemBatch});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Padding = new System.Windows.Forms.Padding(9, 3, 0, 3);
-            this.menuStrip1.Size = new System.Drawing.Size(1043, 35);
+            this.menuStrip1.Size = new System.Drawing.Size(730, 24);
             this.menuStrip1.TabIndex = 14;
             this.menuStrip1.Text = "File";
             // 
@@ -120,54 +119,54 @@
             this.toolStripMenuItemLoadSet,
             this.toolStripMenuItemSaveSet});
             this.toolStripMenuItemFile.Name = "toolStripMenuItemFile";
-            this.toolStripMenuItemFile.Size = new System.Drawing.Size(54, 29);
+            this.toolStripMenuItemFile.Size = new System.Drawing.Size(37, 20);
             this.toolStripMenuItemFile.Text = "File";
             // 
             // toolStripMenuItem11
             // 
             this.toolStripMenuItem11.Name = "toolStripMenuItem11";
             this.toolStripMenuItem11.ShortcutKeys = System.Windows.Forms.Keys.F7;
-            this.toolStripMenuItem11.Size = new System.Drawing.Size(311, 34);
+            this.toolStripMenuItem11.Size = new System.Drawing.Size(205, 22);
             this.toolStripMenuItem11.Text = "Rules database";
             this.toolStripMenuItem11.Click += new System.EventHandler(this.ToolStripMenuItem11Click);
             // 
             // toolStripMenuItemLoadSystemParameters
             // 
             this.toolStripMenuItemLoadSystemParameters.Name = "toolStripMenuItemLoadSystemParameters";
-            this.toolStripMenuItemLoadSystemParameters.Size = new System.Drawing.Size(311, 34);
+            this.toolStripMenuItemLoadSystemParameters.Size = new System.Drawing.Size(205, 22);
             this.toolStripMenuItemLoadSystemParameters.Text = "System parameters";
             this.toolStripMenuItemLoadSystemParameters.Click += new System.EventHandler(this.toolStripMenuItemLoadSystemParametersClick);
             // 
             // toolStripMenuItemLoadOptimizationParameters
             // 
             this.toolStripMenuItemLoadOptimizationParameters.Name = "toolStripMenuItemLoadOptimizationParameters";
-            this.toolStripMenuItemLoadOptimizationParameters.Size = new System.Drawing.Size(311, 34);
+            this.toolStripMenuItemLoadOptimizationParameters.Size = new System.Drawing.Size(205, 22);
             this.toolStripMenuItemLoadOptimizationParameters.Text = "Optimization parameters";
             this.toolStripMenuItemLoadOptimizationParameters.Click += new System.EventHandler(this.toolStripMenuItemLoadOptimizationParametersClick);
             // 
             // toolStripMenuItemUseDefaultParameters
             // 
             this.toolStripMenuItemUseDefaultParameters.Name = "toolStripMenuItemUseDefaultParameters";
-            this.toolStripMenuItemUseDefaultParameters.Size = new System.Drawing.Size(311, 34);
+            this.toolStripMenuItemUseDefaultParameters.Size = new System.Drawing.Size(205, 22);
             this.toolStripMenuItemUseDefaultParameters.Text = "Use default parameters";
             this.toolStripMenuItemUseDefaultParameters.Click += new System.EventHandler(this.toolStripMenuItemUseDefaultParametersClick);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(308, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(202, 6);
             // 
             // toolStripMenuItemLoadSet
             // 
             this.toolStripMenuItemLoadSet.Name = "toolStripMenuItemLoadSet";
-            this.toolStripMenuItemLoadSet.Size = new System.Drawing.Size(311, 34);
+            this.toolStripMenuItemLoadSet.Size = new System.Drawing.Size(205, 22);
             this.toolStripMenuItemLoadSet.Text = "Load set from PBN";
             this.toolStripMenuItemLoadSet.Click += new System.EventHandler(this.ToolStripMenuItemLoadSetClick);
             // 
             // toolStripMenuItemSaveSet
             // 
             this.toolStripMenuItemSaveSet.Name = "toolStripMenuItemSaveSet";
-            this.toolStripMenuItemSaveSet.Size = new System.Drawing.Size(311, 34);
+            this.toolStripMenuItemSaveSet.Size = new System.Drawing.Size(205, 22);
             this.toolStripMenuItemSaveSet.Text = "Save set to PBN";
             this.toolStripMenuItemSaveSet.Click += new System.EventHandler(this.ToolStripMenuItemSaveSetClick);
             // 
@@ -176,14 +175,14 @@
             this.toolStripMenuItemView.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem13});
             this.toolStripMenuItemView.Name = "toolStripMenuItemView";
-            this.toolStripMenuItemView.Size = new System.Drawing.Size(65, 29);
+            this.toolStripMenuItemView.Size = new System.Drawing.Size(44, 20);
             this.toolStripMenuItemView.Text = "View";
             // 
             // toolStripMenuItem13
             // 
             this.toolStripMenuItem13.Name = "toolStripMenuItem13";
             this.toolStripMenuItem13.ShortcutKeys = System.Windows.Forms.Keys.F8;
-            this.toolStripMenuItem13.Size = new System.Drawing.Size(249, 34);
+            this.toolStripMenuItem13.Size = new System.Drawing.Size(162, 22);
             this.toolStripMenuItem13.Text = "View bidding";
             this.toolStripMenuItem13.Click += new System.EventHandler(this.ViewAuctionClick);
             // 
@@ -194,14 +193,14 @@
             this.toolStripMenuItem10,
             this.toolStripMenuItemBidAgain});
             this.toolStripMenuItemShuffle.Name = "toolStripMenuItemShuffle";
-            this.toolStripMenuItemShuffle.Size = new System.Drawing.Size(83, 29);
+            this.toolStripMenuItemShuffle.Size = new System.Drawing.Size(56, 20);
             this.toolStripMenuItemShuffle.Text = "Shuffle";
             // 
             // toolStripMenuItem7
             // 
             this.toolStripMenuItem7.Name = "toolStripMenuItem7";
             this.toolStripMenuItem7.ShortcutKeys = System.Windows.Forms.Keys.F3;
-            this.toolStripMenuItem7.Size = new System.Drawing.Size(282, 34);
+            this.toolStripMenuItem7.Size = new System.Drawing.Size(185, 22);
             this.toolStripMenuItem7.Text = "Shuffle new hand";
             this.toolStripMenuItem7.Click += new System.EventHandler(this.ButtonShuffleClick);
             // 
@@ -209,14 +208,14 @@
             // 
             this.toolStripMenuItem10.Name = "toolStripMenuItem10";
             this.toolStripMenuItem10.ShortcutKeys = System.Windows.Forms.Keys.F6;
-            this.toolStripMenuItem10.Size = new System.Drawing.Size(282, 34);
+            this.toolStripMenuItem10.Size = new System.Drawing.Size(185, 22);
             this.toolStripMenuItem10.Text = "Restrictions";
             this.toolStripMenuItem10.Click += new System.EventHandler(this.ToolStripButton4Click);
             // 
             // toolStripMenuItemBidAgain
             // 
             this.toolStripMenuItemBidAgain.Name = "toolStripMenuItemBidAgain";
-            this.toolStripMenuItemBidAgain.Size = new System.Drawing.Size(282, 34);
+            this.toolStripMenuItemBidAgain.Size = new System.Drawing.Size(185, 22);
             this.toolStripMenuItemBidAgain.Text = "Bid Again";
             this.toolStripMenuItemBidAgain.Click += new System.EventHandler(this.ToolStripMenuItemBidAgainClick);
             // 
@@ -229,14 +228,14 @@
             this.toolStripMenuItemOneBoard,
             this.toolStripMenuItemAbort});
             this.toolStripMenuItemBatch.Name = "toolStripMenuItemBatch";
-            this.toolStripMenuItemBatch.Size = new System.Drawing.Size(71, 29);
+            this.toolStripMenuItemBatch.Size = new System.Drawing.Size(49, 20);
             this.toolStripMenuItemBatch.Text = "Batch";
             // 
             // toolStripMenuItemGenerateHands
             // 
             this.toolStripMenuItemGenerateHands.Name = "toolStripMenuItemGenerateHands";
             this.toolStripMenuItemGenerateHands.ShortcutKeys = System.Windows.Forms.Keys.F4;
-            this.toolStripMenuItemGenerateHands.Size = new System.Drawing.Size(357, 34);
+            this.toolStripMenuItemGenerateHands.Size = new System.Drawing.Size(234, 22);
             this.toolStripMenuItemGenerateHands.Text = "Generate Hands";
             this.toolStripMenuItemGenerateHands.Click += new System.EventHandler(this.ButtonGenerateHandsClick);
             // 
@@ -244,7 +243,7 @@
             // 
             this.toolStripMenuItemBatchBid.Name = "toolStripMenuItemBatchBid";
             this.toolStripMenuItemBatchBid.ShortcutKeys = System.Windows.Forms.Keys.F5;
-            this.toolStripMenuItemBatchBid.Size = new System.Drawing.Size(357, 34);
+            this.toolStripMenuItemBatchBid.Size = new System.Drawing.Size(234, 22);
             this.toolStripMenuItemBatchBid.Text = "Batch bid generated hands";
             this.toolStripMenuItemBatchBid.Click += new System.EventHandler(this.ButtonBatchBiddingClickAsync);
             // 
@@ -252,13 +251,13 @@
             // 
             this.toolStripMenuItemUseSolver.CheckOnClick = true;
             this.toolStripMenuItemUseSolver.Name = "toolStripMenuItemUseSolver";
-            this.toolStripMenuItemUseSolver.Size = new System.Drawing.Size(357, 34);
+            this.toolStripMenuItemUseSolver.Size = new System.Drawing.Size(234, 22);
             this.toolStripMenuItemUseSolver.Text = "Use Solver";
             // 
             // toolStripMenuItemOneBoard
             // 
             this.toolStripMenuItemOneBoard.Name = "toolStripMenuItemOneBoard";
-            this.toolStripMenuItemOneBoard.Size = new System.Drawing.Size(357, 34);
+            this.toolStripMenuItemOneBoard.Size = new System.Drawing.Size(234, 22);
             this.toolStripMenuItemOneBoard.Text = "Batch bid one board";
             this.toolStripMenuItemOneBoard.Click += new System.EventHandler(this.ToolStripMenuItemOneBoardClick);
             // 
@@ -266,7 +265,7 @@
             // 
             this.toolStripMenuItemAbort.Name = "toolStripMenuItemAbort";
             this.toolStripMenuItemAbort.ShortcutKeys = System.Windows.Forms.Keys.F12;
-            this.toolStripMenuItemAbort.Size = new System.Drawing.Size(357, 34);
+            this.toolStripMenuItemAbort.Size = new System.Drawing.Size(234, 22);
             this.toolStripMenuItemAbort.Text = "Cancel batch bidding";
             this.toolStripMenuItemAbort.Click += new System.EventHandler(this.ToolStripMenuItemAbortClick);
             // 
@@ -303,10 +302,10 @@
             this.toolStripTextBoxBoard,
             this.toolStripButtonNext,
             this.toolStripButtonLast});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 35);
+            this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
-            this.toolStrip1.Size = new System.Drawing.Size(1043, 33);
+            this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
+            this.toolStrip1.Size = new System.Drawing.Size(730, 31);
             this.toolStrip1.TabIndex = 15;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -316,14 +315,14 @@
             this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
             this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(34, 28);
+            this.toolStripButton1.Size = new System.Drawing.Size(28, 28);
             this.toolStripButton1.Text = "Shuffle";
             this.toolStripButton1.Click += new System.EventHandler(this.ButtonShuffleClick);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 33);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 31);
             // 
             // toolStripButton2
             // 
@@ -331,7 +330,7 @@
             this.toolStripButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton2.Image")));
             this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButton2.Name = "toolStripButton2";
-            this.toolStripButton2.Size = new System.Drawing.Size(34, 28);
+            this.toolStripButton2.Size = new System.Drawing.Size(28, 28);
             this.toolStripButton2.Text = "Generate hands";
             this.toolStripButton2.Click += new System.EventHandler(this.ButtonGenerateHandsClick);
             // 
@@ -341,7 +340,7 @@
             this.toolStripButton3.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton3.Image")));
             this.toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButton3.Name = "toolStripButton3";
-            this.toolStripButton3.Size = new System.Drawing.Size(34, 28);
+            this.toolStripButton3.Size = new System.Drawing.Size(28, 28);
             this.toolStripButton3.Text = "Batch";
             this.toolStripButton3.Click += new System.EventHandler(this.ButtonBatchBiddingClickAsync);
             // 
@@ -351,14 +350,14 @@
             this.toolStripButton4.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton4.Image")));
             this.toolStripButton4.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButton4.Name = "toolStripButton4";
-            this.toolStripButton4.Size = new System.Drawing.Size(34, 28);
+            this.toolStripButton4.Size = new System.Drawing.Size(28, 28);
             this.toolStripButton4.Text = "Restrictions";
             this.toolStripButton4.Click += new System.EventHandler(this.ToolStripButton4Click);
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 33);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 31);
             // 
             // toolStripButtonFirst
             // 
@@ -366,7 +365,7 @@
             this.toolStripButtonFirst.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonFirst.Image")));
             this.toolStripButtonFirst.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonFirst.Name = "toolStripButtonFirst";
-            this.toolStripButtonFirst.Size = new System.Drawing.Size(34, 28);
+            this.toolStripButtonFirst.Size = new System.Drawing.Size(28, 28);
             this.toolStripButtonFirst.Text = "First";
             this.toolStripButtonFirst.Click += new System.EventHandler(this.ToolStripButtonFirstClick);
             // 
@@ -376,14 +375,14 @@
             this.toolStripButtonPrevious.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonPrevious.Image")));
             this.toolStripButtonPrevious.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonPrevious.Name = "toolStripButtonPrevious";
-            this.toolStripButtonPrevious.Size = new System.Drawing.Size(34, 28);
+            this.toolStripButtonPrevious.Size = new System.Drawing.Size(28, 28);
             this.toolStripButtonPrevious.Text = "Previous";
             this.toolStripButtonPrevious.Click += new System.EventHandler(this.ToolStripButtonPreviousClick);
             // 
             // toolStripTextBoxBoard
             // 
             this.toolStripTextBoxBoard.Name = "toolStripTextBoxBoard";
-            this.toolStripTextBoxBoard.Size = new System.Drawing.Size(41, 33);
+            this.toolStripTextBoxBoard.Size = new System.Drawing.Size(30, 31);
             this.toolStripTextBoxBoard.Leave += new System.EventHandler(this.ToolStripTextBoxBoardLeave);
             // 
             // toolStripButtonNext
@@ -392,7 +391,7 @@
             this.toolStripButtonNext.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonNext.Image")));
             this.toolStripButtonNext.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonNext.Name = "toolStripButtonNext";
-            this.toolStripButtonNext.Size = new System.Drawing.Size(34, 28);
+            this.toolStripButtonNext.Size = new System.Drawing.Size(28, 28);
             this.toolStripButtonNext.Text = "Next";
             this.toolStripButtonNext.Click += new System.EventHandler(this.ToolStripButtonNextClick);
             // 
@@ -402,49 +401,45 @@
             this.toolStripButtonLast.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonLast.Image")));
             this.toolStripButtonLast.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonLast.Name = "toolStripButtonLast";
-            this.toolStripButtonLast.Size = new System.Drawing.Size(34, 28);
+            this.toolStripButtonLast.Size = new System.Drawing.Size(28, 28);
             this.toolStripButtonLast.Text = "Last";
             this.toolStripButtonLast.Click += new System.EventHandler(this.ToolStripButtonLastClick);
             // 
             // numericUpDown1
             // 
-            this.numericUpDown1.Location = new System.Drawing.Point(767, 823);
-            this.numericUpDown1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.numericUpDown1.Location = new System.Drawing.Point(537, 494);
             this.numericUpDown1.Name = "numericUpDown1";
-            this.numericUpDown1.Size = new System.Drawing.Size(171, 31);
+            this.numericUpDown1.Size = new System.Drawing.Size(120, 23);
             this.numericUpDown1.TabIndex = 16;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(767, 784);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.Location = new System.Drawing.Point(537, 470);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(205, 25);
+            this.label1.Size = new System.Drawing.Size(134, 15);
             this.label1.TabIndex = 17;
             this.label1.Text = "Number of hands to bid";
             // 
-            // openFileDialog1
+            // openFileDialogDatabase
             // 
-            this.openFileDialog1.DefaultExt = "db3";
-            this.openFileDialog1.FileName = "Tosr.db3";
+            this.openFileDialogDatabase.DefaultExt = "db3";
+            this.openFileDialogDatabase.FileName = "Tosr.db3";
             // 
             // panelNorth
             // 
             this.panelNorth.BackColor = System.Drawing.Color.Green;
-            this.panelNorth.Location = new System.Drawing.Point(59, 128);
-            this.panelNorth.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.panelNorth.Location = new System.Drawing.Point(41, 77);
             this.panelNorth.Name = "panelNorth";
-            this.panelNorth.Size = new System.Drawing.Size(447, 162);
+            this.panelNorth.Size = new System.Drawing.Size(313, 97);
             this.panelNorth.TabIndex = 18;
             // 
             // panelSouth
             // 
             this.panelSouth.BackColor = System.Drawing.Color.Green;
-            this.panelSouth.Location = new System.Drawing.Point(59, 697);
-            this.panelSouth.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.panelSouth.Location = new System.Drawing.Point(41, 418);
             this.panelSouth.Name = "panelSouth";
-            this.panelSouth.Size = new System.Drawing.Size(447, 162);
+            this.panelSouth.Size = new System.Drawing.Size(313, 97);
             this.panelSouth.TabIndex = 18;
             // 
             // statusStrip1
@@ -453,41 +448,40 @@
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 905);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 540);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 20, 0);
-            this.statusStrip1.Size = new System.Drawing.Size(1043, 32);
+            this.statusStrip1.Size = new System.Drawing.Size(730, 22);
             this.statusStrip1.TabIndex = 19;
             this.statusStrip1.Text = "statusStrip1";
             // 
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(179, 25);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(118, 17);
             this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
             // 
-            // saveFileDialog1
+            // saveFileDialogPBN
             // 
-            this.saveFileDialog1.DefaultExt = "pbn";
+            this.saveFileDialogPBN.DefaultExt = "pbn";
             // 
-            // openFileDialog2
+            // openFileDialogPBN
             // 
-            this.openFileDialog2.DefaultExt = "pbn";
+            this.openFileDialogPBN.DefaultExt = "pbn";
             // 
-            // openFileDialog3
+            // openFileDialogSystemParameters
             // 
-            this.openFileDialog3.DefaultExt = "json";
+            this.openFileDialogSystemParameters.DefaultExt = "json";
             // 
-            // openFileDialog4
+            // openFileDialogOptimizationParameters
             // 
-            this.openFileDialog4.DefaultExt = "json";
+            this.openFileDialogOptimizationParameters.DefaultExt = "json";
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Green;
-            this.ClientSize = new System.Drawing.Size(1043, 937);
+            this.ClientSize = new System.Drawing.Size(730, 562);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.panelSouth);
             this.Controls.Add(this.panelNorth);
@@ -496,7 +490,7 @@
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.buttonGetAuction);
             this.Controls.Add(this.menuStrip1);
-            this.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "Form1";
             this.Text = "TOSR";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1Closed);
@@ -546,8 +540,8 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemLoadSet;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSaveSet;
-        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
-        private System.Windows.Forms.OpenFileDialog openFileDialog2;
+        private System.Windows.Forms.SaveFileDialog saveFileDialogPBN;
+        private System.Windows.Forms.OpenFileDialog openFileDialogPBN;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemOneBoard;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemBidAgain;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
@@ -558,11 +552,12 @@
         private System.Windows.Forms.ToolStripButton toolStripButtonLast;
 
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemAbort;
-        private System.Windows.Forms.OpenFileDialog openFileDialog3;
-        private System.Windows.Forms.OpenFileDialog openFileDialog4;
+        private System.Windows.Forms.OpenFileDialog openFileDialogSystemParameters;
+        private System.Windows.Forms.OpenFileDialog openFileDialogOptimizationParameters;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemLoadSystemParameters;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemLoadOptimizationParameters;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemUseDefaultParameters;
+        private System.Windows.Forms.OpenFileDialog openFileDialogDatabase;
     }
 }
 
