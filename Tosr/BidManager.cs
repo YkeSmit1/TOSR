@@ -58,11 +58,15 @@ namespace Tosr
             public int numberOfHandsForSolver;
         }
 
-        public static void useDefaultParameters()
+        public static void useDefaultSystemParameters()
         {
             systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(ReadResource("SystemParameters.json"));
-            optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(ReadResource("OptimizationParameters.json"));
             systemParametersPath = "SystemParameters.json";
+        }
+
+        public static void useDefaultOptimizationParameters()
+        {
+            optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(ReadResource("OptimizationParameters.json"));
             optimizationParametersPath = "OptimizationParameters.json";
         }
 
@@ -76,11 +80,11 @@ namespace Tosr
         static readonly char[] relevantCards = new[] { 'A', 'K' };
         public ConstructedSouthhandOutcome constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
 
-        public static string systemParametersPath = Settings.Default.systemParametersPath;
-        public static string optimizationParametersPath = Settings.Default.optimizationParametersPath;
+        public static string systemParametersPath;
+        public static string optimizationParametersPath;
 
-        public static SystemParameters systemParameters = JsonConvert.DeserializeObject<SystemParameters>(File.ReadAllText(systemParametersPath));
-        public static OptimizationParameters optimizationParameters = JsonConvert.DeserializeObject<OptimizationParameters>(File.ReadAllText(optimizationParametersPath));
+        public static SystemParameters systemParameters;
+        public static OptimizationParameters optimizationParameters;
 
         public static readonly List<Fase> signOffFasesFor3NT = new List<Fase> { Fase.Pull3NTNoAsk, Fase.Pull3NTOneAskMin, Fase.Pull3NTOneAskMax, Fase.Pull3NTTwoAsks };
         public static readonly List<Fase> signOffFasesFor4Di = new List<Fase> { Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAskMin, Fase.Pull4DiamondsOneAskMax };

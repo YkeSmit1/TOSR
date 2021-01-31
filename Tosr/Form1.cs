@@ -53,7 +53,7 @@ namespace Tosr
             numericUpDown1.Value = 1000;
             Pinvoke.Setup("Tosr.db3");
             logger.Info($"Initialized engine with database '{"Tosr.db3"}'");
-            openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
+            openFileDialogDatabase.InitialDirectory = Environment.CurrentDirectory;
 
             shufflingDeal.North = new North { Hcp = new MinMax(16, 37) };
             shufflingDeal.South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) };
@@ -61,6 +61,7 @@ namespace Tosr
             // Load user settings
             toolStripMenuItemUseSolver.Checked = Settings.Default.useSolver;
             numericUpDown1.Value = Settings.Default.numberOfHandsToBid;
+            useSavedParameterFiles();
             if (File.Exists(Settings.Default.pbnFilePath))
             {
                 pbnFilepath = Settings.Default.pbnFilePath;
@@ -84,6 +85,34 @@ namespace Tosr
                 bidManager.Init(auctionControl.auction);
                 resetEvent.Set();
             });
+        }
+
+
+        private void useSavedParameterFiles()
+        {
+            // System parameters
+            try
+            {
+                BidManager.systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(File.ReadAllText(Settings.Default.systemParametersPath));
+                BidManager.systemParametersPath = Settings.Default.systemParametersPath;
+            }
+            catch
+            {
+                MessageBox.Show("Could not load previous system parameters file. Using the default system parameters instead.");
+                BidManager.useDefaultSystemParameters();
+            }
+
+            // Optimization parameters
+            try
+            {
+                BidManager.optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(File.ReadAllText(Settings.Default.optimizationParametersPath));
+                BidManager.optimizationParametersPath = Settings.Default.optimizationParametersPath;
+            }
+            catch
+            {
+                MessageBox.Show("Could not load previous optimization parameters file. Using the default optimization parameters instead.");
+                BidManager.useDefaultOptimizationParameters();
+            }
         }
 
         private void ShowBiddingBox()
@@ -286,9 +315,9 @@ namespace Tosr
 
         private void ToolStripMenuItem11Click(object sender, EventArgs e)
         {
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            if (openFileDialogDatabase.ShowDialog() == DialogResult.OK)
             {
-                Pinvoke.Setup(openFileDialog1.FileName);
+                Pinvoke.Setup(openFileDialogDatabase.FileName);
             }
         }
 
@@ -453,7 +482,8 @@ namespace Tosr
 
         private void toolStripMenuItemUseDefaultParametersClick(object sender, EventArgs e)
         {
-            BidManager.useDefaultParameters();
+            BidManager.useDefaultSystemParameters();
+            BidManager.useDefaultOptimizationParameters();
         }
 
     }
