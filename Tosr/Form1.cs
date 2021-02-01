@@ -31,6 +31,7 @@ namespace Tosr
         private readonly static Logger logger = LogManager.GetCurrentClassLogger();
         private readonly ManualResetEvent resetEvent = new ManualResetEvent(false);
         private Pbn pbn = new Pbn();
+        private Pbn interactivePbn = new Pbn();
         private int boardNumber;
         private string pbnFilepath;
         private CancellationTokenSource cancelBatchbidding = new CancellationTokenSource();
@@ -59,6 +60,9 @@ namespace Tosr
             // Load user settings
             toolStripMenuItemUseSolver.Checked = Settings.Default.useSolver;
             numericUpDown1.Value = Settings.Default.numberOfHandsToBid;
+            if (File.Exists("interactive.pbn"))
+                interactivePbn.Load("interactive.pbn");
+
             if (File.Exists(Settings.Default.pbnFilePath))
             {
                 pbnFilepath = Settings.Default.pbnFilePath;
@@ -140,7 +144,16 @@ namespace Tosr
             {
                 biddingBox.Enabled = false;
                 panelNorth.Visible = true;
+                AddBoardToInteractivePBNFile(deal, auction);
             }
+        }
+
+        private void AddBoardToInteractivePBNFile(string[] deal, Auction auction)
+        {
+            interactivePbn.Boards.Add(new BoardDto { 
+                Deal = ObjectCloner.ObjectCloner.DeepClone(deal), 
+                Auction = ObjectCloner.ObjectCloner.DeepClone(auction) });
+            interactivePbn.Save("interactive.pbn");
         }
 
         private void ButtonShuffleClick(object sender, EventArgs e)
@@ -344,6 +357,7 @@ namespace Tosr
         {
             StartBidding();
             panelNorth.Visible = false;
+            interactivePbn.Boards.RemoveAt(interactivePbn.Boards.Count - 1);
             toolStripStatusLabel1.Text = "";
             _ = resetEvent.WaitOne();
             bidManager.Init(auctionControl.auction);
