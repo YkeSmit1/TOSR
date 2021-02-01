@@ -178,7 +178,7 @@ namespace Tosr
                     if (biddingState.Fase == Fase.BidGame)
                     {
                         biddingState.Fase = Fase.End;
-                        var game = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid);
+                        var game = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, true);
                         if (game == Bid.PassBid)
                             biddingState.EndOfBidding = true;
                         return game;
@@ -223,7 +223,7 @@ namespace Tosr
                                         {
                                             biddingState.Fase = Fase.End;
                                             auction.responderHasSignedOff = true;
-                                            var game = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid);
+                                            var game = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, false);
                                             if (game == Bid.PassBid)
                                                 biddingState.EndOfBidding = true;
                                             return game;
@@ -251,7 +251,7 @@ namespace Tosr
                                 biddingState.Fase = Fase.End;
                                 constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
                                 auction.responderHasSignedOff = true;
-                                return Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid);
+                                return Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, false);
                             }
                         }
                     }

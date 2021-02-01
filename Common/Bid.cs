@@ -109,13 +109,13 @@ namespace Common
             return new Bid(bid.rank, bid.suit + 1);
         }
 
-        public static Bid GetGameContractSafe(Suit trumpSuit, Bid currentBid)
+        public static Bid GetGameContractSafe(Suit trumpSuit, Bid currentBid, bool canUseNextBid)
         {
-            var bid = GetGameContract(trumpSuit, currentBid);
+            var bid = GetGameContract(trumpSuit, currentBid, canUseNextBid);
             return bid == Bid.InvalidBid ? Bid.PassBid : bid;
         }
 
-        public static Bid GetGameContract(Suit trumpSuit, Bid currentBid)
+        public static Bid GetGameContract(Suit trumpSuit, Bid currentBid, bool canUseNextBid)
         {
             var bid = trumpSuit switch
             {
@@ -126,17 +126,17 @@ namespace Common
                 Suit.NoTrump => new Bid(3, Suit.NoTrump),
                 _ => throw new ArgumentException(nameof(trumpSuit)),
             };
-            var contract = CheapestContract(currentBid, bid);
+            var contract = CheapestContract(currentBid, bid, canUseNextBid);
             return contract.rank <= 5 ? contract : Bid.InvalidBid;
         }
 
-        private static Bid CheapestContract(Bid currentBid, Bid bid)
+        private static Bid CheapestContract(Bid currentBid, Bid bid, bool canUseNextBid)
         {
             if (currentBid.suit == bid.suit && currentBid.rank < bid.rank)
                 return bid;
             if (currentBid.suit == bid.suit)
                 return PassBid;
-            if (currentBid + 1 < bid)
+            if (currentBid + (canUseNextBid ? 0 : 1) < bid)
                 return bid;
             return bid + (5 * (((currentBid + 1 - bid) / 5) + 1));
         }
@@ -145,7 +145,7 @@ namespace Common
         {
             return expectedContract switch
             {
-                ExpectedContract.Game => Bid.GetGameContract(item1, currentBid),
+                ExpectedContract.Game => Bid.GetGameContract(item1, currentBid, false),
                 ExpectedContract.SmallSlam => new Bid(6, item1),
                 ExpectedContract.GrandSlam => new Bid(7, item1),
                 _ => throw new ArgumentException(nameof(expectedContract)),
