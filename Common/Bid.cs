@@ -132,6 +132,8 @@ namespace Common
 
         private static Bid CheapestContract(Bid currentBid, Bid bid)
         {
+            if (currentBid.suit == bid.suit && currentBid.rank < bid.rank)
+                return bid;
             if (currentBid.suit == bid.suit)
                 return PassBid;
             if (currentBid + 1 < bid)

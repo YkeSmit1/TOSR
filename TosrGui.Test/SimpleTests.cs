@@ -75,6 +75,7 @@ namespace TosrGui.Test
         [Fact()]
         public void GetGameContractTest()
         {
+            Assert.Equal(new Bid(4, Suit.Hearts), Bid.GetGameContract(Suit.Hearts, new Bid(3, Suit.Hearts)));
             Assert.Equal(Bid.PassBid, Bid.GetGameContract(Suit.Hearts, new Bid(4, Suit.Hearts)));
             Assert.Equal(Bid.PassBid, Bid.GetGameContract(Suit.Hearts, new Bid(5, Suit.Hearts)));
             Assert.Equal(new Bid(4, Suit.Hearts), Bid.GetGameContract(Suit.Hearts, new Bid(4, Suit.Clubs)));
