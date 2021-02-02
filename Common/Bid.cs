@@ -7,11 +7,13 @@ namespace Common
         bid,
         pass,
         dbl,
-        rdbl
+        rdbl,
+        invalid,
     }
 
     public class Bid : IEquatable<Bid>, IComparable<Bid>
     {
+        public static readonly Bid InvalidBid = new Bid(BidType.invalid);
         public static readonly Bid PassBid = new Bid(BidType.pass);
         public static readonly Bid Dbl = new Bid(BidType.dbl);
         public static readonly Bid Rdbl = new Bid(BidType.rdbl);
@@ -59,6 +61,7 @@ namespace Common
                 BidType.pass => "Pass",
                 BidType.dbl => "Dbl",
                 BidType.rdbl => "Rdbl",
+                BidType.invalid => "Invalid",
                 _ => throw new ArgumentOutOfRangeException(nameof(bidType)),
             };
         }
@@ -106,7 +109,13 @@ namespace Common
             return new Bid(bid.rank, bid.suit + 1);
         }
 
-        public static Bid GetGameContract(Suit trumpSuit, Bid currentBid)
+        public static Bid GetGameContractSafe(Suit trumpSuit, Bid currentBid, bool canUseNextBid)
+        {
+            var bid = GetGameContract(trumpSuit, currentBid, canUseNextBid);
+            return bid == Bid.InvalidBid ? Bid.PassBid : bid;
+        }
+
+        public static Bid GetGameContract(Suit trumpSuit, Bid currentBid, bool canUseNextBid)
         {
             var bid = trumpSuit switch
             {
@@ -117,23 +126,26 @@ namespace Common
                 Suit.NoTrump => new Bid(3, Suit.NoTrump),
                 _ => throw new ArgumentException(nameof(trumpSuit)),
             };
-            return CheapestContract(currentBid, bid);
+            var contract = CheapestContract(currentBid, bid, canUseNextBid);
+            return contract.rank <= 5 ? contract : Bid.InvalidBid;
         }
 
-        private static Bid CheapestContract(Bid currentBid, Bid bid)
+        private static Bid CheapestContract(Bid currentBid, Bid bid, bool canUseNextBid)
         {
-            return currentBid == bid ? PassBid : 
-                currentBid < bid ? bid : 
-                currentBid.suit < bid.suit ? new Bid(currentBid.rank, bid.suit) :
-                currentBid.suit == bid.suit ? PassBid :
-                new Bid(currentBid.rank + 1, bid.suit);
+            if (currentBid.suit == bid.suit && currentBid.rank < bid.rank)
+                return bid;
+            if (currentBid.suit == bid.suit)
+                return PassBid;
+            if (currentBid + (canUseNextBid ? 0 : 1) < bid)
+                return bid;
+            return bid + (5 * (((currentBid + 1 - bid) / 5) + 1));
         }
 
         public static Bid GetBestContract(ExpectedContract expectedContract, Suit item1, Bid currentBid)
         {
             return expectedContract switch
             {
-                ExpectedContract.Game => Bid.GetGameContract(item1, currentBid),
+                ExpectedContract.Game => Bid.GetGameContract(item1, currentBid, false),
                 ExpectedContract.SmallSlam => new Bid(6, item1),
                 ExpectedContract.GrandSlam => new Bid(7, item1),
                 _ => throw new ArgumentException(nameof(expectedContract)),
