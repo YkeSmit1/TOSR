@@ -1,22 +1,22 @@
 {
-    "hcpRelayerToSignOffInNT": {
-        "0": [16, 17, 18, 19, 20],
-        "1": [21, 22],
-        "2": [23, 24]
-    },
-    "requirementsForRelayBid": [
-        {"Item1": {
-            "Item1": -0.01,
-            "Item2": 30.0},
-        "Item2": "gameBid"},
-        {"Item1": {
-            "Item1": 30.0,
-            "Item2": 70.01},
-        "Item2": "fourDiamondEndSignal"},
-        {"Item1": {
-            "Item1": 70.0,
-            "Item2": 100.01},
-        "Item2": "Relay"}
+  "hcpRelayerToSignOffInNT": {
+    "0": [ 16, 17, 18, 19, 20 ],
+    "1": [ 21, 22 ],
+    "2": [ 23, 24 ]
+  },
+  "requirementsForRelayBid": [
+    [
+      [ -0.01, 30.0 ],
+      "gameBid"
     ],
-    "requiredMaxHcpToBid4Diamond": 17
+    [
+      [ 30.0, 70.01 ],
+      "fourDiamondEndSignal"
+    ],
+    [
+      [ 70.0, 100.01 ],
+      "Relay"
+    ]
+  ],
+  "requiredMaxHcpToBid4Diamond": 17
 }

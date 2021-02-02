@@ -12,7 +12,6 @@ using Common;
 using Solver;
 using Tosr.Properties;
 using System.Resources;
-using static Common.ResourceReader;
 
 namespace Tosr
 {
@@ -36,6 +35,9 @@ namespace Tosr
         private int boardNumber;
         private string pbnFilepath;
         private CancellationTokenSource cancelBatchbidding = new CancellationTokenSource();
+
+        private string defaultSystemParameters = "SystemParameters.json";
+        private string defaultOptimizationParameters = "OptimizationParameters.json";
 
         public Form1()
         {
@@ -61,7 +63,8 @@ namespace Tosr
             // Load user settings
             toolStripMenuItemUseSolver.Checked = Settings.Default.useSolver;
             numericUpDown1.Value = Settings.Default.numberOfHandsToBid;
-            useSavedParameterFiles();
+            useSavedSystemParameters();
+            useSavedOptimizationParameters();
             if (File.Exists(Settings.Default.pbnFilePath))
             {
                 pbnFilepath = Settings.Default.pbnFilePath;
@@ -88,31 +91,40 @@ namespace Tosr
         }
 
 
-        private void useSavedParameterFiles()
-        {
-            // System parameters
-            try
+        private void useSavedSystemParameters()
+        {  
+            if (!String.IsNullOrEmpty(Settings.Default.systemParametersPath))
             {
-                BidManager.systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(File.ReadAllText(Settings.Default.systemParametersPath));
-                BidManager.systemParametersPath = Settings.Default.systemParametersPath;
+                try
+                {
+                    BidManager.SetSystemParameters(File.ReadAllText(Settings.Default.systemParametersPath));
+                    return;
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show($"Could not load previous system parameters file. Using the default system parameters instead. ({e.Message})");
+                    Settings.Default.systemParametersPath = "";
+                }
             }
-            catch
-            {
-                MessageBox.Show("Could not load previous system parameters file. Using the default system parameters instead.");
-                BidManager.useDefaultSystemParameters();
-            }
+            BidManager.SetSystemParameters(Util.ReadResource(defaultSystemParameters));
+        }
 
-            // Optimization parameters
-            try
+        private void useSavedOptimizationParameters()
+        {
+            if (!String.IsNullOrEmpty(Settings.Default.optimizationParametersPath))
             {
-                BidManager.optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(File.ReadAllText(Settings.Default.optimizationParametersPath));
-                BidManager.optimizationParametersPath = Settings.Default.optimizationParametersPath;
+                try
+                {
+                    BidManager.SetOptimizationParameters(File.ReadAllText(Settings.Default.optimizationParametersPath));
+                    return;
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show($"Could not load previous optimization parameters file. Using the default optimization parameters instead. ({e.Message})");
+                    Settings.Default.optimizationParametersPath = "";
+                }
             }
-            catch
-            {
-                MessageBox.Show("Could not load previous optimization parameters file. Using the default optimization parameters instead.");
-                BidManager.useDefaultOptimizationParameters();
-            }
+            BidManager.SetOptimizationParameters(Util.ReadResource(defaultOptimizationParameters));
         }
 
         private void ShowBiddingBox()
@@ -438,8 +450,6 @@ namespace Tosr
             Settings.Default.boardNumber = boardNumber;
             Settings.Default.numberOfHandsToBid = (int)numericUpDown1.Value;
             Settings.Default.pbnFilePath = pbn.Boards.Count() > 0 ? pbnFilepath : "";
-            Settings.Default.systemParametersPath = BidManager.systemParametersPath;
-            Settings.Default.optimizationParametersPath = BidManager.optimizationParametersPath;
             Settings.Default.Save();
         }
 
@@ -455,7 +465,7 @@ namespace Tosr
                 try
                 {
                     BidManager.systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(File.ReadAllText(openFileDialogSystemParameters.FileName));
-                    BidManager.systemParametersPath = openFileDialogSystemParameters.FileName;
+                    Settings.Default.systemParametersPath = openFileDialogSystemParameters.FileName;
                 }
                 catch (Exception exception)
                 {
@@ -471,7 +481,7 @@ namespace Tosr
                 try
                 {
                     BidManager.optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(File.ReadAllText(openFileDialogOptimizationParameters.FileName));
-                    BidManager.optimizationParametersPath = openFileDialogOptimizationParameters.FileName;
+                    Settings.Default.optimizationParametersPath = openFileDialogOptimizationParameters.FileName;
                 }
                 catch (Exception exception)
                 {
@@ -482,8 +492,8 @@ namespace Tosr
 
         private void toolStripMenuItemUseDefaultParametersClick(object sender, EventArgs e)
         {
-            BidManager.useDefaultSystemParameters();
-            BidManager.useDefaultOptimizationParameters();
+            BidManager.SetSystemParameters(Util.ReadResource(defaultSystemParameters));
+            BidManager.SetOptimizationParameters(Util.ReadResource(defaultOptimizationParameters));
         }
 
     }

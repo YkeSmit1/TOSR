@@ -8,7 +8,7 @@ using Solver;
 using Newtonsoft.Json;
 using System.IO;
 using Tosr.Properties;
-using static Common.ResourceReader;
+using Newtonsoft.Json.Linq;
 
 namespace Tosr
 {
@@ -43,6 +43,7 @@ namespace Tosr
             public Dictionary<int, List<int>> hcpRelayerToSignOffInNT;
 
             [JsonProperty(Required = Required.Always)]
+            [JsonConverter(typeof(requirementsForRelayBidConverter))]
             public List<((double min, double max) range, RelayBidKind relayBidKind)> requirementsForRelayBid;
 
             [JsonProperty(Required = Required.Always)]
@@ -58,16 +59,41 @@ namespace Tosr
             public int numberOfHandsForSolver;
         }
 
-        public static void useDefaultSystemParameters()
+        public class requirementsForRelayBidConverter : JsonConverter
         {
-            systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(ReadResource("SystemParameters.json"));
-            systemParametersPath = "SystemParameters.json";
+            public override bool CanConvert(Type objectType)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                JArray jArray = JArray.Load(reader);
+                var requirementsForRelayBid = new List<((double min, double max) range, RelayBidKind relayBidKind)>();
+                foreach (var entry in jArray)
+                {
+                    var range = ValueTuple.Create((double)entry[0][0], (double)entry[0][1]);
+                    var item = (((double, double), RelayBidKind))ValueTuple.Create(range, Enum.Parse(typeof(RelayBidKind), entry[1].ToString()));
+                    requirementsForRelayBid.Add(item);
+                }
+                return requirementsForRelayBid;
+            }
+
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        public static void useDefaultOptimizationParameters()
+        public static SystemParameters systemParameters;
+        public static OptimizationParameters optimizationParameters;
+        public static void SetSystemParameters(string json)
         {
-            optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(ReadResource("OptimizationParameters.json"));
-            optimizationParametersPath = "OptimizationParameters.json";
+            systemParameters = JsonConvert.DeserializeObject<SystemParameters>(json);
+        }
+        public static void SetOptimizationParameters(string json)
+        {
+            optimizationParameters = JsonConvert.DeserializeObject<OptimizationParameters>(json);
         }
 
         private readonly IBidGenerator bidGenerator;
@@ -79,12 +105,6 @@ namespace Tosr
 
         static readonly char[] relevantCards = new[] { 'A', 'K' };
         public ConstructedSouthhandOutcome constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
-
-        public static string systemParametersPath;
-        public static string optimizationParametersPath;
-
-        public static SystemParameters systemParameters;
-        public static OptimizationParameters optimizationParameters;
 
         public static readonly List<Fase> signOffFasesFor3NT = new List<Fase> { Fase.Pull3NTNoAsk, Fase.Pull3NTOneAskMin, Fase.Pull3NTOneAskMax, Fase.Pull3NTTwoAsks };
         public static readonly List<Fase> signOffFasesFor4Di = new List<Fase> { Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAskMin, Fase.Pull4DiamondsOneAskMax };

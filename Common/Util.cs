@@ -369,5 +369,15 @@ namespace Common
         {
             return Regex.Replace(hand, "[QJT98765432]", "x");
         }
+
+        public static string ReadResource(string fileName)
+        {
+            var projectName = Assembly.GetCallingAssembly().GetName().Name;
+            Stream stream = Assembly.GetCallingAssembly().GetManifestResourceStream($"{projectName}.{fileName}");
+            StreamReader reader = new StreamReader(stream);
+            {
+                return reader.ReadToEnd();
+            }
+        }
     }
 }
