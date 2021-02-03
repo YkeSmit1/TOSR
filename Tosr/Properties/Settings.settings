@@ -15,10 +15,10 @@
       <Value Profile="(Default)">10</Value>
     </Setting>
     <Setting Name="systemParametersPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">SystemParameters.json</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="optimizationParametersPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">OptimizationParameters.json</Value>
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

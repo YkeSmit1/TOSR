@@ -73,7 +73,7 @@ namespace Tosr.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("SystemParameters.json")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string systemParametersPath {
             get {
                 return ((string)(this["systemParametersPath"]));
@@ -85,7 +85,7 @@ namespace Tosr.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("OptimizationParameters.json")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string optimizationParametersPath {
             get {
                 return ((string)(this["optimizationParametersPath"]));

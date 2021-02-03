@@ -65,7 +65,7 @@ namespace Tosr
             toolStripMenuItemUseSolver.Checked = Settings.Default.useSolver;
             numericUpDown1.Value = Settings.Default.numberOfHandsToBid;
             useSavedSystemParameters();
-            useSavedOptimizationParameters()
+            useSavedOptimizationParameters();
             if (File.Exists("interactive.pbn"))
                 interactivePbn.Load("interactive.pbn");;
             if (File.Exists(Settings.Default.pbnFilePath))
