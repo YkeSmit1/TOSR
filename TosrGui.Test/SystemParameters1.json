@@ -1,0 +1,22 @@
+{
+  "hcpRelayerToSignOffInNT": {
+    "0": [ 16, 17, 18, 19, 20 ],
+    "1": [ 21, 22 ],
+    "2": [ 23, 24 ]
+  },
+  "requirementsForRelayBid": [
+    [
+      [ -0.01, 30.0 ],
+      "gameBid"
+    ],
+    [
+      [ 30.0, 70.01 ],
+      "fourDiamondEndSignal"
+    ],
+    [
+      [ 70.0, 100.01 ],
+      "Relay"
+    ]
+  ],
+  "requiredMaxHcpToBid4Diamond": 17
+}

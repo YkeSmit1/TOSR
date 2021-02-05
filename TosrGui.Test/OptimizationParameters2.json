@@ -1,0 +1,4 @@
+{
+    "requiredConfidenceToContinueRelaying" : 65.0,
+    "numberOfHandsForSolver": 15
+}

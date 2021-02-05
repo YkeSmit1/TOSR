@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Tosr;
 using Xunit;
@@ -64,6 +65,18 @@ namespace TosrIntegration.Test
             // Special case, double zoom
             yield return new object[] { "TestFitWithDoubleZoom", "AJT3,KQ74,AQT5,5", "Kxx,Axxx,J,KQxxx", "1♣2♣2♠3♥4♦5♠Pass", "1NT2♥3♦3NT5♥5NT" };
 
+        }
+
+        public static IEnumerable<object[]> TestCasesSystemParameters()
+        {
+            // ♣♦♥♠
+            // Test hcpRelayerToSignOffInNT
+            yield return new object[] { "TestNoAsk20HCP", "AK32,AK2,AQ2,432", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3NT", "1♠2♣2♥2NT3♦Pass", "SystemParameters1.json" };
+            yield return new object[] { "TestOneAsk20HCP", "AK32,AK2,AQ2,432", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥3NT", "1♠2♣2♥2NT3♦3♠Pass", "SystemParameters2.json" };
+
+            // Test requiredMaxHcpToBid4Diamond
+            yield return new object[] { "TestRelay18HCP", "AK32,AK2,A32,432", "xxxx,,KQxxx,Kxxx", "1♣2♦2♠3♦4♣4♠", "2♣2♥3♣3♠4♦Pass", "SystemParameters1.json" };
+            yield return new object[] { "Test4Diamond18HCP", "AK32,AK2,A32,432", "xxxx,,KQxxx,Kxxx", "1♣2♦2♠3♦4♦4♠", "2♣2♥3♣3♠4♥Pass", "SystemParameters2.json" };
         }
     }
 
@@ -125,6 +138,18 @@ namespace TosrIntegration.Test
             AssertHand(bidManager, auction, northHand, southHand);
         }
 
+        [Theory]
+        [MemberData(nameof(TestCaseProviderRelayBid.TestCasesSystemParameters), MemberType = typeof(TestCaseProviderRelayBid))]
+        public void TestAuctionsSystemParameters(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth, string parametersFileName)
+        {
+            SetupTest(testName);
+            string directoryPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, false);
+            BidManager.SetSystemParameters(File.ReadAllText(Path.Combine(directoryPath, parametersFileName)));
+            var auction = bidManager.GetAuction(northHand, southHand);
+            AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
+        }
+
         private static void SetupTest(string testName)
         {
             if (testName is null)
@@ -134,7 +159,7 @@ namespace TosrIntegration.Test
         }
 
         private static void AssertAuction(string expectedBidsNorth, string expectedBidsSouth, Auction auction)
-        {
+        { 
             var actualBidsSouth = auction.GetBidsAsString(Player.South);
             var actualBidsNorth = auction.GetBidsAsString(Player.North);
 
