@@ -370,11 +370,11 @@ namespace Common
             return Regex.Replace(hand, "[QJT98765432]", "x");
         }
 
-        public static string ReadResource(string fileName)
+        public static string ReadResource(string resourceName)
         {
-            var projectName = Assembly.GetCallingAssembly().GetName().Name;
-            Stream stream = Assembly.GetCallingAssembly().GetManifestResourceStream($"{projectName}.{fileName}");
-            StreamReader reader = new StreamReader(stream);
+            var assembly = Assembly.LoadFrom("Tosr.dll");
+            using (var stream = assembly.GetManifestResourceStream(resourceName))
+            using (var reader = new StreamReader(stream))
             {
                 return reader.ReadToEnd();
             }

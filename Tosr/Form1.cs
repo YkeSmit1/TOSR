@@ -37,8 +37,8 @@ namespace Tosr
         private string pbnFilepath;
         private CancellationTokenSource cancelBatchbidding = new CancellationTokenSource();
 
-        private string defaultSystemParameters = "SystemParameters.json";
-        private string defaultOptimizationParameters = "OptimizationParameters.json";
+        private string defaultSystemParameters = "Tosr.SystemParameters.json";
+        private string defaultOptimizationParameters = "Tosr.OptimizationParameters.json";
 
         public Form1()
         {

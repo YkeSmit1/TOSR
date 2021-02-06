@@ -1,4 +1,5 @@
 ﻿using Common;
+using Common.Test;
 using Newtonsoft.Json;
 using NLog;
 using System;
@@ -66,22 +67,10 @@ namespace TosrIntegration.Test
             yield return new object[] { "TestFitWithDoubleZoom", "AJT3,KQ74,AQT5,5", "Kxx,Axxx,J,KQxxx", "1♣2♣2♠3♥4♦5♠Pass", "1NT2♥3♦3NT5♥5NT" };
 
         }
-
-        public static IEnumerable<object[]> TestCasesSystemParameters()
-        {
-            // ♣♦♥♠
-            // Test hcpRelayerToSignOffInNT
-            yield return new object[] { "TestNoAsk20HCP", "AK32,AK2,AQ2,432", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3NT", "1♠2♣2♥2NT3♦Pass", "SystemParameters1.json" };
-            yield return new object[] { "TestOneAsk20HCP", "AK32,AK2,AQ2,432", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥3NT", "1♠2♣2♥2NT3♦3♠Pass", "SystemParameters2.json" };
-
-            // Test requiredMaxHcpToBid4Diamond
-            yield return new object[] { "TestRelay18HCP", "AK32,AK2,A32,432", "xxxx,,KQxxx,Kxxx", "1♣2♦2♠3♦4♣4♠", "2♣2♥3♣3♠4♦Pass", "SystemParameters1.json" };
-            yield return new object[] { "Test4Diamond18HCP", "AK32,AK2,A32,432", "xxxx,,KQxxx,Kxxx", "1♣2♦2♠3♦4♦4♠", "2♣2♥3♣3♠4♥Pass", "SystemParameters2.json" };
-        }
     }
 
     [Collection("Sequential")]
-    public class TestRelayBid
+    public class TestRelayBid : IClassFixture<BaseTestFixture>
     {
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
@@ -89,10 +78,10 @@ namespace TosrIntegration.Test
 
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        public TestRelayBid(ITestOutputHelper output)
+        public TestRelayBid(BaseTestFixture fixture, ITestOutputHelper output)
         {
-            fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
-            reverseDictionaries = new ReverseDictionaries(fasesWithOffset, new Progress<string>());
+            fasesWithOffset = fixture.fasesWithOffset;
+            reverseDictionaries = fixture.reverseDictionaries;
             this.output = output;
         }
 
@@ -100,80 +89,42 @@ namespace TosrIntegration.Test
         [MemberData(nameof(TestCaseProviderRelayBid.TestCases3NT), MemberType = typeof(TestCaseProviderRelayBid))]
         public void TestAuctions3NT(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
-            SetupTest(testName);
+            SetupTest.setupTest(testName, logger);
             var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction(northHand, southHand);
-            AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
+            AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
         }
 
         [Theory]
         [MemberData(nameof(TestCaseProviderRelayBid.TestCases3NTPull), MemberType = typeof(TestCaseProviderRelayBid))]
         public void TestAuctions3NTPull(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
-            SetupTest(testName);
+            SetupTest.setupTest(testName, logger);
             var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction(northHand, southHand);
-            AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
-            AssertHand(bidManager, auction, northHand, southHand);
+            AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
+            AssertMethods.AssertHand(bidManager, auction, northHand, southHand, reverseDictionaries);
         }
 
         [Theory]
         [MemberData(nameof(TestCaseProviderRelayBid.TestCases4Diamond), MemberType = typeof(TestCaseProviderRelayBid))]
         public void TestAuctions4Diamond(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
-            SetupTest(testName);
+            SetupTest.setupTest(testName, logger);
             var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, (auction, northHand, southHandShape, controls, trumpSuit) => { return BidManager.RelayBidKind.fourDiamondEndSignal; });
             var auction = bidManager.GetAuction(northHand, southHand);
-            AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
+            AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
         }
 
         [Theory]
         [MemberData(nameof(TestCaseProviderRelayBid.TestCases4DiamondPull), MemberType = typeof(TestCaseProviderRelayBid))]
         public void TestAuctions4DiamondPull(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
-            SetupTest(testName);
+            SetupTest.setupTest(testName, logger);
             var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, (auction, northHand, southHandShape, controls, trumpSuit) => { return BidManager.RelayBidKind.fourDiamondEndSignal; });
             var auction = bidManager.GetAuction(northHand, southHand);
-            AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
-            AssertHand(bidManager, auction, northHand, southHand);
-        }
-
-        [Theory]
-        [MemberData(nameof(TestCaseProviderRelayBid.TestCasesSystemParameters), MemberType = typeof(TestCaseProviderRelayBid))]
-        public void TestAuctionsSystemParameters(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth, string parametersFileName)
-        {
-            SetupTest(testName);
-            string directoryPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, false);
-            BidManager.SetSystemParameters(File.ReadAllText(Path.Combine(directoryPath, parametersFileName)));
-            var auction = bidManager.GetAuction(northHand, southHand);
-            AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
-        }
-
-        private static void SetupTest(string testName)
-        {
-            if (testName is null)
-                throw new ArgumentNullException(nameof(testName));
-            logger.Info($"Executing test-case {testName}");
-            Pinvoke.Setup("Tosr.db3");
-        }
-
-        private static void AssertAuction(string expectedBidsNorth, string expectedBidsSouth, Auction auction)
-        { 
-            var actualBidsSouth = auction.GetBidsAsString(Player.South);
-            var actualBidsNorth = auction.GetBidsAsString(Player.North);
-
-            Assert.Equal(expectedBidsSouth, actualBidsSouth);
-            Assert.Equal(expectedBidsNorth, actualBidsNorth);
-        }
-
-        private void AssertHand(BidManager bidManager, Auction auction, string northHand, string southHand)
-        {
-            var constructedSouthHand = bidManager.ConstructSouthHand(northHand);
-            Assert.Equal(Util.HandWithx(southHand), constructedSouthHand.First());
-
-            var queens = bidManager.GetQueensFromAuction(auction, reverseDictionaries);
-            Assert.True(BidManager.CheckQueens(queens, southHand));
+            AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
+            AssertMethods.AssertHand(bidManager, auction, northHand, southHand, reverseDictionaries);
         }
     }
 }
