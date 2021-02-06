@@ -64,8 +64,8 @@ namespace Tosr
             // Load user settings
             toolStripMenuItemUseSolver.Checked = Settings.Default.useSolver;
             numericUpDown1.Value = Settings.Default.numberOfHandsToBid;
-            useSavedSystemParameters();
-            useSavedOptimizationParameters();
+            UseSavedSystemParameters();
+            UseSavedOptimizationParameters();
             if (File.Exists("interactive.pbn"))
                 interactivePbn.Load("interactive.pbn");;
             if (File.Exists(Settings.Default.pbnFilePath))
@@ -94,9 +94,9 @@ namespace Tosr
         }
 
 
-        private void useSavedSystemParameters()
+        private void UseSavedSystemParameters()
         {  
-            if (!String.IsNullOrEmpty(Settings.Default.systemParametersPath))
+            if (!String.IsNullOrWhiteSpace(Settings.Default.systemParametersPath))
             {
                 try
                 {
@@ -112,9 +112,9 @@ namespace Tosr
             BidManager.SetSystemParameters(Util.ReadResource(defaultSystemParameters));
         }
 
-        private void useSavedOptimizationParameters()
+        private void UseSavedOptimizationParameters()
         {
-            if (!String.IsNullOrEmpty(Settings.Default.optimizationParametersPath))
+            if (!String.IsNullOrWhiteSpace(Settings.Default.optimizationParametersPath))
             {
                 try
                 {

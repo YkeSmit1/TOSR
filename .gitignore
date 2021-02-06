@@ -17,3 +17,5 @@
 /Common/obj
 /Common/bin
 launchSettings.json
+/Common.Test/bin/Debug/netcoreapp3.1
+/Common.Test/obj
