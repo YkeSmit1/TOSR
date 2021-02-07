@@ -11,6 +11,7 @@ using NLog;
 using Common;
 using Solver;
 using Tosr.Properties;
+using System.Resources;
 
 namespace Tosr
 {
@@ -36,6 +37,9 @@ namespace Tosr
         private string pbnFilepath;
         private CancellationTokenSource cancelBatchbidding = new CancellationTokenSource();
 
+        private string defaultSystemParameters = "Tosr.SystemParameters.json";
+        private string defaultOptimizationParameters = "Tosr.OptimizationParameters.json";
+
         public Form1()
         {
             InitializeComponent();
@@ -52,7 +56,7 @@ namespace Tosr
             numericUpDown1.Value = 1000;
             Pinvoke.Setup("Tosr.db3");
             logger.Info($"Initialized engine with database '{"Tosr.db3"}'");
-            openFileDialog1.InitialDirectory = Environment.CurrentDirectory;
+            openFileDialogDatabase.InitialDirectory = Environment.CurrentDirectory;
 
             shufflingDeal.North = new North { Hcp = new MinMax(16, 37) };
             shufflingDeal.South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) };
@@ -60,9 +64,10 @@ namespace Tosr
             // Load user settings
             toolStripMenuItemUseSolver.Checked = Settings.Default.useSolver;
             numericUpDown1.Value = Settings.Default.numberOfHandsToBid;
+            UseSavedSystemParameters();
+            UseSavedOptimizationParameters();
             if (File.Exists("interactive.pbn"))
-                interactivePbn.Load("interactive.pbn");
-
+                interactivePbn.Load("interactive.pbn");;
             if (File.Exists(Settings.Default.pbnFilePath))
             {
                 pbnFilepath = Settings.Default.pbnFilePath;
@@ -86,6 +91,43 @@ namespace Tosr
                 bidManager.Init(auctionControl.auction);
                 resetEvent.Set();
             });
+        }
+
+
+        private void UseSavedSystemParameters()
+        {  
+            if (!String.IsNullOrWhiteSpace(Settings.Default.systemParametersPath))
+            {
+                try
+                {
+                    BidManager.SetSystemParameters(File.ReadAllText(Settings.Default.systemParametersPath));
+                    return;
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show($"Could not load previous system parameters file. Using the default system parameters instead. ({e.Message})");
+                    Settings.Default.systemParametersPath = "";
+                }
+            }
+            BidManager.SetSystemParameters(Util.ReadResource(defaultSystemParameters));
+        }
+
+        private void UseSavedOptimizationParameters()
+        {
+            if (!String.IsNullOrWhiteSpace(Settings.Default.optimizationParametersPath))
+            {
+                try
+                {
+                    BidManager.SetOptimizationParameters(File.ReadAllText(Settings.Default.optimizationParametersPath));
+                    return;
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show($"Could not load previous optimization parameters file. Using the default optimization parameters instead. ({e.Message})");
+                    Settings.Default.optimizationParametersPath = "";
+                }
+            }
+            BidManager.SetOptimizationParameters(Util.ReadResource(defaultOptimizationParameters));
         }
 
         private void ShowBiddingBox()
@@ -300,9 +342,9 @@ namespace Tosr
 
         private void ToolStripMenuItem11Click(object sender, EventArgs e)
         {
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            if (openFileDialogDatabase.ShowDialog() == DialogResult.OK)
             {
-                Pinvoke.Setup(openFileDialog1.FileName);
+                Pinvoke.Setup(openFileDialogDatabase.FileName);
             }
         }
 
@@ -318,9 +360,9 @@ namespace Tosr
 
         private void ToolStripMenuItemSaveSetClick(object sender, EventArgs e)
         {
-            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+            if (saveFileDialogPBN.ShowDialog() == DialogResult.OK)
             {
-                pbnFilepath = saveFileDialog1.FileName;
+                pbnFilepath = saveFileDialogPBN.FileName;
                 pbn.Save(pbnFilepath);
                 Text = $"{Path.GetFileName(pbnFilepath)} Board: {boardNumber} from {pbn.Boards.Count}";
             }
@@ -328,9 +370,9 @@ namespace Tosr
 
         private void ToolStripMenuItemLoadSetClick(object sender, EventArgs e)
         {
-            if (openFileDialog2.ShowDialog() == DialogResult.OK)
+            if (openFileDialogPBN.ShowDialog() == DialogResult.OK)
             {
-                pbnFilepath = openFileDialog2.FileName;
+                pbnFilepath = openFileDialogPBN.FileName;
                 pbn.Load(pbnFilepath);
                 boardNumber = 1;
                 LoadCurrentBoard();
@@ -434,5 +476,44 @@ namespace Tosr
         {
             cancelBatchbidding.Cancel();
         }
+
+        private void toolStripMenuItemLoadSystemParametersClick(object sender, EventArgs e)
+        {
+            if (openFileDialogSystemParameters.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    BidManager.systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(File.ReadAllText(openFileDialogSystemParameters.FileName));
+                    Settings.Default.systemParametersPath = openFileDialogSystemParameters.FileName;
+                }
+                catch (Exception exception)
+                {
+                    MessageBox.Show($"No valid system parameters file is loaded. ({exception.Message})", "Error");
+                }
+            }
+        }
+
+        private void toolStripMenuItemLoadOptimizationParametersClick(object sender, EventArgs e)
+        {
+            if (openFileDialogOptimizationParameters.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    BidManager.optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(File.ReadAllText(openFileDialogOptimizationParameters.FileName));
+                    Settings.Default.optimizationParametersPath = openFileDialogOptimizationParameters.FileName;
+                }
+                catch (Exception exception)
+                {
+                    MessageBox.Show($"No valid optimization parameters file is loaded. ({exception.Message})", "Error");
+                }
+            }
+        }
+
+        private void toolStripMenuItemUseDefaultParametersClick(object sender, EventArgs e)
+        {
+            BidManager.SetSystemParameters(Util.ReadResource(defaultSystemParameters));
+            BidManager.SetOptimizationParameters(Util.ReadResource(defaultOptimizationParameters));
+        }
+
     }
 }

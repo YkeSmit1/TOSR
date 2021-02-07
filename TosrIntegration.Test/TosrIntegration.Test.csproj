@@ -32,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Common.Test\Common.Test.csproj" />
     <ProjectReference Include="..\Tosr\Tosr.csproj" />
   </ItemGroup>
 

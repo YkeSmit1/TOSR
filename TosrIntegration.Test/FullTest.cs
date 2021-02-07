@@ -9,6 +9,7 @@ using Tosr;
 using Common;
 using NLog;
 using System.Linq;
+using Common.Test;
 
 namespace TosrIntegration.Test
 {
@@ -37,7 +38,7 @@ namespace TosrIntegration.Test
     }
 
     [Collection("Sequential")]
-    public class FullTest
+    public class FullTest : IClassFixture<BaseTestFixture>
     {
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
@@ -45,10 +46,10 @@ namespace TosrIntegration.Test
         private readonly ITestOutputHelper output;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        public FullTest(ITestOutputHelper output)
+        public FullTest(BaseTestFixture fixture, ITestOutputHelper output)
         {
-            fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
-            reverseDictionaries = new ReverseDictionaries(fasesWithOffset, new Progress<string>());
+            fasesWithOffset = fixture.fasesWithOffset;
+            reverseDictionaries = fixture.reverseDictionaries;
 
             this.output = output;
         }

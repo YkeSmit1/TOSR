@@ -1,4 +1,5 @@
 ﻿using Common;
+using Common.Test;
 using Newtonsoft.Json;
 using NLog;
 using System;
@@ -68,7 +69,7 @@ namespace TosrIntegration.Test
     }
 
     [Collection("Sequential")]
-    public class TestRelayBid
+    public class TestRelayBid : IClassFixture<BaseTestFixture>
     {
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
@@ -76,10 +77,10 @@ namespace TosrIntegration.Test
 
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        public TestRelayBid(ITestOutputHelper output)
+        public TestRelayBid(BaseTestFixture fixture, ITestOutputHelper output)
         {
-            fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
-            reverseDictionaries = new ReverseDictionaries(fasesWithOffset, new Progress<string>());
+            fasesWithOffset = fixture.fasesWithOffset;
+            reverseDictionaries = fixture.reverseDictionaries;
             this.output = output;
         }
 
@@ -87,68 +88,42 @@ namespace TosrIntegration.Test
         [MemberData(nameof(TestCaseProviderRelayBid.TestCases3NT), MemberType = typeof(TestCaseProviderRelayBid))]
         public void TestAuctions3NT(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
-            SetupTest(testName);
+            SetupTest.setupTest(testName, logger);
             var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction(northHand, southHand);
-            AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
+            AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
         }
 
         [Theory]
         [MemberData(nameof(TestCaseProviderRelayBid.TestCases3NTPull), MemberType = typeof(TestCaseProviderRelayBid))]
         public void TestAuctions3NTPull(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
-            SetupTest(testName);
+            SetupTest.setupTest(testName, logger);
             var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction(northHand, southHand);
-            AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
-            AssertHand(bidManager, auction, northHand, southHand);
+            AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
+            AssertMethods.AssertHand(bidManager, auction, northHand, southHand, reverseDictionaries);
         }
 
         [Theory]
         [MemberData(nameof(TestCaseProviderRelayBid.TestCases4Diamond), MemberType = typeof(TestCaseProviderRelayBid))]
         public void TestAuctions4Diamond(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
-            SetupTest(testName);
+            SetupTest.setupTest(testName, logger);
             var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, (auction, northHand, southHandShape, controls, trumpSuit) => { return BidManager.RelayBidKind.fourDiamondEndSignal; });
             var auction = bidManager.GetAuction(northHand, southHand);
-            AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
+            AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
         }
 
         [Theory]
         [MemberData(nameof(TestCaseProviderRelayBid.TestCases4DiamondPull), MemberType = typeof(TestCaseProviderRelayBid))]
         public void TestAuctions4DiamondPull(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
-            SetupTest(testName);
+            SetupTest.setupTest(testName, logger);
             var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, (auction, northHand, southHandShape, controls, trumpSuit) => { return BidManager.RelayBidKind.fourDiamondEndSignal; });
             var auction = bidManager.GetAuction(northHand, southHand);
-            AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
-            AssertHand(bidManager, auction, northHand, southHand);
-        }
-
-        private static void SetupTest(string testName)
-        {
-            if (testName is null)
-                throw new ArgumentNullException(nameof(testName));
-            logger.Info($"Executing test-case {testName}");
-            Pinvoke.Setup("Tosr.db3");
-        }
-
-        private static void AssertAuction(string expectedBidsNorth, string expectedBidsSouth, Auction auction)
-        {
-            var actualBidsSouth = auction.GetBidsAsString(Player.South);
-            var actualBidsNorth = auction.GetBidsAsString(Player.North);
-
-            Assert.Equal(expectedBidsSouth, actualBidsSouth);
-            Assert.Equal(expectedBidsNorth, actualBidsNorth);
-        }
-
-        private void AssertHand(BidManager bidManager, Auction auction, string northHand, string southHand)
-        {
-            var constructedSouthHand = bidManager.ConstructSouthHand(northHand);
-            Assert.Equal(Util.HandWithx(southHand), constructedSouthHand.First());
-
-            var queens = bidManager.GetQueensFromAuction(auction, reverseDictionaries);
-            Assert.True(BidManager.CheckQueens(queens, southHand));
+            AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
+            AssertMethods.AssertHand(bidManager, auction, northHand, southHand, reverseDictionaries);
         }
     }
 }

@@ -18,7 +18,7 @@ namespace TosrGui.Test
             var northHand = "KT98,AK96,AKJ9,4";
             var southHand = "Axxx,Qxxx,xx,KQx";
 
-            var scores = SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, southHand, null, "NYNY");
+            var scores = SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, southHand, null, "NYNY", 10);
             foreach (var score in scores)
             {
                 Assert.InRange(score, 10, 12);

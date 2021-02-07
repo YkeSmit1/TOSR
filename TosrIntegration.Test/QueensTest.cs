@@ -8,6 +8,7 @@ using Xunit;
 using Newtonsoft.Json;
 using Common;
 using Tosr;
+using Common.Test;
 
 namespace TosrIntegration.Test
 {
@@ -35,17 +36,17 @@ namespace TosrIntegration.Test
     }
 
     [Collection("Sequential")]
-    public class QueensTest
+    public class QueensTest : IClassFixture<BaseTestFixture>
     {
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
 
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        public QueensTest()
+        public QueensTest(BaseTestFixture fixture)
         {
-            fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
-            reverseDictionaries = new ReverseDictionaries(fasesWithOffset, new Progress<string>());
+            fasesWithOffset = fixture.fasesWithOffset;
+            reverseDictionaries = fixture.reverseDictionaries;
         }
 
         [Theory]

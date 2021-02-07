@@ -33,6 +33,9 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItemFile = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem11 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemLoadSystemParameters = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemLoadOptimizationParameters = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemUseDefaultParameters = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItemLoadSet = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemSaveSet = new System.Windows.Forms.ToolStripMenuItem();
@@ -65,13 +68,15 @@
             this.toolStripButtonLast = new System.Windows.Forms.ToolStripButton();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.openFileDialogDatabase = new System.Windows.Forms.OpenFileDialog();
             this.panelNorth = new System.Windows.Forms.Panel();
             this.panelSouth = new System.Windows.Forms.Panel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-            this.openFileDialog2 = new System.Windows.Forms.OpenFileDialog();
+            this.saveFileDialogPBN = new System.Windows.Forms.SaveFileDialog();
+            this.openFileDialogPBN = new System.Windows.Forms.OpenFileDialog();
+            this.openFileDialogSystemParameters = new System.Windows.Forms.OpenFileDialog();
+            this.openFileDialogOptimizationParameters = new System.Windows.Forms.OpenFileDialog();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
@@ -107,6 +112,9 @@
             // 
             this.toolStripMenuItemFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem11,
+            this.toolStripMenuItemLoadSystemParameters,
+            this.toolStripMenuItemLoadOptimizationParameters,
+            this.toolStripMenuItemUseDefaultParameters,
             this.toolStripSeparator2,
             this.toolStripMenuItemLoadSet,
             this.toolStripMenuItemSaveSet});
@@ -121,6 +129,27 @@
             this.toolStripMenuItem11.Size = new System.Drawing.Size(173, 22);
             this.toolStripMenuItem11.Text = "Rules database";
             this.toolStripMenuItem11.Click += new System.EventHandler(this.ToolStripMenuItem11Click);
+            // 
+            // toolStripMenuItemLoadSystemParameters
+            // 
+            this.toolStripMenuItemLoadSystemParameters.Name = "toolStripMenuItemLoadSystemParameters";
+            this.toolStripMenuItemLoadSystemParameters.Size = new System.Drawing.Size(205, 22);
+            this.toolStripMenuItemLoadSystemParameters.Text = "System parameters";
+            this.toolStripMenuItemLoadSystemParameters.Click += new System.EventHandler(this.toolStripMenuItemLoadSystemParametersClick);
+            // 
+            // toolStripMenuItemLoadOptimizationParameters
+            // 
+            this.toolStripMenuItemLoadOptimizationParameters.Name = "toolStripMenuItemLoadOptimizationParameters";
+            this.toolStripMenuItemLoadOptimizationParameters.Size = new System.Drawing.Size(205, 22);
+            this.toolStripMenuItemLoadOptimizationParameters.Text = "Optimization parameters";
+            this.toolStripMenuItemLoadOptimizationParameters.Click += new System.EventHandler(this.toolStripMenuItemLoadOptimizationParametersClick);
+            // 
+            // toolStripMenuItemUseDefaultParameters
+            // 
+            this.toolStripMenuItemUseDefaultParameters.Name = "toolStripMenuItemUseDefaultParameters";
+            this.toolStripMenuItemUseDefaultParameters.Size = new System.Drawing.Size(205, 22);
+            this.toolStripMenuItemUseDefaultParameters.Text = "Use default parameters";
+            this.toolStripMenuItemUseDefaultParameters.Click += new System.EventHandler(this.toolStripMenuItemUseDefaultParametersClick);
             // 
             // toolStripSeparator2
             // 
@@ -392,10 +421,10 @@
             this.label1.TabIndex = 17;
             this.label1.Text = "Number of hands to bid";
             // 
-            // openFileDialog1
+            // openFileDialogDatabase
             // 
-            this.openFileDialog1.DefaultExt = "db3";
-            this.openFileDialog1.FileName = "Tosr.db3";
+            this.openFileDialogDatabase.DefaultExt = "db3";
+            this.openFileDialogDatabase.FileName = "Tosr.db3";
             // 
             // panelNorth
             // 
@@ -430,13 +459,21 @@
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(118, 17);
             this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
             // 
-            // saveFileDialog1
+            // saveFileDialogPBN
             // 
-            this.saveFileDialog1.DefaultExt = "pbn";
+            this.saveFileDialogPBN.DefaultExt = "pbn";
             // 
-            // openFileDialog2
+            // openFileDialogPBN
             // 
-            this.openFileDialog2.DefaultExt = "pbn";
+            this.openFileDialogPBN.DefaultExt = "pbn";
+            // 
+            // openFileDialogSystemParameters
+            // 
+            this.openFileDialogSystemParameters.DefaultExt = "json";
+            // 
+            // openFileDialogOptimizationParameters
+            // 
+            this.openFileDialogOptimizationParameters.DefaultExt = "json";
             // 
             // Form1
             // 
@@ -490,7 +527,6 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem10;
         private System.Windows.Forms.NumericUpDown numericUpDown1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem11;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemBatchBid;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem13;
@@ -502,8 +538,8 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemLoadSet;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSaveSet;
-        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
-        private System.Windows.Forms.OpenFileDialog openFileDialog2;
+        private System.Windows.Forms.SaveFileDialog saveFileDialogPBN;
+        private System.Windows.Forms.OpenFileDialog openFileDialogPBN;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemOneBoard;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemBidAgain;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
@@ -514,6 +550,12 @@
         private System.Windows.Forms.ToolStripButton toolStripButtonLast;
 
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemAbort;
+        private System.Windows.Forms.OpenFileDialog openFileDialogSystemParameters;
+        private System.Windows.Forms.OpenFileDialog openFileDialogOptimizationParameters;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemLoadSystemParameters;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemLoadOptimizationParameters;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemUseDefaultParameters;
+        private System.Windows.Forms.OpenFileDialog openFileDialogDatabase;
     }
 }
 

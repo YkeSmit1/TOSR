@@ -5,6 +5,10 @@ using System.Collections.Generic;
 using NLog;
 using Common;
 using Solver;
+using Newtonsoft.Json;
+using System.IO;
+using Tosr.Properties;
+using Newtonsoft.Json.Linq;
 
 namespace Tosr
 {
@@ -33,6 +37,65 @@ namespace Tosr
             gameBid,
         }
 
+        public struct SystemParameters
+        {
+            [JsonProperty(Required = Required.Always)]
+            public Dictionary<int, List<int>> hcpRelayerToSignOffInNT;
+
+            [JsonProperty(Required = Required.Always)]
+            [JsonConverter(typeof(requirementsForRelayBidConverter))]
+            public List<((double min, double max) range, RelayBidKind relayBidKind)> requirementsForRelayBid;
+
+            [JsonProperty(Required = Required.Always)]
+            public int requiredMaxHcpToBid4Diamond;
+        }
+
+        public struct OptimizationParameters
+        {
+            [JsonProperty(Required = Required.Always)]
+            public double requiredConfidenceToContinueRelaying;
+
+            [JsonProperty(Required = Required.Always)]
+            public int numberOfHandsForSolver;
+        }
+
+        public class requirementsForRelayBidConverter : JsonConverter
+        {
+            public override bool CanConvert(Type objectType)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                JArray jArray = JArray.Load(reader);
+                var requirementsForRelayBid = new List<((double min, double max) range, RelayBidKind relayBidKind)>();
+                foreach (var entry in jArray)
+                {
+                    var range = ValueTuple.Create((double)entry[0][0], (double)entry[0][1]);
+                    var item = (((double, double), RelayBidKind))ValueTuple.Create(range, Enum.Parse(typeof(RelayBidKind), entry[1].ToString()));
+                    requirementsForRelayBid.Add(item);
+                }
+                return requirementsForRelayBid;
+            }
+
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public static SystemParameters systemParameters;
+        public static OptimizationParameters optimizationParameters;
+        public static void SetSystemParameters(string json)
+        {
+            systemParameters = JsonConvert.DeserializeObject<SystemParameters>(json);
+        }
+        public static void SetOptimizationParameters(string json)
+        {
+            optimizationParameters = JsonConvert.DeserializeObject<OptimizationParameters>(json);
+        }
+
         private readonly IBidGenerator bidGenerator;
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries = null;
@@ -43,20 +106,6 @@ namespace Tosr
         static readonly char[] relevantCards = new[] { 'A', 'K' };
         public ConstructedSouthhandOutcome constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
 
-        // Special TOSR logic. Should be in a JSON file as parameters
-        static readonly Dictionary<int, List<int>> requirementsToPull3NT = new Dictionary<int, List<int>> {
-            {0, Enumerable.Range(16, 5).ToList()},
-            {1, Enumerable.Range(21, 2).ToList()},
-            {2, Enumerable.Range(23, 2).ToList()}};
-
-        // Special TOSR logic. Should be in a JSON file as parameters
-        static readonly List<((double min, double max) range, RelayBidKind relayBidKind)> requirementsForRelayBid = new List<((double, double), RelayBidKind)> {
-            {((-0.01, 30.01) , RelayBidKind.gameBid )},
-            {((30.0, 70.01) , RelayBidKind.fourDiamondEndSignal)},
-            {((70.0, 100.01) , RelayBidKind.Relay )},
-        };
-
-        static readonly int requiredMaxHcpToBid4Diamond = 17;
         public static readonly List<Fase> signOffFasesFor3NT = new List<Fase> { Fase.Pull3NTNoAsk, Fase.Pull3NTOneAskMin, Fase.Pull3NTOneAskMax, Fase.Pull3NTTwoAsks };
         public static readonly List<Fase> signOffFasesFor4Di = new List<Fase> { Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAskMin, Fase.Pull4DiamondsOneAskMax };
         public static readonly List<Fase> signOffFases = signOffFasesFor3NT.Concat(signOffFasesFor4Di).ToList();
@@ -191,7 +240,7 @@ namespace Tosr
                         var hcp = Util.GetHcpCount(northHand);
                         if (trumpSuit == Suit.NoTrump)
                         {
-                            if (requirementsToPull3NT.TryGetValue(controlBidCount, out var hcps) && hcps.Contains(hcp))
+                            if (systemParameters.hcpRelayerToSignOffInNT.TryGetValue(controlBidCount, out var hcps) && hcps.Contains(hcp))
                             {
                                 var noTrumpBid = biddingState.CurrentBid < Bid.threeNTBid ? Bid.threeNTBid : Bid.fourNTBid;
                                 biddingState.UpdateBiddingStateSignOff(controlBidCount, noTrumpBid);
@@ -200,7 +249,7 @@ namespace Tosr
                         }
                         else
                         {
-                            if (controlBidCount == 0 && hcp <= requiredMaxHcpToBid4Diamond && biddingState.CurrentBid >= Bid.threeSpadeBid)
+                            if (controlBidCount == 0 && hcp <= systemParameters.requiredMaxHcpToBid4Diamond && biddingState.CurrentBid >= Bid.threeSpadeBid)
                             {
                                 biddingState.UpdateBiddingStateSignOff(controlBidCount, Bid.fourDiamondBid);
                                 return Bid.fourDiamondBid;
@@ -246,7 +295,7 @@ namespace Tosr
                             var hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions);
                             var declarer = auction.GetDeclarerOrNorth(trumpSuit);
                             var confidenceTricks = GetConfidenceTricks(northHand, matches, hcp, queens, trumpSuit, declarer);
-                            if (GetConfidenceToBidSlam(confidenceTricks) < 60.0)
+                            if (GetConfidenceToBidSlam(confidenceTricks) < optimizationParameters.requiredConfidenceToContinueRelaying)
                             {
                                 biddingState.Fase = Fase.End;
                                 constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
@@ -303,7 +352,7 @@ namespace Tosr
             var possibleControls = reverseDictionaries.ControlsOnlyAuctions[strControls];
             var confidence = GetConfidenceTricks(northHand, southHandShapes, possibleControls.First(), possibleControls.Last(), trumpSuit, declarer != Player.UnKnown ? declarer : Player.North);
             var confidenceToBidSlam = GetConfidenceToBidSlam(confidence);
-            var relayBidkind = requirementsForRelayBid.Where(x =>confidenceToBidSlam >= x.range.min && confidenceToBidSlam <= x.range.max).First().relayBidKind;
+            var relayBidkind = systemParameters.requirementsForRelayBid.Where(x =>confidenceToBidSlam >= x.range.min && confidenceToBidSlam <= x.range.max).First().relayBidKind;
             return relayBidkind;
         }
 
@@ -319,12 +368,12 @@ namespace Tosr
 
         private static Dictionary<int, double> GetConfidenceTricks(string northHand, IEnumerable<string> matches, int minControls, int maxControls, Suit trumpSuit, Player declarer)
         {
-            return GroupTricks(matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, minControls, maxControls)));
+            return GroupTricks(matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, minControls, maxControls, optimizationParameters.numberOfHandsForSolver)));
         }
 
         private static Dictionary<int, double> GetConfidenceTricks(string northHand, IEnumerable<string> matches, MinMax hcp, string queens, Suit trumpSuit, Player declarer)
         {
-            return GroupTricks(matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, hcp, queens)));
+            return GroupTricks(matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, hcp, queens, optimizationParameters.numberOfHandsForSolver)));
         }
 
         private static Dictionary<int, double> GroupTricks(IEnumerable<int> tricks)
@@ -358,7 +407,7 @@ namespace Tosr
 
             bool TryGetEndContract(Suit triedSuit, out Bid bid)
             {
-                var scores = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(triedSuit, auction.GetDeclarerOrNorth(triedSuit), northHand, match, hcp, queens));
+                var scores = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(triedSuit, auction.GetDeclarerOrNorth(triedSuit), northHand, match, hcp, queens, optimizationParameters.numberOfHandsForSolver));
                 bid = Bid.GetBestContract(Util.GetExpectedContract(scores), triedSuit, currentBid);
                 return (bid > currentBid || bid == Bid.PassBid) && bid != Bid.InvalidBid;
             }

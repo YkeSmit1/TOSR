@@ -369,5 +369,15 @@ namespace Common
         {
             return Regex.Replace(hand, "[QJT98765432]", "x");
         }
+
+        public static string ReadResource(string resourceName)
+        {
+            var assembly = Assembly.LoadFrom("Tosr.dll");
+            using (var stream = assembly.GetManifestResourceStream(resourceName))
+            using (var reader = new StreamReader(stream))
+            {
+                return reader.ReadToEnd();
+            }
+        }
     }
 }
