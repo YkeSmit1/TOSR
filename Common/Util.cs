@@ -327,16 +327,21 @@ namespace Common
             return suit == Suit.NoTrump ? (int)suit : 3 - (int)suit;
         }
 
-        public static ExpectedContract GetExpectedContract(IEnumerable<int> scores)
+        public static (ExpectedContract expectedContract, Dictionary<ExpectedContract, int> confidence) GetExpectedContract(IEnumerable<int> scores)
         {
+            ExpectedContract expectedContract;
             if ((double)scores.Count(x => x == 13) / (double)scores.Count() > .6)
-                return ExpectedContract.GrandSlam;
-            if ((double)scores.Count(x => x == 12) / (double)scores.Count() > .6)
-                return ExpectedContract.SmallSlam;
-            if ((double)scores.Count(x => x == 12 || x == 13) / (double)scores.Count() > .6)
-                return scores.Count(x => x == 12) >= scores.Count(x => x == 13) ? ExpectedContract.SmallSlam : ExpectedContract.GrandSlam;
+                expectedContract = ExpectedContract.GrandSlam;
+            else if ((double)scores.Count(x => x == 12) / (double)scores.Count() > .6)
+                expectedContract = ExpectedContract.SmallSlam;
+            else if ((double)scores.Count(x => x == 12 || x == 13) / (double)scores.Count() > .6)
+                expectedContract = scores.Count(x => x == 12) >= scores.Count(x => x == 13) ? ExpectedContract.SmallSlam : ExpectedContract.GrandSlam;
+            else expectedContract = ExpectedContract.Game;
 
-            return ExpectedContract.Game;
+            return (expectedContract, new Dictionary<ExpectedContract, int> { 
+                {ExpectedContract.GrandSlam, scores.Count(x => x == 13) }, 
+                { ExpectedContract.SmallSlam, scores.Count(x => x == 12) }, 
+                { ExpectedContract.Game, scores.Count(x => x < 12)}});
         }
 
         public static Player GetPlayer(string player) => player switch

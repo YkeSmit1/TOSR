@@ -66,6 +66,8 @@
             this.toolStripTextBoxBoard = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripButtonNext = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonLast = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripComboBoxFilter = new System.Windows.Forms.ToolStripComboBox();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
             this.openFileDialogDatabase = new System.Windows.Forms.OpenFileDialog();
@@ -126,7 +128,7 @@
             // 
             this.toolStripMenuItem11.Name = "toolStripMenuItem11";
             this.toolStripMenuItem11.ShortcutKeys = System.Windows.Forms.Keys.F7;
-            this.toolStripMenuItem11.Size = new System.Drawing.Size(173, 22);
+            this.toolStripMenuItem11.Size = new System.Drawing.Size(205, 22);
             this.toolStripMenuItem11.Text = "Rules database";
             this.toolStripMenuItem11.Click += new System.EventHandler(this.ToolStripMenuItem11Click);
             // 
@@ -135,38 +137,38 @@
             this.toolStripMenuItemLoadSystemParameters.Name = "toolStripMenuItemLoadSystemParameters";
             this.toolStripMenuItemLoadSystemParameters.Size = new System.Drawing.Size(205, 22);
             this.toolStripMenuItemLoadSystemParameters.Text = "System parameters";
-            this.toolStripMenuItemLoadSystemParameters.Click += new System.EventHandler(this.toolStripMenuItemLoadSystemParametersClick);
+            this.toolStripMenuItemLoadSystemParameters.Click += new System.EventHandler(this.ToolStripMenuItemLoadSystemParametersClick);
             // 
             // toolStripMenuItemLoadOptimizationParameters
             // 
             this.toolStripMenuItemLoadOptimizationParameters.Name = "toolStripMenuItemLoadOptimizationParameters";
             this.toolStripMenuItemLoadOptimizationParameters.Size = new System.Drawing.Size(205, 22);
             this.toolStripMenuItemLoadOptimizationParameters.Text = "Optimization parameters";
-            this.toolStripMenuItemLoadOptimizationParameters.Click += new System.EventHandler(this.toolStripMenuItemLoadOptimizationParametersClick);
+            this.toolStripMenuItemLoadOptimizationParameters.Click += new System.EventHandler(this.ToolStripMenuItemLoadOptimizationParametersClick);
             // 
             // toolStripMenuItemUseDefaultParameters
             // 
             this.toolStripMenuItemUseDefaultParameters.Name = "toolStripMenuItemUseDefaultParameters";
             this.toolStripMenuItemUseDefaultParameters.Size = new System.Drawing.Size(205, 22);
             this.toolStripMenuItemUseDefaultParameters.Text = "Use default parameters";
-            this.toolStripMenuItemUseDefaultParameters.Click += new System.EventHandler(this.toolStripMenuItemUseDefaultParametersClick);
+            this.toolStripMenuItemUseDefaultParameters.Click += new System.EventHandler(this.ToolStripMenuItemUseDefaultParametersClick);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(170, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(202, 6);
             // 
             // toolStripMenuItemLoadSet
             // 
             this.toolStripMenuItemLoadSet.Name = "toolStripMenuItemLoadSet";
-            this.toolStripMenuItemLoadSet.Size = new System.Drawing.Size(173, 22);
+            this.toolStripMenuItemLoadSet.Size = new System.Drawing.Size(205, 22);
             this.toolStripMenuItemLoadSet.Text = "Load set from PBN";
             this.toolStripMenuItemLoadSet.Click += new System.EventHandler(this.ToolStripMenuItemLoadSetClick);
             // 
             // toolStripMenuItemSaveSet
             // 
             this.toolStripMenuItemSaveSet.Name = "toolStripMenuItemSaveSet";
-            this.toolStripMenuItemSaveSet.Size = new System.Drawing.Size(173, 22);
+            this.toolStripMenuItemSaveSet.Size = new System.Drawing.Size(205, 22);
             this.toolStripMenuItemSaveSet.Text = "Save set to PBN";
             this.toolStripMenuItemSaveSet.Click += new System.EventHandler(this.ToolStripMenuItemSaveSetClick);
             // 
@@ -300,7 +302,9 @@
             this.toolStripButtonPrevious,
             this.toolStripTextBoxBoard,
             this.toolStripButtonNext,
-            this.toolStripButtonLast});
+            this.toolStripButtonLast,
+            this.toolStripSeparator4,
+            this.toolStripComboBoxFilter});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(730, 25);
@@ -402,6 +406,18 @@
             this.toolStripButtonLast.Size = new System.Drawing.Size(23, 22);
             this.toolStripButtonLast.Text = "Last";
             this.toolStripButtonLast.Click += new System.EventHandler(this.ToolStripButtonLastClick);
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripComboBoxFilter
+            // 
+            this.toolStripComboBoxFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.toolStripComboBoxFilter.Name = "toolStripComboBoxFilter";
+            this.toolStripComboBoxFilter.Size = new System.Drawing.Size(121, 25);
+            this.toolStripComboBoxFilter.SelectedIndexChanged += new System.EventHandler(this.ToolStripComboBoxFilterSelectedIndexChanged);
             // 
             // numericUpDown1
             // 
@@ -556,6 +572,8 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemLoadOptimizationParameters;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemUseDefaultParameters;
         private System.Windows.Forms.OpenFileDialog openFileDialogDatabase;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+        private System.Windows.Forms.ToolStripComboBox toolStripComboBoxFilter;
     }
 }
 

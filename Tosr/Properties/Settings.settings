@@ -20,5 +20,8 @@
     <Setting Name="optimizationParametersPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="filter" Type="System.String" Scope="User">
+      <Value Profile="(Default)">All</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -94,5 +94,17 @@ namespace Tosr.Properties {
                 this["optimizationParametersPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("All")]
+        public string filter {
+            get {
+                return ((string)(this["filter"]));
+            }
+            set {
+                this["filter"] = value;
+            }
+        }
     }
 }

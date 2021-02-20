@@ -28,14 +28,17 @@ namespace Tosr
     {
         public enum CorrectnessContractBreakdown
         {
-            WrongTrumpSuit,
             GameCorrect,
-            MissedSmallSlam,
+            MissedGoodSmallSlam,
+            MissedLaydownSmallSlam,
             SmallSlamCorrect,
             SmallSlamTooHigh,
-            MissedGrandSlam,
+            SmallSlamHopeless,
+            MissedGoodGrandSlam,
+            MissedLaydownGrandSlam,
             GrandSlamCorrect,
             GrandSlamTooHigh,
+            GrandSlamHopeless,
             NoFit,
             Unknown,
         }
@@ -43,6 +46,7 @@ namespace Tosr
         public enum CorrectnessContract
         {
             InCorrect,
+            Poor,
             GameCorrect,
             SmallSlamCorrect,
             GrandSlamCorrect,
@@ -74,6 +78,8 @@ namespace Tosr
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         private readonly bool useSingleDummySolver;
         private CorrectnessContractBreakdown correctnessContractBreakdown;
+        private CorrectnessContract correctnessContract;
+        private Dictionary<ExpectedContract, int> confidence;
 
         public BatchBidding(ReverseDictionaries reverseDictionaries, Dictionary<Fase, bool> fasesWithOffset, bool useSingleDummySolver)
         {
@@ -111,16 +117,16 @@ namespace Tosr
                     statistics.handsBid++;
                     var auction = bidManager.GetAuction(board[(int)Player.North], board[(int)Player.South]);
                     AddHandAndAuction(board, auction, statistics.handsBid);
-                    pbn.Boards.Add(new BoardDto { 
-                        Deal = board, 
-                        Auction = auction, 
-                        BoardNumber = statistics.handsBid, 
-                        Event = "TOSR Batchbidding", 
-                        Date = DateTime.Now, 
+                    pbn.Boards.Add(new BoardDto {
+                        Deal = board,
+                        Auction = auction,
+                        BoardNumber = statistics.handsBid,
+                        Event = "TOSR Batchbidding",
+                        Date = DateTime.Now,
                         Declarer = auction.GetDeclarerOrNorth(auction.currentContract.suit),
                         Dealer = Player.West,
                         Vulnerable = "None",
-                        Description = correctnessContractBreakdown.ToString()});
+                        Description = $"{correctnessContract}:{correctnessContractBreakdown}{JsonConvert.SerializeObject(confidence)}"});
                     if (statistics.handsBid % 100 == 0)
                         progress.Report(statistics.handsBid);
                     if (token.IsCancellationRequested)
@@ -183,7 +189,7 @@ namespace Tosr
             statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthhandOutcome);
             correctnessContractBreakdown = CheckContract(contract, board, dealer == Player.UnKnown ? Player.North : dealer);
             statistics.ContractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, bidManager.constructedSouthhandOutcome));
-            var correctnessContract = GetCorrectness(correctnessContractBreakdown);
+            correctnessContract = GetCorrectness(correctnessContractBreakdown);
             statistics.ContractCorrectnessBreakdown.AddOrUpdateDictionary(correctnessContractBreakdown);
             statistics.ContractCorrectness.AddOrUpdateDictionary(correctnessContract);
             if (correctnessContract == CorrectnessContract.InCorrect || correctnessContract == CorrectnessContract.NoFit)
@@ -196,11 +202,15 @@ namespace Tosr
         {
             switch (correctnessContractBreakdown)
             {
-                case CorrectnessContractBreakdown.WrongTrumpSuit:
-                case CorrectnessContractBreakdown.MissedSmallSlam:
+                case CorrectnessContractBreakdown.MissedGoodSmallSlam:
                 case CorrectnessContractBreakdown.SmallSlamTooHigh:
-                case CorrectnessContractBreakdown.MissedGrandSlam:
+                case CorrectnessContractBreakdown.MissedGoodGrandSlam:
                 case CorrectnessContractBreakdown.GrandSlamTooHigh:
+                    return CorrectnessContract.Poor;
+                case CorrectnessContractBreakdown.MissedLaydownSmallSlam:
+                case CorrectnessContractBreakdown.SmallSlamHopeless:
+                case CorrectnessContractBreakdown.MissedLaydownGrandSlam:
+                case CorrectnessContractBreakdown.GrandSlamHopeless:
                 case CorrectnessContractBreakdown.Unknown:
                     return CorrectnessContract.InCorrect;
                 case CorrectnessContractBreakdown.GameCorrect:
@@ -239,6 +249,7 @@ namespace Tosr
 
         private CorrectnessContractBreakdown CheckContract(Bid contract, string[] board, Player declarer)
         {
+            confidence = new Dictionary<ExpectedContract, int>();
             if (!useSingleDummySolver)
                 return CorrectnessContractBreakdown.Unknown;
             var northHand = board[(int)Player.North];
@@ -246,22 +257,24 @@ namespace Tosr
             if (contract.suit != Suit.NoTrump && Util.GetNumberOfTrumps(contract.suit, northHand, southHand) < 8)
                 return CorrectnessContractBreakdown.NoFit;
             var tricks = SingleDummySolver.SolveSingleDummyExactHands(contract.suit, declarer, northHand, southHand);
-            var expectedContractType = Util.GetExpectedContract(tricks);
+            var expectedContract = Util.GetExpectedContract(tricks);
+            var expectedContractType = expectedContract.expectedContract;
+            confidence = expectedContract.confidence;
 
             if (expectedContractType == ExpectedContract.GrandSlam && contract.rank == 7)
                 return CorrectnessContractBreakdown.GrandSlamCorrect;
             if (expectedContractType == ExpectedContract.GrandSlam && contract.rank < 7)
-                return CorrectnessContractBreakdown.MissedGrandSlam;
+                return confidence[ExpectedContract.GrandSlam] > 8 ? CorrectnessContractBreakdown.MissedLaydownGrandSlam : CorrectnessContractBreakdown.MissedGoodGrandSlam;
 
             if (expectedContractType == ExpectedContract.SmallSlam && contract.rank == 6)
                 return CorrectnessContractBreakdown.SmallSlamCorrect;
             if (expectedContractType == ExpectedContract.SmallSlam && contract.rank < 6)
-                return CorrectnessContractBreakdown.MissedSmallSlam;
+                return confidence[ExpectedContract.SmallSlam] + confidence[ExpectedContract.GrandSlam] > 8 ? CorrectnessContractBreakdown.MissedLaydownSmallSlam : CorrectnessContractBreakdown.MissedGoodSmallSlam;
 
             if (expectedContractType != ExpectedContract.GrandSlam && contract.rank == 7)
-                return CorrectnessContractBreakdown.GrandSlamTooHigh;
+                return confidence[ExpectedContract.GrandSlam] < 2 ? CorrectnessContractBreakdown.GrandSlamHopeless : CorrectnessContractBreakdown.GrandSlamTooHigh;
             if (expectedContractType != ExpectedContract.SmallSlam && contract.rank == 6)
-                return CorrectnessContractBreakdown.SmallSlamTooHigh;
+                return confidence[ExpectedContract.SmallSlam] + confidence[ExpectedContract.GrandSlam] < 2 ? CorrectnessContractBreakdown.SmallSlamHopeless : CorrectnessContractBreakdown.SmallSlamTooHigh;
 
             return CorrectnessContractBreakdown.GameCorrect;
         }

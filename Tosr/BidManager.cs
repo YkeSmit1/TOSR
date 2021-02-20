@@ -208,7 +208,7 @@ namespace Tosr
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e);
+                        logger.Warn(e);
                     }
                 }
                 biddingState.CurrentBid = Bid.PassBid;
@@ -408,7 +408,7 @@ namespace Tosr
             bool TryGetEndContract(Suit triedSuit, out Bid bid)
             {
                 var scores = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(triedSuit, auction.GetDeclarerOrNorth(triedSuit), northHand, match, hcp, queens, optimizationParameters.numberOfHandsForSolver));
-                bid = Bid.GetBestContract(Util.GetExpectedContract(scores), triedSuit, currentBid);
+                bid = Bid.GetBestContract(Util.GetExpectedContract(scores).expectedContract, triedSuit, currentBid);
                 return (bid > currentBid || bid == Bid.PassBid) && bid != Bid.InvalidBid;
             }
         }
