@@ -17,21 +17,21 @@ namespace TosrIntegration.Test
         public static IEnumerable<object[]> TestCases()
         {
             // ♣♦♥♠
-            yield return new object[] { "5NT", "AKQ2,AK2,AKQ,KQ2", "xxxx,Qxx,xx,Axxx", "1♣1NT2♥3♥4♣4♥4NT5♥5NT6♦6♠7♠", "1♠2♦3♦3♠4♦4♠5♦5♠6♣6♥7♣" };
-            yield return new object[] { "Zoom5NT", "AKQ2,AK2,KQ2,AKQ", "xxxx,Qxx,Ax,xxxx", "1♣1NT2♥3♥4♣4♥4NT5♦5♠6♦6♠7♠", "1♠2♦3♦3♠4♦4♠5♣5♥6♣6♥7♣" };
-            yield return new object[] { "6C", "AK32,AKQ,AKQ,KQ2", "Qxxx,xxx,xx,Axxx", "1♣1NT2♥3♥4♣4♥4NT5♥5NT6♥7♠", "1♠2♦3♦3♠4♦4♠5♦5♠6♦6♠" };
-            yield return new object[] { "Zoom6C", "AKJ2,AKQ,K32,AKQ", "Qxxx,xxx,AQ,xxxx", "1♣1NT2♥3♥4♣4♥4NT5♦5♠6♥7♠", "1♠2♦3♦3♠4♦4♠5♣5♥6♦6♠" };
+            yield return new object[] { "5NT", "AKQ32,AK2,AK2,K2", "xxxx,Qxx,xx,Axxx", "1♣1NT2♥3♥4♣4♥4NT5♥5NT6♦6♠7♠", "1♠2♦3♦3♠4♦4♠5♦5♠6♣6♥7♣" };
+            yield return new object[] { "Zoom5NT", "AKQ32,AK2,K32,AK", "xxxx,Qxx,Ax,xxxx", "1♣1NT2♥3♥4♣4♥4NT5♦5♠6♦6♠7♠", "1♠2♦3♦3♠4♦4♠5♣5♥6♣6♥7♣" };
+            yield return new object[] { "6C", "AK432,AKQ,AK2,K2", "Qxxx,xxx,xx,Axxx", "1♣1NT2♥3♥4♣4♥4NT5♥5NT6♥7♠", "1♠2♦3♦3♠4♦4♠5♦5♠6♦6♠" };
+            yield return new object[] { "Zoom6C", "AKJ2,AK2,K32,AKQ", "Qxxx,xxx,AQ,xxxx", "1♣1NT2♥3♥4♣4♥4NT5♦5♠6♥7♠", "1♠2♦3♦3♠4♦4♠5♣5♥6♦6♠" };
             // With Singleton
-            yield return new object[] { "1Singleton5NT", "AKQ2,AK2,AKQ,KQ2", "xxxx,Qxxx,x,Axxx", "1♣1♠2♣2♥2NT3♥4♣4♥4NT5♥7♠", "1♥1NT2♦2♠3♦3♠4♦4♠5♦5NT" };
-            yield return new object[] { "1SingletonZoom5NT", "AKQ2,AK2,KQ2,AKQ", "xxxx,Qxx,A,xxxxx", "1♣1♠2♠3♥4♣4♥4NT5♦5♠6♣6♥7♠", "1♥2♥3♦3♠4♦4♠5♣5♥5NT6♦6NT" };
-            yield return new object[] { "1Singleton6C", "AK32,AKQ,AKQ,KQ2", "Qxxx,xxx,x,Axxxx", "1♣1♠2♠3♥4♣4♥5♣5♥5NT7♠", "1♥2♥3♦3♠4♦4NT5♦5♠6♦" };
-            yield return new object[] { "1SingletonZoom6C", "AKJ2,AKQ,K32,AKQ", "Qxxx,x,AQxx,xxxx", "1♣2♦2♠3♥4♣4♥5♣7♠", "2♣2♥3♦3♠4♦4NT5♠" };
+            yield return new object[] { "1Singleton5NT", "AKQ2,AK2,AK32,K2", "xxxx,Qxxx,x,Axxx", "1♣1♠2♣2♥2NT3♥4♣4♥4NT5♥7♠", "1♥1NT2♦2♠3♦3♠4♦4♠5♦5NT" };
+            yield return new object[] { "1SingletonZoom5NT", "AKQ2,AK2,KQ32,AK", "xxxx,Qxx,A,xxxxx", "1♣1♠2♠3♥4♣4♥4NT5♦5♠6♣6♥7♠", "1♥2♥3♦3♠4♦4♠5♣5♥5NT6♦6NT" };
+            yield return new object[] { "1Singleton6C", "AK32,AKQ,AK32,K2", "Qxxx,xxx,x,Axxxx", "1♣1♠2♠3♥4♣4♥5♣5♥5NT7♠", "1♥2♥3♦3♠4♦4NT5♦5♠6♦" };
+            yield return new object[] { "1SingletonZoom6C", "AKJ2,A32,K32,AKQ", "Qxxx,x,AQxx,xxxx", "1♣2♦2♠3♥4♣4♥5♣7♠", "2♣2♥3♦3♠4♦4NT5♠" };
 
             // With two singletons
-            yield return new object[] { "2Singleton5NT", "AKQ2,AK2,AKQ,KQ2", "x,Qxxxxx,x,Axxxx", "1♣2♣2♥2NT3♥4♣4♥4NT5♦7♥", "1NT2♦2♠3♦3NT4♦4♠5♣5NT" };
-            yield return new object[] { "2SingletonZoom5NT", "AKQ2,AK2,KQ2,AKQ", "x,Qxxxxx,A,xxxxx", "1♣2♣2♥2NT3♥4♣4♥4NT5♦5♠7♥", "1NT2♦2♠3♦3NT4♦4♠5♣5♥6♣" };
-            yield return new object[] { "2Singleton6C", "AK32,AKQ,AKQ,KQ2", "Qxxxxx,x,x,Axxxx", "1♣1♠2♥2NT3♥4♣4♥4NT5♦7♠", "1♥2♦2♠3♦3NT4♦4♠5♣5NT" };
-            yield return new object[] { "2SingletonZoom6C", "AKJ2,AKQ,K32,AKQ", "Qxxxxx,x,AQxxx,x", "1♣1♠2♦2NT3♥4♣4♥4NT5♦7♠", "1♥2♣2♠3♦3NT4♦4♠5♣6♣" };
+            yield return new object[] { "2Singleton5NT", "AK32,AK32,AK2,K2", "x,Qxxxxx,x,Axxxx", "1♣2♣2♥2NT3♥4♣4♥4NT5♦7♥", "1NT2♦2♠3♦3NT4♦4♠5♣5NT" };
+            yield return new object[] { "2SingletonZoom5NT", "AK32,AK32,K32,AK", "x,Qxxxxx,A,xxxxx", "1♣2♣2♥2NT3♥4♣4♥4NT5♦5♠7♥", "1NT2♦2♠3♦3NT4♦4♠5♣5♥6♣" };
+            yield return new object[] { "2Singleton6C", "AK32,AK2,AK32,K2", "Qxxxxx,x,x,Axxxx", "1♣1♠2♥2NT3♥4♣4♥4NT5♦7♠", "1♥2♦2♠3♦3NT4♦4♠5♣5NT" };
+            yield return new object[] { "2SingletonZoom6C", "AKJ2,AK32,K3,A32", "Qxxxxx,x,AQxxx,x", "1♣1♠2♦2NT3♥4♣4♥4NT5♦7♠", "1♥2♣2♠3♦3NT4♦4♠5♣6♣" };
         }
     }
 
