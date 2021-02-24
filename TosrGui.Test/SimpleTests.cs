@@ -90,5 +90,11 @@ namespace TosrGui.Test
             Assert.Equal(Bid.InvalidBid, Bid.GetGameContract(Suit.Hearts, new Bid(6, Suit.Spades), false));
             Assert.Equal(Bid.InvalidBid, Bid.GetGameContract(Suit.Hearts, new Bid(6, Suit.Clubs), false));
         }
+
+        [Fact()]
+        public void GetSuitsWithFitTest()
+        {
+            Assert.True(false, "This test needs an implementation");
+        }
     }
 }
