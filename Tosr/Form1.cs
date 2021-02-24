@@ -76,7 +76,7 @@ namespace Tosr
                 pbn.Load(pbnFilepath);
                 toolStripComboBoxFilter.SelectedItem = Settings.Default.filter;
                 ApplyFilter();
-                boardIndex = Math.Min(Settings.Default.boardNumber, filteredPbn.Boards.Count());
+                boardIndex = Math.Min(Settings.Default.boardNumber, filteredPbn.Boards.Count() - 1);
                 LoadCurrentBoard();
             }
             if (pbn.Boards.Count == 0)
