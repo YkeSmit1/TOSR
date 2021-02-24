@@ -1,0 +1,18 @@
+- Better statistics if contract is correct
+    - Consider alternative trump suit
+    - Consider actual trump suit
+    - Consider actual height (4NT or 5 level may be too high)
+
+- BUG consider minor suit fit for slam (other rules for choosing trump suit than when bidding game)
+
+- Bidding can get out of hand after 13+ pull from 3NT
+    - After minimum without minor fit, opener should bid 4NT
+
+- BUG When zooming for controls, opener should bid 3NT with a minimum.
+However, the number of hcps of opener is not contained in the list hcpRelayerToSignOffInNT, because controlBidCount is 1 (not 0 because of zoom!)
+
+- If it is not a good grand slam, don't relay with 5NT or higher!
+
+- Bid a reasonable contract when bidding got too high, instead of passing in a misfit.
+
+- Make decision to continue/stop relaying in ScanningOther fase better
