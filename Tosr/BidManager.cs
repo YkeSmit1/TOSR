@@ -388,27 +388,40 @@ namespace Tosr
 
         private Bid CalculateEndContract(Auction auction, string northHand, Bid currentBid)
         {
+            var possibleEndContractsWithConfidence = new List<(Bid bid, int confidence)>();
+
             if (!useSingleDummySolver)
                 return Bid.PassBid;
 
             var constructedSouthHands = ConstructSouthHand(northHand);
-            var suitAndLength = Util.GetLongestSuit(northHand, constructedSouthHands.First());
-            var suit = suitAndLength.Item2 >= 8 ? suitAndLength.Item1 : Suit.NoTrump;
+            var possibleTrumpSuits = Util.GetSuitsWithFit(northHand, constructedSouthHands.First());
             var queens = GetQueensFromAuction(auction, reverseDictionaries);
             var hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions);
 
-            // Try Suit
-            if (TryGetEndContract(suit, out var bid))
-                return bid;
+            // Try Suits
+            foreach (var suit in possibleTrumpSuits)
+            {
+                if (TryGetEndContract(suit, out var bid, out var confidence))
+                    possibleEndContractsWithConfidence.Add((bid, confidence));
+            }
+
             // Try NT
-            if (suit != Suit.NoTrump && TryGetEndContract(suit, out var bidNT))
-                return bidNT;
+            if (TryGetEndContract(Suit.NoTrump, out var bidNT, out var confidenceNT))
+                possibleEndContractsWithConfidence.Add((bidNT, confidenceNT));
+
+            if (possibleEndContractsWithConfidence.Count() > 0)
+            {
+                var maxRank = possibleEndContractsWithConfidence.Max(x => x.bid.rank);
+                return possibleEndContractsWithConfidence.Where(x => x.bid.rank == maxRank).OrderByDescending(x => x.confidence).First().bid;
+            }
             return Bid.PassBid;
 
-            bool TryGetEndContract(Suit triedSuit, out Bid bid)
+            bool TryGetEndContract(Suit triedSuit, out Bid bid, out int confidenceInContract)
             {
                 var scores = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(triedSuit, auction.GetDeclarerOrNorth(triedSuit), northHand, match, hcp, queens, optimizationParameters.numberOfHandsForSolver));
-                bid = Bid.GetBestContract(Util.GetExpectedContract(scores).expectedContract, triedSuit, currentBid);
+                (ExpectedContract expectedContract, Dictionary<ExpectedContract, int> confidence) = Util.GetExpectedContract(scores);
+                bid = Bid.GetBestContract(expectedContract, triedSuit, currentBid);
+                confidence.TryGetValue(expectedContract, out confidenceInContract);
                 return (bid > currentBid || bid == Bid.PassBid) && bid != Bid.InvalidBid;
             }
         }
