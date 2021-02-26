@@ -94,7 +94,14 @@ namespace TosrGui.Test
         [Fact()]
         public void GetSuitsWithFitTest()
         {
-            Assert.True(true, "This test needs an implementation");
+            // No fit
+            Assert.Equal(new List<(Suit, int)>(), Util.GetSuitsWithFit("xxx,xxx,xxx,xxxx", "xxx,xxx,xxxx,xxx"));
+
+            // Fit in spades (8)
+            Assert.Equal(new List<(Suit, int)> { (Suit.Spades, 8) }, Util.GetSuitsWithFit("xxxx,xxxx,xxx,xx", "xxxx,xx,xxx,xxxx"));
+
+            // Fit in hearts (9) and clubs (8)
+            Assert.Equal(new List<(Suit, int)> { (Suit.Hearts, 9), (Suit.Clubs, 8) }, Util.GetSuitsWithFit("xx,xxxxx,xx,xxxx", "xxx,xxxx,xx,xxxx"));
         }
     }
 }
