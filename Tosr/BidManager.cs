@@ -416,7 +416,7 @@ namespace Tosr
             if (TryGetEndContract(suit, out var bid))
                 return bid;
             // Try NT
-            if (suit != Suit.NoTrump && TryGetEndContract(suit, out var bidNT))
+            if (suit != Suit.NoTrump && TryGetEndContract(Suit.NoTrump, out var bidNT))
                 return bidNT;
             return Bid.PassBid;
 
