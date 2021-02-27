@@ -187,6 +187,14 @@ namespace Common
             return ((Suit)(3 - longestSuit), maxSuitLength);
         }
 
+        public static IEnumerable<(Suit suit, int length)> GetSuitsWithFit(string northHand, string southHand)
+        {
+            var suitLengthNorth = northHand.Split(',').Select(x => x.Length);
+            var suitLengthSouth = southHand.Split(',').Select(x => x.Length);
+            var suitLengthNS = suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
+            return suitLengthNS.Select((length, index) => ((Suit)(3 - index), length)).OrderByDescending(x => x.length).TakeWhile(x => x.length >= 8);
+        }
+
         public static int GetNumberOfTrumps(Suit suit, string northHand, string southHand)
         {
             Debug.Assert(suit != Suit.NoTrump);
