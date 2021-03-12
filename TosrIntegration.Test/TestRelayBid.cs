@@ -110,7 +110,7 @@ namespace TosrIntegration.Test
         public void TestAuctions4Diamond(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
             SetupTest.setupTest(testName, logger);
-            var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, (auction, northHand, southHandShape, controls, trumpSuit) => { return BidManager.RelayBidKind.fourDiamondEndSignal; });
+            var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, (auction, northHand, biddingState) => { return BidManager.RelayBidKind.fourDiamondEndSignal; });
             var auction = bidManager.GetAuction(northHand, southHand);
             AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
         }
@@ -120,7 +120,7 @@ namespace TosrIntegration.Test
         public void TestAuctions4DiamondPull(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
             SetupTest.setupTest(testName, logger);
-            var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, (auction, northHand, southHandShape, controls, trumpSuit) => { return BidManager.RelayBidKind.fourDiamondEndSignal; });
+            var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, (auction, northHand, biddingState) => { return BidManager.RelayBidKind.fourDiamondEndSignal; });
             var auction = bidManager.GetAuction(northHand, southHand);
             AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
             AssertMethods.AssertHand(bidManager, auction, northHand, southHand, reverseDictionaries);

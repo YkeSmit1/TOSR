@@ -8,6 +8,15 @@ using Common;
 
 namespace Solver
 {
+    public class SouthInformation
+    {
+        public IEnumerable<string> Shapes { get; set; }
+        public MinMax Hcp { get; set; }
+        public MinMax Controls { get; set; }
+        public IEnumerable<string[]> SpecificControls { get; set; }
+        public string Queens { get; set; }
+    }
+
     public class SingleDummySolver
     {
         public static List<int> SolveSingleDummyExactHands(Suit trumpSuit, Player declarer, string northHand, string southHand)
@@ -26,64 +35,44 @@ namespace Solver
             return shufflingDeal.Execute();
         }
 
-        public static List<int> SolveSingleDummy(Suit trumpSuit, Player declarer, string northHand, string southHandShape, int minControls, int maxControls, int numberOfHands)
+        public static Dictionary<Bid, int> SolveSingleDummy(string northHand, SouthInformation southInformation, int numberOfHands, Dictionary<Suit, Player> declarers)
         {
-            var handsForSolver = GetHandsForSolver(northHand, southHandShape, minControls, maxControls, numberOfHands).ToArray();
-            return Api.SolveAllBoards(handsForSolver, Util.GetDDSSuit(trumpSuit), Util.GetDDSFirst(declarer)).ToList();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="northHandStr">Whole northhand. Cannot contain x's</param>
-        /// <param name="southHandShape">For example 5431</param>
-        /// <param name="minControls">Number of controls in the southhand</param>
-        /// <param name="nrOfHands"></param>
-        /// <returns></returns>
-        private static IEnumerable<string> GetHandsForSolver(string northHandStr, string southHandShape, int minControls, int maxControls, int numberOfHands)
-        {
+            var tricksPerContract = new Dictionary<Bid, int>();
             var shufflingDeal = new ShufflingDeal
             {
-                North = new North { Hand = northHandStr.Split(',') },
-                South = new South { Shape = southHandShape, Controls = new MinMax(minControls, maxControls) },
+                North = new North { Hand = northHand.Split(',') },
+                South = new South { Controls = southInformation.Controls, Hcp = southInformation.Hcp, Queens = southInformation.Queens },
                 NrOfHands = numberOfHands
             };
-            if (minControls == 2)
-                shufflingDeal.South.Hcp = new MinMax(8, 37);
 
-            return shufflingDeal.Execute().ToArray();
-        }
-
-        public static List<int> SolveSingleDummy(Suit trumpSuit, Player declarer, string northHand, string southHand, MinMax hcp, string queens, int numberOfHands)
-        {
-            var handsForSolver = GetHandsForSolver(northHand, southHand, hcp, queens, numberOfHands).ToArray();
-            return Api.SolveAllBoards(handsForSolver, Util.GetDDSSuit(trumpSuit), Util.GetDDSFirst(declarer)).ToList();
-        }
-
-        private static IEnumerable<string> GetHandsForSolver(string northHandStr, string southHandStr, MinMax hcp, string queens, int numberOfHands)
-        {
-            var southHand = southHandStr.Split(',');
-            var controlsSpecific = southHand.Select(x => Regex.Match(x, "[AK]").ToString()).ToArray();
-            var controls = Util.GetControlCount(southHandStr);
-
-            var shufflingDeal = new ShufflingDeal
+            foreach (var shape in southInformation.Shapes)
             {
-                North = new North { Hand = northHandStr.Split(',') },
-                South = new South
-                {
-                    Shape = string.Join("", southHand.Select(x => x.Length.ToString())),
-                    Hcp = hcp,
-                    Controls = new MinMax(controls, controls),
-                    SpecificControls = controlsSpecific,
-                    Queens = queens
-                },
-                NrOfHands = numberOfHands
-            };
-            if (controls == 2 && shufflingDeal.South.Hcp == null)
-                shufflingDeal.South.Hcp = new MinMax(8, 37);
+                shufflingDeal.South.Shape = shape;
 
-            return shufflingDeal.Execute();
+                if (southInformation.SpecificControls == null)
+                    ShuffleAndUpdate(shufflingDeal, shape);
+                else
+                    foreach (var specificControls in southInformation.SpecificControls)
+                    {
+                        shufflingDeal.South.SpecificControls = specificControls;
+                        ShuffleAndUpdate(shufflingDeal, shape);
+                    }
+            }
+            return tricksPerContract;
+
+            void ShuffleAndUpdate(ShufflingDeal shufflingDeal, string shape)
+            {
+                var handsForSolver = shufflingDeal.Execute();
+                // TODO extend for multiple trump suits and for NT
+                var (suit, length) = Util.GetLongestSuitShape(northHand, shape);
+                CalculateAndUpdateDictionary(handsForSolver, suit);
+            }
+
+            void CalculateAndUpdateDictionary(IEnumerable<string> handsForSolver, Suit suit)
+            {
+                foreach (var trick in Api.SolveAllBoards(handsForSolver, Util.GetDDSSuit(suit), Util.GetDDSFirst(declarers[suit])))
+                    tricksPerContract.AddOrUpdateDictionary(new Bid(trick - 6, suit));
+            }
         }
-
     }
 }

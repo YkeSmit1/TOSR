@@ -14,6 +14,17 @@ using System.Text.RegularExpressions;
 
 namespace Common
 {
+    public static class DictionaryExtension 
+    {
+        public static void AddOrUpdateDictionary<T>(this IDictionary<T, int> dictionary, T item)
+        {
+            if (!dictionary.ContainsKey(item))
+                dictionary.Add(item, 1);
+            else
+                dictionary[item]++;
+        }
+    }
+
     public enum Player
     {
         West,
@@ -180,17 +191,34 @@ namespace Common
         public static (Suit, int) GetLongestSuit(string northHand, string southHand)
         {
             var suitLengthNorth = northHand.Split(',').Select(x => x.Length);
+            Debug.Assert(suitLengthNorth.Count() == 4);
             var suitLengthSouth = southHand.Split(',').Select(x => x.Length);
+            Debug.Assert(suitLengthSouth.Count() == 4);
             var suitLengthNS = suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
             var maxSuitLength = suitLengthNS.Max();
             var longestSuit = suitLengthNS.ToList().IndexOf(maxSuitLength);
             return ((Suit)(3 - longestSuit), maxSuitLength);
         }
 
+        public static (Suit, int) GetLongestSuitShape(string northHand, string southHandShape)
+        {
+            var suitLengthNorth = northHand.Split(',').Select(x => x.Length);
+            Debug.Assert(suitLengthNorth.Count() == 4);
+            var suitLengthSouth = southHandShape.Select(x => int.Parse(x.ToString()));
+            Debug.Assert(suitLengthSouth.Count() == 4);
+            var suitLengthNS = suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
+            var maxSuitLength = suitLengthNS.Max();
+            var longestSuit = suitLengthNS.ToList().IndexOf(maxSuitLength);
+            return ((Suit)(3 - longestSuit), maxSuitLength);
+        }
+
+
         public static IEnumerable<(Suit suit, int length)> GetSuitsWithFit(string northHand, string southHand)
         {
             var suitLengthNorth = northHand.Split(',').Select(x => x.Length);
+            Debug.Assert(suitLengthNorth.Count() == 4);
             var suitLengthSouth = southHand.Split(',').Select(x => x.Length);
+            Debug.Assert(suitLengthSouth.Count() == 4);
             var suitLengthNS = suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
             return suitLengthNS.Select((length, index) => ((Suit)(3 - index), length)).OrderByDescending(x => x.length).TakeWhile(x => x.length >= 8);
         }

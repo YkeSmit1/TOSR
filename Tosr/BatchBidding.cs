@@ -14,16 +14,6 @@ using System.Threading;
 
 namespace Tosr
 {
-    public static class DictionaryExtension 
-    {
-        public static void AddOrUpdateDictionary<T>(this IDictionary<T, int> dictionary, T item)
-        {
-            if (!dictionary.ContainsKey(item))
-                dictionary.Add(item, 1);
-            else
-                dictionary[item]++;
-        }
-    }
     public class BatchBidding
     {
         public enum CorrectnessContractBreakdown

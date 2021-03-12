@@ -29,7 +29,7 @@ namespace Solver
     public class South
     {
         public string[] Hand { get; set; }
-        public MinMax Hcp { get; set; }
+        public MinMax Hcp { get; set; } = new MinMax(8, 37);
         public MinMax Controls { get; set; }
         public string[] SpecificControls { get; set; }
         public string Queens { get; set; }

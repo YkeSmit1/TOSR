@@ -1,21 +1,20 @@
-﻿
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 using Common;
 using Solver;
-using Newtonsoft.Json;
-using System.IO;
 using Tosr.Properties;
-using Newtonsoft.Json.Linq;
 
 namespace Tosr
 {
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
     using FaseDictionary = Dictionary<Fase, Dictionary<string, List<int>>>;
 
-    using RelayBidKindFunc = Func<Auction, string, IEnumerable<string>, IEnumerable<Bid>, Suit, BidManager.RelayBidKind>;
+    using RelayBidKindFunc = Func<Auction, string, BiddingState, BidManager.RelayBidKind>;
 
     public class BidManager
     {
@@ -265,7 +264,7 @@ namespace Tosr
                             }
                             if (controlBidCount == 1)
                             {
-                                var relayBidkind = getRelayBidKindFunc(auction, northHand, shape.Value.shapes, controls, trumpSuit);
+                                var relayBidkind = getRelayBidKindFunc(auction, northHand, biddingState);
                                 switch (relayBidkind)
                                 {
                                     case RelayBidKind.Relay:
@@ -295,24 +294,15 @@ namespace Tosr
 
                     if (biddingState.Fase == Fase.ScanningOther && useSingleDummySolver)
                     {
-                        var matches = GetMatchesWithNorthHand(shape.Value.shapes, controlsScanning.Value.controls, northHand);
-                        if (matches.Count() >= 1)
+                        // TODO also call this function when some part of the queens is known. I.e. when control scanning has used zoom
+                        var confidenceTricks = GetConfidenceFromAuction(biddingState, auction, northHand);
+
+                        if (GetConfidenceToBidSlam(confidenceTricks) < optimizationParameters.requiredConfidenceToContinueRelaying)
                         {
-                            var bidsScanningOther = auction.GetBids(Player.South, Fase.ScanningOther);
-                            // TODO also call this function when some part of the queens is known. I.e. when control scanning has used zoom
-                            var queens = GetQueensFromAuction(auction, reverseDictionaries);
-                            var hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions);
-                            var declarer = auction.GetDeclarerOrNorth(trumpSuit);
-                            var confidenceTricks = GetConfidenceTricks(northHand, matches, hcp, queens, trumpSuit, declarer);
-                            loggerBidding.Info($"ConfidenceTricks in fase scanningOther:{JsonConvert.SerializeObject(confidenceTricks)} matches:{string.Join(',', matches)} " +
-                                $"HCP:{hcp?.Min}-{hcp?.Max} queens:{queens} trumpSuit:{trumpSuit}");
-                            if (GetConfidenceToBidSlam(confidenceTricks) < optimizationParameters.requiredConfidenceToContinueRelaying)
-                            {
-                                biddingState.Fase = Fase.End;
-                                constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
-                                auction.responderHasSignedOff = true;
-                                return Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, false);
-                            }
+                            biddingState.Fase = Fase.End;
+                            constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
+                            auction.responderHasSignedOff = true;
+                            return Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, false);
                         }
                     }
                 }
@@ -356,20 +346,16 @@ namespace Tosr
             return null;
         }
 
-        public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, IEnumerable<string> southHandShapes, IEnumerable<Bid> controls, Suit trumpSuit)
+        public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, BiddingState biddingState)
         {
-            var declarer = auction.GetDeclarerOrNorth(trumpSuit);
-            var strControls = string.Join("", controls);
-            var possibleControls = reverseDictionaries.ControlsOnlyAuctions[strControls];
-            var confidence = GetConfidenceTricks(northHand, southHandShapes, possibleControls.First(), possibleControls.Last(), trumpSuit, declarer);
-            var confidenceToBidSlam = GetConfidenceToBidSlam(confidence);
+            var confidenceTricks = GetConfidenceFromAuction(biddingState, auction, northHand);
+            var confidenceToBidSlam = GetConfidenceToBidSlam(confidenceTricks);
             var relayBidkind = systemParameters.requirementsForRelayBid.Where(x =>confidenceToBidSlam >= x.range.min && confidenceToBidSlam <= x.range.max).First().relayBidKind;
-            loggerBidding.Info($"RelayBidkind:{relayBidkind} confidence in GetRelayBid:{JsonConvert.SerializeObject(confidence)} shapes:{string.Join(",", southHandShapes)} " +
-                $"Controls:{possibleControls.First()}-{possibleControls.Last()} trumpSuit:{trumpSuit}");
+            loggerBidding.Info($"RelayBidkind:{relayBidkind} confidence in GetRelayBid:{JsonConvert.SerializeObject(confidenceTricks)}");
             return relayBidkind;
         }
 
-        public RelayBidKind GetRelayBidKind(Auction auction, string northHand, IEnumerable<string> southHandShapes, IEnumerable<Bid> controls, Suit trumpSuit)
+        public RelayBidKind GetRelayBidKind(Auction auction, string northHand, BiddingState biddingState)
         {
             var hcp = Util.GetHcpCount(northHand);
             loggerBidding.Info($"GetRelaybid no solver HCP:{hcp}");
@@ -381,19 +367,52 @@ namespace Tosr
             };
         }
 
-        private static Dictionary<int, double> GetConfidenceTricks(string northHand, IEnumerable<string> matches, int minControls, int maxControls, Suit trumpSuit, Player declarer)
+        private Dictionary<int, double> GetConfidenceFromAuction(BiddingState biddingState, Auction auction, string northHand)
         {
-            return GroupTricks(matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, minControls, maxControls, optimizationParameters.numberOfHandsForSolver)));
+            var southInformation = GetInformationFromAuction(auction, northHand);
+            var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
+            var confidenceTricks = GetConfidenceTricks(northHand, southInformation, declarers);
+            loggerBidding.Info($"ConfidenceTricks: {JsonConvert.SerializeObject(confidenceTricks)}");
+
+            return confidenceTricks;
         }
 
-        private static Dictionary<int, double> GetConfidenceTricks(string northHand, IEnumerable<string> matches, MinMax hcp, string queens, Suit trumpSuit, Player declarer)
+        private SouthInformation GetInformationFromAuction(Auction auction, string northHand)
         {
-            return GroupTricks(matches.SelectMany(match => SingleDummySolver.SolveSingleDummy(trumpSuit, declarer, northHand, match, hcp, queens, optimizationParameters.numberOfHandsForSolver)));
+            var hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions);
+            var controls = GetAuctionForFaseWithOffset(auction, shape.Value.zoomOffset, new Fase[] { Fase.Controls });
+            var possibleControls = reverseDictionaries.ControlsOnlyAuctions[string.Join("", controls)];
+            IEnumerable<string[]> specificControls = null;
+            string queens = null;
+
+            if (controlsScanning.IsValueCreated)
+            {
+                var matches = GetMatchesWithNorthHand(shape.Value.shapes, controlsScanning.Value.controls, northHand);
+                if (matches.Count() == 0)
+                    throw new InvalidOperationException($"No matches found. NorthHand:{northHand}");
+
+                specificControls = matches.Select(match => match.Split(',').Select(x => Regex.Match(x, "[AK]").ToString()).ToArray());
+                queens = GetQueensFromAuction(auction, reverseDictionaries);
+            }
+
+            var southInformation = new SouthInformation
+            {
+                Shapes = shape.Value.shapes,
+                Controls = new MinMax(possibleControls.First(), possibleControls.Last()),
+                Hcp = hcp,
+                SpecificControls = specificControls,
+                Queens = queens
+            };
+            loggerBidding.Info($"SouthInformation. {JsonConvert.SerializeObject(southInformation)}");
+            return southInformation;
         }
 
-        private static Dictionary<int, double> GroupTricks(IEnumerable<int> tricks)
+        private static Dictionary<int, double> GetConfidenceTricks(string northHand, SouthInformation southInformation, Dictionary<Suit, Player> declarers)
         {
-            return tricks.GroupBy(x => x).ToDictionary(g => g.Key, g => 100 * (double)g.ToList().Count() / tricks.Count());
+            var tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
+            var nrOfHands = tricksForBid.Sum(x => x.Value);
+            var confidenceTricks = tricksForBid.ToDictionary(bid => bid.Key.rank + 6, bid => (double)100 * bid.Value / nrOfHands);
+            return confidenceTricks;
         }
 
         private static double GetConfidenceToBidSlam(Dictionary<int, double> confidenceTricks)
@@ -406,29 +425,14 @@ namespace Tosr
             if (!useSingleDummySolver)
                 return Bid.PassBid;
 
-            var constructedSouthHands = ConstructSouthHand(northHand);
-            var suitAndLength = Util.GetLongestSuit(northHand, constructedSouthHands.First());
-            var suit = suitAndLength.Item2 >= 8 ? suitAndLength.Item1 : Suit.NoTrump;
-            var queens = GetQueensFromAuction(auction, reverseDictionaries);
-            var hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions);
-
-            // Try Suit
-            if (TryGetEndContract(suit, out var bid))
-                return bid;
-            // Try NT
-            if (suit != Suit.NoTrump && TryGetEndContract(Suit.NoTrump, out var bidNT))
-                return bidNT;
-            return Bid.PassBid;
-
-            bool TryGetEndContract(Suit triedSuit, out Bid bid)
-            {
-                var scores = constructedSouthHands.SelectMany(match => SingleDummySolver.SolveSingleDummy(triedSuit, auction.GetDeclarerOrNorth(triedSuit), northHand, match, hcp, queens, optimizationParameters.numberOfHandsForSolver));
-                var expectedContract = Util.GetExpectedContract(scores);
-                bid = Bid.GetBestContract(expectedContract.expectedContract, triedSuit, currentBid);
-                loggerBidding.Info($"Tried bid:{bid}. confidence in CalculateEndContract:{JsonConvert.SerializeObject(expectedContract.confidence)} with matches:{string.Join(",", constructedSouthHands)} " +
-                    $"HCP:{hcp?.Min}-{hcp?.Max} queens:{queens} trumpSuit:{suit}");
-                return (bid > currentBid || bid == Bid.PassBid) && bid != Bid.InvalidBid;
-            }
+            var southInformation = GetInformationFromAuction(auction, northHand);
+            var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
+            var tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
+            var possibleTricksForBid = tricksForBid.Where(bid => bid.Key >= currentBid);
+            if (!possibleTricksForBid.Any())
+                return Bid.PassBid;
+            var maxBid = possibleTricksForBid.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
+            return maxBid == currentBid ? Bid.PassBid : maxBid;
         }
 
         public void SouthBid(BiddingState biddingState, Auction auction, string handsString)
