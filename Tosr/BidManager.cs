@@ -7,14 +7,13 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Common;
 using Solver;
-using Tosr.Properties;
 
 namespace Tosr
 {
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
     using FaseDictionary = Dictionary<Fase, Dictionary<string, List<int>>>;
 
-    using RelayBidKindFunc = Func<Auction, string, BiddingState, BidManager.RelayBidKind>;
+    using RelayBidKindFunc = Func<Auction, string, BidManager.RelayBidKind>;
 
     public class BidManager
     {
@@ -264,7 +263,7 @@ namespace Tosr
                             }
                             if (controlBidCount == 1)
                             {
-                                var relayBidkind = getRelayBidKindFunc(auction, northHand, biddingState);
+                                var relayBidkind = getRelayBidKindFunc(auction, northHand);
                                 switch (relayBidkind)
                                 {
                                     case RelayBidKind.Relay:
@@ -295,7 +294,7 @@ namespace Tosr
                     if (biddingState.Fase == Fase.ScanningOther && useSingleDummySolver)
                     {
                         // TODO also call this function when some part of the queens is known. I.e. when control scanning has used zoom
-                        var confidenceTricks = GetConfidenceFromAuction(biddingState, auction, northHand);
+                        var confidenceTricks = GetConfidenceFromAuction(auction, northHand);
 
                         if (GetConfidenceToBidSlam(confidenceTricks) < optimizationParameters.requiredConfidenceToContinueRelaying)
                         {
@@ -346,16 +345,16 @@ namespace Tosr
             return null;
         }
 
-        public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, BiddingState biddingState)
+        public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand)
         {
-            var confidenceTricks = GetConfidenceFromAuction(biddingState, auction, northHand);
+            var confidenceTricks = GetConfidenceFromAuction(auction, northHand);
             var confidenceToBidSlam = GetConfidenceToBidSlam(confidenceTricks);
             var relayBidkind = systemParameters.requirementsForRelayBid.Where(x =>confidenceToBidSlam >= x.range.min && confidenceToBidSlam <= x.range.max).First().relayBidKind;
             loggerBidding.Info($"RelayBidkind:{relayBidkind} confidence in GetRelayBid:{JsonConvert.SerializeObject(confidenceTricks)}");
             return relayBidkind;
         }
 
-        public RelayBidKind GetRelayBidKind(Auction auction, string northHand, BiddingState biddingState)
+        public RelayBidKind GetRelayBidKind(Auction auction, string northHand)
         {
             var hcp = Util.GetHcpCount(northHand);
             loggerBidding.Info($"GetRelaybid no solver HCP:{hcp}");
@@ -367,7 +366,7 @@ namespace Tosr
             };
         }
 
-        private Dictionary<int, double> GetConfidenceFromAuction(BiddingState biddingState, Auction auction, string northHand)
+        private Dictionary<int, double> GetConfidenceFromAuction(Auction auction, string northHand)
         {
             var southInformation = GetInformationFromAuction(auction, northHand);
             var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
@@ -411,7 +410,8 @@ namespace Tosr
         {
             var tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
             var nrOfHands = tricksForBid.Sum(x => x.Value);
-            var confidenceTricks = tricksForBid.ToDictionary(bid => bid.Key.rank + 6, bid => (double)100 * bid.Value / nrOfHands);
+            var groupedTricked = tricksForBid.GroupBy(x => x.Key.rank + 6);
+            var confidenceTricks = groupedTricked.ToDictionary(bid => bid.Key, bid => (double)100 * bid.Select(x => x.Value).Sum() / nrOfHands);
             return confidenceTricks;
         }
 
@@ -595,7 +595,7 @@ namespace Tosr
         public static IEnumerable<Bid> GetAuctionForFaseWithOffset(Auction auction, int zoomOffset, Fase[] fases)
         {
             var lastBidShape = auction.GetBids(Player.South, Fase.Shape).Last();
-            var bidsForFases = auction.GetBids(Player.South, fases.Concat(signOffFasesWithout3NTNoAsk).ToArray());
+            var bidsForFases = auction.GetBids(Player.South, fases);
             var offSet = lastBidShape - Bid.threeDiamondBid;
             if (zoomOffset != 0)
                 bidsForFases = new [] { lastBidShape }.Concat(bidsForFases);
@@ -604,12 +604,13 @@ namespace Tosr
             var fourCLubsRelayOffSet = 0;
             var signOffOffset = 0;
             var previousBid = lastBidShape;
-            var bidPull3NTNoAsk = auction.GetBids(Player.South).Where(bid => bid.fase == Fase.Pull3NTNoAsk);
+            var bidPull3NTNoAsk = auction.GetBids(Player.South).Where(bid => bid.pullFase == Fase.Pull3NTNoAsk);
+            var signOffBid = GetSignOffBid();
 
             var bidsForFasesResult = bidsForFases.Select(b =>
             {
-                if (signOffFases.Contains(b.fase) || (bidPull3NTNoAsk.Count() == 1 && signOffOffset == 0 && b > bidPull3NTNoAsk.Single()))
-                    signOffOffset = GetSignOffBid(b) - previousBid;
+                if (signOffFases.Contains(b.pullFase) || (bidPull3NTNoAsk.Count() == 1 && signOffOffset == 0 && b > bidPull3NTNoAsk.Single()))
+                    signOffOffset = signOffBid - previousBid;
 
                 if (used4ClAsRelay && b > Bid.fourClubBid)
                     fourCLubsRelayOffSet = 1;
@@ -620,14 +621,14 @@ namespace Tosr
 
             return bidsForFasesResult;
 
-            Bid GetSignOffBid(Bid b)
+            Bid GetSignOffBid()
             {
-                var signOffBiddingRounds = auction.bids.Where(bids => bids.Value.TryGetValue(Player.South, out var bid) && signOffFases.Contains(bid.fase));
+                var signOffBiddingRounds = auction.bids.Where(bids => bids.Value.TryGetValue(Player.South, out var bid) && signOffFases.Contains(bid.pullFase));
                 if (signOffBiddingRounds.Count() == 0)
                     return Bid.PassBid;
                 var signOffBiddingRound = signOffBiddingRounds.Single();
                 // Return the next bid. The sign-off bid only shows points
-                if (signOffBiddingRound.Value[Player.South].fase == Fase.Pull3NTNoAsk)
+                if (signOffBiddingRound.Value[Player.South].pullFase == Fase.Pull3NTNoAsk)
                     return auction.bids[signOffBiddingRound.Key + 1][Player.North] - 1;
 
                 var signoffBidNorth = signOffBiddingRound.Value[Player.North];

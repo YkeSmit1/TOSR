@@ -99,7 +99,8 @@ namespace Tosr
 
         private void ApplyFilter()
         {
-            filteredPbn.Boards = (string)toolStripComboBoxFilter.SelectedItem == "All" ? pbn.Boards : pbn.Boards.Where(b => b.Description.Split(':')[0] == (string)toolStripComboBoxFilter.SelectedItem).ToList();
+            filteredPbn.Boards = (string)toolStripComboBoxFilter.SelectedItem == "All" ? pbn.Boards : 
+                pbn.Boards.Where(b => b.Description != null && b.Description.Split(':')[0] == (string)toolStripComboBoxFilter.SelectedItem).ToList();
         }
 
         private void FillFilteredComboBox()

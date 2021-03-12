@@ -65,7 +65,7 @@ namespace Solver
                 var handsForSolver = shufflingDeal.Execute();
                 // TODO extend for multiple trump suits and for NT
                 var (suit, length) = Util.GetLongestSuitShape(northHand, shape);
-                CalculateAndUpdateDictionary(handsForSolver, suit);
+                CalculateAndUpdateDictionary(handsForSolver, length >= 8 ? suit : Suit.NoTrump);
             }
 
             void CalculateAndUpdateDictionary(IEnumerable<string> handsForSolver, Suit suit)

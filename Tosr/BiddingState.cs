@@ -52,7 +52,14 @@ namespace Tosr
             }
 
             CurrentBid = Bid.GetBid(bidId);
-            CurrentBid.fase = Fase;
+            if (BidManager.signOffFases.Contains(Fase))
+            {
+                if (Fase != Fase.Pull3NTNoAsk)
+                    CurrentBid.fase = PreviousFase;
+                CurrentBid.pullFase = Fase;
+            }
+            else
+                CurrentBid.fase = Fase;
             CurrentBid.description = description;
             CurrentBid.zoom = zoom;
             return bidId;

@@ -16,6 +16,7 @@ namespace TosrGui.Test
         {
             var northHand = "KT98,AK96,AKJ9,4";
             var southHand = "Axxx,Qxxx,xx,KQx";
+            Assert.NotNull(southHand);
 
             var declarers = new Dictionary<Suit, Player> { { Suit.Spades, Player.North } };
             var southInformation = new SouthInformation
