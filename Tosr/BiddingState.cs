@@ -39,7 +39,7 @@ namespace Tosr
             var bidId = bidIdFromRule + RelayBidIdLastFase + FaseOffset;
             if (bidIdFromRule == 0)
             {
-                if (BidManager.signOffFasesFor4Di.Contains(Fase))
+                if (Util.signOffFasesFor4Di.Contains(Fase))
                 {
                     CurrentBid = Bid.fourHeartsBid;
                 }
@@ -52,14 +52,8 @@ namespace Tosr
             }
 
             CurrentBid = Bid.GetBid(bidId);
-            if (BidManager.signOffFases.Contains(Fase))
-            {
-                if (Fase != Fase.Pull3NTNoAsk)
-                    CurrentBid.fase = PreviousFase;
-                CurrentBid.pullFase = Fase;
-            }
-            else
-                CurrentBid.fase = Fase;
+            CurrentBid.fase = Util.signOffFasesWithout3NTNoAsk.Contains(Fase) ? PreviousFase : Fase;
+            CurrentBid.pullFase = Util.signOffFases.Contains(Fase) ? Fase : Fase.Unknown;
             CurrentBid.description = description;
             CurrentBid.zoom = zoom;
             return bidId;
@@ -67,7 +61,7 @@ namespace Tosr
 
         public void UpdateBiddingState(int bidIdFromRule, Fase nextfase, int bidId, int zoomOffset)
         {
-            if (BidManager.signOffFases.Contains(Fase))
+            if (Util.signOffFases.Contains(Fase))
             {
                 if (Fase == Fase.Pull3NTNoAsk)
                 {

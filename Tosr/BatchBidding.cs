@@ -50,11 +50,11 @@ namespace Tosr
             public int handsNotBidBecauseofFreakhand = 0;
             public int handsNotBidBecauseOfError = 0;
             public SortedDictionary<Bid, int> contracts = new SortedDictionary<Bid, int>();
-            public SortedDictionary<BidManager.ConstructedSouthhandOutcome, int> outcomes = new SortedDictionary<BidManager.ConstructedSouthhandOutcome, int>();
+            public SortedDictionary<ConstructedSouthhandOutcome, int> outcomes = new SortedDictionary<ConstructedSouthhandOutcome, int>();
             public SortedDictionary<Player, int> dealers = new SortedDictionary<Player, int>();
             public SortedDictionary<int, int> bidsNonShape = new SortedDictionary<int, int>();
-            public SortedDictionary<(CorrectnessContractBreakdown, BidManager.ConstructedSouthhandOutcome), int> ContractCorrectnessBreakdownOutcome = 
-                new SortedDictionary<(CorrectnessContractBreakdown, BidManager.ConstructedSouthhandOutcome), int>();
+            public SortedDictionary<(CorrectnessContractBreakdown, ConstructedSouthhandOutcome), int> ContractCorrectnessBreakdownOutcome = 
+                new SortedDictionary<(CorrectnessContractBreakdown, ConstructedSouthhandOutcome), int>();
             public SortedDictionary<CorrectnessContract, int> ContractCorrectness = new SortedDictionary<CorrectnessContract, int>();
             public SortedDictionary<CorrectnessContractBreakdown, int> ContractCorrectnessBreakdown = new SortedDictionary<CorrectnessContractBreakdown, int>();
 
@@ -167,7 +167,7 @@ namespace Tosr
 
             // Start calculating hand
             if (!auction.responderHasSignedOff)
-                expectedSouthHands.AppendLine($"Board:{boardNumber} {bidManager.ConstructSouthHandSafe(board, auction)}");
+                expectedSouthHands.AppendLine($"Board:{boardNumber} { bidManager.biddingInformation.ConstructSouthHandSafe(board)}");
 
             var longestSuit = Util.GetLongestSuit(board[(int)Player.North], board[(int)Player.South]);
             var dealer = auction.GetDeclarer(3 - longestSuit.Item1);
@@ -176,14 +176,14 @@ namespace Tosr
             statistics.contracts.AddOrUpdateDictionary(contract);
             if (!auction.responderHasSignedOff)
                 statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Where(bid => bid.bidType == BidType.bid).Last() - auction.GetBids(Player.South, Fase.Shape).Last());
-            statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthhandOutcome);
+            statistics.outcomes.AddOrUpdateDictionary(bidManager.biddingInformation.constructedSouthhandOutcome);
             correctnessContractBreakdown = CheckContract(contract, board, dealer == Player.UnKnown ? Player.North : dealer);
-            statistics.ContractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, bidManager.constructedSouthhandOutcome));
+            statistics.ContractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, bidManager.biddingInformation.constructedSouthhandOutcome));
             correctnessContract = GetCorrectness(correctnessContractBreakdown);
             statistics.ContractCorrectnessBreakdown.AddOrUpdateDictionary(correctnessContractBreakdown);
             statistics.ContractCorrectness.AddOrUpdateDictionary(correctnessContract);
             if (correctnessContract == CorrectnessContract.InCorrect || correctnessContract == CorrectnessContract.NoFit)
-                inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.constructedSouthhandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
+                inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.biddingInformation.constructedSouthhandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
                     $" Auction:{auction.GetPrettyAuction("|")} Northhand: {board[(int)Player.North]} Southhand: {board[(int)Player.South]}");
 
         }

@@ -59,7 +59,7 @@ namespace TosrGui.Test
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Equal("6331", BidManager.GetShapeStrFromAuction(auction, shapeAuctions).shapes.First());
+            Assert.Equal("6331", BiddingInformation.GetShapeStrFromAuction(auction, shapeAuctions).shapes.First());
         }
 
         [Fact()]
@@ -72,7 +72,7 @@ namespace TosrGui.Test
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Equal("4243", BidManager.GetShapeStrFromAuction(auction, shapeAuctions).shapes.First());
+            Assert.Equal("4243", BiddingInformation.GetShapeStrFromAuction(auction, shapeAuctions).shapes.First());
         }
 
         [Fact()]
@@ -85,7 +85,7 @@ namespace TosrGui.Test
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Throws<InvalidOperationException>(() => BidManager.GetShapeStrFromAuction(auction, shapeAuctions));
+            Assert.Throws<InvalidOperationException>(() => BiddingInformation.GetShapeStrFromAuction(auction, shapeAuctions));
         }
 
         [Fact()]
@@ -122,7 +122,7 @@ namespace TosrGui.Test
             Assert.Equal("", auction.GetBidsAsString(Fase.Controls));
             Assert.Equal("4♥5♦5♠6♦", auction.GetBidsAsString(Fase.ScanningControls));
 
-            var southHand = bidManager.ConstructSouthHand("Axxx,Kxx,Kxx,Kxx");
+            var southHand = bidManager.biddingInformation.ConstructSouthHand("Axxx,Kxx,Kxx,Kxx");
             Assert.Equal("Kxxx,Ax,xxx,Axxx", southHand.First());
         }
     }

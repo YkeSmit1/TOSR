@@ -51,7 +51,7 @@ namespace TosrGui.Test
         [MemberData(nameof(TestCaseProviderMergeTest.TestCases), MemberType = typeof(TestCaseProviderMergeTest))]
         public void MergeControlAndShapeTest(string expected, string[] controls, string shapeLengthStr)
         {
-            Assert.Equal(expected, string.Join(',', BidManager.MergeControlAndShape(controls, shapeLengthStr)));
+            Assert.Equal(expected, string.Join(',', BiddingInformation.MergeControlAndShape(controls, shapeLengthStr)));
         }
 
         [Fact()]

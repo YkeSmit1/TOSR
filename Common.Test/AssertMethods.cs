@@ -18,13 +18,13 @@ namespace Common.Test
             Assert.Equal(expectedBidsNorth, actualBidsNorth);
         }
 
-        public static void AssertHand(BidManager bidManager, Auction auction, string northHand, string southHand, ReverseDictionaries reverseDictionaries)
+        public static void AssertHand(BiddingInformation bidManager, Auction auction, string northHand, string southHand, ReverseDictionaries reverseDictionaries)
         {
             var constructedSouthHand = bidManager.ConstructSouthHand(northHand);
             Assert.Equal(Util.HandWithx(southHand), constructedSouthHand.First());
 
             var queens = bidManager.GetQueensFromAuction(auction, reverseDictionaries);
-            Assert.True(BidManager.CheckQueens(queens, southHand));
+            Assert.True(BiddingInformation.CheckQueens(queens, southHand));
         }
     }
 }

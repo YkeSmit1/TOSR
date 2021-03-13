@@ -207,7 +207,7 @@ namespace Tosr
             logger.Info("Generating dictionaries for sign-off fases");
             var signOfffasesAuctions = new SignOffFasesDictionary();
             var shuffleRestriction = new ShufflingDeal() { South = new South { Controls = new MinMax(2, 12) } };
-            foreach (var fase in BidManager.signOffFases)
+            foreach (var fase in Util.signOffFases)
             {
                 var dictionaryForFase = new ControlsOnlyDictionary();
                 foreach (var hcp in Enumerable.Range(8, 15))

@@ -92,7 +92,6 @@ namespace Tosr
                 var progress = new Progress<string>(report => toolStripStatusLabel1.Text = $"Generating dictionary {report}...");
                 reverseDictionaries = new ReverseDictionaries(fasesWithOffset, progress);
                 bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, true);
-                bidManager.Init(auctionControl.auction);
                 resetEvent.Set();
             });
         }
@@ -218,7 +217,6 @@ namespace Tosr
             Shuffle();
             StartBidding();
             _ = resetEvent.WaitOne();
-            bidManager.Init(auctionControl.auction);
         }
 
         private void StartBidding()
@@ -419,7 +417,6 @@ namespace Tosr
             interactivePbn.Boards.RemoveAt(interactivePbn.Boards.Count - 1);
             toolStripStatusLabel1.Text = "";
             _ = resetEvent.WaitOne();
-            bidManager.Init(auctionControl.auction);
         }
 
         private void ToolStripButtonFirstClick(object sender, EventArgs e)

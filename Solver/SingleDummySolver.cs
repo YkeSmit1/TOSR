@@ -15,6 +15,7 @@ namespace Solver
         public MinMax Controls { get; set; }
         public IEnumerable<string[]> SpecificControls { get; set; }
         public string Queens { get; set; }
+        public int ControlBidCount { get; set; }
     }
 
     public class SingleDummySolver
