@@ -269,7 +269,7 @@ namespace Tosr
                     return new MinMax(hcps.Min(), hcps.Max());
             }
 
-            return null;
+            return new MinMax(8, 37);
         }
 
         /// <summary>
