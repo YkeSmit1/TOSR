@@ -54,8 +54,8 @@ namespace Tosr
                 Hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions)
             };
 
+            southInformation.ControlBidCount = auction.GetBids(Player.South, Fase.Controls).Count();
             var controls = GetAuctionForFaseWithOffset(auction, shape.Value.zoomOffset, new Fase[] { Fase.Controls }).ToList();
-            southInformation.ControlBidCount = controls.Count();
             if (controls.Count() > 0)
             {
                 var possibleControls = reverseDictionaries.ControlsOnlyAuctions[string.Join("", controls)];

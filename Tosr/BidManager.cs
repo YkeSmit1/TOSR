@@ -272,7 +272,8 @@ namespace Tosr
                         if (GetConfidenceToBidSlam(confidenceTricks) < optimizationParameters.requiredConfidenceToContinueRelaying)
                         {
                             biddingState.Fase = Fase.End;
-                            biddingInformation.constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
+                            biddingInformation.constructedSouthhandOutcome = southInformation.SpecificControls.Count() == 1 ?
+                                ConstructedSouthhandOutcome.SouthhandMatches : ConstructedSouthhandOutcome.MultipleMatchesFound;
                             auction.responderHasSignedOff = true;
                             return Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, false);
                         }
