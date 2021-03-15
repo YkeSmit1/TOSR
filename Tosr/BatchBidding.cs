@@ -43,6 +43,13 @@ namespace Tosr
             NoFit,
         }
 
+        public enum PullType
+        {
+            NoPull,
+            PullNT,
+            Pull4Di
+        }
+
 
         class Statistics
         {
@@ -53,8 +60,8 @@ namespace Tosr
             public SortedDictionary<ConstructedSouthhandOutcome, int> outcomes = new SortedDictionary<ConstructedSouthhandOutcome, int>();
             public SortedDictionary<Player, int> dealers = new SortedDictionary<Player, int>();
             public SortedDictionary<int, int> bidsNonShape = new SortedDictionary<int, int>();
-            public SortedDictionary<(CorrectnessContractBreakdown, ConstructedSouthhandOutcome), int> ContractCorrectnessBreakdownOutcome = 
-                new SortedDictionary<(CorrectnessContractBreakdown, ConstructedSouthhandOutcome), int>();
+            public SortedDictionary<(CorrectnessContractBreakdown, (ConstructedSouthhandOutcome, PullType)), int> ContractCorrectnessBreakdownOutcome = 
+                new SortedDictionary<(CorrectnessContractBreakdown, (ConstructedSouthhandOutcome, PullType)), int>();
             public SortedDictionary<CorrectnessContract, int> ContractCorrectness = new SortedDictionary<CorrectnessContract, int>();
             public SortedDictionary<CorrectnessContractBreakdown, int> ContractCorrectnessBreakdown = new SortedDictionary<CorrectnessContractBreakdown, int>();
 
@@ -178,13 +185,26 @@ namespace Tosr
                 statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Where(bid => bid.bidType == BidType.bid).Last() - auction.GetBids(Player.South, Fase.Shape).Last());
             statistics.outcomes.AddOrUpdateDictionary(bidManager.biddingInformation.constructedSouthhandOutcome);
             correctnessContractBreakdown = CheckContract(contract, board, dealer == Player.UnKnown ? Player.North : dealer);
-            statistics.ContractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, bidManager.biddingInformation.constructedSouthhandOutcome));
+            var pullType = GetPullType(auction);
+            statistics.ContractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, (bidManager.biddingInformation.constructedSouthhandOutcome, pullType)));
             correctnessContract = GetCorrectness(correctnessContractBreakdown);
             statistics.ContractCorrectnessBreakdown.AddOrUpdateDictionary(correctnessContractBreakdown);
             statistics.ContractCorrectness.AddOrUpdateDictionary(correctnessContract);
             if (correctnessContract == CorrectnessContract.InCorrect || correctnessContract == CorrectnessContract.NoFit)
                 inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.biddingInformation.constructedSouthhandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
                     $" Auction:{auction.GetPrettyAuction("|")} Northhand: {board[(int)Player.North]} Southhand: {board[(int)Player.South]}");
+
+        }
+
+        private PullType GetPullType(Auction auction)
+        {
+            var signOffBidsNT = auction.GetPullBids(Player.South, Util.signOffFasesFor3NT.ToArray());
+            if (signOffBidsNT.Any())
+                return PullType.PullNT;
+            var signOffBids4Di = auction.GetPullBids(Player.South, Util.signOffFasesFor4Di.ToArray());
+            if (signOffBids4Di.Any())
+                return PullType.Pull4Di;
+            return PullType.NoPull;
 
         }
 

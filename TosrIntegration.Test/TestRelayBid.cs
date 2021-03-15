@@ -37,6 +37,18 @@ namespace TosrIntegration.Test
             yield return new object[] { "TestOneAskCtrl5", "AQJ2,AQJ,AK2,432", "K,Kxxx,Qxxxx,AKx", "1♣1NT2♦2♠3♣3♥4NT5♦5NT6♥Pass", "1♠2♣2♥2NT3♦4♣5♣5♠6♦6♠" };
             yield return new object[] { "TestTwoAskCtrl3", "AKQ2,AK2,A32,KQ2", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4♣4♠5♦6♣Pass", "1♠2♣2♥2NT3♦3♠4♥5♣5NT6♦" };
             yield return new object[] { "TestTwoAskCtrl5", "KQ32,AKQ,A32,KQ2", "A,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4♦4NT5♠Pass", "1♠2♣2♥2NT3♦4♣4♠5♥5NT" };
+
+            // TODO fix this
+            //yield return new object[] { "TestNoAskZoomShapeMin", "AKQ2,AK2,A32,432", "xxx,QJ,KQJx,KQJx", "1♣1NT2♠3NT4♥4NT5♠6♣6NTPass", "1♠2♥3♥4♦4♠5♥5NT6♠7♦" };
+            yield return new object[] { "TestOneAskZoomShapeMin", "AKQ2,AK2,A32,K32", "xxx,QJ,KQJx,AQJx", "1♣1NT2♠3♠4♦5♣5♥6♦Pass", "1♠2♥3♥4♣4NT5♦6♣6♠" };
+            yield return new object[] { "TestTwoAskZoomShapeMin", "AKQ2,AK2,A32,KQ2", "xxx,QJ,KQJx,AJxx", "1♣1NT2♠3♠4♦5♣5♥6♣6♥Pass", "1♠2♥3♥4♣4NT5♦5NT6♦6NT" };
+
+            yield return new object[] { "TestNoAskZoomShapeMax", "AKQ2,AK2,A32,432", "xxx,QJ,KQJx,AKQJ", "1♣1NT2♠3NT4NT5♥5NT6♦7♣Pass", "1♠2♥3♠4♠5♦5♠6♣6NT7♥" };
+            // TODO investigate why opener doesn't bid 3NT
+            yield return new object[] { "TestOneAskZoomShapeMax", "AKQ2,AK2,A32,Q32", "xxx,QJ,KQJx,AKJx", "1♣1NT2♠4♣4♠5♣5♥6♣6♥Pass", "1♠2♥3♠4♥4NT5♦5NT6♦6NT" };
+            yield return new object[] { "TestTwoAskZoomShapeMax", "AKQ2,AK2,AQ2,Q32", "xxx,QJ,KJxx,AKJx", "1♣1NT2♠4♣4♠5♣5♥5NT6♦6♠Pass", "1♠2♥3♠4♥4NT5♦5♠6♣6♥7♣" };
+
+
         }
 
         public static IEnumerable<object[]> TestCases4Diamond()
@@ -60,7 +72,8 @@ namespace TosrIntegration.Test
             // Test with minor fit. TODO
 
             // Test with zoom
-            yield return new object[] { "TestFitWithZoom", "KJ743,K,A84,AQT4", "Axxx,AQ,Qxx,Kxxx", "1♣1NT2♥4♦5♦5NT6♦Pass", "1♠2♦3NT5♣5♠6♣6NT" };
+            yield return new object[] { "TestFitWithZoomMin", "K8743,A,A84,AQT4", "QJxx,KQ,Qxx,KJxx", "1♣1NT2♥3♠4♦4NT5♥6♦Pass", "1♠2♦3♥3NT4♠5♦6♣6NT" };
+            yield return new object[] { "TestFitWithZoomMax", "KJ743,K,A84,AQT4", "Axxx,AQ,Qxx,Kxxx", "1♣1NT2♥4♦5♦5NT6♦Pass", "1♠2♦3NT5♣5♠6♣6NT" };
 
             // Special case, double zoom
             yield return new object[] { "TestFitWithDoubleZoom", "AJT3,KQ74,AQT5,5", "Kxx,Axxx,J,KQxxx", "1♣2♣2♠3♥4♦5♠Pass", "1NT2♥3♦3NT5♥5NT" };

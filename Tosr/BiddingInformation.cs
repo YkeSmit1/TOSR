@@ -249,11 +249,11 @@ namespace Tosr
 
         private static MinMax GetHcpFromAuction(Auction auction, FaseDictionary faseAuctions)
         {
-            var signOffBids = auction.GetBids(Player.South, Util.signOffFases.ToArray());
+            var signOffBids = auction.GetPullBids(Player.South, Util.signOffFases.ToArray());
             if (signOffBids.Count() == 1)
             {
                 var signOffBid = signOffBids.Single();
-                var sigOffBidStr = (signOffBid.fase switch
+                var sigOffBidStr = (signOffBid.pullFase switch
                 {
                     Fase.Pull3NTNoAsk => signOffBid,
                     Fase.Pull3NTOneAskMin => Bid.threeNTBid + 1,
@@ -262,10 +262,10 @@ namespace Tosr
                     Fase.Pull4DiamondsNoAsk => Bid.fourDiamondBid + 2,
                     Fase.Pull4DiamondsOneAskMin => Bid.fourDiamondBid + 2,
                     Fase.Pull4DiamondsOneAskMax => Bid.fourDiamondBid + 2,
-                    _ => throw new ArgumentException(nameof(signOffBid.fase)),
+                    _ => throw new ArgumentException(nameof(signOffBid.pullFase)),
                 }).ToString();
                 // TODO handle case where sign-off bid is 4NT
-                if (faseAuctions[signOffBid.fase].TryGetValue(sigOffBidStr, out var hcps))
+                if (faseAuctions[signOffBid.pullFase].TryGetValue(sigOffBidStr, out var hcps))
                     return new MinMax(hcps.Min(), hcps.Max());
             }
 

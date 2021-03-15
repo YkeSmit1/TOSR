@@ -109,6 +109,11 @@ namespace Common
             return bids.Where(x => x.Value.TryGetValue(player, out var bid) && fases.Contains(bid.fase)).Select(x => x.Value[player]);
         }
 
+        public IEnumerable<Bid> GetPullBids(Player player, Fase[] fases)
+        {
+            return bids.Where(x => x.Value.TryGetValue(player, out var bid) && fases.Contains(bid.pullFase)).Select(x => x.Value[player]);
+        }
+
         public void SetBids(Player player, IEnumerable<Bid> newBids)
         {
             bids.Clear();
