@@ -39,7 +39,7 @@ namespace TosrIntegration.Test
             yield return new object[] { "TestTwoAskCtrl5", "KQ32,AKQ,A32,KQ2", "A,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥4♦4NT5♠Pass", "1♠2♣2♥2NT3♦4♣4♠5♥5NT" };
 
             // TODO fix this
-            //yield return new object[] { "TestNoAskZoomShapeMin", "AKQ2,AK2,A32,432", "xxx,QJ,KQJx,KQJx", "1♣1NT2♠3NT4♥4NT5♠6♣6NTPass", "1♠2♥3♥4♦4♠5♥5NT6♠7♦" };
+            yield return new object[] { "TestNoAskZoomShapeMin", "AKQ2,AK2,A32,432", "xxx,QJ,KQJx,KQJx", "1♣1NT2♠3NT4♥4NT5♠6♣6NTPass", "1♠2♥3♥4♦4♠5♥5NT6♠7♦" };
             yield return new object[] { "TestOneAskZoomShapeMin", "AKQ2,AK2,A32,K32", "xxx,QJ,KQJx,AQJx", "1♣1NT2♠3♠4♦5♣5♥6♦Pass", "1♠2♥3♥4♣4NT5♦6♣6♠" };
             yield return new object[] { "TestTwoAskZoomShapeMin", "AKQ2,AK2,A32,KQ2", "xxx,QJ,KQJx,AJxx", "1♣1NT2♠3♠4♦5♣5♥6♣6♥Pass", "1♠2♥3♥4♣4NT5♦5NT6♦6NT" };
 

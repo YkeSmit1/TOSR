@@ -65,7 +65,7 @@ namespace Tosr
             {
                 if (Fase == Fase.Pull3NTNoAsk)
                 {
-                    RelayBidIdLastFase += bidIdFromRule + 1;
+                    RelayBidIdLastFase += bidIdFromRule + 1 - NextBidIdForRule;
                     Fase = PreviousFase;
                     return;
                 }
@@ -94,8 +94,6 @@ namespace Tosr
         public void UpdateBiddingStateSignOff(int controlBidCount, Bid relayBid)
         {
             PreviousFase = Fase;
-            RelayBidIdLastFase = Bid.GetBidId(relayBid) - NextBidIdForRule - FaseOffset + (relayBid == Bid.fourDiamondBid ? 1 : 0);
-            RelayerHasSignedOff = true;
             if (relayBid.suit == Suit.NoTrump)
             {
                 Fase = controlBidCount switch
@@ -115,6 +113,8 @@ namespace Tosr
                     _ => throw new ArgumentException(nameof(controlBidCount)),
                 };
             }
+            RelayBidIdLastFase = Bid.GetBidId(relayBid) - (Fase == Fase.Pull3NTNoAsk ? 0 : NextBidIdForRule) - FaseOffset + (relayBid == Bid.fourDiamondBid ? 1 : 0);
+            RelayerHasSignedOff = true;
         }
     }
 }
