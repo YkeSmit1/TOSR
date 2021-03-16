@@ -267,16 +267,8 @@ namespace Tosr
                     if (biddingState.Fase == Fase.ScanningOther && useSingleDummySolver)
                     {
                         // TODO also call this function when some part of the queens is known. I.e. when control scanning has used zoom
-                        var confidenceTricks = GetConfidenceFromAuction(auction, northHand, southInformation);
-
-                        if (GetConfidenceToBidSlam(confidenceTricks) < optimizationParameters.requiredConfidenceToContinueRelaying)
-                        {
-                            biddingState.Fase = Fase.End;
-                            biddingInformation.constructedSouthhandOutcome = southInformation.SpecificControls.Count() == 1 ?
-                                ConstructedSouthhandOutcome.SouthhandMatches : ConstructedSouthhandOutcome.MultipleMatchesFound;
-                            auction.responderHasSignedOff = true;
-                            return Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, false);
-                        }
+                        var bid = GetBidInFaseScanningOther(biddingState, auction, northHand, southInformation, biddingInformation);
+                        return bid == biddingState.CurrentBid ? Bid.PassBid : bid;
                     }
                 }
 
@@ -313,6 +305,76 @@ namespace Tosr
                 var x when x >= 19 && x < 22 => RelayBidKind.fourDiamondEndSignal,
                 _ => RelayBidKind.Relay,
             };
+        }
+
+        enum BidPosibilities
+        {
+            CannotBid,
+            CanInvestigate,
+            CannotInvestigate
+        }
+
+        private Bid GetBidInFaseScanningOther(BiddingState biddingState, Auction auction, string northHand, SouthInformation southInformation, BiddingInformation biddingInformation)
+        {
+            var possibleContracts = GetPossbileContractsFromAuction(auction, northHand, southInformation, biddingState.CurrentBid);
+            var nrOfHands = possibleContracts.Sum(x => x.Value.tricks);
+            var x = possibleContracts.Where(y => y.Value.posibility != BidPosibilities.CannotBid);
+            if (x.Count() == 0)
+            {
+                UpdateForSignoff();
+                return Bid.PassBid;
+            }
+            if (x.Count() == 1)
+            {
+                UpdateForSignoff();
+                return x.Single().Key;
+            }
+            if (x.Count() == 2)
+            {
+                if (x.Any(y => y.Value.posibility == BidPosibilities.CannotInvestigate))
+                {
+                    UpdateForSignoff();
+                    return x.Aggregate((x, y) => x.Value.tricks > y.Value.tricks ? x : y).Key;
+                }
+            }
+            if (x.Count() > 2)
+            {
+                if (x.Count(y => y.Value.posibility == BidPosibilities.CanInvestigate) <= 1)
+                {
+                    UpdateForSignoff();
+                    return x.Aggregate((x, y) => x.Value.tricks > y.Value.tricks ? x : y).Key;
+                }
+            }
+
+            return Bid.NextBid(biddingState.CurrentBid);
+
+            void UpdateForSignoff()
+            {
+                biddingState.Fase = Fase.End;
+                biddingInformation.constructedSouthhandOutcome = southInformation.SpecificControls.Count() == 1 ?
+                    ConstructedSouthhandOutcome.SouthhandMatches : ConstructedSouthhandOutcome.MultipleMatchesFound;
+                auction.responderHasSignedOff = true;
+            }
+        }
+
+
+        private Dictionary<Bid, (int tricks, BidPosibilities posibility)> GetPossbileContractsFromAuction(Auction auction, string northHand, 
+            SouthInformation southInformation, Bid currentBid)
+        {
+            var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
+            var tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
+            var dictionary = tricksForBid.ToDictionary((key => key.Key), (value => (value.Value, GetBidPosibility(value.Key, currentBid))));
+            return dictionary;
+
+        }
+
+        private BidPosibilities GetBidPosibility(Bid contract, Bid currentBid)
+        {
+            if (contract < currentBid || contract == currentBid + 1)
+                return BidPosibilities.CannotBid;
+            if (contract == currentBid || contract == currentBid + 3)
+                return BidPosibilities.CannotInvestigate;
+            return BidPosibilities.CanInvestigate;
         }
 
         private Dictionary<int, double> GetConfidenceFromAuction(Auction auction, string northHand, SouthInformation southInformation)
