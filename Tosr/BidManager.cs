@@ -172,7 +172,7 @@ namespace Tosr
             if (biddingState.EndOfBidding)
                 return;
 
-            if (biddingState.Fase != Fase.End && (biddingState.CurrentBid == Bid.PassBid || biddingState.CurrentBid < Bid.sixSpadeBid))
+            if (biddingState.Fase != Fase.End && (biddingState.CurrentBid == Bid.PassBid || biddingState.CurrentBid < Bid.sixSpadeBid || !useSingleDummySolver))
                 biddingState.CurrentBid = GetRelayBid(biddingState, auction, northHand);
             else
             {
