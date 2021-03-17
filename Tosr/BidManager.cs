@@ -72,8 +72,8 @@ namespace Tosr
             }
         }
 
-        public static SystemParameters systemParameters;
-        public static OptimizationParameters optimizationParameters;
+        private static SystemParameters systemParameters;
+        private static OptimizationParameters optimizationParameters;
         public static void SetSystemParameters(string json)
         {
             systemParameters = JsonConvert.DeserializeObject<SystemParameters>(json);
@@ -169,28 +169,16 @@ namespace Tosr
 
         public void NorthBid(BiddingState biddingState, Auction auction, string northHand)
         {
-            if (biddingState.EndOfBidding)
+            if (biddingState.EndOfBidding || biddingState.CurrentBid == Bid.PassBid)
                 return;
 
-            if (biddingState.Fase != Fase.End && (biddingState.CurrentBid == Bid.PassBid || biddingState.CurrentBid < Bid.sixSpadeBid || !useSingleDummySolver))
+            if (biddingState.Fase != Fase.End && biddingState.CurrentBid < Bid.sixSpadeBid)
                 biddingState.CurrentBid = GetRelayBid(biddingState, auction, northHand);
             else
             {
                 biddingState.EndOfBidding = true;
                 // Try to guess contract by using single dummy solver
-                if (useSingleDummySolver)
-                {
-                    try
-                    {
-                        biddingState.CurrentBid = CalculateEndContract(auction, northHand, biddingState.CurrentBid);
-                        return;
-                    }
-                    catch (Exception e)
-                    {
-                        logger.Warn(e);
-                    }
-                }
-                biddingState.CurrentBid = Bid.PassBid;
+                biddingState.CurrentBid = useSingleDummySolver ? CalculateEndContract(auction, northHand, biddingState.CurrentBid) : Bid.PassBid;
             }
         }
 
@@ -340,9 +328,6 @@ namespace Tosr
 
         private Bid CalculateEndContract(Auction auction, string northHand, Bid currentBid)
         {
-            if (!useSingleDummySolver)
-                return Bid.PassBid;
-
             var southInformation = biddingInformation.GetInformationFromAuction(auction, northHand);
             var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
             var tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
