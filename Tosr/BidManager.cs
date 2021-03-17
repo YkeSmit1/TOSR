@@ -169,10 +169,10 @@ namespace Tosr
 
         public void NorthBid(BiddingState biddingState, Auction auction, string northHand)
         {
-            if (biddingState.EndOfBidding || biddingState.CurrentBid == Bid.PassBid)
+            if (biddingState.EndOfBidding)
                 return;
 
-            if (biddingState.Fase != Fase.End && biddingState.CurrentBid < Bid.sixSpadeBid)
+            if (biddingState.Fase != Fase.End && (biddingState.CurrentBid == Bid.PassBid || biddingState.CurrentBid < Bid.sixSpadeBid))
                 biddingState.CurrentBid = GetRelayBid(biddingState, auction, northHand);
             else
             {
