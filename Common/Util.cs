@@ -280,6 +280,12 @@ namespace Common
             return hand.Count(x => x == 'K') + hand.Count(x => x == 'A') * 2;
         }
 
+        public static Suit GetTrumpSuitShape(string northHand, string southHandShape)
+        {
+            var southHand = string.Join(',', southHandShape.Select(x => new string('x', int.Parse(x.ToString()))));
+            return GetTrumpSuit(northHand, southHand);
+        }
+
         public static Suit GetTrumpSuit(string northHand, string southHand)
         {
             Debug.Assert(northHand.Length == 16);
