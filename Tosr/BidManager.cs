@@ -72,8 +72,8 @@ namespace Tosr
             }
         }
 
-        public static SystemParameters systemParameters;
-        public static OptimizationParameters optimizationParameters;
+        private static SystemParameters systemParameters;
+        private static OptimizationParameters optimizationParameters;
         public static void SetSystemParameters(string json)
         {
             systemParameters = JsonConvert.DeserializeObject<SystemParameters>(json);
@@ -88,7 +88,7 @@ namespace Tosr
         private readonly ReverseDictionaries reverseDictionaries = null;
         readonly bool useSingleDummySolver = false;
 
-        private readonly RelayBidKindFunc getRelayBidKindFunc = null;
+        private readonly RelayBidKindFunc GetRelayBidKindFunc = null;
 
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         private static readonly Logger loggerBidding = LogManager.GetLogger("bidding");
@@ -100,7 +100,7 @@ namespace Tosr
             this(bidGenerator, fasesWithOffset)
         {
             this.reverseDictionaries = reverseDictionaries;
-            this.getRelayBidKindFunc = getRelayBidKindFunc;
+            this.GetRelayBidKindFunc = getRelayBidKindFunc;
         }
 
         // Standard constructor
@@ -110,7 +110,7 @@ namespace Tosr
             this.reverseDictionaries = reverseDictionaries;
             this.useSingleDummySolver = useSingleDummySolver;
             if (useSingleDummySolver)
-                getRelayBidKindFunc = GetRelayBidKindSolver;
+                GetRelayBidKindFunc = GetRelayBidKindSolver;
         }
 
         // Constructor used for generate reverse dictionaries
@@ -118,7 +118,7 @@ namespace Tosr
         {
             this.bidGenerator = bidGenerator;
             this.fasesWithOffset = fasesWithOffset;
-            getRelayBidKindFunc = GetRelayBidKind;
+            GetRelayBidKindFunc = GetRelayBidKind;
         }
 
         public Auction GetAuction(string northHand, string southHand)
@@ -173,117 +173,182 @@ namespace Tosr
                 return;
 
             if (biddingState.Fase != Fase.End && (biddingState.CurrentBid == Bid.PassBid || biddingState.CurrentBid < Bid.sixSpadeBid || !useSingleDummySolver))
-                biddingState.CurrentBid = GetRelayBid(biddingState, auction, northHand);
+                biddingState.CurrentBid = GetNorthBid(biddingState, auction, northHand);
             else
             {
                 biddingState.EndOfBidding = true;
                 // Try to guess contract by using single dummy solver
-                if (useSingleDummySolver)
-                {
-                    try
-                    {
-                        biddingState.CurrentBid = CalculateEndContract(auction, northHand, biddingState.CurrentBid);
-                        return;
-                    }
-                    catch (Exception e)
-                    {
-                        logger.Warn(e);
-                    }
-                }
-                biddingState.CurrentBid = Bid.PassBid;
+                biddingState.CurrentBid = useSingleDummySolver ? CalculateEndContract(auction, northHand, biddingState.CurrentBid) : Bid.PassBid;
             }
         }
 
-        private Bid GetRelayBid(BiddingState biddingState, Auction auction, string northHand)
+        private Bid GetNorthBid(BiddingState biddingState, Auction auction, string northHand)
         {
-            if (biddingState.Fase != Fase.Shape && reverseDictionaries != null)
+            if (biddingState.Fase != Fase.Shape && reverseDictionaries != null && !string.IsNullOrWhiteSpace(northHand))
             {
                 var southInformation = biddingInformation.GetInformationFromAuction(auction, northHand);
-                if (!string.IsNullOrWhiteSpace(northHand))
+                var trumpSuit = Util.GetTrumpSuitShape(northHand, southInformation.Shapes.First());
+
+                if (biddingState.Fase == Fase.BidGame)
+                    return GetGameBid(trumpSuit);
+
+                if (!biddingState.RelayerHasSignedOff)
                 {
-                    var southHand = string.Join(',', southInformation.Shapes.First().Select(x => new string('x', int.Parse(x.ToString()))));
-                    var trumpSuit = Util.GetTrumpSuit(northHand, southHand);
-                    if (biddingState.Fase == Fase.BidGame)
+                    if (trumpSuit == Suit.NoTrump)
                     {
-                        biddingState.Fase = Fase.End;
-                        var game = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, true);
-                        if (game == Bid.PassBid)
-                            biddingState.EndOfBidding = true;
-                        return game;
+                        if (TryGetNoTrumpBid(southInformation, out var noTrumpBid))
+                            return noTrumpBid;
                     }
-
-                    if (!biddingState.RelayerHasSignedOff)
+                    else
                     {
-                        var controlBidCount = southInformation.ControlBidCount;
-                        var hcp = Util.GetHcpCount(northHand);
-                        if (trumpSuit == Suit.NoTrump)
-                        {
-                            if (systemParameters.hcpRelayerToSignOffInNT.TryGetValue(controlBidCount, out var hcps) && hcps.Contains(hcp))
-                            {
-                                var noTrumpBid = biddingState.CurrentBid < Bid.threeNTBid ? Bid.threeNTBid : Bid.fourNTBid;
-                                biddingState.UpdateBiddingStateSignOff(controlBidCount, noTrumpBid);
-                                loggerBidding.Info($"Signed off with {noTrumpBid} because HCP {hcp} was found in {string.Join(",", hcps)} for ControlBidCount:{controlBidCount}");
-                                return noTrumpBid;
-                            }
-                        }
-                        else
-                        {
-                            if (controlBidCount == 0 && hcp <= systemParameters.requiredMaxHcpToBid4Diamond && biddingState.CurrentBid >= Bid.threeSpadeBid)
-                            {
-                                loggerBidding.Info($"Signed off with {Bid.fourDiamondBid} because hcp {hcp} was smaller or equal then {systemParameters.requiredMaxHcpToBid4Diamond} for ControlBidCount:{controlBidCount}");
-                                biddingState.UpdateBiddingStateSignOff(controlBidCount, Bid.fourDiamondBid);
-                                return Bid.fourDiamondBid;
-                            }
-                            if (controlBidCount == 1)
-                            {
-                                var relayBidkind = getRelayBidKindFunc(auction, northHand, southInformation);
-                                switch (relayBidkind)
-                                {
-                                    case RelayBidKind.Relay:
-                                        break;
-                                    case RelayBidKind.fourDiamondEndSignal:
-                                        if (biddingState.CurrentBid < Bid.fourClubBid)
-                                        {
-                                            biddingState.UpdateBiddingStateSignOff(controlBidCount, Bid.fourDiamondBid);
-                                            return Bid.fourDiamondBid;
-                                        }
-                                        break;
-                                    case RelayBidKind.gameBid:
-                                        {
-                                            biddingState.Fase = Fase.End;
-                                            auction.responderHasSignedOff = true;
-                                            var game = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, false);
-                                            if (game == Bid.PassBid)
-                                                biddingState.EndOfBidding = true;
-                                            return game;
-                                        }
-                                    default:
-                                        throw new ArgumentException(nameof(relayBidkind));
-                                }
-                            }
-                        }
-                    }
-
-                    if (biddingState.Fase == Fase.ScanningOther && useSingleDummySolver)
-                    {
-                        // TODO also call this function when some part of the queens is known. I.e. when control scanning has used zoom
-                        var bid = GetBidInFaseScanningOther(biddingState, auction, northHand, southInformation, biddingInformation);
-                        return bid == biddingState.CurrentBid ? Bid.PassBid : bid;
+                        if (TryGetSuitBid(southInformation, trumpSuit, out var suitBid))
+                            return suitBid;
                     }
                 }
 
-                if (biddingState.CurrentBid == Bid.threeSpadeBid)
+                if (biddingState.Fase == Fase.ScanningControls && southInformation.ControlsScanningBidCount == 0 && biddingState.RelayerHasSignedOff && useSingleDummySolver)
                 {
-                    string shape = new string(southInformation.Shapes.First().ToCharArray().OrderByDescending(x => x).ToArray());
-                    if (shape != "7330")
+                    if (TryGetEndContract(southInformation, trumpSuit, out var bid))
+                        return bid;
+                }
+
+                if ((biddingState.Fase == Fase.ScanningOther) && useSingleDummySolver)
+                    if (TryGetEndContract(southInformation, trumpSuit, out var bid))
+                        return bid;
+            }
+
+            return GetRelayBid();
+
+            Bid GetGameBid(Suit trumpSuit)
+            {
+                biddingState.Fase = Fase.End;
+                var game = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, true);
+                if (game == Bid.PassBid)
+                    biddingState.EndOfBidding = true;
+                return game;
+            }
+
+            bool TryGetNoTrumpBid(SouthInformation southInformation, out Bid noTrumpBid)
+            {
+                var hcpNorth = Util.GetHcpCount(northHand);
+                var controlBidCount = southInformation.ControlBidCount;
+                if (systemParameters.hcpRelayerToSignOffInNT.TryGetValue(controlBidCount, out var hcps) && hcps.Contains(hcpNorth))
+                {
+                    noTrumpBid = biddingState.CurrentBid < Bid.threeNTBid ? Bid.threeNTBid : Bid.fourNTBid;
+                    biddingState.UpdateBiddingStateSignOff(controlBidCount, noTrumpBid);
+                    loggerBidding.Info($"Signed off with {noTrumpBid} because HCP {hcpNorth} was found in {string.Join(",", hcps)} for ControlBidCount:{controlBidCount}");
+                    return true;
+                }
+                noTrumpBid = null;
+                return false;
+            }
+
+            bool TryGetSuitBid(SouthInformation southInformation, Suit trumpSuit, out Bid suitBid)
+            {
+                suitBid = null;
+                var controlBidCount = southInformation.ControlBidCount;
+                var hcpNorth = Util.GetHcpCount(northHand);
+                if (controlBidCount == 0 && hcpNorth <= systemParameters.requiredMaxHcpToBid4Diamond && biddingState.CurrentBid >= Bid.threeSpadeBid)
+                {
+                    loggerBidding.Info($"Signed off with {Bid.fourDiamondBid} because hcp {hcpNorth} was smaller or equal then {systemParameters.requiredMaxHcpToBid4Diamond} for ControlBidCount:{controlBidCount}");
+                    biddingState.UpdateBiddingStateSignOff(controlBidCount, Bid.fourDiamondBid);
+                    suitBid = Bid.fourDiamondBid;
+                    return true;
+                }
+                if (controlBidCount == 1)
+                {
+                    var relayBidkind = GetRelayBidKindFunc(auction, northHand, southInformation);
+                    switch (relayBidkind)
+                    {
+                        case RelayBidKind.Relay:
+                            return false;
+                        case RelayBidKind.fourDiamondEndSignal:
+                            if (biddingState.CurrentBid < Bid.fourClubBid)
+                            {
+                                biddingState.UpdateBiddingStateSignOff(controlBidCount, Bid.fourDiamondBid);
+                                suitBid = Bid.fourDiamondBid;
+                                return true;
+                            }
+                            else return false;
+                        case RelayBidKind.gameBid:
+                            {
+                                biddingState.Fase = Fase.End;
+                                auction.responderHasSignedOff = true;
+                                suitBid = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, false);
+                                if (suitBid == Bid.PassBid)
+                                    biddingState.EndOfBidding = true;
+                                return true;
+                            }
+                        default:
+                            throw new ArgumentException(nameof(relayBidkind));
+                    }
+                }
+                return false;
+            }
+
+            bool TryGetEndContract(SouthInformation southInformation, Suit trumpSuit, out Bid bid)
+            {
+                // TODO also call this function when some part of the queens is known. I.e. when control scanning has used zoom
+                var possibleContracts = GetPossbileContractsFromAuction(auction, northHand, southInformation, biddingState.CurrentBid);
+                var nrOfHands = possibleContracts.Sum(x => x.Value.tricks);
+                var x = possibleContracts.Where(y => y.Value.posibility != BidPosibilities.CannotBid);
+                if (x.Count() == 0)
+                {
+                    UpdateForSignoff();
+                    bid = Bid.PassBid;
+                    return true;
+                }
+                if (x.Count() == 1)
+                {
+                    UpdateForSignoff();
+                    bid = x.Single().Key;
+                    return true;
+                }
+                if (x.Count() == 2)
+                {
+                    if (x.Any(y => y.Value.posibility == BidPosibilities.CannotInvestigate))
+                    {
+                        UpdateForSignoff();
+                        bid = x.Aggregate((x, y) => x.Value.tricks > y.Value.tricks ? x : y).Key;
+                        return true;
+                    }
+                }
+                if (x.Count() > 2)
+                {
+                    if (x.Count(y => y.Value.posibility == BidPosibilities.CanInvestigate) <= 1)
+                    {
+                        UpdateForSignoff();
+                        bid = x.Aggregate((x, y) => x.Value.tricks > y.Value.tricks ? x : y).Key;
+                        return true;
+                    }
+                }
+
+                bid = null;
+                return false;
+
+                void UpdateForSignoff()
+                {
+                    biddingState.Fase = Fase.End;
+                    if (biddingState.Fase == Fase.ScanningOther)
+                        biddingInformation.constructedSouthhandOutcome = southInformation.SpecificControls.Count() == 1 ?
+                            ConstructedSouthhandOutcome.SouthhandMatches : ConstructedSouthhandOutcome.MultipleMatchesFound;
+                    auction.responderHasSignedOff = true;
+                }
+            }
+
+            Bid GetRelayBid()
+            {
+                if (biddingState.CurrentBid == Bid.threeSpadeBid && biddingState.Fase != Fase.Shape && reverseDictionaries != null)
+                {
+                    string shapeOrdered = new string(biddingInformation.shape.Value.shapes.First().ToCharArray().OrderByDescending(x => x).ToArray());
+                    if (shapeOrdered != "7330")
                     {
                         biddingState.RelayBidIdLastFase++;
                         return Bid.fourClubBid;
                     }
                 }
+                return Bid.NextBid(biddingState.CurrentBid);
             }
-
-            return Bid.NextBid(biddingState.CurrentBid);
         }
 
         public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, SouthInformation southInformation)
@@ -313,50 +378,6 @@ namespace Tosr
             CanInvestigate,
             CannotInvestigate
         }
-
-        private Bid GetBidInFaseScanningOther(BiddingState biddingState, Auction auction, string northHand, SouthInformation southInformation, BiddingInformation biddingInformation)
-        {
-            var possibleContracts = GetPossbileContractsFromAuction(auction, northHand, southInformation, biddingState.CurrentBid);
-            var nrOfHands = possibleContracts.Sum(x => x.Value.tricks);
-            var x = possibleContracts.Where(y => y.Value.posibility != BidPosibilities.CannotBid);
-            if (x.Count() == 0)
-            {
-                UpdateForSignoff();
-                return Bid.PassBid;
-            }
-            if (x.Count() == 1)
-            {
-                UpdateForSignoff();
-                return x.Single().Key;
-            }
-            if (x.Count() == 2)
-            {
-                if (x.Any(y => y.Value.posibility == BidPosibilities.CannotInvestigate))
-                {
-                    UpdateForSignoff();
-                    return x.Aggregate((x, y) => x.Value.tricks > y.Value.tricks ? x : y).Key;
-                }
-            }
-            if (x.Count() > 2)
-            {
-                if (x.Count(y => y.Value.posibility == BidPosibilities.CanInvestigate) <= 1)
-                {
-                    UpdateForSignoff();
-                    return x.Aggregate((x, y) => x.Value.tricks > y.Value.tricks ? x : y).Key;
-                }
-            }
-
-            return Bid.NextBid(biddingState.CurrentBid);
-
-            void UpdateForSignoff()
-            {
-                biddingState.Fase = Fase.End;
-                biddingInformation.constructedSouthhandOutcome = southInformation.SpecificControls.Count() == 1 ?
-                    ConstructedSouthhandOutcome.SouthhandMatches : ConstructedSouthhandOutcome.MultipleMatchesFound;
-                auction.responderHasSignedOff = true;
-            }
-        }
-
 
         private Dictionary<Bid, (int tricks, BidPosibilities posibility)> GetPossbileContractsFromAuction(Auction auction, string northHand, 
             SouthInformation southInformation, Bid currentBid)
@@ -402,9 +423,6 @@ namespace Tosr
 
         private Bid CalculateEndContract(Auction auction, string northHand, Bid currentBid)
         {
-            if (!useSingleDummySolver)
-                return Bid.PassBid;
-
             var southInformation = biddingInformation.GetInformationFromAuction(auction, northHand);
             var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
             var tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
@@ -445,7 +463,6 @@ namespace Tosr
             biddingState.UpdateBiddingState(bidIdFromRule, nextfase, bidId, lzoomOffset);
             if (nextfase == Fase.BidGame)
                 auction.responderHasSignedOff = true;
-
         }
     }
 }

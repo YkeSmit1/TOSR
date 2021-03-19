@@ -91,7 +91,7 @@ namespace Tosr
             }
         }
 
-        public void UpdateBiddingStateSignOff(int controlBidCount, Bid relayBid)
+        public Bid UpdateBiddingStateSignOff(int controlBidCount, Bid relayBid)
         {
             PreviousFase = Fase;
             if (relayBid.suit == Suit.NoTrump)
@@ -115,6 +115,7 @@ namespace Tosr
             }
             RelayBidIdLastFase = Bid.GetBidId(relayBid) - (Fase == Fase.Pull3NTNoAsk ? 0 : NextBidIdForRule) - FaseOffset + (relayBid == Bid.fourDiamondBid ? 1 : 0);
             RelayerHasSignedOff = true;
+            return relayBid;
         }
     }
 }

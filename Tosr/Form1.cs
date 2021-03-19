@@ -503,7 +503,7 @@ namespace Tosr
             {
                 try
                 {
-                    BidManager.systemParameters = JsonConvert.DeserializeObject<BidManager.SystemParameters>(File.ReadAllText(openFileDialogSystemParameters.FileName));
+                    BidManager.SetSystemParameters(File.ReadAllText(openFileDialogSystemParameters.FileName));
                     Settings.Default.systemParametersPath = openFileDialogSystemParameters.FileName;
                 }
                 catch (Exception exception)
@@ -519,7 +519,7 @@ namespace Tosr
             {
                 try
                 {
-                    BidManager.optimizationParameters = JsonConvert.DeserializeObject<BidManager.OptimizationParameters>(File.ReadAllText(openFileDialogOptimizationParameters.FileName));
+                    BidManager.SetOptimizationParameters(File.ReadAllText(openFileDialogOptimizationParameters.FileName));
                     Settings.Default.optimizationParametersPath = openFileDialogOptimizationParameters.FileName;
                 }
                 catch (Exception exception)

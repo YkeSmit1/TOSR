@@ -40,7 +40,7 @@ namespace Tosr
         public BiddingInformation(ReverseDictionaries reverseDictionaries, Auction auction)
         {
             shape = new Lazy<(List<string> shapes, int zoomOffset)>(() => GetShapeStrFromAuction(auction, reverseDictionaries.ShapeAuctions));
-            controlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() => GetControlsScanningStrFromAuction(auction, reverseDictionaries, shape.Value.zoomOffset, shape.Value.shapes.First()));
+            controlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() => GetControlsScanningStrFromAuction(auction, reverseDictionaries, shape.Value.zoomOffset, shape.Value.shapes.Last()));
             this.reverseDictionaries = reverseDictionaries;
             this.auction = auction;
             constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
@@ -61,6 +61,9 @@ namespace Tosr
                 var possibleControls = reverseDictionaries.ControlsOnlyAuctions[string.Join("", controls)];
                 southInformation.Controls = new MinMax(possibleControls.First(), possibleControls.Last());
             }
+
+            southInformation.ControlsScanningBidCount = BiddingInformation.GetAuctionForFaseWithOffset(auction, shape.Value.zoomOffset,
+                new Fase[] { Fase.ScanningControls }).Count();
 
             if (controlsScanning.IsValueCreated)
             {
@@ -277,7 +280,8 @@ namespace Tosr
         /// </summary>
         public string GetQueensFromAuction(Auction auction, ReverseDictionaries reverseDictionaries)
         {
-            string shapeStr = shape.Value.shapes.First();
+            // Because the last shape is the one with the highest numeric value generated in ReverseDictionaries
+            string shapeStr = shape.Value.shapes.Last();
             int zoomOffset = controlsScanning.Value.zoomOffset;
             var lastBidPreviousFase = auction.GetBids(Player.South, (new[] { Fase.Controls, Fase.ScanningControls })).Last();
             var queensBids = auction.GetBids(Player.South, Fase.ScanningOther);

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using NLog;
 
 namespace Solver
 {
@@ -41,6 +42,8 @@ namespace Solver
         public North North { get; set; } = new North();
         public South South { get; set; } = new South();
         private Random seed = new Random();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
         public string[] Execute()
         {
             GenerateTclScript();
@@ -161,7 +164,9 @@ namespace Solver
             if (process.ExitCode != 0)
             {
                 using var errorReader = process.StandardError;
-                throw new Exception($"Dealer has incorrect exit code: {process.ExitCode}. Error:{errorReader.ReadToEnd()}");
+                var message = $"Dealer has incorrect exit code: {process.ExitCode}. Error:{errorReader.ReadToEnd()}";
+                logger.Warn(message);
+                throw new Exception(message);
             }
 
             using var reader = process.StandardOutput;
