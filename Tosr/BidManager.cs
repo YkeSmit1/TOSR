@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Common;
 using Solver;
+using MoreLinq;
 
 namespace Tosr
 {
@@ -14,6 +15,13 @@ namespace Tosr
     using FaseDictionary = Dictionary<Fase, Dictionary<string, List<int>>>;
 
     using RelayBidKindFunc = Func<Auction, string, SouthInformation, BidManager.RelayBidKind>;
+
+    public enum BidPosibilities
+    {
+        CannotBid,
+        CanInvestigate,
+        CannotInvestigate
+    }
 
     public class BidManager
     {
@@ -87,6 +95,7 @@ namespace Tosr
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries = null;
         readonly bool useSingleDummySolver = false;
+        bool useSingleDummySolverDuringRelaying = false;
 
         private readonly RelayBidKindFunc GetRelayBidKindFunc = null;
 
@@ -106,10 +115,17 @@ namespace Tosr
 
         // Standard constructor
         public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, bool useSingleDummySolver) :
+            this(bidGenerator, fasesWithOffset, reverseDictionaries, useSingleDummySolver, useSingleDummySolver)
+        {
+        }
+
+        // Standard constructor
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, bool useSingleDummySolver, bool useSingleDummySolverDuringRelaying) :
             this(bidGenerator, fasesWithOffset)
         {
             this.reverseDictionaries = reverseDictionaries;
             this.useSingleDummySolver = useSingleDummySolver;
+            this.useSingleDummySolverDuringRelaying = useSingleDummySolverDuringRelaying;
             if (useSingleDummySolver)
                 GetRelayBidKindFunc = GetRelayBidKindSolver;
         }
@@ -209,7 +225,7 @@ namespace Tosr
                 }
                 else
                 {
-                    if (useSingleDummySolver)
+                    if (useSingleDummySolverDuringRelaying)
                         if (TryGetEndContract(southInformation, trumpSuit, out var bid))
                             return bid;
                 }
@@ -300,49 +316,55 @@ namespace Tosr
 
             bool TryGetEndContract(SouthInformation southInformation, Suit trumpSuit, out Bid bid)
             {
-                // TODO also call this function when some part of the queens is known. I.e. when control scanning has used zoom
                 loggerBidding.Info($"TryGetEndContract. Current contract:{biddingState.CurrentBid}");
-                var possibleContracts = GetPossbileContractsFromAuction(auction, northHand, southInformation, biddingState);
-                var nrOfHands = possibleContracts.Sum(x => x.Value.tricks);
-                var x = possibleContracts.Where(y => y.Value.posibility != BidPosibilities.CannotBid);
-                if (x.Count() == 0)
+
+                var possibleContracts = GetPossibleContractsFromAuction(auction, northHand, southInformation, biddingState);
+                // No contracts. Try again
+                if (possibleContracts.Count() == 0)
+                    possibleContracts = GetPossibleContractsFromAuction(auction, northHand, southInformation, biddingState);
+
+                GroupGameContracts(ref possibleContracts);
+                var reachableContracts = possibleContracts.Where(y => y.Value.posibility != BidPosibilities.CannotBid).ToDictionary(x => x.Key, y => y.Value);
+
+                bid = reachableContracts.Count() switch
                 {
-                    UpdateForSignoff();
-                    bid = Bid.PassBid;
-                    loggerBidding.Info("No reasonable contracts are possible. Let's pass");
-                    return true;
-                }
-                if (x.Count() == 1)
+                    0 => UpdateAndLog(Bid.PassBid),
+                    1 => UpdateAndLog(reachableContracts.Single().Key),
+                    _ => reachableContracts.Count(y => y.Value.posibility == BidPosibilities.CanInvestigate) <= 1
+                            ? UpdateAndLog(reachableContracts.MaxBy(y => y.Value.tricks).First().Key)
+                            : UpdateAndLog(null),
+                };
+                return bid != null;
+
+                static void GroupGameContracts(ref Dictionary<Bid, (int tricks, BidPosibilities posibility)> contracts)
                 {
-                    UpdateForSignoff();
-                    bid = x.Single().Key;
-                    loggerBidding.Info($"Only one reasonable contract is possible. Bid {bid}");
-                    return true;
-                }
-                if (x.Count() >= 2)
-                {
-                    if (x.Count(y => y.Value.posibility == BidPosibilities.CanInvestigate) <= 1)
+                    var bestGames = contracts.Where(x => x.Key.rank < 6 && x.Value.posibility != BidPosibilities.CannotBid).MinBy(x => x.Key);
+                    if (bestGames.Any())
                     {
-                        UpdateForSignoff();
-                        bid = x.Aggregate((x, y) => x.Value.tricks > y.Value.tricks ? x : y).Key;
-                        loggerBidding.Info($"{x.Count()} contracts are possible, but only one can be investigated. Return the most likely contract of " +
-                            $"{string.Join(';', x.Select(y => y.Key))}.Bid {bid}");
-                        return true;
+                        var bestGame = bestGames.Single();
+                        contracts = contracts.GroupBy(x => x.Key.rank < 6 ? bestGame.Key : x.Key)
+                            .ToDictionary(g => g.Key, g => (g.Sum(v => v.Value.tricks),
+                                g.Key == bestGame.Key ? g.Any(v => v.Value.posibility == BidPosibilities.CanInvestigate) ? BidPosibilities.CanInvestigate :
+                                    BidPosibilities.CannotInvestigate : g.Single().Value.posibility));
                     }
                 }
 
-                loggerBidding.Info($"{x.Count()} contracts({string.Join(';', x.Select(y => y.Key))}) are possible of which " +
-                    $"{x.Where(y => y.Value.posibility == BidPosibilities.CanInvestigate).Count()} can be investigated. Relay a bit more");
-                bid = null;
-                return false;
-
-                void UpdateForSignoff()
+                Bid UpdateAndLog(Bid signOffbid)
                 {
-                    biddingState.Fase = Fase.End;
-                    if (biddingState.Fase == Fase.ScanningOther)
-                        biddingInformation.constructedSouthhandOutcome = southInformation.SpecificControls.Count() == 1 ?
-                            ConstructedSouthhandOutcome.SouthhandMatches : ConstructedSouthhandOutcome.MultipleMatchesFound;
-                    auction.responderHasSignedOff = true;
+                    if (signOffbid != null)
+                    {
+                        biddingState.Fase = Fase.End;
+                        if (biddingState.Fase == Fase.ScanningOther)
+                            biddingInformation.constructedSouthhandOutcome = southInformation.SpecificControls.Count() == 1 ?
+                                ConstructedSouthhandOutcome.SouthhandMatches : ConstructedSouthhandOutcome.MultipleMatchesFound;
+                        auction.responderHasSignedOff = true;
+                    }
+                    var bidString = signOffbid == null ? "Relay a bit more" : $"Bid: {signOffbid}";
+                    loggerBidding.Info($"{reachableContracts.Count()} contracts are possible. " +
+                        $"Reachable contracts: {string.Join(';', reachableContracts.Select(y => y.Key))}. " +
+                        $"Investigatable contracts: {string.Join(';', reachableContracts.Where(y => y.Value.posibility == BidPosibilities.CanInvestigate).Select(y => y.Key))} {bidString}");
+
+                    return biddingState.CurrentBid == signOffbid ? Bid.PassBid : signOffbid;
                 }
             }
 
@@ -363,8 +385,9 @@ namespace Tosr
 
         public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, SouthInformation southInformation)
         {
-            var confidenceTricks = GetConfidenceFromAuction(auction, northHand, southInformation);
-            var confidenceToBidSlam = GetConfidenceToBidSlam(confidenceTricks);
+            var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
+            var confidenceTricks = GetConfidenceTricks(northHand, southInformation, declarers);
+            var confidenceToBidSlam = (confidenceTricks.TryGetValue(12, out var smallSlamTricks) ? smallSlamTricks : 0.0) + (confidenceTricks.TryGetValue(13, out var grandSlamTricks) ? grandSlamTricks : 0.0);
             var relayBidkind = systemParameters.requirementsForRelayBid.Where(x =>confidenceToBidSlam >= x.range.min && confidenceToBidSlam <= x.range.max).First().relayBidKind;
             loggerBidding.Info($"RelayBidkind:{relayBidkind} confidence in GetRelayBid:{JsonConvert.SerializeObject(confidenceTricks)}");
             return relayBidkind;
@@ -382,20 +405,15 @@ namespace Tosr
             };
         }
 
-        enum BidPosibilities
-        {
-            CannotBid,
-            CanInvestigate,
-            CannotInvestigate
-        }
-
-        private Dictionary<Bid, (int tricks, BidPosibilities posibility)> GetPossbileContractsFromAuction(Auction auction, string northHand, 
+        private Dictionary<Bid, (int tricks, BidPosibilities posibility)> GetPossibleContractsFromAuction(Auction auction, string northHand, 
             SouthInformation southInformation, BiddingState biddingState)
         {
             var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
             bool canReuseSolverOutput = biddingState.Fase == Fase.ScanningControls && southInformation.ControlsScanningBidCount > 0;
             if (!canReuseSolverOutput || tricksForBid == null)
                 tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
+            loggerBidding.Info($"Tricks by bid in GetPossibleContractsFromAuction: {JsonConvert.SerializeObject(tricksForBid)}");
+
             var dictionary = tricksForBid.ToDictionary((key => key.Key), (value => (value.Value, GetBidPosibility(value.Key, biddingState.CurrentBid))));
             return dictionary;
         }
@@ -409,15 +427,6 @@ namespace Tosr
             return BidPosibilities.CanInvestigate;
         }
 
-        private Dictionary<int, double> GetConfidenceFromAuction(Auction auction, string northHand, SouthInformation southInformation)
-        {
-            var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
-            var confidenceTricks = GetConfidenceTricks(northHand, southInformation, declarers);
-            loggerBidding.Info($"ConfidenceTricks: {JsonConvert.SerializeObject(confidenceTricks)}");
-
-            return confidenceTricks;
-        }
-
         private Dictionary<int, double> GetConfidenceTricks(string northHand, SouthInformation southInformation, Dictionary<Suit, Player> declarers)
         {
             tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
@@ -425,11 +434,6 @@ namespace Tosr
             var groupedTricked = tricksForBid.GroupBy(x => x.Key.rank + 6);
             var confidenceTricks = groupedTricked.ToDictionary(bid => bid.Key, bid => (double)100 * bid.Select(x => x.Value).Sum() / nrOfHands);
             return confidenceTricks;
-        }
-
-        private static double GetConfidenceToBidSlam(Dictionary<int, double> confidenceTricks)
-        {
-            return (confidenceTricks.TryGetValue(12, out var smallSlamTricks) ? smallSlamTricks : 0.0) + (confidenceTricks.TryGetValue(13, out var grandSlamTricks) ? grandSlamTricks : 0.0);
         }
 
         private Bid CalculateEndContract(Auction auction, string northHand, Bid currentBid)
@@ -440,7 +444,7 @@ namespace Tosr
             var possibleTricksForBid = tricksForBid.Where(bid => bid.Key >= currentBid);
             if (!possibleTricksForBid.Any())
                 return Bid.PassBid;
-            var maxBid = possibleTricksForBid.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
+            var maxBid = possibleTricksForBid.MaxBy(x => x.Value).First().Key;
             return maxBid == currentBid ? Bid.PassBid : maxBid;
         }
 

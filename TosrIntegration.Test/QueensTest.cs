@@ -49,7 +49,7 @@ namespace TosrIntegration.Test
             reverseDictionaries = fixture.reverseDictionaries;
         }
 
-        [Theory(Skip = "Fix this test")]
+        [Theory]
         [MemberData(nameof(TestCaseProviderQueens.TestCases), MemberType = typeof(TestCaseProviderQueens))]
         public void TestAuctionsQueens(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
@@ -59,13 +59,13 @@ namespace TosrIntegration.Test
             logger.Info($"Executing testcase {testName}");
 
             Pinvoke.Setup("Tosr.db3");
-            BidManager bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, true);
+            BidManager bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, true, false);
             var auction = bidManager.GetAuction(northHand, southHand);
             var actualBidsSouth = auction.GetBidsAsString(Player.South);
-            //Assert.Equal(expectedBidsSouth, actualBidsSouth);
+            Assert.Equal(expectedBidsSouth, actualBidsSouth);
 
             var actualBidsNorth = auction.GetBidsAsString(Player.North);
-            //Assert.Equal(expectedBidsNorth, actualBidsNorth);
+            Assert.Equal(expectedBidsNorth, actualBidsNorth);
 
             var constructedSouthHand = bidManager.biddingInformation.ConstructSouthHand(northHand);
             Assert.Equal(Util.HandWithx(southHand), constructedSouthHand.First());
