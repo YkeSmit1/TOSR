@@ -19,3 +19,5 @@
 launchSettings.json
 /Common.Test/bin
 /Common.Test/obj
+/log.txt
+/Tarzan.db3
