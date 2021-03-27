@@ -562,5 +562,19 @@ namespace Tosr
             boardIndex = 0;
             LoadCurrentBoard();
         }
+
+        private void ToolStripMenuItemSaveFilteredSetClick(object sender, EventArgs e)
+        {
+            try
+            {
+                if (saveFileDialogPBN.ShowDialog() == DialogResult.OK)
+                    filteredPbn.Save(saveFileDialogPBN.FileName);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show($"Error saving filtered PBN file. {exception.Message}", "Error");
+            }
+
+        }
     }
 }

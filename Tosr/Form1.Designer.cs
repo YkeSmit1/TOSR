@@ -79,6 +79,7 @@
             this.openFileDialogPBN = new System.Windows.Forms.OpenFileDialog();
             this.openFileDialogSystemParameters = new System.Windows.Forms.OpenFileDialog();
             this.openFileDialogOptimizationParameters = new System.Windows.Forms.OpenFileDialog();
+            this.toolStripMenuItemSaveFilteredSet = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
@@ -119,7 +120,8 @@
             this.toolStripMenuItemUseDefaultParameters,
             this.toolStripSeparator2,
             this.toolStripMenuItemLoadSet,
-            this.toolStripMenuItemSaveSet});
+            this.toolStripMenuItemSaveSet,
+            this.toolStripMenuItemSaveFilteredSet});
             this.toolStripMenuItemFile.Name = "toolStripMenuItemFile";
             this.toolStripMenuItemFile.Size = new System.Drawing.Size(37, 20);
             this.toolStripMenuItemFile.Text = "File";
@@ -491,6 +493,13 @@
             // 
             this.openFileDialogOptimizationParameters.DefaultExt = "json";
             // 
+            // toolStripMenuItemSaveFilteredSet
+            // 
+            this.toolStripMenuItemSaveFilteredSet.Name = "toolStripMenuItemSaveFilteredSet";
+            this.toolStripMenuItemSaveFilteredSet.Size = new System.Drawing.Size(205, 22);
+            this.toolStripMenuItemSaveFilteredSet.Text = "Save filtered set to PBN";
+            this.toolStripMenuItemSaveFilteredSet.Click += new System.EventHandler(this.ToolStripMenuItemSaveFilteredSetClick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -574,6 +583,7 @@
         private System.Windows.Forms.OpenFileDialog openFileDialogDatabase;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripComboBox toolStripComboBoxFilter;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSaveFilteredSet;
     }
 }
 
