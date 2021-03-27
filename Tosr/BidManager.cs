@@ -319,10 +319,6 @@ namespace Tosr
                 loggerBidding.Info($"TryGetEndContract. Current contract:{biddingState.CurrentBid}");
 
                 var possibleContracts = GetPossibleContractsFromAuction(auction, northHand, southInformation, biddingState);
-                // No contracts. Try again
-                if (possibleContracts.Count() == 0)
-                    possibleContracts = GetPossibleContractsFromAuction(auction, northHand, southInformation, biddingState);
-
                 GroupGameContracts(ref possibleContracts);
                 var reachableContracts = possibleContracts.Where(y => y.Value.posibility != BidPosibilities.CannotBid).ToDictionary(x => x.Key, y => y.Value);
 
