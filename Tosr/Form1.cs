@@ -6,7 +6,6 @@ using System.Text;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Threading;
-using System.Resources;
 using Newtonsoft.Json;
 using NLog;
 using Common;
@@ -72,12 +71,19 @@ namespace Tosr
                 interactivePbn.Load("interactive.pbn");;
             if (File.Exists(Settings.Default.pbnFilePath))
             {
-                pbnFilepath = Settings.Default.pbnFilePath;
-                pbn.Load(pbnFilepath);
-                toolStripComboBoxFilter.SelectedItem = Settings.Default.filter;
-                ApplyFilter();
-                boardIndex = Math.Min(Settings.Default.boardNumber, filteredPbn.Boards.Count() - 1);
-                LoadCurrentBoard();
+                try
+                {
+                    pbnFilepath = Settings.Default.pbnFilePath;
+                    pbn.Load(pbnFilepath);
+                    toolStripComboBoxFilter.SelectedItem = Settings.Default.filter;
+                    ApplyFilter();
+                    boardIndex = Math.Min(Settings.Default.boardNumber, filteredPbn.Boards.Count() - 1);
+                    LoadCurrentBoard();
+                }
+                catch (Exception exception)
+                {
+                    MessageBox.Show($"Error loading PBN file. {exception.Message}", "Error");
+                }
             }
             if (pbn.Boards.Count == 0)
             {
@@ -110,7 +116,7 @@ namespace Tosr
 
         private void UseSavedSystemParameters()
         {  
-            if (!String.IsNullOrWhiteSpace(Settings.Default.systemParametersPath))
+            if (!string.IsNullOrWhiteSpace(Settings.Default.systemParametersPath))
             {
                 try
                 {
@@ -128,7 +134,7 @@ namespace Tosr
 
         private void UseSavedOptimizationParameters()
         {
-            if (!String.IsNullOrWhiteSpace(Settings.Default.optimizationParametersPath))
+            if (!string.IsNullOrWhiteSpace(Settings.Default.optimizationParametersPath))
             {
                 try
                 {
@@ -148,7 +154,7 @@ namespace Tosr
         {
             void handler(object x, EventArgs y)
             {
-                _ = resetEvent.WaitOne();
+                resetEvent.WaitOne();
                 var biddingBoxButton = (BiddingBoxButton)x;
                 // TODO consider to use the solution proposed in
                 // https://stackoverflow.com/questions/981776/using-an-enum-as-an-array-index-in-c-sharp Ian Goldby solution
@@ -216,7 +222,7 @@ namespace Tosr
         {
             Shuffle();
             StartBidding();
-            _ = resetEvent.WaitOne();
+            resetEvent.WaitOne();
         }
 
         private void StartBidding()
@@ -281,7 +287,7 @@ namespace Tosr
         {
             try
             {
-                _ = resetEvent.WaitOne();
+                resetEvent.WaitOne();
                 auctionControl.auction = bidManager.GetAuction(deal[(int)Player.North], deal[(int)Player.South]);
                 auctionControl.ReDraw();
                 biddingBox.Clear();
@@ -299,7 +305,7 @@ namespace Tosr
             var oldCursor = Cursor.Current;
             try
             {
-                _ = resetEvent.WaitOne();
+                resetEvent.WaitOne();
                 Cursor.Current = Cursors.WaitCursor;
                 panelNorth.Visible = false;
                 BatchBidding batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, toolStripMenuItemUseSolver.Checked);
@@ -356,41 +362,55 @@ namespace Tosr
 
         private void ToolStripMenuItem11Click(object sender, EventArgs e)
         {
-            if (openFileDialogDatabase.ShowDialog() == DialogResult.OK)
+            try
             {
-                Pinvoke.Setup(openFileDialogDatabase.FileName);
+                if (openFileDialogDatabase.ShowDialog() == DialogResult.OK)
+                    Pinvoke.Setup(openFileDialogDatabase.FileName);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show($"Error opening database. {exception.Message}", "Error");
             }
         }
 
         private void ViewAuctionClick(object sender, EventArgs e)
         {
-            var stringBuilder = new StringBuilder();
-            foreach (var bid in auctionControl.auction.GetBids(Player.South))
-            {
-                stringBuilder.AppendLine($"{bid} {bid.description} ");
-            }
-            MessageBox.Show(stringBuilder.ToString(), "Auction");
+            MessageBox.Show(auctionControl.auction.GetPrettyAuction("\n"));
         }
 
         private void ToolStripMenuItemSaveSetClick(object sender, EventArgs e)
         {
-            if (saveFileDialogPBN.ShowDialog() == DialogResult.OK)
+            try
             {
-                pbnFilepath = saveFileDialogPBN.FileName;
-                pbn.Save(pbnFilepath);
-                Text = $"{Path.GetFileName(pbnFilepath)} Board: {boardIndex} from {pbn.Boards.Count}";
+                if (saveFileDialogPBN.ShowDialog() == DialogResult.OK)
+                {
+                    pbn.Save(saveFileDialogPBN.FileName);
+                    pbnFilepath = saveFileDialogPBN.FileName;
+                    Text = $"{Path.GetFileName(pbnFilepath)} Board: {boardIndex} from {pbn.Boards.Count}";
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show($"Error saving PBN file. {exception.Message}", "Error");
             }
         }
 
         private void ToolStripMenuItemLoadSetClick(object sender, EventArgs e)
         {
-            if (openFileDialogPBN.ShowDialog() == DialogResult.OK)
+            try
             {
-                pbnFilepath = openFileDialogPBN.FileName;
-                pbn.Load(pbnFilepath);
-                ApplyFilter();
-                boardIndex = 0;
-                LoadCurrentBoard();
+                if (openFileDialogPBN.ShowDialog() == DialogResult.OK)
+                {
+                    pbn.Load(openFileDialogPBN.FileName);
+                    pbnFilepath = openFileDialogPBN.FileName;
+                    ApplyFilter();
+                    boardIndex = 0;
+                    LoadCurrentBoard();
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show($"Error loading PBN file. {exception.Message}", "Error");
             }
         }
 
@@ -401,7 +421,7 @@ namespace Tosr
                 boardIndex = filteredPbn.Boards.IndexOf(filteredPbn.Boards.Where(b => b.BoardNumber == board).Single());
                 LoadCurrentBoard();
 
-                _ = resetEvent.WaitOne();
+                resetEvent.WaitOne();
                 var batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, true);
                 var localPbn = batchBidding.Execute(new[] { pbn.Boards[boardIndex].Deal}, new Progress<int>(), CancellationToken.None);
                 auctionControl.auction = localPbn.Boards.First().Auction ?? new Auction();
@@ -414,9 +434,10 @@ namespace Tosr
         {
             StartBidding();
             panelNorth.Visible = false;
-            interactivePbn.Boards.RemoveAt(interactivePbn.Boards.Count - 1);
+            if (interactivePbn.Boards.Any())
+                interactivePbn.Boards.RemoveAt(interactivePbn.Boards.Count - 1);
             toolStripStatusLabel1.Text = "";
-            _ = resetEvent.WaitOne();
+            resetEvent.WaitOne();
         }
 
         private void ToolStripButtonFirstClick(object sender, EventArgs e)
@@ -540,6 +561,20 @@ namespace Tosr
             ApplyFilter();
             boardIndex = 0;
             LoadCurrentBoard();
-    }
+        }
+
+        private void ToolStripMenuItemSaveFilteredSetClick(object sender, EventArgs e)
+        {
+            try
+            {
+                if (saveFileDialogPBN.ShowDialog() == DialogResult.OK)
+                    filteredPbn.Save(saveFileDialogPBN.FileName);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show($"Error saving filtered PBN file. {exception.Message}", "Error");
+            }
+
+        }
     }
 }
