@@ -12,7 +12,6 @@ How to build
 - Clone or download the sources.
 - Use vcpkg to install SQLiteCpp. Use "vcpkg integrate install" to use it in VS.
 - Make sure .Net Core 3.1 is installed.
-- Install nuget packages newtonsoft and xunit.
 
 How to run without building
 - Make sure .Net Core 3.1 is installed.
