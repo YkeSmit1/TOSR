@@ -2,11 +2,36 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NLog" Version="4.7.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="AuctionControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="BiddingBox.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="BiddingBoxButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Images.Designer.cs">
+      <DependentUpon>Images.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Images.resx">
+      <LastGenOutput>Images.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
