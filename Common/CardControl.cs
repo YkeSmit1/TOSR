@@ -7,13 +7,12 @@ using System.Reflection;
 using System.Resources;
 using System.Text;
 using System.Windows.Forms;
-using Common;
 
-namespace Tosr
+namespace Common
 {
     public static class CardControl
     {
-        private static ResourceManager resourceManager = new ResourceManager("Tosr.Images", Assembly.GetExecutingAssembly());
+        private static ResourceManager resourceManager = new ResourceManager("Common.Images", Assembly.GetExecutingAssembly());
 
         public static Bitmap GetFaceImageForCard(Suit suit, Face face)
         {

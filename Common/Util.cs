@@ -1,15 +1,9 @@
-﻿using Newtonsoft.Json;
-using NLog;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
-using System.Resources;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace Common
@@ -241,28 +235,6 @@ namespace Common
             var handPattern = handLength.OrderByDescending(y => y).ToArray();
             return int.Parse(handPattern[0].ToString()) >= 8 ||
                 int.Parse(handPattern[0].ToString()) + int.Parse(handPattern[1].ToString()) >= 12;
-        }
-        public static Dictionary<T, U> LoadAuctions<T, U>(string fileName, Func<int, Dictionary<T, U>> generateAuctions, int nrOfShortage)
-        {
-            var logger = LogManager.GetCurrentClassLogger();
-
-            Dictionary<T, U> auctions;
-            // Generate only if file does not exist or is older then one day
-            if (File.Exists(fileName) && File.GetLastWriteTime(fileName) > DateTime.Now - TimeSpan.FromDays(1))
-            {
-                auctions = JsonConvert.DeserializeObject<Dictionary<T, U>>(File.ReadAllText(fileName));
-            }
-            else
-            {
-                logger.Info($"File {fileName} is too old or does not exist. File will be generated");
-                auctions = generateAuctions(nrOfShortage);
-                var sortedAuctions = auctions.ToImmutableSortedDictionary();
-                var path = Path.GetDirectoryName(fileName);
-                if (!string.IsNullOrWhiteSpace(path))
-                    Directory.CreateDirectory(path);
-                File.WriteAllText(fileName, JsonConvert.SerializeObject(sortedAuctions, Formatting.Indented));
-            }
-            return auctions;
         }
 
         public static int GetHcpCount(string hand)
