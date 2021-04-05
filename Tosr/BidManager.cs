@@ -95,7 +95,7 @@ namespace Tosr
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries = null;
         readonly bool useSingleDummySolver = false;
-        bool useSingleDummySolverDuringRelaying = false;
+        readonly bool useSingleDummySolverDuringRelaying = false;
 
         private readonly RelayBidKindFunc GetRelayBidKindFunc = null;
 
@@ -253,8 +253,6 @@ namespace Tosr
                 var shapeOrdered = new string(biddingInformation.shape.Value.shapes.First().ToCharArray().OrderByDescending(x => x).ToArray());
                 if (auction.GetBids(Player.North).Any(bid => bid == Bid.threeNTBid) && shapeOrdered != "7330")
                     return false;
-                if (auction.GetBids(Player.North).Any(bid => bid == Bid.fourNTBid) && !auction.GetBids(Player.South).Any(bid => bid == Bid.fourSpadeBid))
-                    return false;
                 return true;
             }
 
@@ -293,20 +291,16 @@ namespace Tosr
                         case RelayBidKind.Relay:
                             return false;
                         case RelayBidKind.fourDiamondEndSignal:
-                            {
-                                biddingState.UpdateBiddingStateSignOff(controlBidCount, Bid.fourDiamondBid);
-                                suitBid = Bid.fourDiamondBid;
-                                return true;
-                            }
+                            biddingState.UpdateBiddingStateSignOff(controlBidCount, Bid.fourDiamondBid);
+                            suitBid = Bid.fourDiamondBid;
+                            return true;
                         case RelayBidKind.gameBid:
-                            {
-                                biddingState.Fase = Fase.End;
-                                auction.responderHasSignedOff = true;
-                                suitBid = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, false);
-                                if (suitBid == Bid.PassBid)
-                                    biddingState.EndOfBidding = true;
-                                return true;
-                            }
+                            biddingState.Fase = Fase.End;
+                            auction.responderHasSignedOff = true;
+                            suitBid = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, false);
+                            if (suitBid == Bid.PassBid)
+                                biddingState.EndOfBidding = true;
+                            return true;
                         default:
                             throw new ArgumentException(nameof(relayBidkind));
                     }
@@ -410,7 +404,7 @@ namespace Tosr
                 tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
             loggerBidding.Info($"Tricks by bid in GetPossibleContractsFromAuction: {JsonConvert.SerializeObject(tricksForBid)}");
 
-            var dictionary = tricksForBid.ToDictionary((key => key.Key), (value => (value.Value, GetBidPosibility(value.Key, biddingState.CurrentBid))));
+            var dictionary = tricksForBid.ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => (keyValuePair.Value, GetBidPosibility(keyValuePair.Key, biddingState.CurrentBid)));
             return dictionary;
         }
 

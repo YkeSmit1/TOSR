@@ -55,15 +55,14 @@ namespace Tosr
             };
 
             southInformation.ControlBidCount = auction.GetBids(Player.South, Fase.Controls).Count();
-            var controls = GetAuctionForFaseWithOffset(auction, shape.Value.zoomOffset, new Fase[] { Fase.Controls }).ToList();
+            var controls = GetAuctionForFaseWithOffset(auction, shape.Value.zoomOffset, Fase.Controls).ToList();
             if (controls.Count() > 0)
             {
                 var possibleControls = reverseDictionaries.ControlsOnlyAuctions[string.Join("", controls)];
                 southInformation.Controls = new MinMax(possibleControls.First(), possibleControls.Last());
             }
 
-            southInformation.ControlsScanningBidCount = BiddingInformation.GetAuctionForFaseWithOffset(auction, shape.Value.zoomOffset,
-                new Fase[] { Fase.ScanningControls }).Count();
+            southInformation.ControlsScanningBidCount = BiddingInformation.GetAuctionForFaseWithOffset(auction, shape.Value.zoomOffset, Fase.ScanningControls).Count();
 
             if (controlsScanning.IsValueCreated)
             {
@@ -177,8 +176,7 @@ namespace Tosr
         /// </summary>
         private static (List<string> controls, int zoomOffset) GetControlsScanningStrFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, int zoomOffsetShape, string shapeStr)
         {
-            var fases = new[] { Fase.Controls, Fase.ScanningControls };
-            var bidsForFase = GetAuctionForFaseWithOffset(auction, zoomOffsetShape, fases).ToList();
+            var bidsForFase = GetAuctionForFaseWithOffset(auction, zoomOffsetShape, Fase.Controls, Fase.ScanningControls).ToList();
             var controlScanningAuctions = reverseDictionaries.GetControlScanningDictionary(shapeStr);
 
             if (controlScanningAuctions.TryGetValue(string.Join("", bidsForFase), out var controls))
@@ -205,7 +203,7 @@ namespace Tosr
         /// <param name="auction">Generated auction </param>
         /// <param name="fase">Which fases to get the offset from</param>
         /// <returns></returns>
-        public static IEnumerable<Bid> GetAuctionForFaseWithOffset(Auction auction, int zoomOffset, Fase[] fases)
+        public static IEnumerable<Bid> GetAuctionForFaseWithOffset(Auction auction, int zoomOffset, params Fase[] fases)
         {
             var lastBidShape = auction.GetBids(Player.South, Fase.Shape).Last();
             var bidsForFases = auction.GetBids(Player.South, fases);

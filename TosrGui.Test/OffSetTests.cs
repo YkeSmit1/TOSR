@@ -404,7 +404,7 @@ namespace TosrGui.Test
             Assert.Equal(bids.Length, fases.Length);
             var enumerable = fases.Zip(pullFases, (x, y) => (x, y)).Zip(bids, (x, z) => (z, x.x, x.y));
             SetBids(auction, enumerable);
-            var actual = string.Join("", BiddingInformation.GetAuctionForFaseWithOffset(auction, zoomOffset, new Fase[] { Fase.Controls, Fase.ScanningControls }));
+            var actual = string.Join("", BiddingInformation.GetAuctionForFaseWithOffset(auction, zoomOffset, Fase.Controls, Fase.ScanningControls));
             Assert.Equal(expected, actual);
         }
 
