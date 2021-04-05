@@ -138,6 +138,11 @@ namespace Tosr
             GetRelayBidKindFunc = GetRelayBidKind;
         }
 
+        public void Init(Auction auction)
+        {
+            biddingInformation = new BiddingInformation(reverseDictionaries, auction);
+        }
+
         public Auction GetAuction(string northHand, string southHand)
         {
             logger.Debug($"Starting GetAuction for hand : {southHand}");

@@ -1,12 +1,15 @@
-﻿using Common;
-using NLog;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.IO;
+using NLog;
+using Newtonsoft.Json;
+using System.Collections.Immutable;
 using Solver;
+using Common;
 
 namespace Tosr
 {
@@ -54,27 +57,50 @@ namespace Tosr
             this.fasesWithOffset = fasesWithOffset;
 
             progress.Report(nameof(ShapeAuctions));
-            ShapeAuctions = Util.LoadAuctions("txt\\AuctionsByShape.txt", GenerateAuctionsForShape, 0);
+            ShapeAuctions = LoadAuctions("txt\\AuctionsByShape.txt", GenerateAuctionsForShape, 0);
             progress.Report(nameof(ControlsOnlyAuctions));
-            ControlsOnlyAuctions = Util.LoadAuctions("txt\\AuctionsByControlsOnly.txt", GenerateAuctionsForControlsOnly, 0);
+            ControlsOnlyAuctions = LoadAuctions("txt\\AuctionsByControlsOnly.txt", GenerateAuctionsForControlsOnly, 0);
 
             progress.Report(nameof(ControlScanningAuctions0));
-            ControlScanningAuctions0 = Util.LoadAuctions("txt\\AuctionsByControlsScanning0.txt", GenerateAuctionsForControlsScanning, 0);
+            ControlScanningAuctions0 = LoadAuctions("txt\\AuctionsByControlsScanning0.txt", GenerateAuctionsForControlsScanning, 0);
             progress.Report(nameof(ControlScanningAuctions1));
-            ControlScanningAuctions1 = Util.LoadAuctions("txt\\AuctionsByControlsScanning1.txt", GenerateAuctionsForControlsScanning, 1);
+            ControlScanningAuctions1 = LoadAuctions("txt\\AuctionsByControlsScanning1.txt", GenerateAuctionsForControlsScanning, 1);
             progress.Report(nameof(ControlScanningAuctions2));
-            ControlScanningAuctions2 = Util.LoadAuctions("txt\\AuctionsByControlsScanning2.txt", GenerateAuctionsForControlsScanning, 2);
+            ControlScanningAuctions2 = LoadAuctions("txt\\AuctionsByControlsScanning2.txt", GenerateAuctionsForControlsScanning, 2);
 
             progress.Report(nameof(SignOffFasesAuctions));
-            SignOffFasesAuctions = Util.LoadAuctions("txt\\AuctionsBySignOffFases.txt", GenerateAuctionsForSignOffFases, 0);
+            SignOffFasesAuctions = LoadAuctions("txt\\AuctionsBySignOffFases.txt", GenerateAuctionsForSignOffFases, 0);
 
             progress.Report(nameof(QueensAuction0));
-            QueensAuction0 = Util.LoadAuctions("txt\\AuctionsByQueen0.txt", GenerateQueensDictionary, 0);
+            QueensAuction0 = LoadAuctions("txt\\AuctionsByQueen0.txt", GenerateQueensDictionary, 0);
             progress.Report(nameof(QueensAuction1));
-            QueensAuction1 = Util.LoadAuctions("txt\\AuctionsByQueen1.txt", GenerateQueensDictionary, 1);
+            QueensAuction1 = LoadAuctions("txt\\AuctionsByQueen1.txt", GenerateQueensDictionary, 1);
             progress.Report(nameof(QueensAuction2));
-            QueensAuction2 = Util.LoadAuctions("txt\\AuctionsByQueen2.txt", GenerateQueensDictionary, 2);
+            QueensAuction2 = LoadAuctions("txt\\AuctionsByQueen2.txt", GenerateQueensDictionary, 2);
             progress.Report("done");
+        }
+
+        private static Dictionary<T, U> LoadAuctions<T, U>(string fileName, Func<int, Dictionary<T, U>> generateAuctions, int nrOfShortage)
+        {
+            var logger = LogManager.GetCurrentClassLogger();
+
+            Dictionary<T, U> auctions;
+            // Generate only if file does not exist or is older then one day
+            if (File.Exists(fileName) && File.GetLastWriteTime(fileName) > DateTime.Now - TimeSpan.FromDays(1))
+            {
+                auctions = JsonConvert.DeserializeObject<Dictionary<T, U>>(File.ReadAllText(fileName));
+            }
+            else
+            {
+                logger.Info($"File {fileName} is too old or does not exist. File will be generated");
+                auctions = generateAuctions(nrOfShortage);
+                var sortedAuctions = auctions.ToImmutableSortedDictionary();
+                var path = Path.GetDirectoryName(fileName);
+                if (!string.IsNullOrWhiteSpace(path))
+                    Directory.CreateDirectory(path);
+                File.WriteAllText(fileName, JsonConvert.SerializeObject(sortedAuctions, Formatting.Indented));
+            }
+            return auctions;
         }
 
         public ShapeDictionary GenerateAuctionsForShape(int nrOfShortages)

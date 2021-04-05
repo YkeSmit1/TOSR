@@ -33,8 +33,8 @@
 
   <ItemGroup>
     <PackageReference Include="morelinq" Version="3.3.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="NLog" Version="4.7.6" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="NLog" Version="4.7.9" />
     <PackageReference Include="ObjectCloner" Version="2.2.2" />
   </ItemGroup>
 
@@ -44,23 +44,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Images.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Images.resx</DependentUpon>
-    </Compile>
     <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Images.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Images.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

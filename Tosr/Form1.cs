@@ -235,6 +235,8 @@ namespace Tosr
             auctionControl.auction.AddBid(Bid.PassBid);
             auctionControl.ReDraw();
 
+            bidManager.Init(auctionControl.auction);
+
             biddingBox.Clear();
             biddingBox.UpdateButtons(Bid.OneClub, auctionControl.auction.currentPlayer);
             biddingBox.Enabled = true;
