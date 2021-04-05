@@ -222,6 +222,7 @@ namespace Tosr
         {
             Shuffle();
             StartBidding();
+            bidManager.Init(auctionControl.auction);
             resetEvent.WaitOne();
         }
 
@@ -234,8 +235,6 @@ namespace Tosr
             auctionControl.auction.AddBid(Bid.OneClub);
             auctionControl.auction.AddBid(Bid.PassBid);
             auctionControl.ReDraw();
-
-            bidManager.Init(auctionControl.auction);
 
             biddingBox.Clear();
             biddingBox.UpdateButtons(Bid.OneClub, auctionControl.auction.currentPlayer);
@@ -435,6 +434,7 @@ namespace Tosr
         private void ToolStripMenuItemBidAgainClick(object sender, EventArgs e)
         {
             StartBidding();
+            bidManager.Init(auctionControl.auction);
             panelNorth.Visible = false;
             if (interactivePbn.Boards.Any())
                 interactivePbn.Boards.RemoveAt(interactivePbn.Boards.Count - 1);
