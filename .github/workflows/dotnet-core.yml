@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: NuGet Restore
-      run: nuget restore BidTrainer.sln
+      run: nuget restore Tosr.sln
     # Restore from cache the previously built ports. If cache-miss, download, build vcpkg.
     - name: Restore from cache and install vcpkg
       # Download and build vcpkg, without installing any port. If content is cached already, it is a no-op.
@@ -38,10 +38,14 @@ jobs:
         $VCPKG_ROOT/vcpkg integrate install
       shell: bash      
     - name: Build
-      run: msbuild /t:Build /p:Configuration=Release -m BidTrainer.sln
+      run: msbuild /t:Build /p:Configuration=Release -m Tosr.sln
     - name: Run c# Test
-      run: dotnet test --no-restore --configuration Release --verbosity normal .\BidTrainerTests\BidTrainerTests.csproj
+      run: dotnet test --no-restore --configuration Release --verbosity normal .\TosrGui.Test\TosrGui.Test.csproj
+    - name: Run c++ Test
+      run: .\x64\Release\EngineTest.exe
+    - name: Run Integration Test
+      run: dotnet test --no-restore --configuration Release --verbosity normal .\TosrIntegration.Test\TosrIntegration.Test.csproj
     - uses: actions/upload-artifact@v2
       with:
         name: distribute
-        path: .\BidTrainer\bin\Release\netcoreapp3.1\
+        path: .\Tosr\bin\Release\netcoreapp3.1\
