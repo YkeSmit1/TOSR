@@ -64,6 +64,7 @@ namespace Tosr
 
             // Load user settings
             toolStripMenuItemUseSolver.Checked = Settings.Default.useSolver;
+            toolStripMenuItemAlternateSuits.Checked = Settings.Default.alternateSuits;
             numericUpDown1.Value = Settings.Default.numberOfHandsToBid;
             UseSavedSystemParameters();
             UseSavedOptimizationParameters();
@@ -98,6 +99,7 @@ namespace Tosr
                 var progress = new Progress<string>(report => toolStripStatusLabel1.Text = $"Generating dictionary {report}...");
                 reverseDictionaries = new ReverseDictionaries(fasesWithOffset, progress);
                 bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, true);
+                bidManager.Init(auctionControl.auction);
                 resetEvent.Set();
             });
         }
@@ -249,9 +251,8 @@ namespace Tosr
                 deal = Util.GetBoardsTosr(board);
             } 
             while (Util.IsFreakHand(deal[(int)Player.South].Split(',').Select(x => x.Length)));
-            ShowHand(deal[(int)Player.North], panelNorth);
             panelNorth.Visible = false;
-            ShowHand(deal[(int)Player.South], panelSouth);
+            ShowBothHands();
         }
 
         private void ShowHand(string hand, Panel parent)
@@ -261,16 +262,19 @@ namespace Tosr
                 parent.Controls.Remove(card);
                 card.Dispose();
             });
-            var suits = hand.Split(',');
-            var suit = Suit.Clubs;
             var left = 20 * 12;
-            foreach (var suitStr in suits.Reverse())
+            var suitOrder = toolStripMenuItemAlternateSuits.Checked ?
+                new List<Suit> { Suit.Spades, Suit.Hearts, Suit.Clubs, Suit.Diamonds } :
+                new List<Suit> { Suit.Spades, Suit.Hearts, Suit.Diamonds, Suit.Clubs };
+            var suits = hand.Split(',').Select((x, index) => (x, (Suit)(3 - index))).OrderByDescending(x => suitOrder.IndexOf(x.Item2));
+
+            foreach (var suit in suits)
             {
-                foreach (var card in suitStr.Reverse())
+                foreach (var card in suit.x.Reverse())
                 {
                     var pictureBox = new PictureBox
                     {
-                        Image = CardControl.GetFaceImageForCard(suit, Util.GetFaceFromDescription(card)),
+                        Image = CardControl.GetFaceImageForCard(suit.Item2, Util.GetFaceFromDescription(card)),
                         Left = left,
                         Parent = parent,
                         Height = 97,
@@ -280,7 +284,6 @@ namespace Tosr
                     pictureBox.Show();
                     left -= 20;
                 }
-                suit++;
             }
         }
 
@@ -492,22 +495,28 @@ namespace Tosr
             Text = $"{Path.GetFileName(pbnFilepath)} Number of boards in pbn: {pbn.Boards.Count}. Number of filtered boards: {filteredPbn.Boards.Count}";
 
             if (filteredPbn.Boards.Count > 0)
-            {                
+            {
                 toolStripTextBoxBoard.Text = Convert.ToString(filteredPbn.Boards[boardIndex].BoardNumber);
                 var board = filteredPbn.Boards[boardIndex];
                 deal = board.Deal;
-                ShowHand(board.Deal[(int)Player.North], panelNorth);
                 panelNorth.Visible = true;
-                ShowHand(board.Deal[(int)Player.South], panelSouth);
+                ShowBothHands();
                 auctionControl.auction = board.Auction ?? new Auction();
                 auctionControl.ReDraw();
                 toolStripStatusLabel1.Text = board.Description;
             }
         }
 
+        private void ShowBothHands()
+        {
+            ShowHand(deal[(int)Player.North], panelNorth);
+            ShowHand(deal[(int)Player.South], panelSouth);
+        }
+
         private void Form1Closed(object sender, FormClosedEventArgs e)
         {
             Settings.Default.useSolver = toolStripMenuItemUseSolver.Checked;
+            Settings.Default.alternateSuits = toolStripMenuItemAlternateSuits.Checked;
             Settings.Default.boardNumber = boardIndex;
             Settings.Default.numberOfHandsToBid = (int)numericUpDown1.Value;
             Settings.Default.pbnFilePath = pbn.Boards.Count() > 0 ? pbnFilepath : "";
@@ -577,6 +586,11 @@ namespace Tosr
                 MessageBox.Show($"Error saving filtered PBN file. {exception.Message}", "Error");
             }
 
+        }
+
+        private void ToolStripMenuItemAlternateSuitsClick(object sender, EventArgs e)
+        {
+            ShowBothHands();
         }
     }
 }

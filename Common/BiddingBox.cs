@@ -23,7 +23,8 @@ namespace Common
             BiddingBoxClick += eventHandler;
             InitializeComponent();
             Name = "BiddingBox";
-            Size = new Size(200, 210);
+            Size = new Size(200, 183);
+            BackColor = Color.White;
 
             foreach (Suit suit in Enum.GetValues(typeof(Suit)))
             {
@@ -32,11 +33,12 @@ namespace Common
                     var button = new BiddingBoxButton(new Bid(level, suit))
                     {
                         Width = defaultButtonWidth,
-                        Left = (4 - (int) suit) * defaultButtonWidth,
+                        Left = ((int) suit) * defaultButtonWidth,
                         Top = (level - 1) * defaultButtonHeight,
                         Parent = this,
                         Text = Convert.ToString(level) + Util.GetSuitDescription(suit),
-                        ForeColor = suit == Suit.Diamonds || suit == Suit.Hearts ? Color.Red : Color.Black
+                        ForeColor = suit == Suit.Diamonds || suit == Suit.Hearts ? Color.Red : Color.Black,
+                        FlatStyle = FlatStyle.Flat
                     };
                     button.Click += BiddingBoxClick;
                     button.Show();

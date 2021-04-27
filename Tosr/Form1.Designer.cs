@@ -39,8 +39,10 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItemLoadSet = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemSaveSet = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemSaveFilteredSet = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemView = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem13 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemAlternateSuits = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemShuffle = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem10 = new System.Windows.Forms.ToolStripMenuItem();
@@ -79,7 +81,6 @@
             this.openFileDialogPBN = new System.Windows.Forms.OpenFileDialog();
             this.openFileDialogSystemParameters = new System.Windows.Forms.OpenFileDialog();
             this.openFileDialogOptimizationParameters = new System.Windows.Forms.OpenFileDialog();
-            this.toolStripMenuItemSaveFilteredSet = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
@@ -174,10 +175,18 @@
             this.toolStripMenuItemSaveSet.Text = "Save set to PBN";
             this.toolStripMenuItemSaveSet.Click += new System.EventHandler(this.ToolStripMenuItemSaveSetClick);
             // 
+            // toolStripMenuItemSaveFilteredSet
+            // 
+            this.toolStripMenuItemSaveFilteredSet.Name = "toolStripMenuItemSaveFilteredSet";
+            this.toolStripMenuItemSaveFilteredSet.Size = new System.Drawing.Size(205, 22);
+            this.toolStripMenuItemSaveFilteredSet.Text = "Save filtered set to PBN";
+            this.toolStripMenuItemSaveFilteredSet.Click += new System.EventHandler(this.ToolStripMenuItemSaveFilteredSetClick);
+            // 
             // toolStripMenuItemView
             // 
             this.toolStripMenuItemView.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem13});
+            this.toolStripMenuItem13,
+            this.toolStripMenuItemAlternateSuits});
             this.toolStripMenuItemView.Name = "toolStripMenuItemView";
             this.toolStripMenuItemView.Size = new System.Drawing.Size(44, 20);
             this.toolStripMenuItemView.Text = "View";
@@ -186,9 +195,17 @@
             // 
             this.toolStripMenuItem13.Name = "toolStripMenuItem13";
             this.toolStripMenuItem13.ShortcutKeys = System.Windows.Forms.Keys.F8;
-            this.toolStripMenuItem13.Size = new System.Drawing.Size(162, 22);
+            this.toolStripMenuItem13.Size = new System.Drawing.Size(179, 22);
             this.toolStripMenuItem13.Text = "View bidding";
             this.toolStripMenuItem13.Click += new System.EventHandler(this.ViewAuctionClick);
+            // 
+            // toolStripMenuItemAlternateSuits
+            // 
+            this.toolStripMenuItemAlternateSuits.CheckOnClick = true;
+            this.toolStripMenuItemAlternateSuits.Name = "toolStripMenuItemAlternateSuits";
+            this.toolStripMenuItemAlternateSuits.Size = new System.Drawing.Size(179, 22);
+            this.toolStripMenuItemAlternateSuits.Text = "Show alternate suits";
+            this.toolStripMenuItemAlternateSuits.Click += new System.EventHandler(this.ToolStripMenuItemAlternateSuitsClick);
             // 
             // toolStripMenuItemShuffle
             // 
@@ -493,13 +510,6 @@
             // 
             this.openFileDialogOptimizationParameters.DefaultExt = "json";
             // 
-            // toolStripMenuItemSaveFilteredSet
-            // 
-            this.toolStripMenuItemSaveFilteredSet.Name = "toolStripMenuItemSaveFilteredSet";
-            this.toolStripMenuItemSaveFilteredSet.Size = new System.Drawing.Size(205, 22);
-            this.toolStripMenuItemSaveFilteredSet.Text = "Save filtered set to PBN";
-            this.toolStripMenuItemSaveFilteredSet.Click += new System.EventHandler(this.ToolStripMenuItemSaveFilteredSetClick);
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -584,6 +594,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripComboBox toolStripComboBoxFilter;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSaveFilteredSet;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemAlternateSuits;
     }
 }
 

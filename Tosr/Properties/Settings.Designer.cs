@@ -106,5 +106,17 @@ namespace Tosr.Properties {
                 this["filter"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool alternateSuits {
+            get {
+                return ((bool)(this["alternateSuits"]));
+            }
+            set {
+                this["alternateSuits"] = value;
+            }
+        }
     }
 }
