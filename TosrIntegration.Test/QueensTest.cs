@@ -59,7 +59,7 @@ namespace TosrIntegration.Test
             logger.Info($"Executing testcase {testName}");
 
             Pinvoke.Setup("Tosr.db3");
-            BidManager bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, true);
+            BidManager bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, true, false);
             var auction = bidManager.GetAuction(northHand, southHand);
             var actualBidsSouth = auction.GetBidsAsString(Player.South);
             Assert.Equal(expectedBidsSouth, actualBidsSouth);

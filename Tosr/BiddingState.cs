@@ -15,7 +15,6 @@ namespace Tosr
 
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         public Fase PreviousFase { get; private set; }
-        public bool RelayerHasSignedOff { get; private set; }
 
         public BiddingState(Dictionary<Fase, bool> fasesWithOffset)
         {
@@ -31,7 +30,6 @@ namespace Tosr
             EndOfBidding = false;
             FaseOffset = 0;
             NextBidIdForRule = 0;
-            RelayerHasSignedOff = false;
             PreviousFase = Fase.Unknown;
         }
         public int CalculateBid(int bidIdFromRule, string description, bool zoom)
@@ -114,7 +112,6 @@ namespace Tosr
                 };
             }
             RelayBidIdLastFase = Bid.GetBidId(relayBid) - (Fase == Fase.Pull3NTNoAsk ? 0 : NextBidIdForRule) - FaseOffset + (relayBid == Bid.fourDiamondBid ? 1 : 0);
-            RelayerHasSignedOff = true;
             return relayBid;
         }
     }

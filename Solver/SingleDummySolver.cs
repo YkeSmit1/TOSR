@@ -16,6 +16,8 @@ namespace Solver
         public IEnumerable<string[]> SpecificControls { get; set; }
         public string Queens { get; set; }
         public int ControlBidCount { get; set; }
+        public int ControlsScanningBidCount { get; set; }
+
     }
 
     public class SingleDummySolver
