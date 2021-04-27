@@ -62,8 +62,8 @@ namespace TosrIntegration.Test
                 throw new ArgumentNullException(nameof(testName));
             logger.Info($"Executing testcase {testName}");
 
-            Pinvoke.Setup("Tosr.db3");
-            BidManager bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, false);
+            _ = Pinvoke.Setup("Tosr.db3");
+            var bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction(string.Empty, southHand);
             var actualBidsSouth = auction.GetBidsAsString(Player.South);
             Assert.Equal(expectedBidsSouth, actualBidsSouth);

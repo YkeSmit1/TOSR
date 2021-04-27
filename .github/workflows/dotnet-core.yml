@@ -20,11 +20,9 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.101
+        dotnet-version: 5.0.x
     - name: Install dependencies
       run: dotnet restore
-    - name: NuGet Restore
-      run: nuget restore Tosr.sln
     # Restore from cache the previously built ports. If cache-miss, download, build vcpkg.
     - name: Restore from cache and install vcpkg
       # Download and build vcpkg, without installing any port. If content is cached already, it is a no-op.
@@ -48,4 +46,4 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: distribute
-        path: .\Tosr\bin\Release\netcoreapp3.1\
+        path: .\Tosr\bin\Release\net5.0-windows\

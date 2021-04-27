@@ -11,6 +11,7 @@ using NLog;
 using Common;
 using Solver;
 using System.Threading;
+using System.ComponentModel;
 
 namespace Tosr
 {
@@ -92,7 +93,7 @@ namespace Tosr
             var stopwatch = Stopwatch.StartNew();
             var stringbuilder = new StringBuilder();
 
-            if (boards == null || boards.Count() == 0)
+            if (boards == null || !boards.Any())
             {
                 MessageBox.Show("Cannot do batchbidding. Shuffle first.", "Error");
                 return pbn;
@@ -196,7 +197,7 @@ namespace Tosr
 
         }
 
-        private PullType GetPullType(Auction auction)
+        private static PullType GetPullType(Auction auction)
         {
             var signOffBidsNT = auction.GetPullBids(Player.South, Util.signOffFasesFor3NT.ToArray());
             if (signOffBidsNT.Any())
@@ -208,7 +209,7 @@ namespace Tosr
 
         }
 
-        private CorrectnessContract GetCorrectness(CorrectnessContractBreakdown correctnessContractBreakdown)
+        private static CorrectnessContract GetCorrectness(CorrectnessContractBreakdown correctnessContractBreakdown)
         {
             switch (correctnessContractBreakdown)
             {
@@ -233,7 +234,7 @@ namespace Tosr
                     return CorrectnessContract.NoFit;
 
                 default:
-                    throw new ArgumentException(nameof(correctnessContractBreakdown));
+                    throw new InvalidEnumArgumentException(nameof(correctnessContractBreakdown));
             }
         }
 

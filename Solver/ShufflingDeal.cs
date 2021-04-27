@@ -41,19 +41,19 @@ namespace Solver
     {
         public North North { get; set; } = new North();
         public South South { get; set; } = new South();
-        private Random seed = new Random();
+        private readonly Random seed = new Random();
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public string[] Execute()
         {
             GenerateTclScript();
             var boards = new List<string>();
-            while (NrOfHands != boards.Count())
+            while (NrOfHands != boards.Count)
             {
-                var batchSize = Math.Min(40, NrOfHands - boards.Count());
+                var batchSize = Math.Min(40, NrOfHands - boards.Count);
                 boards.AddRange(RunDeal(batchSize));
             }
-            Debug.Assert(NrOfHands == boards.Count());
+            Debug.Assert(NrOfHands == boards.Count);
             return boards.ToArray();
         }
 
@@ -134,7 +134,7 @@ namespace Solver
                 1 => "hearts",
                 2 => "diamonds",
                 3 => "clubs",
-                _ => throw new ArgumentException(nameof(suitIndex)),
+                _ => throw new ArgumentOutOfRangeException(nameof(suitIndex)),
             };
 
         }

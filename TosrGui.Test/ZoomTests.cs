@@ -111,8 +111,8 @@ namespace TosrGui.Test
                 // 6D
                 Returns(() => (8, Fase.ScanningControls, "", 0));
 
-            ReverseDictionaries reverseDictionaries = new ReverseDictionaries(shapeAuctions, auctionsControlsOnly, auctionsControlsScanning, null);
-            BidManager bidManager = new BidManager(bidGenerator.Object, fasesWithOffset, reverseDictionaries, false);
+            var reverseDictionaries = new ReverseDictionaries(shapeAuctions, auctionsControlsOnly, auctionsControlsScanning, null);
+            var bidManager = new BidManager(bidGenerator.Object, fasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction("", "");
 
             Assert.Equal("1♠2♦3NT4♥5♦5♠6♦Pass", auction.GetBidsAsString(Player.South));

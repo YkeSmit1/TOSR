@@ -125,7 +125,7 @@ namespace Common
                     DisableButtons(new[] {Bid.Dbl, Bid.Rdbl});
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new InvalidEnumArgumentException(nameof(bid.bidType));
             }
         }
 

@@ -157,7 +157,7 @@ namespace TosrGui.Test
                         case 'X': // TODO not sure what to do
                             break;
                         default:
-                            throw new ArgumentException(queens[suit.Index].ToString());
+                            throw new ArgumentException($"Invalid value for queens. Should be Y,N of X({queens[suit.Index]})");
                     }
                 }
             }

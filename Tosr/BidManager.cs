@@ -1,19 +1,16 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Common;
 using Solver;
 using MoreLinq;
+using System.ComponentModel;
 
 namespace Tosr
 {
-    using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
-    using FaseDictionary = Dictionary<Fase, Dictionary<string, List<int>>>;
-
     using RelayBidKindFunc = Func<Auction, string, SouthInformation, BidManager.RelayBidKind>;
 
     public enum BidPosibilities
@@ -110,7 +107,7 @@ namespace Tosr
             this(bidGenerator, fasesWithOffset)
         {
             this.reverseDictionaries = reverseDictionaries;
-            this.GetRelayBidKindFunc = getRelayBidKindFunc;
+            GetRelayBidKindFunc = getRelayBidKindFunc;
         }
 
         // Standard constructor
@@ -172,11 +169,11 @@ namespace Tosr
                         SouthBid(biddingState, auction, southHand);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new InvalidEnumArgumentException(nameof(currentPlayer));
                 }
 
                 currentPlayer = currentPlayer == Player.South ? Player.West : currentPlayer + 1;
-                if (auction.bids.Count() > 30)
+                if (auction.bids.Count > 30)
                     throw new InvalidOperationException("Bidding is stuck in a loop");
             }
             while (!biddingState.EndOfBidding);
@@ -307,7 +304,7 @@ namespace Tosr
                                 biddingState.EndOfBidding = true;
                             return true;
                         default:
-                            throw new ArgumentException(nameof(relayBidkind));
+                            throw new InvalidEnumArgumentException(nameof(relayBidkind));
                     }
                 }
                 return false;
@@ -321,7 +318,7 @@ namespace Tosr
                 GroupGameContracts(ref possibleContracts);
                 var reachableContracts = possibleContracts.Where(y => y.Value.posibility != BidPosibilities.CannotBid).ToDictionary(x => x.Key, y => y.Value);
 
-                bid = reachableContracts.Count() switch
+                bid = reachableContracts.Count switch
                 {
                     0 => UpdateAndLog(Bid.PassBid),
                     1 => UpdateAndLog(reachableContracts.Single().Key),
@@ -355,7 +352,7 @@ namespace Tosr
                         auction.responderHasSignedOff = true;
                     }
                     var bidString = signOffbid == null ? "Relay a bit more" : $"Bid: {signOffbid}";
-                    loggerBidding.Info($"{reachableContracts.Count()} contracts are possible. " +
+                    loggerBidding.Info($"{reachableContracts.Count} contracts are possible. " +
                         $"Reachable contracts: {string.Join(';', reachableContracts.Select(y => y.Key))}. " +
                         $"Investigatable contracts: {string.Join(';', reachableContracts.Where(y => y.Value.posibility == BidPosibilities.CanInvestigate).Select(y => y.Key))} {bidString}");
 
@@ -388,7 +385,7 @@ namespace Tosr
             return relayBidkind;
         }
 
-        public RelayBidKind GetRelayBidKind(Auction auction, string northHand, SouthInformation southInformation)
+        public static RelayBidKind GetRelayBidKind(Auction auction, string northHand, SouthInformation southInformation)
         {
             var hcp = Util.GetHcpCount(northHand);
             loggerBidding.Info($"GetRelaybid no solver HCP:{hcp}");
@@ -413,7 +410,7 @@ namespace Tosr
             return dictionary;
         }
 
-        private BidPosibilities GetBidPosibility(Bid contract, Bid currentBid)
+        private static BidPosibilities GetBidPosibility(Bid contract, Bid currentBid)
         {
             if (contract < currentBid || contract == currentBid + 1)
                 return BidPosibilities.CannotBid;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -95,7 +96,7 @@ namespace Common
                 Suit.Hearts => "♥", // \u2665
                 Suit.Spades => "♠", // \u2660
                 Suit.NoTrump => "NT",
-                _ => throw new ArgumentOutOfRangeException(nameof(suit), suit, null),
+                _ => throw new InvalidEnumArgumentException(nameof(suit), (int)suit, null),
             };
         }
 
@@ -108,7 +109,7 @@ namespace Common
                 Suit.Hearts => "H",
                 Suit.Spades => "S",
                 Suit.NoTrump => "NT",
-                _ => throw new ArgumentOutOfRangeException(nameof(suit), suit, null),
+                _ => throw new InvalidEnumArgumentException(nameof(suit), (int)suit, null),
             };
         }
 
@@ -121,7 +122,7 @@ namespace Common
                 "♥" => Suit.Hearts, // \u2665
                 "♠" => Suit.Spades, // \u2660
                 "NT" => Suit.NoTrump,
-                _ => throw new ArgumentOutOfRangeException(nameof(suit), suit, null),
+                _ => throw new ArgumentException("Invalid value for suit", nameof(suit)),
             };
         }
 
@@ -134,7 +135,7 @@ namespace Common
                 "H" => Suit.Hearts,
                 "S" => Suit.Spades,
                 "NT" => Suit.NoTrump,
-                _ => throw new ArgumentOutOfRangeException(nameof(suit), suit, null),
+                _ => throw new ArgumentException("Invalid value for suit", nameof(suit)),
             };
         }
 
@@ -155,7 +156,7 @@ namespace Common
                 Face.Jack => 'J',
                 Face.Queen => 'Q',
                 Face.King => 'K',
-                _ => throw new ArgumentOutOfRangeException(nameof(face), face, null),
+                _ => throw new InvalidEnumArgumentException(nameof(face), (int)face, null),
             };
         }
 
@@ -176,7 +177,7 @@ namespace Common
                 'J' => Face.Jack,
                 'Q' => Face.Queen,
                 'K' => Face.King,
-                _ => throw new ArgumentOutOfRangeException(nameof(c), c, null),
+                _ => throw new ArgumentException("Invalid value for face", nameof(c)),
             };
         }
 
@@ -378,7 +379,7 @@ namespace Common
             Player.East => "E",
             Player.South => "S",
             Player.West => "W",
-            _ => throw new ArgumentException("Unknown player"),
+            _ => throw new InvalidEnumArgumentException(nameof(player)),
         };
 
         public static string[] GetBoardsTosr(string board)
@@ -397,11 +398,9 @@ namespace Common
         public static string ReadResource(string resourceName)
         {
             var assembly = Assembly.LoadFrom("Tosr.dll");
-            using (var stream = assembly.GetManifestResourceStream(resourceName))
-            using (var reader = new StreamReader(stream))
-            {
-                return reader.ReadToEnd();
-            }
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
         }
     }
 }

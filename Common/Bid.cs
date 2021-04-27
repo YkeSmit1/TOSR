@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace Common
 {
@@ -63,7 +64,7 @@ namespace Common
                 BidType.dbl => "Dbl",
                 BidType.rdbl => "Rdbl",
                 BidType.invalid => "Invalid",
-                _ => throw new ArgumentOutOfRangeException(nameof(bidType)),
+                _ => throw new InvalidEnumArgumentException(nameof(bidType)),
             };
         }
 
@@ -75,7 +76,7 @@ namespace Common
                 BidType.pass => "Pass",
                 BidType.dbl => "X",
                 BidType.rdbl => "XX",
-                _ => throw new ArgumentOutOfRangeException(nameof(bidType)),
+                _ => throw new InvalidEnumArgumentException(nameof(bidType)),
             };
         }
 
@@ -124,7 +125,7 @@ namespace Common
                 Suit.Diamonds => new Bid(5, Suit.Diamonds),
                 Suit.Clubs => new Bid(5, Suit.Clubs),
                 Suit.NoTrump => new Bid(3, Suit.NoTrump),
-                _ => throw new ArgumentException(nameof(trumpSuit)),
+                _ => throw new InvalidEnumArgumentException(nameof(trumpSuit)),
             };
             var contract = CheapestContract(currentBid, bid, canUseNextBid);
             return contract.rank <= 5 ? contract : InvalidBid;
@@ -148,7 +149,7 @@ namespace Common
                 ExpectedContract.Game => GetGameContract(item1, currentBid, false),
                 ExpectedContract.SmallSlam => new Bid(6, item1),
                 ExpectedContract.GrandSlam => new Bid(7, item1),
-                _ => throw new ArgumentException(nameof(expectedContract)),
+                _ => throw new InvalidEnumArgumentException(nameof(expectedContract)),
             };
         }
 

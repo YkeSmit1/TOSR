@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -55,7 +56,7 @@ namespace Common
                 Player.North => 3,
                 Player.East => 2,
                 Player.South => 1,
-                _ => throw new ArgumentException(nameof(player)),
+                _ => throw new InvalidEnumArgumentException(nameof(player)),
             };
         }
 
@@ -124,7 +125,7 @@ namespace Common
                 Player.North => 1,
                 Player.East => 2,
                 Player.South => 3,
-                _ => throw new ArgumentException(nameof(player)),
+                _ => throw new InvalidEnumArgumentException(nameof(player)),
             };
         }
     }

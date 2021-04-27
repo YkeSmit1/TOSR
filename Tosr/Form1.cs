@@ -55,7 +55,7 @@ namespace Tosr
             // Need to set in code because of a .net core bug
             numericUpDown1.Maximum = 100_000;
             numericUpDown1.Value = 1000;
-            Pinvoke.Setup("Tosr.db3");
+            _ = Pinvoke.Setup("Tosr.db3");
             logger.Info($"Initialized engine with database '{"Tosr.db3"}'");
             openFileDialogDatabase.InitialDirectory = Environment.CurrentDirectory;
 
@@ -78,7 +78,7 @@ namespace Tosr
                     pbn.Load(pbnFilepath);
                     toolStripComboBoxFilter.SelectedItem = Settings.Default.filter;
                     ApplyFilter();
-                    boardIndex = Math.Min(Settings.Default.boardNumber, filteredPbn.Boards.Count() - 1);
+                    boardIndex = Math.Min(Settings.Default.boardNumber, filteredPbn.Boards.Count - 1);
                     LoadCurrentBoard();
                 }
                 catch (Exception exception)
@@ -312,7 +312,7 @@ namespace Tosr
                 resetEvent.WaitOne();
                 Cursor.Current = Cursors.WaitCursor;
                 panelNorth.Visible = false;
-                BatchBidding batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, toolStripMenuItemUseSolver.Checked);
+                var batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, toolStripMenuItemUseSolver.Checked);
                 toolStripStatusLabel1.Text = "Batch bidding hands...";
                 cancelBatchbidding.Dispose();
                 cancelBatchbidding = new CancellationTokenSource();
@@ -369,7 +369,7 @@ namespace Tosr
             try
             {
                 if (openFileDialogDatabase.ShowDialog() == DialogResult.OK)
-                    Pinvoke.Setup(openFileDialogDatabase.FileName);
+                    _ = Pinvoke.Setup(openFileDialogDatabase.FileName);
             }
             catch (Exception exception)
             {
@@ -486,7 +486,7 @@ namespace Tosr
 
         private void LoadCurrentBoard()
         {
-            if (pbn.Boards.Count() == 0)
+            if (pbn.Boards.Count == 0)
             {
                 MessageBox.Show("No valid PBN file is loaded.", "Error");
                 return;
@@ -519,7 +519,7 @@ namespace Tosr
             Settings.Default.alternateSuits = toolStripMenuItemAlternateSuits.Checked;
             Settings.Default.boardNumber = boardIndex;
             Settings.Default.numberOfHandsToBid = (int)numericUpDown1.Value;
-            Settings.Default.pbnFilePath = pbn.Boards.Count() > 0 ? pbnFilepath : "";
+            Settings.Default.pbnFilePath = pbn.Boards.Count > 0 ? pbnFilepath : "";
             Settings.Default.filter = (string)toolStripComboBoxFilter.SelectedItem;
             Settings.Default.Save();
         }

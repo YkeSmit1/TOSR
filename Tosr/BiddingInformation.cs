@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -56,18 +57,18 @@ namespace Tosr
 
             southInformation.ControlBidCount = auction.GetBids(Player.South, Fase.Controls).Count();
             var controls = GetAuctionForFaseWithOffset(auction, shape.Value.zoomOffset, Fase.Controls).ToList();
-            if (controls.Count() > 0)
+            if (controls.Count > 0)
             {
                 var possibleControls = reverseDictionaries.ControlsOnlyAuctions[string.Join("", controls)];
                 southInformation.Controls = new MinMax(possibleControls.First(), possibleControls.Last());
             }
 
-            southInformation.ControlsScanningBidCount = BiddingInformation.GetAuctionForFaseWithOffset(auction, shape.Value.zoomOffset, Fase.ScanningControls).Count();
+            southInformation.ControlsScanningBidCount = GetAuctionForFaseWithOffset(auction, shape.Value.zoomOffset, Fase.ScanningControls).Count();
 
             if (controlsScanning.IsValueCreated)
             {
                 var matches = GetMatchesWithNorthHand(shape.Value.shapes, controlsScanning.Value.controls, northHand);
-                if (matches.Count() == 0)
+                if (!matches.Any())
                     throw new InvalidOperationException($"No matches found. NorthHand:{northHand}");
 
                 southInformation.SpecificControls = matches.Select(match => match.Split(',').Select(x => Regex.Match(x, "[AK]").ToString()).ToArray());
@@ -135,7 +136,7 @@ namespace Tosr
                 throw SetOutcome(exception.Message, ConstructedSouthhandOutcome.AuctionNotFoundInControls);
             }
             var matches = GetMatchesWithNorthHand(shape.Value.shapes, possibleControls, northHand);
-            if (matches.Count() == 0)
+            if (!matches.Any())
                 throw SetOutcome($"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {northHand}.", ConstructedSouthhandOutcome.NoMatchFound);
 
             logger.Debug($"Ending ConstructSouthHand. southhand : {string.Join("|", matches)}");
@@ -184,7 +185,7 @@ namespace Tosr
 
             var lastBid = bidsForFase.Last();
             var firstBid = bidsForFase.First();
-            var allButLastBid = bidsForFase.Take(bidsForFase.Count() - 1);
+            var allButLastBid = bidsForFase.Take(bidsForFase.Count - 1);
             for (var bid = lastBid - 1; bid >= firstBid; bid--)
             {
                 var allBidsNew = allButLastBid.Concat(new[] { bid });
@@ -235,7 +236,7 @@ namespace Tosr
             Bid GetSignOffBid()
             {
                 var signOffBiddingRounds = auction.bids.Where(bids => bids.Value.TryGetValue(Player.South, out var bid) && Util.signOffFases.Contains(bid.pullFase));
-                if (signOffBiddingRounds.Count() == 0)
+                if (!signOffBiddingRounds.Any())
                     return Bid.PassBid;
                 var signOffBiddingRound = signOffBiddingRounds.Single();
                 // Return the next bid. The sign-off bid only shows points
@@ -263,7 +264,7 @@ namespace Tosr
                     Fase.Pull4DiamondsNoAsk => Bid.fourDiamondBid + 2,
                     Fase.Pull4DiamondsOneAskMin => Bid.fourDiamondBid + 2,
                     Fase.Pull4DiamondsOneAskMax => Bid.fourDiamondBid + 2,
-                    _ => throw new ArgumentException(nameof(signOffBid.pullFase)),
+                    _ => throw new InvalidEnumArgumentException(nameof(signOffBid.pullFase)),
                 }).ToString();
                 // TODO handle case where sign-off bid is 4NT
                 if (faseAuctions[signOffBid.pullFase].TryGetValue(sigOffBidStr, out var hcps))
@@ -281,16 +282,16 @@ namespace Tosr
             // Because the last shape is the one with the highest numeric value generated in ReverseDictionaries
             string shapeStr = shape.Value.shapes.Last();
             int zoomOffset = controlsScanning.Value.zoomOffset;
-            var lastBidPreviousFase = auction.GetBids(Player.South, (new[] { Fase.Controls, Fase.ScanningControls })).Last();
+            var lastBidPreviousFase = auction.GetBids(Player.South, new[] { Fase.Controls, Fase.ScanningControls }).Last();
             var queensBids = auction.GetBids(Player.South, Fase.ScanningOther);
             var offset = lastBidPreviousFase - ReverseDictionaries.GetOffsetBidForQueens(shapeStr);
             if (zoomOffset != 0)
             {
                 queensBids = new[] { lastBidPreviousFase }.Concat(queensBids);
-                offset -= (zoomOffset + 1);
+                offset -= zoomOffset + 1;
             }
 
-            if (queensBids.Count() == 0)
+            if (!queensBids.Any())
                 return null;
 
             queensBids = queensBids.Select(bid => bid - offset);

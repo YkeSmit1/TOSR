@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using System.Collections.Immutable;
 using Solver;
 using Common;
+using System.ComponentModel;
 
 namespace Tosr
 {
@@ -252,7 +253,7 @@ namespace Tosr
                             Fase.Pull4DiamondsNoAsk => Bid.fourDiamondBid + 2,
                             Fase.Pull4DiamondsOneAskMin => Bid.fourDiamondBid + 2,
                             Fase.Pull4DiamondsOneAskMax => Bid.fourDiamondBid + 2,
-                            _ => throw new ArgumentException(nameof(fase)),
+                            _ => throw new InvalidEnumArgumentException(nameof(fase)),
                         }).ToString();
                         if (!dictionaryForFase.ContainsKey(bid))
                             dictionaryForFase.Add(bid, new List<int>());
@@ -310,7 +311,7 @@ namespace Tosr
                 foreach (var auction in auctions)
                 {
                     var counter = 1;
-                    while (auction.Key.SkipLast(counter).Count() > 0)
+                    while (auction.Key.SkipLast(counter).Any())
                     {
                         partialAuctions.Add((auction.Key.SkipLast(counter), auction.Value));
                         counter++;
@@ -324,7 +325,7 @@ namespace Tosr
                 {
                     var values = group.ToList().Select(x => x.queens);
                     var queenStr = string.Empty;
-                    Debug.Assert(values.All(x => x.Count() == 4));
+                    Debug.Assert(values.All(x => x.Length == 4));
                     foreach (var i in Enumerable.Range(0, 4))
                         queenStr += values.All(x => x[i] == values.First()[i]) ? values.First()[i] : 'X';
                     auctions.Add(group.Key, queenStr);
@@ -340,7 +341,7 @@ namespace Tosr
                 0 => suitLengthNoSingleton,
                 1 => suitLengthSingleton,
                 2 => suitLength2Singletons,
-                _ => throw new ArgumentException("nrOfshortages should be 0, 1 or 2")
+                _ => throw new ArgumentOutOfRangeException(nameof(nrOfShortages), "nrOfshortages should be 0, 1 or 2")
             };
         }
 
@@ -362,7 +363,7 @@ namespace Tosr
                 0 => QueensAuction0,
                 1 => QueensAuction1,
                 2 => QueensAuction2,
-                _ => throw new ArgumentException("nrOfshortages should be 0, 1 or 2"),
+                _ => throw new ArgumentException("nrOfshortages should be 0, 1 or 2", nameof(handShape)),
             };
             return queensAuctions;
         }
@@ -374,19 +375,19 @@ namespace Tosr
                 0 => ControlScanningAuctions0,
                 1 => ControlScanningAuctions1,
                 2 => ControlScanningAuctions2,
-                _ => throw new ArgumentException("nrOfshortages should be 0, 1 or 2"),
+                _ => throw new ArgumentException("nrOfshortages should be 0, 1 or 2", nameof(handShape)),
             };
         }
 
         public static Bid GetOffsetBidForQueens(string shapeStr)
         {
             // TODO this should be determined when creating queens dictionaries
-            return (Util.NrOfShortages(shapeStr)) switch
+            return Util.NrOfShortages(shapeStr) switch
             {
                 0 => Bid.fiveHeartsBid,
                 1 => Bid.fiveClubBid,
                 2 => Bid.fiveDiamondBid,
-                _ => throw new ArgumentException("Unsupported number of shortages"),
+                _ => throw new ArgumentException("Unsupported number of shortages", nameof(shapeStr)),
             };
         }
     }

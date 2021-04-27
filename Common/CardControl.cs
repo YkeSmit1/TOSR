@@ -22,7 +22,7 @@ namespace Common
                 Suit.Diamonds => 294,
                 Suit.Hearts => 196,
                 Suit.Spades => 98,
-                _ => throw new ArgumentException(nameof(suit)),
+                _ => throw new InvalidEnumArgumentException(nameof(suit)),
             };
             var topx = 73 * Convert.ToInt32(face);
             var rect = new Rectangle(topx, topy, 73, 97);
