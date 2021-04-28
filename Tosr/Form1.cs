@@ -20,11 +20,10 @@ namespace Tosr
         private AuctionControl auctionControl;
 
         private string[] deal;
-        private ShufflingDeal shufflingDeal = new ShufflingDeal() { NrOfHands = 1};
+        private ShufflingDeal shufflingDeal = new ShufflingDeal() { NrOfHands = 1 };
 
         private BidManager bidManager;
-
-        ReverseDictionaries reverseDictionaries;
+        private ReverseDictionaries reverseDictionaries;
 
         private readonly static Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
         private readonly BiddingState biddingState = new BiddingState(fasesWithOffset);
@@ -69,7 +68,7 @@ namespace Tosr
             UseSavedSystemParameters();
             UseSavedOptimizationParameters();
             if (File.Exists("interactive.pbn"))
-                interactivePbn.Load("interactive.pbn");;
+                interactivePbn.Load("interactive.pbn"); ;
             if (File.Exists(Settings.Default.pbnFilePath))
             {
                 try
@@ -106,7 +105,7 @@ namespace Tosr
 
         private void ApplyFilter()
         {
-            filteredPbn.Boards = (string)toolStripComboBoxFilter.SelectedItem == "All" ? pbn.Boards : 
+            filteredPbn.Boards = (string)toolStripComboBoxFilter.SelectedItem == "All" ? pbn.Boards :
                 pbn.Boards.Where(b => b.Description != null && b.Description.Split(':')[0] == (string)toolStripComboBoxFilter.SelectedItem).ToList();
         }
 
@@ -117,7 +116,7 @@ namespace Tosr
         }
 
         private void UseSavedSystemParameters()
-        {  
+        {
             if (!string.IsNullOrWhiteSpace(Settings.Default.systemParametersPath))
             {
                 try
@@ -214,9 +213,11 @@ namespace Tosr
 
         private void AddBoardToInteractivePBNFile(string[] deal, Auction auction)
         {
-            interactivePbn.Boards.Add(new BoardDto { 
-                Deal = ObjectCloner.ObjectCloner.DeepClone(deal), 
-                Auction = ObjectCloner.ObjectCloner.DeepClone(auction) });
+            interactivePbn.Boards.Add(new BoardDto
+            {
+                Deal = ObjectCloner.ObjectCloner.DeepClone(deal),
+                Auction = ObjectCloner.ObjectCloner.DeepClone(auction)
+            });
             interactivePbn.Save("interactive.pbn");
         }
 
@@ -249,7 +250,7 @@ namespace Tosr
             {
                 var board = shufflingDeal.Execute().First();
                 deal = Util.GetBoardsTosr(board);
-            } 
+            }
             while (Util.IsFreakHand(deal[(int)Player.South].Split(',').Select(x => x.Length)));
             panelNorth.Visible = false;
             ShowBothHands();
@@ -334,9 +335,12 @@ namespace Tosr
 
         private void GenerateBoards(int batchSize)
         {
-            var shufflingDeal = new ShufflingDeal() { NrOfHands = batchSize, 
-                North = new North { Hcp = new MinMax(16, 37) }, 
-                South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) } };
+            var shufflingDeal = new ShufflingDeal()
+            {
+                NrOfHands = batchSize,
+                North = new North { Hcp = new MinMax(16, 37) },
+                South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) }
+            };
 
             var boards = shufflingDeal.Execute();
             pbn.Boards = boards.Select(board => new BoardDto { Deal = Util.GetBoardsTosr(board) }).ToList();
@@ -427,7 +431,7 @@ namespace Tosr
 
                 resetEvent.WaitOne();
                 var batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, true);
-                var localPbn = batchBidding.Execute(new[] { pbn.Boards[boardIndex].Deal}, new Progress<int>(), CancellationToken.None);
+                var localPbn = batchBidding.Execute(new[] { pbn.Boards[boardIndex].Deal }, new Progress<int>(), CancellationToken.None);
                 auctionControl.auction = localPbn.Boards.First().Auction ?? new Auction();
                 auctionControl.ReDraw();
                 toolStripStatusLabel1.Text = localPbn.Boards.First().Description;

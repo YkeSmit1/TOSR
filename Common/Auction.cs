@@ -101,7 +101,7 @@ namespace Common
 
         public IEnumerable<Bid> GetBids(Player player, Fase fase)
         {
-            return GetBids(player, new Fase[] { fase});
+            return GetBids(player, new Fase[] { fase });
         }
 
         public IEnumerable<Bid> GetBids(Player player, Fase[] fases)

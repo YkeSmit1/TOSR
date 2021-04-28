@@ -91,8 +91,8 @@ namespace Tosr
         private readonly IBidGenerator bidGenerator;
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries = null;
-        readonly bool useSingleDummySolver = false;
-        readonly bool useSingleDummySolverDuringRelaying = false;
+        private readonly bool useSingleDummySolver = false;
+        private readonly bool useSingleDummySolverDuringRelaying = false;
 
         private readonly RelayBidKindFunc GetRelayBidKindFunc = null;
 
@@ -380,7 +380,7 @@ namespace Tosr
             var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
             var confidenceTricks = GetConfidenceTricks(northHand, southInformation, declarers);
             var confidenceToBidSlam = (confidenceTricks.TryGetValue(12, out var smallSlamTricks) ? smallSlamTricks : 0.0) + (confidenceTricks.TryGetValue(13, out var grandSlamTricks) ? grandSlamTricks : 0.0);
-            var relayBidkind = systemParameters.requirementsForRelayBid.Where(x =>confidenceToBidSlam >= x.range.min && confidenceToBidSlam <= x.range.max).First().relayBidKind;
+            var relayBidkind = systemParameters.requirementsForRelayBid.Where(x => confidenceToBidSlam >= x.range.min && confidenceToBidSlam <= x.range.max).First().relayBidKind;
             loggerBidding.Info($"RelayBidkind:{relayBidkind} confidence in GetRelayBid:{JsonConvert.SerializeObject(confidenceTricks)}");
             return relayBidkind;
         }
@@ -397,7 +397,7 @@ namespace Tosr
             };
         }
 
-        private Dictionary<Bid, (int tricks, BidPosibilities posibility)> GetPossibleContractsFromAuction(Auction auction, string northHand, 
+        private Dictionary<Bid, (int tricks, BidPosibilities posibility)> GetPossibleContractsFromAuction(Auction auction, string northHand,
             SouthInformation southInformation, BiddingState biddingState)
         {
             var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
@@ -454,11 +454,11 @@ namespace Tosr
             auction.AddBid(biddingState.CurrentBid);
 
             var lzoomOffset = nextfase switch
-                {
-                    Fase.Controls => reverseDictionaries == null ? zoomOffset : biddingInformation.shape.Value.zoomOffset,
-                    Fase.ScanningOther => reverseDictionaries == null ? zoomOffset : biddingInformation.controlsScanning.Value.zoomOffset,
-                    _ => 0,
-                };
+            {
+                Fase.Controls => reverseDictionaries == null ? zoomOffset : biddingInformation.shape.Value.zoomOffset,
+                Fase.ScanningOther => reverseDictionaries == null ? zoomOffset : biddingInformation.controlsScanning.Value.zoomOffset,
+                _ => 0,
+            };
             // Check if controls and their positions are correctly evaluated.
             if (nextfase == Fase.ScanningOther && reverseDictionaries != null)
             {

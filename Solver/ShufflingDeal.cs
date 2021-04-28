@@ -34,7 +34,7 @@ namespace Solver
         public MinMax Controls { get; set; }
         public string[] SpecificControls { get; set; }
         public string Queens { get; set; }
-        public string Shape { get; set; }   
+        public string Shape { get; set; }
     }
 
     public class ShufflingDeal

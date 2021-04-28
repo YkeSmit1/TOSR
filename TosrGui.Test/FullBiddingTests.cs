@@ -20,7 +20,7 @@ namespace TosrGui.Test
 
             // 1Sp
             bidGenerator.SetupSequence(x => x.GetBid(It.IsAny<BiddingState>(), It.IsAny<string>())).
-               // 1Sp
+                // 1Sp
                 Returns(() => (4, Fase.Shape, "", 0)).
                 // 2Di
                 Returns(() => (7, Fase.Shape, "", 0)).

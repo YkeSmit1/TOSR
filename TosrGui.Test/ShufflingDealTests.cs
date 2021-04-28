@@ -21,7 +21,7 @@ namespace TosrGui.Test
 
             var boards = shufflingDeal.Execute();
             Assert.Equal(10, boards.Length);
-            Assert.All(boards, (board) => 
+            Assert.All(boards, (board) =>
             {
                 var hands = Util.GetBoardsTosr(board);
                 Assert.All(hands, (hand) => Assert.Equal(16, hand.Length));
@@ -45,7 +45,7 @@ namespace TosrGui.Test
             var shufflingDeal = new ShufflingDeal
             {
                 North = new North { Hand = expectedNorthHand.Split(".") },
-                South = new South { Hcp = new MinMax (7, 37), Controls = new MinMax(controls, controls), Shape = shape }
+                South = new South { Hcp = new MinMax(7, 37), Controls = new MinMax(controls, controls), Shape = shape }
             };
 
             var boards = shufflingDeal.Execute();
@@ -106,7 +106,7 @@ namespace TosrGui.Test
             var shufflingDeal = new ShufflingDeal()
             {
                 North = new North { Hand = expectedNorthHand.Split(".") },
-                South = new South {Hcp = new MinMax(minHcp, maxHcp), Controls = new MinMax(controls, controls), Shape = shape, SpecificControls = specificControls, Queens = queens, }
+                South = new South { Hcp = new MinMax(minHcp, maxHcp), Controls = new MinMax(controls, controls), Shape = shape, SpecificControls = specificControls, Queens = queens, }
             };
 
             var boards = shufflingDeal.Execute();
@@ -150,9 +150,11 @@ namespace TosrGui.Test
                 {
                     switch (queens[suit.Index])
                     {
-                        case 'Y': Assert.Contains("Q", suit.x);
+                        case 'Y':
+                            Assert.Contains("Q", suit.x);
                             break;
-                        case 'N': Assert.DoesNotContain("Q", suit.x);
+                        case 'N':
+                            Assert.DoesNotContain("Q", suit.x);
                             break;
                         case 'X': // TODO not sure what to do
                             break;

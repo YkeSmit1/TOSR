@@ -86,7 +86,7 @@ namespace Common
                         if (int.TryParse(value, out var boardNumber))
                             board.BoardNumber = boardNumber;
                         break;
-                    case "Dealer": 
+                    case "Dealer":
                         board.Dealer = Util.GetPlayer(value);
                         break;
                     case "Vulnerable":

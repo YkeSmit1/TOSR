@@ -21,7 +21,7 @@ namespace TosrGui.Test
             var declarers = new Dictionary<Suit, Player> { { Suit.Spades, Player.North } };
             var southInformation = new SouthInformation
             {
-                Shapes = new [] { "4423" },
+                Shapes = new[] { "4423" },
                 Controls = new MinMax(3, 3),
                 Hcp = null,
                 SpecificControls = new List<string[]> { new[] { "A", "", "", "K" } },

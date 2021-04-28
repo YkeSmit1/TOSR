@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace Common
 {
-    public static class DictionaryExtension 
+    public static class DictionaryExtension
     {
         public static void AddOrUpdateDictionary<T>(this IDictionary<T, int> dictionary, T item)
         {
@@ -183,8 +183,8 @@ namespace Common
 
         public static bool IsSameTeam(Player player1, Player player2)
         {
-            return Math.Abs(player1 - player2) == 2 || 
-                (player1 == player2) || 
+            return Math.Abs(player1 - player2) == 2 ||
+                (player1 == player2) ||
                 (player2 == Player.UnKnown || player1 == Player.UnKnown);
         }
 
@@ -339,7 +339,7 @@ namespace Common
         public static int GetDDSFirst(Player declarer)
         {
             int declarerDDS = 3 - (int)declarer;
-            return declarerDDS == 3 ? 0 : declarerDDS + 1;            
+            return declarerDDS == 3 ? 0 : declarerDDS + 1;
         }
 
         public static int GetDDSSuit(Suit suit)
@@ -350,17 +350,17 @@ namespace Common
         public static (ExpectedContract expectedContract, Dictionary<ExpectedContract, int> confidence) GetExpectedContract(IEnumerable<int> scores)
         {
             ExpectedContract expectedContract;
-            if ((double)scores.Count(x => x == 13) / (double)scores.Count() > .6)
+            if (scores.Count(x => x == 13) / (double)scores.Count() > .6)
                 expectedContract = ExpectedContract.GrandSlam;
-            else if ((double)scores.Count(x => x == 12) / (double)scores.Count() > .6)
+            else if (scores.Count(x => x == 12) / (double)scores.Count() > .6)
                 expectedContract = ExpectedContract.SmallSlam;
-            else if ((double)scores.Count(x => x == 12 || x == 13) / (double)scores.Count() > .6)
+            else if (scores.Count(x => x == 12 || x == 13) / (double)scores.Count() > .6)
                 expectedContract = scores.Count(x => x == 12) >= scores.Count(x => x == 13) ? ExpectedContract.SmallSlam : ExpectedContract.GrandSlam;
             else expectedContract = ExpectedContract.Game;
 
-            return (expectedContract, new Dictionary<ExpectedContract, int> { 
-                {ExpectedContract.GrandSlam, scores.Count(x => x == 13) }, 
-                { ExpectedContract.SmallSlam, scores.Count(x => x == 12) }, 
+            return (expectedContract, new Dictionary<ExpectedContract, int> {
+                {ExpectedContract.GrandSlam, scores.Count(x => x == 13) },
+                { ExpectedContract.SmallSlam, scores.Count(x => x == 12) },
                 { ExpectedContract.Game, scores.Count(x => x < 12)}});
         }
 

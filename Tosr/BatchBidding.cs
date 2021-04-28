@@ -51,8 +51,7 @@ namespace Tosr
             Pull4Di
         }
 
-
-        class Statistics
+        private class Statistics
         {
             public int handsBid;
             public int handsNotBidBecauseofFreakhand = 0;
@@ -61,7 +60,7 @@ namespace Tosr
             public SortedDictionary<ConstructedSouthhandOutcome, int> outcomes = new SortedDictionary<ConstructedSouthhandOutcome, int>();
             public SortedDictionary<Player, int> dealers = new SortedDictionary<Player, int>();
             public SortedDictionary<int, int> bidsNonShape = new SortedDictionary<int, int>();
-            public SortedDictionary<(CorrectnessContractBreakdown, (ConstructedSouthhandOutcome, PullType)), int> ContractCorrectnessBreakdownOutcome = 
+            public SortedDictionary<(CorrectnessContractBreakdown, (ConstructedSouthhandOutcome, PullType)), int> ContractCorrectnessBreakdownOutcome =
                 new SortedDictionary<(CorrectnessContractBreakdown, (ConstructedSouthhandOutcome, PullType)), int>();
             public SortedDictionary<CorrectnessContract, int> ContractCorrectness = new SortedDictionary<CorrectnessContract, int>();
             public SortedDictionary<CorrectnessContractBreakdown, int> ContractCorrectnessBreakdown = new SortedDictionary<CorrectnessContractBreakdown, int>();
@@ -115,7 +114,8 @@ namespace Tosr
                     statistics.handsBid++;
                     var auction = bidManager.GetAuction(board[(int)Player.North], board[(int)Player.South]);
                     AddHandAndAuction(board, auction, statistics.handsBid);
-                    pbn.Boards.Add(new BoardDto {
+                    pbn.Boards.Add(new BoardDto
+                    {
                         Deal = board,
                         Auction = auction,
                         BoardNumber = statistics.handsBid,
@@ -124,7 +124,8 @@ namespace Tosr
                         Declarer = auction.GetDeclarerOrNorth(auction.currentContract.suit),
                         Dealer = Player.West,
                         Vulnerable = "None",
-                        Description = $"{correctnessContract}:{correctnessContractBreakdown}{JsonConvert.SerializeObject(confidence)}"});
+                        Description = $"{correctnessContract}:{correctnessContractBreakdown}{JsonConvert.SerializeObject(confidence)}"
+                    });
                     if (statistics.handsBid % 100 == 0)
                         progress.Report(statistics.handsBid);
                     if (token.IsCancellationRequested)

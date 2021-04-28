@@ -32,8 +32,7 @@ namespace Tosr
 
         public Lazy<(List<string> shapes, int zoomOffset)> shape;
         public Lazy<(List<string> controls, int zoomOffset)> controlsScanning;
-
-        static readonly char[] relevantCards = new[] { 'A', 'K' };
+        private static readonly char[] relevantCards = new[] { 'A', 'K' };
         public ConstructedSouthhandOutcome constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
         private readonly ReverseDictionaries reverseDictionaries;
         private readonly Auction auction;

@@ -12,7 +12,7 @@ namespace Common
 {
     public static class CardControl
     {
-        private static ResourceManager resourceManager = new ResourceManager("Common.Images", Assembly.GetExecutingAssembly());
+        private static readonly ResourceManager resourceManager = new ResourceManager("Common.Images", Assembly.GetExecutingAssembly());
 
         public static Bitmap GetFaceImageForCard(Suit suit, Face face)
         {

@@ -33,7 +33,7 @@ namespace Tosr
         private ControlScanningDictionary ControlScanningAuctions0 { get; }
         private ControlScanningDictionary ControlScanningAuctions1 { get; }
         private ControlScanningDictionary ControlScanningAuctions2 { get; }
-        public SignOffFasesDictionary SignOffFasesAuctions { get;  }
+        public SignOffFasesDictionary SignOffFasesAuctions { get; }
         private QueensDictionary QueensAuction0 { get; }
         private QueensDictionary QueensAuction1 { get; }
         private QueensDictionary QueensAuction2 { get; }
@@ -130,7 +130,7 @@ namespace Tosr
                                     var key = auction.GetBidsAsString(Fase.Shape);
                                     if (auctions.ContainsKey(key))
                                         auctions[key].pattern.Add(str);
-                                    else 
+                                    else
                                         auctions.Add(key, (new List<string> { str }, isZoom));
                                 }
                             }
@@ -146,7 +146,7 @@ namespace Tosr
             var shufflingDeal = new ShufflingDeal
             {
                 NrOfHands = 1,
-                South = new South { Shape = "4333"}
+                South = new South { Shape = "4333" }
             };
 
             foreach (var control in Enumerable.Range(2, 9))
@@ -191,7 +191,7 @@ namespace Tosr
             logger.Info($"Generating dictionaries for controlsScanning. Shortages:{nrOfShortages}");
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
             var auctions = new ControlScanningDictionary();
-            var controls = new[] { "", "A", "K", "AK"};
+            var controls = new[] { "", "A", "K", "AK" };
 
             foreach (var spades in controls)
                 foreach (var hearts in controls)
@@ -202,7 +202,7 @@ namespace Tosr
 
             void BidAndStoreHandsByHcp(int[] suitLength, params string[] suits)
             {
-                var lsuits =  ObjectCloner.ObjectCloner.DeepClone(suits);
+                var lsuits = ObjectCloner.ObjectCloner.DeepClone(suits);
                 var hand = ConstructHand(suitLengthNoSingleton, lsuits);
                 if (Util.GetControlCount(hand) > 1)
                 {

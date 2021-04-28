@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Solver
 {
-    class Pinvoke
+    internal class Pinvoke
     {
         [DllImport("dds.dll")]
         public static extern int SolveBoardPBN(DealPbn dealPBN, int target, int solutions, int mode, out FutureTricks futureTricks, int threadIndex);

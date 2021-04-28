@@ -58,7 +58,7 @@ namespace TosrIntegration.Test
         [MemberData(nameof(TestCaseProvider.TestCases), MemberType = typeof(TestCaseProvider))]
         public void TestAuctions(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
-            if (testName is null) 
+            if (testName is null)
                 throw new ArgumentNullException(nameof(testName));
             logger.Info($"Executing testcase {testName}");
 

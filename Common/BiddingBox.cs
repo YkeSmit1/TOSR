@@ -33,7 +33,7 @@ namespace Common
                     var button = new BiddingBoxButton(new Bid(level, suit))
                     {
                         Width = defaultButtonWidth,
-                        Left = ((int) suit) * defaultButtonWidth,
+                        Left = ((int)suit) * defaultButtonWidth,
                         Top = (level - 1) * defaultButtonHeight,
                         Parent = this,
                         Text = Convert.ToString(level) + Util.GetSuitDescription(suit),
@@ -73,8 +73,8 @@ namespace Common
             switch (bid.bidType)
             {
                 case BidType.bid:
-                    EnableButtons(new[] {Bid.Dbl});
-                    DisableButtons(new[] {Bid.Rdbl});
+                    EnableButtons(new[] { Bid.Dbl });
+                    DisableButtons(new[] { Bid.Rdbl });
                     foreach (var button in buttons)
                     {
                         Bid localBid = button.bid;
@@ -94,11 +94,11 @@ namespace Common
                         switch (currentBidType)
                         {
                             case BidType.bid:
-                                EnableButtons(new[] {Bid.Dbl});
-                                DisableButtons(new[] {Bid.Rdbl});
+                                EnableButtons(new[] { Bid.Dbl });
+                                DisableButtons(new[] { Bid.Rdbl });
                                 break;
                             case BidType.dbl:
-                                DisableButtons(new[] {Bid.Dbl, Bid.Rdbl});
+                                DisableButtons(new[] { Bid.Dbl, Bid.Rdbl });
                                 break;
                         }
                     }
@@ -107,22 +107,22 @@ namespace Common
                         switch (currentBidType)
                         {
                             case BidType.bid:
-                                DisableButtons(new[] {Bid.Dbl, Bid.Rdbl});
+                                DisableButtons(new[] { Bid.Dbl, Bid.Rdbl });
                                 break;
                             case BidType.dbl:
-                                EnableButtons(new[] {Bid.Rdbl});
-                                DisableButtons(new[] {Bid.Dbl});
+                                EnableButtons(new[] { Bid.Rdbl });
+                                DisableButtons(new[] { Bid.Dbl });
                                 break;
                         }
 
                     }
                     break;
                 case BidType.dbl:
-                    EnableButtons(new[] {Bid.Rdbl});
-                    DisableButtons(new[] {Bid.Dbl});
+                    EnableButtons(new[] { Bid.Rdbl });
+                    DisableButtons(new[] { Bid.Dbl });
                     break;
                 case BidType.rdbl:
-                    DisableButtons(new[] {Bid.Dbl, Bid.Rdbl});
+                    DisableButtons(new[] { Bid.Dbl, Bid.Rdbl });
                     break;
                 default:
                     throw new InvalidEnumArgumentException(nameof(bid.bidType));

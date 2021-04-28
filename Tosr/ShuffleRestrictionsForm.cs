@@ -74,7 +74,7 @@ namespace Tosr
         private void ButtonOkClick(object sender, EventArgs e)
         {
             if (!ValidateChildren())
-                this.DialogResult = DialogResult.None;
+                DialogResult = DialogResult.None;
         }
     }
 }

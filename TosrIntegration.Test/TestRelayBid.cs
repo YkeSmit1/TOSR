@@ -19,7 +19,7 @@ namespace TosrIntegration.Test
         {
             // ♣♦♥♠
             // 3(4)NT tests no pull
-            yield return new object[] { "TestNoAsk18HCP", "AK32,AK2,A32,432", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3NT", "1♠2♣2♥2NT3♦Pass"};
+            yield return new object[] { "TestNoAsk18HCP", "AK32,AK2,A32,432", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3NT", "1♠2♣2♥2NT3♦Pass" };
             yield return new object[] { "TestOneAsk21HCP", "AK32,AK2,A32,K32", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥3NT", "1♠2♣2♥2NT3♦3♠Pass" };
             yield return new object[] { "TestTwoAsk23HCP", "AK32,AK2,A32,KQ2", "x,xxxx,Kxxxx,Axx", "1♣1NT2♦2♠3♣3♥4♣4NT", "1♠2♣2♥2NT3♦3♠4♥Pass" };
         }
