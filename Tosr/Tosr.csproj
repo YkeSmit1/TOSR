@@ -64,8 +64,8 @@
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <PropertyGroup>
-      <TosrBuildDirectory>$(ProjectDir)bin\$(Configuration)\net5.0-windows</TosrBuildDirectory>
-      <TosrIntegrationTestBuildDirectory>$(ProjectDir)..\TosrIntegration.Test\bin\$(Configuration)\net5.0-windows</TosrIntegrationTestBuildDirectory>
+      <TosrBuildDirectory>$(ProjectDir)bin\$(Configuration)\$(TargetFramework)</TosrBuildDirectory>
+      <TosrIntegrationTestBuildDirectory>$(ProjectDir)..\TosrIntegration.Test\bin\$(Configuration)\$(TargetFramework)</TosrIntegrationTestBuildDirectory>
     </PropertyGroup>
     <Copy SourceFiles="$(TosrBuildDirectory)\Engine.dll;$(TosrBuildDirectory)\sqlite3.dll" DestinationFolder="$(TosrIntegrationTestBuildDirectory)" />
   </Target>
