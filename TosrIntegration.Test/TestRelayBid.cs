@@ -1,13 +1,11 @@
 ﻿using Common;
 using Common.Test;
-using Newtonsoft.Json;
 using NLog;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
-using Tosr;
+using BiddingLogic;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -47,8 +45,6 @@ namespace TosrIntegration.Test
             // TODO investigate why opener doesn't bid 3NT
             yield return new object[] { "TestOneAskZoomShapeMax", "AKQ2,AK2,A32,Q32", "xxx,QJ,KQJx,AKJx", "1♣1NT2♠4♣4♠5♣5♥6♣6♥Pass", "1♠2♥3♠4♥4NT5♦5NT6♦6NT" };
             yield return new object[] { "TestTwoAskZoomShapeMax", "AKQ2,AK2,AQ2,Q32", "xxx,QJ,KJxx,AKJx", "1♣1NT2♠4♣4♠5♣5♥5NT6♦6♠Pass", "1♠2♥3♠4♥4NT5♦5♠6♣6♥7♣" };
-
-
         }
 
         public static IEnumerable<object[]> TestCases4Diamond()
@@ -77,7 +73,6 @@ namespace TosrIntegration.Test
 
             // Special case, double zoom
             yield return new object[] { "TestFitWithDoubleZoom", "AJT3,KQ74,AQT5,5", "Kxx,Axxx,J,KQxxx", "1♣2♣2♠3♥4♦5♠Pass", "1NT2♥3♦3NT5♥5NT" };
-
         }
     }
 

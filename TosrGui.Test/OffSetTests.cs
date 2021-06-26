@@ -1,5 +1,5 @@
 ﻿using Xunit;
-using Tosr;
+using BiddingLogic;
 using System;
 using System.Collections.Generic;
 using System.Text;

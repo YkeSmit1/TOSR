@@ -11,6 +11,8 @@ using NLog;
 using Common;
 using Solver;
 using Tosr.Properties;
+using Common.Controls;
+using BiddingLogic;
 
 namespace Tosr
 {
@@ -36,8 +38,8 @@ namespace Tosr
         private string pbnFilepath;
         private CancellationTokenSource cancelBatchbidding = new CancellationTokenSource();
 
-        private readonly string defaultSystemParameters = "Tosr.SystemParameters.json";
-        private readonly string defaultOptimizationParameters = "Tosr.OptimizationParameters.json";
+        private readonly string defaultSystemParameters = "BiddingLogic.SystemParameters.json";
+        private readonly string defaultOptimizationParameters = "BiddingLogic.OptimizationParameters.json";
 
         public Form1()
         {

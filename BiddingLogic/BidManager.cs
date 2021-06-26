@@ -9,7 +9,7 @@ using Solver;
 using MoreLinq;
 using System.ComponentModel;
 
-namespace Tosr
+namespace BiddingLogic
 {
     using RelayBidKindFunc = Func<Auction, string, SouthInformation, BidManager.RelayBidKind>;
 
@@ -364,7 +364,7 @@ namespace Tosr
             {
                 if (biddingState.CurrentBid == Bid.threeSpadeBid && biddingState.Fase != Fase.Shape && reverseDictionaries != null)
                 {
-                    string shapeOrdered = new string(biddingInformation.shape.Value.shapes.First().ToCharArray().OrderByDescending(x => x).ToArray());
+                    var shapeOrdered = new string(biddingInformation.shape.Value.shapes.First().ToCharArray().OrderByDescending(x => x).ToArray());
                     if (shapeOrdered != "7330")
                     {
                         biddingState.RelayBidIdLastFase++;

@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 
-namespace Common
+namespace Common.Controls
 {
     public static class RichTextBoxExtensions
     {

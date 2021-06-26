@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.IO;
 using NLog;
 using Xunit;
-using Newtonsoft.Json;
 using Common;
-using Tosr;
+using BiddingLogic;
 using Common.Test;
 
 namespace TosrIntegration.Test

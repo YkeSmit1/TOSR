@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Tosr;
+using BiddingLogic;
 using Xunit;
 
 namespace Common.Test

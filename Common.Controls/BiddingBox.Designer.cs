@@ -1,4 +1,4 @@
-﻿namespace Common
+﻿namespace Common.Controls
 {
     partial class BiddingBox
     {

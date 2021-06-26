@@ -8,11 +8,11 @@ using System.Resources;
 using System.Text;
 using System.Windows.Forms;
 
-namespace Common
+namespace Common.Controls
 {
     public static class CardControl
     {
-        private static readonly ResourceManager resourceManager = new ResourceManager("Common.Images", Assembly.GetExecutingAssembly());
+        private static readonly ResourceManager resourceManager = new ResourceManager("Common.Controls.Images", Assembly.GetExecutingAssembly());
 
         public static Bitmap GetFaceImageForCard(Suit suit, Face face)
         {

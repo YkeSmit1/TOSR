@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 using NLog;
 using Solver;
 
-namespace Tosr
+namespace BiddingLogic
 {
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
     using FaseDictionary = Dictionary<Fase, Dictionary<string, List<int>>>;

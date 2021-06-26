@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Common;
 
-namespace Tosr
+namespace BiddingLogic
 {
     public class BidGenerator : IBidGenerator
     {

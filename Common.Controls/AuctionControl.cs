@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace Common
+namespace Common.Controls
 {
     public partial class AuctionControl : UserControl
     {

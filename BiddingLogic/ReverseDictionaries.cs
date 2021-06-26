@@ -12,7 +12,7 @@ using Solver;
 using Common;
 using System.ComponentModel;
 
-namespace Tosr
+namespace BiddingLogic
 {
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
     using ControlsOnlyDictionary = Dictionary<string, List<int>>;

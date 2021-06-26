@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Common
+namespace Common.Controls
 {
     public partial class BiddingBox : UserControl
     {

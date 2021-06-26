@@ -12,6 +12,7 @@ using Common;
 using Solver;
 using System.Threading;
 using System.ComponentModel;
+using BiddingLogic;
 
 namespace Tosr
 {
@@ -56,21 +57,20 @@ namespace Tosr
             public int handsBid;
             public int handsNotBidBecauseofFreakhand = 0;
             public int handsNotBidBecauseOfError = 0;
-            public SortedDictionary<Bid, int> contracts = new SortedDictionary<Bid, int>();
-            public SortedDictionary<ConstructedSouthhandOutcome, int> outcomes = new SortedDictionary<ConstructedSouthhandOutcome, int>();
-            public SortedDictionary<Player, int> dealers = new SortedDictionary<Player, int>();
-            public SortedDictionary<int, int> bidsNonShape = new SortedDictionary<int, int>();
-            public SortedDictionary<(CorrectnessContractBreakdown, (ConstructedSouthhandOutcome, PullType)), int> ContractCorrectnessBreakdownOutcome =
-                new SortedDictionary<(CorrectnessContractBreakdown, (ConstructedSouthhandOutcome, PullType)), int>();
-            public SortedDictionary<CorrectnessContract, int> ContractCorrectness = new SortedDictionary<CorrectnessContract, int>();
-            public SortedDictionary<CorrectnessContractBreakdown, int> ContractCorrectnessBreakdown = new SortedDictionary<CorrectnessContractBreakdown, int>();
+            public SortedDictionary<Bid, int> contracts = new();
+            public SortedDictionary<ConstructedSouthhandOutcome, int> outcomes = new();
+            public SortedDictionary<Player, int> dealers = new();
+            public SortedDictionary<int, int> bidsNonShape = new();
+            public SortedDictionary<(CorrectnessContractBreakdown, (ConstructedSouthhandOutcome, PullType)), int> ContractCorrectnessBreakdownOutcome = new();
+            public SortedDictionary<CorrectnessContract, int> ContractCorrectness = new();
+            public SortedDictionary<CorrectnessContractBreakdown, int> ContractCorrectnessBreakdown = new();
 
         }
 
-        private readonly Statistics statistics = new Statistics();
-        private readonly Dictionary<string, List<string>> handPerAuction = new Dictionary<string, List<string>>();
-        private readonly StringBuilder expectedSouthHands = new StringBuilder();
-        private readonly StringBuilder inCorrectContracts = new StringBuilder();
+        private readonly Statistics statistics = new();
+        private readonly Dictionary<string, List<string>> handPerAuction = new();
+        private readonly StringBuilder expectedSouthHands = new();
+        private readonly StringBuilder inCorrectContracts = new();
         private readonly BidManager bidManager;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         private readonly bool useSingleDummySolver;
@@ -212,31 +212,16 @@ namespace Tosr
 
         private static CorrectnessContract GetCorrectness(CorrectnessContractBreakdown correctnessContractBreakdown)
         {
-            switch (correctnessContractBreakdown)
+            return correctnessContractBreakdown switch
             {
-                case CorrectnessContractBreakdown.MissedGoodSmallSlam:
-                case CorrectnessContractBreakdown.SmallSlamTooHigh:
-                case CorrectnessContractBreakdown.MissedGoodGrandSlam:
-                case CorrectnessContractBreakdown.GrandSlamTooHigh:
-                    return CorrectnessContract.Poor;
-                case CorrectnessContractBreakdown.MissedLaydownSmallSlam:
-                case CorrectnessContractBreakdown.SmallSlamHopeless:
-                case CorrectnessContractBreakdown.MissedLaydownGrandSlam:
-                case CorrectnessContractBreakdown.GrandSlamHopeless:
-                case CorrectnessContractBreakdown.Unknown:
-                    return CorrectnessContract.InCorrect;
-                case CorrectnessContractBreakdown.GameCorrect:
-                    return CorrectnessContract.GameCorrect;
-                case CorrectnessContractBreakdown.SmallSlamCorrect:
-                    return CorrectnessContract.SmallSlamCorrect;
-                case CorrectnessContractBreakdown.GrandSlamCorrect:
-                    return CorrectnessContract.GrandSlamCorrect;
-                case CorrectnessContractBreakdown.NoFit:
-                    return CorrectnessContract.NoFit;
-
-                default:
-                    throw new InvalidEnumArgumentException(nameof(correctnessContractBreakdown));
-            }
+                CorrectnessContractBreakdown.MissedGoodSmallSlam or CorrectnessContractBreakdown.SmallSlamTooHigh or CorrectnessContractBreakdown.MissedGoodGrandSlam or CorrectnessContractBreakdown.GrandSlamTooHigh => CorrectnessContract.Poor,
+                CorrectnessContractBreakdown.MissedLaydownSmallSlam or CorrectnessContractBreakdown.SmallSlamHopeless or CorrectnessContractBreakdown.MissedLaydownGrandSlam or CorrectnessContractBreakdown.GrandSlamHopeless or CorrectnessContractBreakdown.Unknown => CorrectnessContract.InCorrect,
+                CorrectnessContractBreakdown.GameCorrect => CorrectnessContract.GameCorrect,
+                CorrectnessContractBreakdown.SmallSlamCorrect => CorrectnessContract.SmallSlamCorrect,
+                CorrectnessContractBreakdown.GrandSlamCorrect => CorrectnessContract.GrandSlamCorrect,
+                CorrectnessContractBreakdown.NoFit => CorrectnessContract.NoFit,
+                _ => throw new InvalidEnumArgumentException(nameof(correctnessContractBreakdown)),
+            };
         }
 
         private void AddHandPerAuction(string str, string strAuction)

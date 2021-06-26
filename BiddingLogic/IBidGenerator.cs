@@ -1,6 +1,6 @@
 ﻿using Common;
 
-namespace Tosr
+namespace BiddingLogic
 {
     public interface IBidGenerator
     {

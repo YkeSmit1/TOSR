@@ -3,10 +3,8 @@ using Common.Test;
 using NLog;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using System.Text;
-using Tosr;
+using BiddingLogic;
 using Xunit;
 using Xunit.Abstractions;
 

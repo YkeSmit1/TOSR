@@ -5,7 +5,7 @@ using System.IO;
 using Moq;
 using Newtonsoft.Json;
 using Xunit;
-using Tosr;
+using BiddingLogic;
 using Common;
 
 namespace TosrGui.Test

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Common;
 
-namespace Tosr
+namespace BiddingLogic
 {
     public class BiddingState
     {

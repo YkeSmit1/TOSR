@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace Common
+namespace Common.Controls
 {
     public class BiddingBoxButton : Button
     {

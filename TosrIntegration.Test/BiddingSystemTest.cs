@@ -4,7 +4,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using Xunit;
 using Common;
-using Tosr;
+using BiddingLogic;
 
 namespace TosrIntegration.Test
 {

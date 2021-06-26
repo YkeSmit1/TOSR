@@ -14,32 +14,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="..\FasesWithOffset.json" Link="FasesWithOffset.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <EmbeddedResource Include="..\OptimizationParameters.json" Link="OptimizationParameters.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\SystemParameters.json" Link="SystemParameters.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
-    <None Include="..\Solver\dds.dll" Link="dds.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="morelinq" Version="3.3.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="NLog" Version="4.7.9" />
+    <PackageReference Include="NLog" Version="4.7.10" />
     <PackageReference Include="ObjectCloner" Version="2.2.2" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BiddingLogic\BiddingLogic.csproj" />
+    <ProjectReference Include="..\Common.Controls\Common.Controls.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Solver\Solver.csproj" />
   </ItemGroup>

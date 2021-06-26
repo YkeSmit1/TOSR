@@ -4,7 +4,7 @@ using System.Text;
 using System.Linq;
 using Xunit;
 using Moq;
-using Tosr;
+using BiddingLogic;
 using Common;
 
 namespace TosrGui.Test

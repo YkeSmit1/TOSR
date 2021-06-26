@@ -1,10 +1,9 @@
-﻿using Common;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Tosr;
+using BiddingLogic;
 
 namespace Common.Test
 {
@@ -17,8 +16,8 @@ namespace Common.Test
             fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
             reverseDictionaries = new ReverseDictionaries(fasesWithOffset, new Progress<string>());
 
-            BidManager.SetSystemParameters(Util.ReadResource("Tosr.SystemParameters.json"));
-            BidManager.SetOptimizationParameters(Util.ReadResource("Tosr.OptimizationParameters.json"));
+            BidManager.SetSystemParameters(Util.ReadResource("BiddingLogic.SystemParameters.json"));
+            BidManager.SetOptimizationParameters(Util.ReadResource("BiddingLogic.OptimizationParameters.json"));
         }
     }
 }
