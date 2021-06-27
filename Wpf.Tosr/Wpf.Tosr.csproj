@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\first.png" />
+    <None Remove="Resources\last.png" />
+    <None Remove="Resources\next.png" />
+    <None Remove="Resources\page_restrictions.png" />
+    <None Remove="Resources\previous.png" />
+    <None Remove="Resources\services.png" />
+    <None Remove="Resources\shuffle.png" />
+    <None Remove="Resources\stumbleupon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\first.png" />
+    <Resource Include="Resources\page_restrictions.png" />
+    <Resource Include="Resources\services.png" />
+    <Resource Include="Resources\shuffle.png" />
+    <Resource Include="Resources\stumbleupon.png" />
+    <Resource Include="Resources\last.png" />
+    <Resource Include="Resources\next.png" />
+    <Resource Include="Resources\previous.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Extended.Wpf.Toolkit" Version="4.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BiddingLogic\BiddingLogic.csproj" />
+    <ProjectReference Include="..\Solver\Solver.csproj" />
+    <ProjectReference Include="..\Wpf.BidControls\Wpf.BidControls.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="nlog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Settings.settings">
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+      <Generator>SettingsSingleFileGenerator</Generator>
+    </None>
+  </ItemGroup>
+
+</Project>

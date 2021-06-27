@@ -22,21 +22,21 @@ namespace Tosr
         private AuctionControl auctionControl;
 
         private string[] deal;
-        private ShufflingDeal shufflingDeal = new ShufflingDeal() { NrOfHands = 1 };
+        private ShufflingDeal shufflingDeal = new() { NrOfHands = 1 };
 
         private BidManager bidManager;
         private ReverseDictionaries reverseDictionaries;
 
-        private readonly static Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
-        private readonly BiddingState biddingState = new BiddingState(fasesWithOffset);
-        private readonly static Logger logger = LogManager.GetCurrentClassLogger();
-        private readonly ManualResetEvent resetEvent = new ManualResetEvent(false);
-        private Pbn pbn = new Pbn();
-        private readonly Pbn interactivePbn = new Pbn();
-        private readonly Pbn filteredPbn = new Pbn();
+        private static readonly Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
+        private readonly BiddingState biddingState = new(fasesWithOffset);
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly ManualResetEvent resetEvent = new(false);
+        private Pbn pbn = new();
+        private readonly Pbn interactivePbn = new();
+        private readonly Pbn filteredPbn = new();
         private int boardIndex;
         private string pbnFilepath;
-        private CancellationTokenSource cancelBatchbidding = new CancellationTokenSource();
+        private CancellationTokenSource cancelBatchbidding = new();
 
         private readonly string defaultSystemParameters = "BiddingLogic.SystemParameters.json";
         private readonly string defaultOptimizationParameters = "BiddingLogic.OptimizationParameters.json";
@@ -204,7 +204,7 @@ namespace Tosr
             auction.AddBid(Bid.PassBid);
 
             auctionControl.ReDraw();
-            biddingBox.UpdateButtons(biddingState.CurrentBid, auctionControl.auction.currentPlayer);
+            biddingBox.UpdateButtons(biddingState.CurrentBid, auctionControl.auction.CurrentPlayer);
             if (biddingState.EndOfBidding)
             {
                 biddingBox.Enabled = false;
@@ -242,7 +242,7 @@ namespace Tosr
             auctionControl.ReDraw();
 
             biddingBox.Clear();
-            biddingBox.UpdateButtons(Bid.OneClub, auctionControl.auction.currentPlayer);
+            biddingBox.UpdateButtons(Bid.OneClub, auctionControl.auction.CurrentPlayer);
             biddingBox.Enabled = true;
         }
 
@@ -428,7 +428,7 @@ namespace Tosr
         {
             if (int.TryParse(toolStripTextBoxBoard.Text, out var board) && board <= pbn.Boards.Count)
             {
-                boardIndex = filteredPbn.Boards.IndexOf(filteredPbn.Boards.Where(b => b.BoardNumber == board).Single());
+                boardIndex = filteredPbn.Boards.IndexOf(filteredPbn.Boards.Single(b => b.BoardNumber == board));
                 LoadCurrentBoard();
 
                 resetEvent.WaitOne();
@@ -483,9 +483,9 @@ namespace Tosr
 
         private void ToolStripTextBoxBoardLeave(object sender, EventArgs e)
         {
-            if (int.TryParse(toolStripTextBoxBoard.Text, out var board) && filteredPbn.Boards.Where(b => b.BoardNumber == board).Any())
+            if (int.TryParse(toolStripTextBoxBoard.Text, out var board) && filteredPbn.Boards.Any(b => b.BoardNumber == board))
             {
-                boardIndex = filteredPbn.Boards.IndexOf(filteredPbn.Boards.Where(b => b.BoardNumber == board).Single());
+                boardIndex = filteredPbn.Boards.IndexOf(filteredPbn.Boards.Single(b => b.BoardNumber == board));
                 LoadCurrentBoard();
             }
         }

@@ -23,11 +23,24 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common.Test", "Common.Test\Common.Test.csproj", "{D121652C-703D-43F5-8342-1290CCBF4E77}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiddingLogic", "BiddingLogic\BiddingLogic.csproj", "{F76071D3-8FF9-4E3F-8EF9-B9DEE9EC4A86}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BiddingLogic", "BiddingLogic\BiddingLogic.csproj", "{F76071D3-8FF9-4E3F-8EF9-B9DEE9EC4A86}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Controls", "Common.Controls\Common.Controls.csproj", "{BBFEFDE6-9972-4708-BEAB-5AE0DAAA2258}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common.Controls", "Common.Controls\Common.Controls.csproj", "{BBFEFDE6-9972-4708-BEAB-5AE0DAAA2258}"
 	ProjectSection(ProjectDependencies) = postProject
 		{12EA347E-0F5F-42A6-9531-EBF9C94D795D} = {12EA347E-0F5F-42A6-9531-EBF9C94D795D}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wpf.Tosr", "Wpf.Tosr\Wpf.Tosr.csproj", "{1AC7AC66-F7DE-49CD-A77B-260872D41014}"
+	ProjectSection(ProjectDependencies) = postProject
+		{12EA347E-0F5F-42A6-9531-EBF9C94D795D} = {12EA347E-0F5F-42A6-9531-EBF9C94D795D}
+		{66942AF0-3C9A-4CB5-9284-6540D37BABD8} = {66942AF0-3C9A-4CB5-9284-6540D37BABD8}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wpf.BidControls", "Wpf.BidControls\Wpf.BidControls.csproj", "{884E7ECD-F0DC-4485-AE0A-94CCC13FA9E9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{67526F93-5F4E-465D-9142-76CCFD87308C}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
 Global
@@ -160,6 +173,30 @@ Global
 		{BBFEFDE6-9972-4708-BEAB-5AE0DAAA2258}.Release|x64.Build.0 = Release|Any CPU
 		{BBFEFDE6-9972-4708-BEAB-5AE0DAAA2258}.Release|x86.ActiveCfg = Release|Any CPU
 		{BBFEFDE6-9972-4708-BEAB-5AE0DAAA2258}.Release|x86.Build.0 = Release|Any CPU
+		{1AC7AC66-F7DE-49CD-A77B-260872D41014}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1AC7AC66-F7DE-49CD-A77B-260872D41014}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1AC7AC66-F7DE-49CD-A77B-260872D41014}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1AC7AC66-F7DE-49CD-A77B-260872D41014}.Debug|x64.Build.0 = Debug|Any CPU
+		{1AC7AC66-F7DE-49CD-A77B-260872D41014}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1AC7AC66-F7DE-49CD-A77B-260872D41014}.Debug|x86.Build.0 = Debug|Any CPU
+		{1AC7AC66-F7DE-49CD-A77B-260872D41014}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1AC7AC66-F7DE-49CD-A77B-260872D41014}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1AC7AC66-F7DE-49CD-A77B-260872D41014}.Release|x64.ActiveCfg = Release|Any CPU
+		{1AC7AC66-F7DE-49CD-A77B-260872D41014}.Release|x64.Build.0 = Release|Any CPU
+		{1AC7AC66-F7DE-49CD-A77B-260872D41014}.Release|x86.ActiveCfg = Release|Any CPU
+		{1AC7AC66-F7DE-49CD-A77B-260872D41014}.Release|x86.Build.0 = Release|Any CPU
+		{884E7ECD-F0DC-4485-AE0A-94CCC13FA9E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{884E7ECD-F0DC-4485-AE0A-94CCC13FA9E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{884E7ECD-F0DC-4485-AE0A-94CCC13FA9E9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{884E7ECD-F0DC-4485-AE0A-94CCC13FA9E9}.Debug|x64.Build.0 = Debug|Any CPU
+		{884E7ECD-F0DC-4485-AE0A-94CCC13FA9E9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{884E7ECD-F0DC-4485-AE0A-94CCC13FA9E9}.Debug|x86.Build.0 = Debug|Any CPU
+		{884E7ECD-F0DC-4485-AE0A-94CCC13FA9E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{884E7ECD-F0DC-4485-AE0A-94CCC13FA9E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{884E7ECD-F0DC-4485-AE0A-94CCC13FA9E9}.Release|x64.ActiveCfg = Release|Any CPU
+		{884E7ECD-F0DC-4485-AE0A-94CCC13FA9E9}.Release|x64.Build.0 = Release|Any CPU
+		{884E7ECD-F0DC-4485-AE0A-94CCC13FA9E9}.Release|x86.ActiveCfg = Release|Any CPU
+		{884E7ECD-F0DC-4485-AE0A-94CCC13FA9E9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
