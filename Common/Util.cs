@@ -190,11 +190,7 @@ namespace Common
 
         public static (Suit, int) GetLongestSuit(string northHand, string southHand)
         {
-            var suitLengthNorth = northHand.Split(',').Select(x => x.Length);
-            Debug.Assert(suitLengthNorth.Count() == 4);
-            var suitLengthSouth = southHand.Split(',').Select(x => x.Length);
-            Debug.Assert(suitLengthSouth.Count() == 4);
-            var suitLengthNS = suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
+            var suitLengthNS = GetSuitLengthNS(northHand, southHand);
             var maxSuitLength = suitLengthNS.Max();
             var longestSuit = suitLengthNS.ToList().IndexOf(maxSuitLength);
             return ((Suit)(3 - longestSuit), maxSuitLength);
@@ -212,15 +208,19 @@ namespace Common
             return ((Suit)(3 - longestSuit), maxSuitLength);
         }
 
+        public static IEnumerable<Suit> GetSuitsWithFit(string northHand, string southHand)
+        {
+            var suitLengthNS = GetSuitLengthNS(northHand, southHand);
+            return suitLengthNS.Select((length, index) => ((Suit)(3 - index), length)).Where(x => x.length >= 8).Select(y => y.Item1);
+        }
 
-        public static IEnumerable<(Suit suit, int length)> GetSuitsWithFit(string northHand, string southHand)
+        private static IEnumerable<int> GetSuitLengthNS(string northHand, string southHand)
         {
             var suitLengthNorth = northHand.Split(',').Select(x => x.Length);
             Debug.Assert(suitLengthNorth.Count() == 4);
             var suitLengthSouth = southHand.Split(',').Select(x => x.Length);
             Debug.Assert(suitLengthSouth.Count() == 4);
-            var suitLengthNS = suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
-            return suitLengthNS.Select((length, index) => ((Suit)(3 - index), length)).OrderByDescending(x => x.length).TakeWhile(x => x.length >= 8);
+            return suitLengthNorth.Zip(suitLengthSouth, (x, y) => x + y);
         }
 
         public static int GetNumberOfTrumps(Suit suit, string northHand, string southHand)
@@ -265,13 +265,15 @@ namespace Common
             Debug.Assert(southHand.Length == 16);
             // TODO Use single dummy analyses to find out the best trump suit
             var (longestSuit, suitLength) = GetLongestSuit(northHand, southHand);
-            // If we have a major fit return the major
-            if (new List<Suit> { Suit.Spades, Suit.Hearts }.Contains(longestSuit))
-                return (suitLength < 8) ? Suit.NoTrump : longestSuit;
-            // Only wants to play a minor if we have a singleton and 9 or more trumps
-            if (suitLength > 8 && (northHand.Split(',').Select(x => x.Length).Min() <= 1 || southHand.Split(',').Select(x => x.Length).Min() <= 1))
-                return longestSuit;
-            return Suit.NoTrump;
+            // Major always, but only a minor if we have a singleton and 9 or more trumps
+            return suitLength > 7 && longestSuit is Suit.Hearts or Suit.Spades || suitLength > 8 && (HasShortage(northHand) || HasShortage(southHand))
+                ? longestSuit
+                : Suit.NoTrump;
+
+            static bool HasShortage(string hand)
+            {
+                return hand.Split(',').Select(x => x.Length).Min() <= 1;
+            }
         }
 
         public static string GetHandWithOnlyControlsAs4333(string handsString, string honors)

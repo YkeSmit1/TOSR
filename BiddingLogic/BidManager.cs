@@ -228,7 +228,7 @@ namespace BiddingLogic
                 else
                 {
                     if (useSingleDummySolverDuringRelaying)
-                        if (TryGetEndContract(southInformation, trumpSuit, out var bid))
+                        if (TryGetEndContract(southInformation, out var bid))
                             return bid;
                 }
             }
@@ -310,7 +310,7 @@ namespace BiddingLogic
                 return false;
             }
 
-            bool TryGetEndContract(SouthInformation southInformation, Suit trumpSuit, out Bid bid)
+            bool TryGetEndContract(SouthInformation southInformation, out Bid bid)
             {
                 loggerBidding.Info($"TryGetEndContract. Current contract:{biddingState.CurrentBid}");
 
