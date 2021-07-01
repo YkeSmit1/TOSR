@@ -330,43 +330,6 @@ namespace BiddingLogic
                 return bid != null;
             }
 
-            static Bid GetEndContract(Dictionary<Bid, int> possibleContracts, Bid currentBid)
-            {
-                Dictionary<Bid, (int occurrences, BidPosibilities posibility)> enrichedContracts = possibleContracts.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value, GetBidPosibility(kvp.Key, currentBid)));
-                GroupGameContracts();
-                var reachableContracts = enrichedContracts.Where(y => y.Value.posibility != BidPosibilities.CannotBid).ToDictionary(x => x.Key, y => y.Value);
-
-                var bid = reachableContracts.Count switch
-                {
-                    0 => Bid.PassBid,
-                    1 => reachableContracts.Single().Key,
-                    _ => reachableContracts.Count(y => y.Value.posibility == BidPosibilities.CanInvestigate) <= 1
-                            ? reachableContracts.MaxBy(y => y.Value.occurrences).First().Key
-                            : null,
-                };
-
-                var bidString = bid == null ? "Relay a bit more" : $"Bid: {bid}";
-                loggerBidding.Info($"{reachableContracts.Count} contracts are possible. " +
-                    $"Reachable contracts: {string.Join(';', reachableContracts.Select(y => y.Key))}. " +
-                    $"Investigatable contracts: {string.Join(';', reachableContracts.Where(y => y.Value.posibility == BidPosibilities.CanInvestigate).Select(y => y.Key))} {bidString}");
-
-                return bid;
-
-                void GroupGameContracts()
-                {
-                    var bestGames = enrichedContracts.Where(x => x.Key.rank < 6 && x.Value.posibility != BidPosibilities.CannotBid).MinBy(x => x.Key);
-                    if (bestGames.Any())
-                    {
-                        var bestGame = bestGames.Single();
-                        enrichedContracts = enrichedContracts.GroupBy(x => x.Key.rank < 6 ? bestGame.Key : x.Key)
-                            .ToDictionary(g => g.Key, g => (g.Sum(v => v.Value.occurrences),
-                                g.Key == bestGame.Key ? g.Any(v => v.Value.posibility == BidPosibilities.CanInvestigate) ? BidPosibilities.CanInvestigate :
-                                    BidPosibilities.CannotInvestigate : g.Single().Value.posibility));
-                    }
-                }
-            }
-
-
             Bid GetRelayBid()
             {
                 if (biddingState.CurrentBid == Bid.threeSpadeBid && biddingState.Fase != Fase.Shape && reverseDictionaries != null)
@@ -379,6 +342,42 @@ namespace BiddingLogic
                     }
                 }
                 return Bid.NextBid(biddingState.CurrentBid);
+            }
+        }
+
+        public static Bid GetEndContract(Dictionary<Bid, int> possibleContracts, Bid currentBid)
+        {
+            Dictionary<Bid, (int occurrences, BidPosibilities posibility)> enrichedContracts = possibleContracts.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value, GetBidPosibility(kvp.Key, currentBid)));
+            GroupGameContracts();
+            var reachableContracts = enrichedContracts.Where(y => y.Value.posibility != BidPosibilities.CannotBid).ToDictionary(x => x.Key, y => y.Value);
+
+            var bid = reachableContracts.Count switch
+            {
+                0 => Bid.PassBid,
+                1 => reachableContracts.Single().Key,
+                _ => reachableContracts.Count(y => y.Value.posibility == BidPosibilities.CanInvestigate) <= 1
+                        ? reachableContracts.MaxBy(y => y.Value.occurrences).First().Key
+                        : null,
+            };
+
+            var bidString = bid == null ? "Relay a bit more" : $"Bid: {bid}";
+            loggerBidding.Info($"{reachableContracts.Count} contracts are possible. " +
+                $"Reachable contracts: {string.Join(';', reachableContracts.Select(y => y.Key))}. " +
+                $"Investigatable contracts: {string.Join(';', reachableContracts.Where(y => y.Value.posibility == BidPosibilities.CanInvestigate).Select(y => y.Key))} {bidString}");
+
+            return bid;
+
+            void GroupGameContracts()
+            {
+                var bestGames = enrichedContracts.Where(x => x.Key.rank < 6 && x.Value.posibility != BidPosibilities.CannotBid).MinBy(x => x.Key);
+                if (bestGames.Any())
+                {
+                    var bestGame = bestGames.Single().Key;
+                    enrichedContracts = enrichedContracts.GroupBy(x => x.Key.rank < 6 ? bestGame : x.Key)
+                        .ToDictionary(g => g.Key, g => (g.Sum(v => v.Value.occurrences),
+                            g.Key == bestGame ? g.Any(v => v.Value.posibility == BidPosibilities.CanInvestigate) ? BidPosibilities.CanInvestigate :
+                                BidPosibilities.CannotInvestigate : g.Single().Value.posibility));
+                }
             }
         }
 
