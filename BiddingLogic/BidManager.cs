@@ -93,6 +93,7 @@ namespace BiddingLogic
         private readonly ReverseDictionaries reverseDictionaries = null;
         private readonly bool useSingleDummySolver = false;
         private readonly bool useSingleDummySolverDuringRelaying = false;
+        public SuitSelection SuitSelection { get; set; } = SuitSelection.AllSuits;
 
         private readonly RelayBidKindFunc GetRelayBidKindFunc = null;
 
@@ -348,14 +349,14 @@ namespace BiddingLogic
         public static Bid GetEndContract(Dictionary<Bid, int> possibleContracts, Bid currentBid)
         {
             Dictionary<Bid, (int occurrences, BidPosibilities posibility)> enrichedContracts = possibleContracts.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value, GetBidPosibility(kvp.Key, currentBid)));
-            GroupGameContracts();
             var reachableContracts = enrichedContracts.Where(y => y.Value.posibility != BidPosibilities.CannotBid).ToDictionary(x => x.Key, y => y.Value);
+            GroupGameContracts();
 
             var bid = reachableContracts.Count switch
             {
                 0 => Bid.PassBid,
                 1 => reachableContracts.Single().Key,
-                _ => reachableContracts.Count(y => y.Value.posibility == BidPosibilities.CanInvestigate) <= 1
+                _ => reachableContracts.Where(y => y.Value.posibility == BidPosibilities.CanInvestigate).GroupBy(x => Util.GetContractType(x.Key)).Count() <= 1
                         ? reachableContracts.MaxBy(y => y.Value.occurrences).First().Key
                         : null,
             };
@@ -369,14 +370,14 @@ namespace BiddingLogic
 
             void GroupGameContracts()
             {
-                var bestGames = enrichedContracts.Where(x => x.Key.rank < 6 && x.Value.posibility != BidPosibilities.CannotBid).MinBy(x => x.Key);
-                if (bestGames.Any())
+                reachableContracts = reachableContracts.GroupBy(x => x.Key.rank < 6 ? GetBestGames(x.Key.suit).Single().Key : x.Key)
+                    .ToDictionary(g => g.Key, g => (g.Sum(v => v.Value.occurrences),
+                        GetBestGames(g.Key.suit).Any() && g.Key == GetBestGames(g.Key.suit).Single().Key ? g.Any(v => v.Value.posibility == BidPosibilities.CanInvestigate) ? BidPosibilities.CanInvestigate :
+                            BidPosibilities.CannotInvestigate : g.Single().Value.posibility));
+
+                IEnumerable<KeyValuePair<Bid, (int occurrences, BidPosibilities posibility)>> GetBestGames(Suit suit)
                 {
-                    var bestGame = bestGames.Single().Key;
-                    enrichedContracts = enrichedContracts.GroupBy(x => x.Key.rank < 6 ? bestGame : x.Key)
-                        .ToDictionary(g => g.Key, g => (g.Sum(v => v.Value.occurrences),
-                            g.Key == bestGame ? g.Any(v => v.Value.posibility == BidPosibilities.CanInvestigate) ? BidPosibilities.CanInvestigate :
-                                BidPosibilities.CannotInvestigate : g.Single().Value.posibility));
+                    return reachableContracts.Where(x => x.Key.suit == suit && x.Key.rank < 6).MinBy(x => x.Key);
                 }
             }
         }
@@ -409,7 +410,7 @@ namespace BiddingLogic
             var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
             bool canReuseSolverOutput = biddingState.Fase == Fase.ScanningControls && southInformation.ControlsScanningBidCount > 0;
             if (!canReuseSolverOutput || occurrencesForBids == null)
-                occurrencesForBids = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
+                occurrencesForBids = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers, SuitSelection);
             loggerBidding.Info($"Occurrences by bid in GetPossibleContractsFromAuction: {JsonConvert.SerializeObject(occurrencesForBids)}");
 
             return occurrencesForBids;
@@ -426,7 +427,7 @@ namespace BiddingLogic
 
         private Dictionary<int, double> GetConfidenceTricks(string northHand, SouthInformation southInformation, Dictionary<Suit, Player> declarers)
         {
-            occurrencesForBids = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
+            occurrencesForBids = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers, SuitSelection);
             var nrOfHands = occurrencesForBids.Sum(x => x.Value);
             var groupedTricked = occurrencesForBids.GroupBy(x => x.Key.rank + 6);
             var confidenceTricks = groupedTricked.ToDictionary(bid => bid.Key, bid => (double)100 * bid.Select(x => x.Value).Sum() / nrOfHands);
@@ -437,7 +438,7 @@ namespace BiddingLogic
         {
             var southInformation = biddingInformation.GetInformationFromAuction(auction, northHand);
             var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
-            var tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
+            var tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers, SuitSelection);
             var possibleTricksForBid = tricksForBid.Where(bid => bid.Key >= currentBid);
             if (!possibleTricksForBid.Any())
                 return Bid.PassBid;

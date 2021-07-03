@@ -208,6 +208,12 @@ namespace Common
             return ((Suit)(3 - longestSuit), maxSuitLength);
         }
 
+        public static IEnumerable<Suit> GetSuitsWithFitShape(string northHand, string southHandShape)
+        {
+            var southHand = string.Join(',', southHandShape.Select(x => new string('x', int.Parse(x.ToString()))));
+            return GetSuitsWithFit(northHand, southHand);
+        }
+
         public static IEnumerable<Suit> GetSuitsWithFit(string northHand, string southHand)
         {
             var suitLengthNS = GetSuitLengthNS(northHand, southHand);
@@ -404,5 +410,16 @@ namespace Common
             using var reader = new StreamReader(stream);
             return reader.ReadToEnd();
         }
+
+        public static ExpectedContract GetContractType(Bid bid)
+        {
+            return bid.rank switch
+            {
+                6 => ExpectedContract.SmallSlam,
+                7 => ExpectedContract.GrandSlam,
+                _ => ExpectedContract.Game,
+            };
+        }
+
     }
 }
