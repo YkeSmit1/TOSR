@@ -1,0 +1,10 @@
+﻿[*.cs]
+
+# IDE0011: Add braces
+csharp_prefer_braces = false
+
+# IDE0008: Use explicit type
+dotnet_diagnostic.IDE0008.severity = none
+
+# IDE0058: Expression value is never used
+dotnet_diagnostic.IDE0058.severity = none

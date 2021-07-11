@@ -1,0 +1,172 @@
+﻿<Window x:Class="Wpf.Tosr.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wpf.Tosr"
+        xmlns:userControls="clr-namespace:Wpf.BidControls.Views;assembly=Wpf.BidControls" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        mc:Ignorable="d"
+        Title="TOSR" Height="680" Width="800"
+        Closed="Window_Closed"
+        Loaded="Form1Load"
+        Background="Green"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <RoutedUICommand x:Key="RulesCommand" Text="Rules Database">
+            <RoutedUICommand.InputGestures>
+                <KeyGesture>F7</KeyGesture>
+            </RoutedUICommand.InputGestures>
+        </RoutedUICommand>
+        <RoutedUICommand x:Key="ViewBiddingCommand" Text="View Bidding">
+            <RoutedUICommand.InputGestures>
+                <KeyGesture>F8</KeyGesture>
+            </RoutedUICommand.InputGestures>
+        </RoutedUICommand>
+        <RoutedUICommand x:Key="ShuffleCommand" Text="Shuffle">
+            <RoutedUICommand.InputGestures>
+                <KeyGesture>F3</KeyGesture>
+            </RoutedUICommand.InputGestures>
+        </RoutedUICommand>
+        <RoutedUICommand x:Key="RestrictionsCommand" Text="Restrictions">
+            <RoutedUICommand.InputGestures>
+                <KeyGesture>F6</KeyGesture>
+            </RoutedUICommand.InputGestures>
+        </RoutedUICommand>
+        <RoutedUICommand x:Key="GenerateCommand" Text="Generate Hands">
+            <RoutedUICommand.InputGestures>
+                <KeyGesture>F4</KeyGesture>
+            </RoutedUICommand.InputGestures>
+        </RoutedUICommand>
+        <RoutedUICommand x:Key="BatchBidCommand" Text="Batch bid generated hands">
+            <RoutedUICommand.InputGestures>
+                <KeyGesture>F5</KeyGesture>
+            </RoutedUICommand.InputGestures>
+        </RoutedUICommand>
+        <RoutedUICommand x:Key="CancelBatchBiddingCommand" Text="Cancel batch bidding">
+            <RoutedUICommand.InputGestures>
+                <KeyGesture>F12</KeyGesture>
+            </RoutedUICommand.InputGestures>
+        </RoutedUICommand>
+    </Window.Resources>
+    <Window.CommandBindings>
+        <CommandBinding Command="{StaticResource RulesCommand}" Executed="ToolStripMenuItem11Click"/>
+        <CommandBinding Command="{StaticResource ViewBiddingCommand}" Executed="ViewAuctionClick"/>
+        <CommandBinding Command="{StaticResource ShuffleCommand}" Executed="ButtonShuffleClick"/>
+        <CommandBinding Command="{StaticResource RestrictionsCommand}" Executed="ToolStripButton4Click"/>
+        <CommandBinding Command="{StaticResource GenerateCommand}" Executed="ButtonGenerateHandsClick"/>
+        <CommandBinding Command="{StaticResource BatchBidCommand}" Executed="ButtonBatchBiddingClick"/>
+        <CommandBinding Command="{StaticResource CancelBatchBiddingCommand}" Executed="ToolStripMenuItemAbortClick"/>
+    </Window.CommandBindings>
+        <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="150"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="150"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="32"/>
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0">
+            <MenuItem Header="_File">
+                <MenuItem Name="toolStripMenuItem11" Header="Rules database" Command="{StaticResource RulesCommand}"/>
+                <MenuItem Name="toolStripMenuItemLoadSystemParameters" Header="System parameters" Click="ToolStripMenuItemLoadSystemParametersClick"/>
+                <MenuItem Name="toolStripMenuItemLoadOptimizationParameters" Header="Optimization parameters" Click="ToolStripMenuItemLoadOptimizationParametersClick"/>
+                <MenuItem Name="toolStripMenuItemUseDefaultParameters" Header="Use default parameters" Click="ToolStripMenuItemUseDefaultParametersClick"/>
+                <Separator/>
+                <MenuItem Name="toolStripMenuItemLoadSet" Header="Load set from PBN" Click="ToolStripMenuItemLoadSetClick"/>
+                <MenuItem Name="toolStripMenuItemSaveSet" Header="Save set to PBN" Click="ToolStripMenuItemSaveSetClick"/>
+                <MenuItem Name="toolStripMenuItemSaveFilteredSet" Header="Save filtered set to PBN" Click="ToolStripMenuItemSaveFilteredSetClick"/>
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Name="toolStripMenuItem13" Header="View bidding" Command="{StaticResource ViewBiddingCommand}"/>
+                <MenuItem Name="toolStripMenuItemAlternateSuits" Header="Show alternate suits" Click="ToolStripMenuItemAlternateSuitsClick" IsCheckable="True"/>
+            </MenuItem>
+            <MenuItem Header="_Shuffle">
+                <MenuItem Name="toolStripMenuItem7" Header="Shuffle new hand" Command="{StaticResource ShuffleCommand}"/>
+                <MenuItem Name="toolStripMenuItem10" Header="Restrictions" Command="{StaticResource RestrictionsCommand}"/>
+                <MenuItem Name="toolStripMenuItemBidAgain" Header="Bid Again" Click="ToolStripMenuItemBidAgainClick"/>
+            </MenuItem>
+            <MenuItem Header="_Batch">
+                <MenuItem Name="toolStripMenuItemGenerateHands" Header="Generate Hands" Command="{StaticResource GenerateCommand}"/>
+                <MenuItem Name="toolStripMenuItemBatchBid" Header="Batch bid generated hands" Command="{StaticResource BatchBidCommand}"/>
+                <MenuItem Name="toolStripMenuItemUseSolver" Header="Use Solver" IsCheckable="True"/>
+                <MenuItem Name="toolStripMenuItemOneBoard" Header="Batch bid one board" Click="ToolStripMenuItemOneBoardClick"/>
+                <MenuItem Name="toolStripMenuItemAbort" Header="Cancel batch bidding" Command="{StaticResource CancelBatchBiddingCommand}"/>
+            </MenuItem>
+
+        </Menu>
+        <ToolBar Grid.Row="1">
+            <Button x:Name="toolStripButton1" ToolTip="Shuffle" Click="ButtonShuffleClick">
+                <Image Source="/Wpf.Tosr;component/Resources/shuffle.png"/>
+            </Button>
+            <Separator/>
+            <Button x:Name="toolStripButton2" ToolTip="Generate hands" Click="ButtonGenerateHandsClick">
+                <Image Source="/Wpf.Tosr;component/Resources/stumbleupon.png"/>
+
+            </Button>
+            <Button x:Name="toolStripButton3" ToolTip="Batch" Click="ButtonBatchBiddingClick">
+                <Image Source="/Wpf.Tosr;component/Resources/services.png"/>
+
+            </Button>
+            <Button x:Name="toolStripButton4" ToolTip="Restrictions" Click="ToolStripButton4Click">
+                <Image Source="/Wpf.Tosr;component/Resources/page_restrictions.png"/>
+
+            </Button>
+            <Separator/>
+            <Button x:Name="toolStripButtonFirst" Click="ToolStripButtonFirstClick" ToolTip="First">
+                    <Image Source="/Wpf.Tosr;component/Resources/first.png"/>
+            </Button>
+            <Button x:Name="toolStripButtonPrevious" Click="ToolStripButtonPreviousClick" ToolTip="Previous">
+                <Image Source="/Wpf.Tosr;component/Resources/previous.png"/>
+            </Button>
+            <TextBox x:Name="toolStripTextBoxBoard" Text="" Width="30"/>
+            <Button x:Name="toolStripButtonNext" Click="ToolStripButtonNextClick" ToolTip="Next">
+                <Image Source="/Wpf.Tosr;component/Resources/next.png"/>
+
+            </Button>
+            <Button x:Name="toolStripButtonLast" Click="ToolStripButtonLastClick" ToolTip="Last">
+                <Image Source="/Wpf.Tosr;component/Resources/last.png"/>
+            </Button>
+            <ComboBox Name="toolStripComboBoxFilter" SelectionChanged="ToolStripComboBoxFilterSelectedIndexChanged" Width="100" IsReadOnly="True"/>
+        </ToolBar>
+        <!--Cards north-->
+        <userControls:HandView  Grid.Row="2" x:Name="panelNorth" Padding="67, 27"/>
+        <!--Biddingbox and auction-->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="4*"/>
+                <ColumnDefinition Width="4*"/>
+                <ColumnDefinition Width="4*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="1">
+                <userControls:BiddingBoxView x:Name="BiddingBoxView"/>
+            </StackPanel>
+            <Border Grid.Column="2" BorderThickness="2">
+                <userControls:AuctionView x:Name="AuctionView" Background="White"/>
+            </Border>
+        </Grid>
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="400"/>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="150"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="50"/>
+            </Grid.RowDefinitions>
+            <userControls:HandView Grid.Column="0" Grid.RowSpan="2" x:Name="panelSouth" Padding="67, 27"/>
+            <Button Grid.Column="1" Grid.Row="1" Name="buttonGetAuction" Content="Get Auction" Click="ButtonGetAuctionClick" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="5"/>
+            <Label Grid.Column="2" Grid.Row="0" VerticalAlignment="Bottom" Content="Number of hands to bid" FontWeight="Bold"/>
+            <xctk:IntegerUpDown Grid.Column="2" Grid.Row="2" Value="10" Name="numericUpDown1" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+        </Grid>
+        <StatusBar Grid.Row="6" >
+            <StatusBarItem>
+                <Label Name="toolStripStatusLabel1" Content="Test"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>
