@@ -34,8 +34,8 @@ namespace Common
         public static readonly Bid sixSpadeBid = new Bid(6, Suit.Spades);
 
         public readonly BidType bidType;
-        public readonly int rank;
-        public readonly Suit suit;
+        public int rank { get; set; }
+        public Suit suit { get; set; }
         public string description = string.Empty;
         public Fase fase = Fase.Unknown;
         public Fase pullFase = Fase.Unknown;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -9,11 +10,12 @@ namespace Common
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public class Auction
     {
-        public Player currentPlayer;
-        private int currentBiddingRound;
-        public readonly Dictionary<int, Dictionary<Player, Bid>> bids = new Dictionary<int, Dictionary<Player, Bid>>();
+        public Player CurrentPlayer { get; set; }
+        public int CurrentBiddingRound { get; set; }
+        public Dictionary<int, Dictionary<Player, Bid>> bids { get; set; } = new Dictionary<int, Dictionary<Player, Bid>>();
         public Bid currentContract = Bid.PassBid;
         public bool responderHasSignedOff = false;
+        public BidType currentBidType = BidType.pass;
 
         private string DebuggerDisplay
         {
@@ -49,32 +51,36 @@ namespace Common
 
         public void AddBid(Bid bid)
         {
-            if (!bids.ContainsKey(currentBiddingRound))
+            if (!bids.ContainsKey(CurrentBiddingRound))
             {
-                bids[currentBiddingRound] = new Dictionary<Player, Bid>();
+                bids[CurrentBiddingRound] = new Dictionary<Player, Bid>();
             }
-            bids[currentBiddingRound][currentPlayer] = bid;
+            bids[CurrentBiddingRound][CurrentPlayer] = bid;
 
-            if (currentPlayer == Player.South)
+            if (CurrentPlayer == Player.South)
             {
-                currentPlayer = Player.West;
-                ++currentBiddingRound;
+                CurrentPlayer = Player.West;
+                ++CurrentBiddingRound;
             }
             else
             {
-                ++currentPlayer;
+                ++CurrentPlayer;
             }
             if (bid.bidType == BidType.bid)
             {
                 currentContract = bid;
+            }
+            if (bid.bidType != BidType.pass)
+            {
+                currentBidType = bid.bidType;
             }
         }
 
         public void Clear()
         {
             bids.Clear();
-            currentPlayer = Player.West;
-            currentBiddingRound = 1;
+            CurrentPlayer = Player.West;
+            CurrentBiddingRound = 1;
         }
 
         public string GetBidsAsString(Player player)
@@ -151,6 +157,27 @@ namespace Common
                     previousBid = bid;
                 }
             }
+        }
+
+        public bool IsEndOfBidding()
+        {
+            var allBids = bids.SelectMany(x => x.Value).Select(y => y.Value);
+            return (allBids.Count() == 4 && allBids.All(bid => bid == Bid.PassBid)) ||
+                allBids.Count() > 3 && allBids.TakeLast(3).Count() == 3 && allBids.TakeLast(3).All(bid => bid == Bid.PassBid);
+        }
+
+        public bool BidIsPossible(Bid bid)
+        {
+            return bid.bidType switch
+            {
+                BidType.pass => true,
+                BidType.bid => currentContract.bidType != BidType.bid || currentContract < bid,
+                BidType.dbl => currentBidType == BidType.bid &&
+                    !Util.IsSameTeam(CurrentPlayer, GetDeclarer(currentContract.suit)),
+                BidType.rdbl => currentBidType == BidType.dbl &&
+                    Util.IsSameTeam(CurrentPlayer, GetDeclarer(currentContract.suit)),
+                _ => throw new InvalidEnumArgumentException(nameof(bid.bidType), (int)bid.bidType, null),
+            };
         }
     }
 }
