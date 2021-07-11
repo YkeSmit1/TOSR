@@ -56,4 +56,12 @@
     </None>
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <PropertyGroup>
+      <TosrBuildDirectory>$(ProjectDir)bin\$(Configuration)\$(TargetFramework)</TosrBuildDirectory>
+      <TosrIntegrationTestBuildDirectory>$(ProjectDir)..\TosrIntegration.Test\bin\$(Configuration)\$(TargetFramework)</TosrIntegrationTestBuildDirectory>
+    </PropertyGroup>
+    <Copy SourceFiles="$(TosrBuildDirectory)\Engine.dll;$(TosrBuildDirectory)\sqlite3.dll" DestinationFolder="$(TosrIntegrationTestBuildDirectory)" />
+  </Target>
+
 </Project>
