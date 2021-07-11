@@ -402,7 +402,7 @@ namespace BiddingLogic
 
         private Dictionary<int, double> GetConfidenceTricks(string northHand, SouthInformation southInformation, Dictionary<Suit, Player> declarers)
         {
-            occurrencesForBids = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers, SuitSelection);
+            occurrencesForBids = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers, SuitSelection.LongestSuit);
             var nrOfHands = occurrencesForBids.Sum(x => x.Value);
             var groupedTricked = occurrencesForBids.GroupBy(x => x.Key.rank + 6);
             var confidenceTricks = groupedTricked.ToDictionary(bid => bid.Key, bid => (double)100 * bid.Select(x => x.Value).Sum() / nrOfHands);

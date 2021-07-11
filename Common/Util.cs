@@ -269,7 +269,6 @@ namespace Common
         {
             Debug.Assert(northHand.Length == 16);
             Debug.Assert(southHand.Length == 16);
-            // TODO Use single dummy analyses to find out the best trump suit
             var (longestSuit, suitLength) = GetLongestSuit(northHand, southHand);
             // Major always, but only a minor if we have a singleton and 9 or more trumps
             return suitLength > 7 && longestSuit is Suit.Hearts or Suit.Spades || suitLength > 8 && (HasShortage(northHand) || HasShortage(southHand))
