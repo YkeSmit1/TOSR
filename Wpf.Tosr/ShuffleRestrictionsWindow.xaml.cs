@@ -67,7 +67,7 @@ namespace Wpf.Tosr
                 return true;
             }
 
-            bool HandleError(string error)
+            static bool HandleError(string error)
             {
                 MessageBox.Show(error, "Error");
                 return false;

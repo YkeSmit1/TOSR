@@ -205,7 +205,7 @@ namespace Tosr
 
             auctionControl.ReDraw();
             biddingBox.UpdateButtons(biddingState.CurrentBid, auctionControl.auction.CurrentPlayer);
-            if (biddingState.EndOfBidding)
+            if (auction.IsEndOfBidding())
             {
                 biddingBox.Enabled = false;
                 panelNorth.Visible = true;

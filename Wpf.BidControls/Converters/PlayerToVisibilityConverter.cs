@@ -14,7 +14,8 @@ namespace Wpf.BidControls.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (Player)value == Player.South ? Visibility.Visible : Visibility.Hidden;
+            var auction = (Auction)value;
+            return auction.CurrentPlayer == Player.South && !auction.IsEndOfBidding() ? Visibility.Visible : Visibility.Hidden;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
