@@ -77,6 +77,7 @@ namespace Wpf.Tosr
         private CorrectnessContractBreakdown correctnessContractBreakdown;
         private CorrectnessContract correctnessContract;
         private Dictionary<ExpectedContract, int> confidence;
+        private List<Bid> endContracts = new();
 
         public BatchBidding(ReverseDictionaries reverseDictionaries, Dictionary<Fase, bool> fasesWithOffset, bool useSingleDummySolver)
         {
@@ -84,7 +85,7 @@ namespace Wpf.Tosr
             this.useSingleDummySolver = useSingleDummySolver;
         }
 
-        public (Pbn, string) Execute(IEnumerable<string[]> boards, IProgress<int> progress, CancellationToken token)
+        public (Pbn, string) Execute(IEnumerable<string[]> boards, IProgress<int> progress, CancellationToken token, string batchName)
         {
             var pbn = new Pbn();
             handPerAuction.Clear();
@@ -157,7 +158,7 @@ namespace Wpf.Tosr
             stringbuilder.AppendLine(@"Statistics are written to ""Statistics.txt""");
             stringbuilder.AppendLine(@"Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
             stringbuilder.AppendLine(@"Incorrect contract hands are written to ""IncorrectContract.txt""");
-            SaveAuctions();
+            SaveAuctions(batchName);
 
             logger.Info($"End batchbidding");
             return (pbn, stringbuilder.ToString());
@@ -193,7 +194,7 @@ namespace Wpf.Tosr
             if (correctnessContract is CorrectnessContract.InCorrect or CorrectnessContract.NoFit)
                 inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.biddingInformation.constructedSouthhandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
                     $" Auction:{auction.GetPrettyAuction("|")} Northhand: {board[(int)Player.North]} Southhand: {board[(int)Player.South]}");
-
+            endContracts.Add(auction.currentContract);
         }
 
         private static PullType GetPullType(Auction auction)
@@ -227,7 +228,7 @@ namespace Wpf.Tosr
                 handPerAuction[strAuction].Add(str);
         }
 
-        private void SaveAuctions()
+        private void SaveAuctions(string batchName)
         {
             logger.Info("Save auctions");
             var multiHandPerAuction = handPerAuction.Where(x => x.Value.Count > 1).ToDictionary(x => x.Key, x => x.Value);
@@ -237,6 +238,13 @@ namespace Wpf.Tosr
             var list = new List<string>(inCorrectContracts.ToString().Split('\n'));
             list.Sort();
             File.WriteAllText("txt\\IncorrectContract.txt", string.Join('\n', list));
+            if (!string.IsNullOrWhiteSpace(batchName))
+            {
+                string pathEndcontracts = $"txt\\endcontracts_{batchName}.csv";
+                if (!File.Exists(pathEndcontracts))
+                    File.WriteAllText(pathEndcontracts, string.Join(',', Enumerable.Range(1, endContracts.Count)));
+                File.AppendAllText(pathEndcontracts, $"\n{string.Join(',', endContracts)}");
+            }
         }
 
         private CorrectnessContractBreakdown CheckContract(Bid contract, string[] board, Player declarer)

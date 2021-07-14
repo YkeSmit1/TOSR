@@ -70,7 +70,7 @@ namespace BiddingLogic
                 if (!matches.Any())
                     throw new InvalidOperationException($"No matches found. NorthHand:{northHand}");
 
-                southInformation.SpecificControls = matches.Select(match => match.Split(',').Select(x => Regex.Match(x, "[AK]").ToString()).ToArray());
+                southInformation.SpecificControls = matches.Select(match => match.Split(',').Select(x => Regex.Replace(x, "[^AK]", "")).ToArray());
                 southInformation.Queens = GetQueensFromAuction(auction, reverseDictionaries);
             }
 

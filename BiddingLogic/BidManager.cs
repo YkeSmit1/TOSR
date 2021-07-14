@@ -170,9 +170,7 @@ namespace BiddingLogic
                 if (auction.bids.Count > 30)
                     throw new InvalidOperationException("Bidding is stuck in a loop");
             }
-            while (!biddingState.EndOfBidding);
-            // Add final pass
-            auction.AddBid(Bid.PassBid);
+            while (!auction.IsEndOfBidding());
 
             logger.Debug($"Ending GetAuction for hand : {southHand}");
             loggerBidding.Info("Auction:");
@@ -183,14 +181,14 @@ namespace BiddingLogic
 
         public void NorthBid(BiddingState biddingState, Auction auction, string northHand)
         {
-            if (biddingState.EndOfBidding)
+            if (auction.IsEndOfBidding())
                 return;
 
             if (biddingState.Fase != Fase.End && (biddingState.CurrentBid == Bid.PassBid || biddingState.CurrentBid < Bid.sixSpadeBid || !useSingleDummySolver))
                 biddingState.CurrentBid = GetNorthBid(biddingState, auction, northHand);
             else
             {
-                biddingState.EndOfBidding = true;
+                biddingState.Fase = Fase.End;
                 // Try to guess contract by using single dummy solver
                 biddingState.CurrentBid = useSingleDummySolver ? CalculateEndContract(auction, northHand, biddingState.CurrentBid) : Bid.PassBid;
             }
@@ -232,10 +230,7 @@ namespace BiddingLogic
             Bid GetGameBid(Suit trumpSuit)
             {
                 biddingState.Fase = Fase.End;
-                var game = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, true);
-                if (game == Bid.PassBid)
-                    biddingState.EndOfBidding = true;
-                return game;
+                return Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, true);
             }
 
             bool CanSignOff(Suit trumpSuit)
@@ -294,8 +289,6 @@ namespace BiddingLogic
                             biddingState.Fase = Fase.End;
                             auction.responderHasSignedOff = true;
                             suitBid = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, false);
-                            if (suitBid == Bid.PassBid)
-                                biddingState.EndOfBidding = true;
                             return true;
                         default:
                             throw new InvalidEnumArgumentException(nameof(relayBidkind));
@@ -312,10 +305,10 @@ namespace BiddingLogic
                 bid = GetEndContract(possibleContracts, biddingState.CurrentBid);
                 if (bid != null)
                 {
-                    biddingState.Fase = Fase.End;
                     if (biddingState.Fase == Fase.ScanningOther)
                         biddingInformation.constructedSouthhandOutcome = southInformation.SpecificControls.Count() == 1 ?
                             ConstructedSouthhandOutcome.SouthhandMatches : ConstructedSouthhandOutcome.MultipleMatchesFound;
+                    biddingState.Fase = Fase.End;
                     auction.responderHasSignedOff = true;
                 }
 
@@ -358,6 +351,7 @@ namespace BiddingLogic
                 $"Reachable contracts: {string.Join(';', reachableContracts.Select(y => y.Key))}. " +
                 $"Investigatable contracts: {string.Join(';', investigatableContracts.Select(y => y.Key))} " +
                 $"{(bid == null ? "Relay a bit more" : $"Bid: {bid}")}");
+            loggerBidding.Info("*************************");
 
             return bid;
 
@@ -427,7 +421,6 @@ namespace BiddingLogic
             {
                 auction.AddBid(Bid.PassBid);
                 biddingState.CurrentBid = Bid.PassBid;
-                biddingState.EndOfBidding = true;
                 return;
             }
             var (bidIdFromRule, nextfase, description, zoomOffset) = bidGenerator.GetBid(biddingState, handsString);

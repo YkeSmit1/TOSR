@@ -11,7 +11,6 @@ namespace BiddingLogic
         public int RelayBidIdLastFase { get; set; }
         public int NextBidIdForRule { get; private set; }
         private int FaseOffset { get; set; }
-        public bool EndOfBidding { get; set; }
 
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         public Fase PreviousFase { get; private set; }
@@ -27,7 +26,6 @@ namespace BiddingLogic
             Fase = Fase.Shape;
             CurrentBid = Bid.PassBid;
             RelayBidIdLastFase = 0;
-            EndOfBidding = false;
             FaseOffset = 0;
             NextBidIdForRule = 0;
             PreviousFase = Fase.Unknown;
@@ -37,15 +35,7 @@ namespace BiddingLogic
             var bidId = bidIdFromRule + RelayBidIdLastFase + FaseOffset;
             if (bidIdFromRule == 0)
             {
-                if (Util.signOffFasesFor4Di.Contains(Fase))
-                {
-                    CurrentBid = Bid.fourHeartsBid;
-                }
-                else
-                {
-                    CurrentBid = Bid.PassBid;
-                    EndOfBidding = true;
-                }
+                CurrentBid = Util.signOffFasesFor4Di.Contains(Fase) ? Bid.fourHeartsBid : Bid.PassBid;
                 return bidId;
             }
 
