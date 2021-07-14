@@ -357,6 +357,7 @@ namespace BiddingLogic
             loggerBidding.Info($"{reachableContracts.Count} contracts are possible. " +
                 $"Reachable contracts: {string.Join(';', reachableContracts.Select(y => y.Key))}. " +
                 $"Investigatable contracts: {string.Join(';', reachableContracts.Where(y => y.Value.posibility == BidPosibilities.CanInvestigate).Select(y => y.Key))} {bidString}");
+            loggerBidding.Info("*************************");
 
             return bid;
 
