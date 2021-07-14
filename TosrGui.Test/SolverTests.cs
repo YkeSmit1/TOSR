@@ -28,7 +28,7 @@ namespace TosrGui.Test
                 Queens = "NYNY"
             };
 
-            var scores = SingleDummySolver.SolveSingleDummy(northHand, southInformation, 10, declarers);
+            var scores = SingleDummySolver.SolveSingleDummy(northHand, southInformation, 10, declarers, SuitSelection.LongestSuit);
 
             foreach (var contracts in scores.Keys)
             {
