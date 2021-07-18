@@ -14,59 +14,42 @@ namespace BiddingLogic
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
     using FaseDictionary = Dictionary<Fase, Dictionary<string, List<int>>>;
 
-    public enum ConstructedSouthhandOutcome
-    {
-        NotSet,
-        AuctionNotFoundInControls,
-        NoMatchFound,
-        SouthhandMatches,
-        MultipleMatchesFound,
-        IncorrectSouthhand,
-        NoMatchFoundNoQueens,
-    }
-
     public class BiddingInformation
     {
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         private static readonly Logger loggerBidding = LogManager.GetLogger("bidding");
-
-        public Lazy<(List<string> shapes, int zoomOffset)> shape;
-        public Lazy<(List<string> controls, int zoomOffset)> controlsScanning;
-        private static readonly char[] relevantCards = new[] { 'A', 'K' };
-        public ConstructedSouthhandOutcome constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
+        public Lazy<(List<string> shapes, int zoomOffset)> Shape { get; set; }
+        public Lazy<(List<string> controls, int zoomOffset)> ControlsScanning { get; set; }
         private readonly ReverseDictionaries reverseDictionaries;
-        private readonly Auction auction;
 
         public BiddingInformation(ReverseDictionaries reverseDictionaries, Auction auction)
         {
-            shape = new Lazy<(List<string> shapes, int zoomOffset)>(() => GetShapeStrFromAuction(auction, reverseDictionaries.ShapeAuctions));
-            controlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() => GetControlsScanningStrFromAuction(auction, reverseDictionaries, shape.Value.zoomOffset, shape.Value.shapes.Last()));
+            Shape = new Lazy<(List<string> shapes, int zoomOffset)>(() => GetShapeStrFromAuction(auction, reverseDictionaries.ShapeAuctions));
+            ControlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() => GetControlsScanningStrFromAuction(auction, reverseDictionaries, Shape.Value.zoomOffset, Shape.Value.shapes.Last()));
             this.reverseDictionaries = reverseDictionaries;
-            this.auction = auction;
-            constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
         }
 
         public SouthInformation GetInformationFromAuction(Auction auction, string northHand)
         {
             var southInformation = new SouthInformation
             {
-                Shapes = shape.Value.shapes,
+                Shapes = Shape.Value.shapes,
                 Hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions)
             };
 
             southInformation.ControlBidCount = auction.GetBids(Player.South, Fase.Controls).Count();
-            var controls = GetAuctionForFaseWithOffset(auction, shape.Value.zoomOffset, Fase.Controls).ToList();
+            var controls = GetAuctionForFaseWithOffset(auction, Shape.Value.zoomOffset, Fase.Controls).ToList();
             if (controls.Count > 0)
             {
                 var possibleControls = reverseDictionaries.ControlsOnlyAuctions[string.Join("", controls)];
                 southInformation.Controls = new MinMax(possibleControls.First(), possibleControls.Last());
             }
 
-            southInformation.ControlsScanningBidCount = GetAuctionForFaseWithOffset(auction, shape.Value.zoomOffset, Fase.ScanningControls).Count();
+            southInformation.ControlsScanningBidCount = GetAuctionForFaseWithOffset(auction, Shape.Value.zoomOffset, Fase.ScanningControls).Count();
 
-            if (controlsScanning.IsValueCreated)
+            if (ControlsScanning.IsValueCreated)
             {
-                var matches = GetMatchesWithNorthHand(shape.Value.shapes, controlsScanning.Value.controls, northHand);
+                var matches = GetMatchesWithNorthHand(Shape.Value.shapes, ControlsScanning.Value.controls, northHand);
                 if (!matches.Any())
                     throw new InvalidOperationException($"No matches found. NorthHand:{northHand}");
 
@@ -79,74 +62,19 @@ namespace BiddingLogic
         }
 
         /// <summary>
-        /// Construct southhand to compare with the actual southhand
-        /// </summary>
-        public string ConstructSouthHandSafe(string[] hand)
-        {
-            var northHand = hand[(int)Player.North];
-            var southHand = hand[(int)Player.South];
-
-            try
-            {
-                var constructedSouthHand = ConstructSouthHand(northHand);
-                if (constructedSouthHand.Count() > 1)
-                {
-                    constructedSouthhandOutcome = ConstructedSouthhandOutcome.MultipleMatchesFound;
-                    return $"Multiple matches found. Matches: {string.Join('|', constructedSouthHand)}. NorthHand: {northHand}. SouthHand: {southHand}";
-                }
-
-                if (constructedSouthHand.First() == Util.HandWithx(southHand))
-                {
-                    constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
-                    var queens = GetQueensFromAuction(auction, reverseDictionaries);
-                    if (!CheckQueens(queens, southHand))
-                        return $"Match is found but queens are wrong : Expected queens: {queens}. SouthHand: {southHand}";
-
-                    return $"Match is found: {constructedSouthHand.First()}. NorthHand: {northHand}. SouthHand: {southHand}";
-                }
-                else
-                {
-                    constructedSouthhandOutcome = ConstructedSouthhandOutcome.IncorrectSouthhand;
-                    return $"SouthHand is not equal to expected. Expected: {constructedSouthHand.First()}. NorthHand: {northHand}. SouthHand: {southHand}";
-                }
-            }
-            catch (Exception e)
-            {
-                return $"{e.Message} SouthHand: {southHand}. Projected AKQ controls as 4333:{Util.GetHandWithOnlyControlsAs4333(southHand, "AKQ")}. " +
-                    $"Sign-off fases:{auction.GetBids(Player.South, Util.signOffFases.ToArray()).FirstOrDefault()?.fase}";
-            }
-        }
-
-        /// <summary>
         /// Construct southhand to use for single dummy analyses
         /// Can throw
         /// </summary>
         public IEnumerable<string> ConstructSouthHand(string northHand)
         {
             logger.Debug($"Starting ConstructSouthHand for northhand : {northHand}");
-
-            List<string> possibleControls;
-            try
-            {
-                possibleControls = controlsScanning.Value.controls;
-            }
-            catch (Exception exception)
-            {
-                throw SetOutcome(exception.Message, ConstructedSouthhandOutcome.AuctionNotFoundInControls);
-            }
-            var matches = GetMatchesWithNorthHand(shape.Value.shapes, possibleControls, northHand);
+            var possibleControls = ControlsScanning.Value.controls;
+            var matches = GetMatchesWithNorthHand(Shape.Value.shapes, possibleControls, northHand);
             if (!matches.Any())
-                throw SetOutcome($"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {northHand}.", ConstructedSouthhandOutcome.NoMatchFound);
+                throw new InvalidOperationException($"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {northHand}.");
 
             logger.Debug($"Ending ConstructSouthHand. southhand : {string.Join("|", matches)}");
             return matches;
-        }
-
-        private Exception SetOutcome(string message, ConstructedSouthhandOutcome outcome)
-        {
-            logger.Warn($"Outcome not satisfied. {outcome}. Message : {message}");
-            constructedSouthhandOutcome = outcome;
-            return new InvalidOperationException(message);
         }
 
         /// <summary>
@@ -165,7 +93,7 @@ namespace BiddingLogic
                 var bidsStr = allBidsNew.Aggregate(string.Empty, (current, bid) => current + bid);
                 // Add two because auction is two bids lower if zoom applies
                 if (shapeAuctions.TryGetValue(bidsStr, out var zoom) && zoom.zoom)
-                    return (zoom.pattern, (lastBid - bid) + 2);
+                    return (zoom.pattern, lastBid - bid + 2);
             }
 
             throw new InvalidOperationException($"{ string.Join("", allBids) } not found in shape dictionary");
@@ -190,7 +118,7 @@ namespace BiddingLogic
                 var allBidsNew = allButLastBid.Concat(new[] { bid });
                 // Add one because auction is one bids lower if zoom applies
                 if (controlScanningAuctions.TryGetValue(string.Join("", allBidsNew), out var zoom) && zoom.zoom)
-                    return (zoom.controlsScanning, (lastBid - bid) + 1);
+                    return (zoom.controlsScanning, lastBid - bid + 1);
             }
 
             throw new InvalidOperationException($"{ string.Join("", bidsForFase) } not found in controls scanning dictionary. Auction:{auction.GetPrettyAuction("|")}. " +
@@ -279,8 +207,8 @@ namespace BiddingLogic
         public string GetQueensFromAuction(Auction auction, ReverseDictionaries reverseDictionaries)
         {
             // Because the last shape is the one with the highest numeric value generated in ReverseDictionaries
-            string shapeStr = shape.Value.shapes.Last();
-            int zoomOffset = controlsScanning.Value.zoomOffset;
+            string shapeStr = Shape.Value.shapes.Last();
+            int zoomOffset = ControlsScanning.Value.zoomOffset;
             var lastBidPreviousFase = auction.GetBids(Player.South, new[] { Fase.Controls, Fase.ScanningControls }).Last();
             var queensBids = auction.GetBids(Player.South, Fase.ScanningOther);
             var offset = lastBidPreviousFase - ReverseDictionaries.GetOffsetBidForQueens(shapeStr);
@@ -357,6 +285,7 @@ namespace BiddingLogic
 
         private static bool Match(string[] hand1, string[] hand2)
         {
+            var relevantCards = new[] { 'A', 'K' };
             foreach (var suit in hand1.Zip(hand2, (x, y) => (x, y)))
                 if (relevantCards.Any(c => suit.x.Contains(c) && suit.y.Contains(c)))
                     return false;

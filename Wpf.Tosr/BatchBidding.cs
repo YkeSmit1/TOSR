@@ -52,6 +52,13 @@ namespace Wpf.Tosr
             Pull4Di
         }
 
+        public enum ExpectedContract
+        {
+            Game,
+            SmallSlam,
+            GrandSlam,
+        }
+
         private class Statistics
         {
             public int handsBid;
@@ -77,7 +84,7 @@ namespace Wpf.Tosr
         private CorrectnessContractBreakdown correctnessContractBreakdown;
         private CorrectnessContract correctnessContract;
         private Dictionary<ExpectedContract, int> confidence;
-        private List<Bid> endContracts = new();
+        private readonly List<Bid> endContracts = new();
 
         public BatchBidding(ReverseDictionaries reverseDictionaries, Dictionary<Fase, bool> fasesWithOffset, bool useSingleDummySolver)
         {
@@ -85,7 +92,7 @@ namespace Wpf.Tosr
             this.useSingleDummySolver = useSingleDummySolver;
         }
 
-        public (Pbn, string) Execute(IEnumerable<string[]> boards, IProgress<int> progress, CancellationToken token, string batchName)
+        public (Pbn, string) Execute(IEnumerable<string[]> boards, IProgress<int> progress, string batchName, CancellationToken token)
         {
             var pbn = new Pbn();
             handPerAuction.Clear();
@@ -175,7 +182,7 @@ namespace Wpf.Tosr
 
             // Start calculating hand
             if (!auction.responderHasSignedOff)
-                expectedSouthHands.AppendLine($"Board:{boardNumber} { bidManager.biddingInformation.ConstructSouthHandSafe(board)}");
+                expectedSouthHands.AppendLine($"Board:{boardNumber} { bidManager.ConstructSouthHandSafe(board, auction)}");
 
             var longestSuit = Util.GetLongestSuit(board[(int)Player.North], board[(int)Player.South]);
             var dealer = auction.GetDeclarer(3 - longestSuit.Item1);
@@ -184,15 +191,15 @@ namespace Wpf.Tosr
             statistics.contracts.AddOrUpdateDictionary(contract);
             if (!auction.responderHasSignedOff)
                 statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Last(bid => bid.bidType == BidType.bid) - auction.GetBids(Player.South, Fase.Shape).Last());
-            statistics.outcomes.AddOrUpdateDictionary(bidManager.biddingInformation.constructedSouthhandOutcome);
+            statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthhandOutcome);
             correctnessContractBreakdown = CheckContract(contract, board, dealer == Player.UnKnown ? Player.North : dealer);
             var pullType = GetPullType(auction);
-            statistics.ContractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, (bidManager.biddingInformation.constructedSouthhandOutcome, pullType)));
+            statistics.ContractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, (bidManager.constructedSouthhandOutcome, pullType)));
             correctnessContract = GetCorrectness(correctnessContractBreakdown);
             statistics.ContractCorrectnessBreakdown.AddOrUpdateDictionary(correctnessContractBreakdown);
             statistics.ContractCorrectness.AddOrUpdateDictionary(correctnessContract);
             if (correctnessContract is CorrectnessContract.InCorrect or CorrectnessContract.NoFit)
-                inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.biddingInformation.constructedSouthhandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
+                inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.constructedSouthhandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
                     $" Auction:{auction.GetPrettyAuction("|")} Northhand: {board[(int)Player.North]} Southhand: {board[(int)Player.South]}");
             endContracts.Add(auction.currentContract);
         }
@@ -257,7 +264,7 @@ namespace Wpf.Tosr
             if (contract.suit != Suit.NoTrump && Util.GetNumberOfTrumps(contract.suit, northHand, southHand) < 8)
                 return CorrectnessContractBreakdown.NoFit;
             var tricks = SingleDummySolver.SolveSingleDummyExactHands(contract.suit, declarer, northHand, southHand);
-            var expectedContract = Util.GetExpectedContract(tricks);
+            var expectedContract = GetExpectedContract(tricks);
             var expectedContractType = expectedContract.expectedContract;
             confidence = expectedContract.confidence;
 
@@ -274,6 +281,24 @@ namespace Wpf.Tosr
                 : expectedContractType != ExpectedContract.SmallSlam && contract.rank == 6
                 ? confidence[ExpectedContract.SmallSlam] + confidence[ExpectedContract.GrandSlam] < 2 ? CorrectnessContractBreakdown.SmallSlamHopeless : CorrectnessContractBreakdown.SmallSlamTooHigh
                 : CorrectnessContractBreakdown.GameCorrect;
+
+            static (ExpectedContract expectedContract, Dictionary<ExpectedContract, int> confidence) GetExpectedContract(IEnumerable<int> scores)
+            {
+                ExpectedContract expectedContract;
+                if (scores.Count(x => x == 13) / (double)scores.Count() > .6)
+                    expectedContract = ExpectedContract.GrandSlam;
+                else if (scores.Count(x => x == 12) / (double)scores.Count() > .6)
+                    expectedContract = ExpectedContract.SmallSlam;
+                else if (scores.Count(x => x == 12 || x == 13) / (double)scores.Count() > .6)
+                    expectedContract = scores.Count(x => x == 12) >= scores.Count(x => x == 13) ? ExpectedContract.SmallSlam : ExpectedContract.GrandSlam;
+                else expectedContract = ExpectedContract.Game;
+
+                return (expectedContract, new Dictionary<ExpectedContract, int> {
+                {ExpectedContract.GrandSlam, scores.Count(x => x == 13) },
+                { ExpectedContract.SmallSlam, scores.Count(x => x == 12) },
+                { ExpectedContract.Game, scores.Count(x => x < 12)}});
+            }
+
         }
     }
 }
