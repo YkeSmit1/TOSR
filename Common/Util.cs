@@ -382,16 +382,5 @@ namespace Common
             using var reader = new StreamReader(stream);
             return reader.ReadToEnd();
         }
-
-        public static ExpectedContract GetContractType(Bid bid)
-        {
-            return bid.rank switch
-            {
-                6 => ExpectedContract.SmallSlam,
-                7 => ExpectedContract.GrandSlam,
-                _ => ExpectedContract.Game,
-            };
-        }
-
     }
 }

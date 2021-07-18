@@ -24,6 +24,14 @@ namespace BiddingLogic
         NoMatchFoundNoQueens,
     }
 
+    public enum ExpectedContract
+    {
+        Game,
+        SmallSlam,
+        GrandSlam,
+    }
+
+
     public class BidManager
     {
         public enum RelayBidKind
@@ -354,7 +362,7 @@ namespace BiddingLogic
             {
                 0 => Bid.PassBid,
                 1 => reachableContractsGrouped.Single().Key,
-                _ => investigatableContracts.GroupBy(x => Util.GetContractType(x.Key)).Count() <= 1
+                _ => investigatableContracts.GroupBy(x => GetContractType(x.Key)).Count() <= 1
                         ? reachableContractsGrouped.MaxBy(y => y.Value).First().Key
                         : null,
             };
@@ -370,6 +378,17 @@ namespace BiddingLogic
             Bid GetBestGame(Suit suit) => reachableContracts.Where(x => x.Key.suit == suit && x.Key.rank < 6).MinBy(x => x.Key).Single().Key;
             static bool CanBeBid(Bid contract, Bid currentBid) => contract >= currentBid && contract != currentBid + 1;
             static bool CanBeInvestigated(Bid contract, Bid currentBid) => contract != currentBid && contract != currentBid + 3;
+
+            static ExpectedContract GetContractType(Bid bid)
+            {
+                return bid.rank switch
+                {
+                    6 => ExpectedContract.SmallSlam,
+                    7 => ExpectedContract.GrandSlam,
+                    _ => ExpectedContract.Game,
+                };
+            }
+
         }
 
         public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, SouthInformation southInformation)
