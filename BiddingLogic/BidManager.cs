@@ -20,6 +20,17 @@ namespace BiddingLogic
         CannotInvestigate
     }
 
+    public enum ConstructedSouthhandOutcome
+    {
+        NotSet,
+        AuctionNotFoundInControls,
+        NoMatchFound,
+        SouthhandMatches,
+        MultipleMatchesFound,
+        IncorrectSouthhand,
+        NoMatchFoundNoQueens,
+    }
+
     public class BidManager
     {
         public enum RelayBidKind
@@ -101,6 +112,7 @@ namespace BiddingLogic
 
         public BiddingInformation biddingInformation;
         private Dictionary<Bid, int> occurrencesForBids;
+        public ConstructedSouthhandOutcome constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
 
         // Constructor used for test
         public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, RelayBidKindFunc getRelayBidKindFunc) :
@@ -247,7 +259,7 @@ namespace BiddingLogic
                 // NoTrump
                 if (biddingState.CurrentBid >= Bid.fourNTBid)
                     return false;
-                var shapeOrdered = new string(biddingInformation.shape.Value.shapes.First().ToCharArray().OrderByDescending(x => x).ToArray());
+                var shapeOrdered = new string(biddingInformation.Shape.Value.shapes.First().ToCharArray().OrderByDescending(x => x).ToArray());
                 if (auction.GetBids(Player.North).Any(bid => bid == Bid.threeNTBid) && shapeOrdered != "7330")
                     return false;
                 return true;
@@ -312,7 +324,7 @@ namespace BiddingLogic
                 if (bid != null)
                 {
                     if (biddingState.Fase == Fase.ScanningOther)
-                        biddingInformation.constructedSouthhandOutcome = southInformation.SpecificControls.Count() == 1 ?
+                        constructedSouthhandOutcome = southInformation.SpecificControls.Count() == 1 ?
                             ConstructedSouthhandOutcome.SouthhandMatches : ConstructedSouthhandOutcome.MultipleMatchesFound;
                     biddingState.Fase = Fase.End;
                     auction.responderHasSignedOff = true;
@@ -327,7 +339,7 @@ namespace BiddingLogic
             {
                 if (biddingState.CurrentBid == Bid.threeSpadeBid && biddingState.Fase != Fase.Shape && reverseDictionaries != null)
                 {
-                    var shapeOrdered = new string(biddingInformation.shape.Value.shapes.First().ToCharArray().OrderByDescending(x => x).ToArray());
+                    var shapeOrdered = new string(biddingInformation.Shape.Value.shapes.First().ToCharArray().OrderByDescending(x => x).ToArray());
                     if (shapeOrdered != "7330")
                     {
                         biddingState.RelayBidIdLastFase++;
@@ -453,21 +465,62 @@ namespace BiddingLogic
 
             var lzoomOffset = nextfase switch
             {
-                Fase.Controls => reverseDictionaries == null ? zoomOffset : biddingInformation.shape.Value.zoomOffset,
-                Fase.ScanningOther => reverseDictionaries == null ? zoomOffset : biddingInformation.controlsScanning.Value.zoomOffset,
+                Fase.Controls => reverseDictionaries == null ? zoomOffset : biddingInformation.Shape.Value.zoomOffset,
+                Fase.ScanningOther => reverseDictionaries == null ? zoomOffset : biddingInformation.ControlsScanning.Value.zoomOffset,
                 _ => 0,
             };
             // Check if controls and their positions are correctly evaluated.
             if (nextfase == Fase.ScanningOther && reverseDictionaries != null)
             {
                 var controlsInSuit = Util.GetHandWithOnlyControlsAs4333(handsString, "AK");
-                if (!biddingInformation.controlsScanning.Value.controls.Contains(controlsInSuit))
-                    throw new InvalidOperationException($"Cannot find {controlsInSuit} in {string.Join('|', biddingInformation.controlsScanning.Value.controls)}");
+                if (!biddingInformation.ControlsScanning.Value.controls.Contains(controlsInSuit))
+                    throw new InvalidOperationException($"Cannot find {controlsInSuit} in {string.Join('|', biddingInformation.ControlsScanning.Value.controls)}");
 
             }
             biddingState.UpdateBiddingState(bidIdFromRule, nextfase, bidId, lzoomOffset);
             if (nextfase == Fase.BidGame)
                 auction.responderHasSignedOff = true;
         }
+
+        /// <summary>
+        /// Construct southhand to compare with the actual southhand
+        /// </summary>
+        public string ConstructSouthHandSafe(string[] hand, Auction auction)
+        {
+            var northHand = hand[(int)Player.North];
+            var southHand = hand[(int)Player.South];
+
+            try
+            {
+                var constructedSouthHand = biddingInformation.ConstructSouthHand(northHand);
+                if (constructedSouthHand.Count() > 1)
+                {
+                    constructedSouthhandOutcome = ConstructedSouthhandOutcome.MultipleMatchesFound;
+                    return $"Multiple matches found. Matches: {string.Join('|', constructedSouthHand)}. NorthHand: {northHand}. SouthHand: {southHand}";
+                }
+
+                if (constructedSouthHand.First() == Util.HandWithx(southHand))
+                {
+                    constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
+                    var queens = biddingInformation.GetQueensFromAuction(auction, reverseDictionaries);
+                    if (!BiddingInformation.CheckQueens(queens, southHand))
+                        return $"Match is found but queens are wrong : Expected queens: {queens}. SouthHand: {southHand}";
+
+                    return $"Match is found: {constructedSouthHand.First()}. NorthHand: {northHand}. SouthHand: {southHand}";
+                }
+                else
+                {
+                    constructedSouthhandOutcome = ConstructedSouthhandOutcome.IncorrectSouthhand;
+                    return $"SouthHand is not equal to expected. Expected: {constructedSouthHand.First()}. NorthHand: {northHand}. SouthHand: {southHand}";
+                }
+            }
+            catch (Exception e)
+            {
+                constructedSouthhandOutcome = !biddingInformation.ControlsScanning.IsValueCreated ? ConstructedSouthhandOutcome.AuctionNotFoundInControls : ConstructedSouthhandOutcome.NoMatchFound;
+                return $"{e.Message} SouthHand: {southHand}. Projected AKQ controls as 4333:{Util.GetHandWithOnlyControlsAs4333(southHand, "AKQ")}. " +
+                    $"Sign-off fases:{auction.GetBids(Player.South, Util.signOffFases.ToArray()).FirstOrDefault()?.fase}";
+            }
+        }
+
     }
 }

@@ -9,7 +9,7 @@ namespace Common
 {
     public static class ListExtensions
     {
-        public static IEnumerable<T> Rotate<T>(this List<T> list, int offset)
+        public static IEnumerable<T> Rotate<T>(this IEnumerable<T> list, int offset)
         {
             return list.Skip(offset).Concat(list.Take(offset));
         }

@@ -52,6 +52,13 @@ namespace Tosr
             Pull4Di
         }
 
+        public enum ExpectedContract
+        {
+            Game,
+            SmallSlam,
+            GrandSlam,
+        }
+
         private class Statistics
         {
             public int handsBid;
@@ -176,7 +183,7 @@ namespace Tosr
 
             // Start calculating hand
             if (!auction.responderHasSignedOff)
-                expectedSouthHands.AppendLine($"Board:{boardNumber} { bidManager.biddingInformation.ConstructSouthHandSafe(board)}");
+                expectedSouthHands.AppendLine($"Board:{boardNumber} { bidManager.ConstructSouthHandSafe(board, auction)}");
 
             var longestSuit = Util.GetLongestSuit(board[(int)Player.North], board[(int)Player.South]);
             var dealer = auction.GetDeclarer(3 - longestSuit.Item1);
@@ -185,15 +192,15 @@ namespace Tosr
             statistics.contracts.AddOrUpdateDictionary(contract);
             if (!auction.responderHasSignedOff)
                 statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Where(bid => bid.bidType == BidType.bid).Last() - auction.GetBids(Player.South, Fase.Shape).Last());
-            statistics.outcomes.AddOrUpdateDictionary(bidManager.biddingInformation.constructedSouthhandOutcome);
+            statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthhandOutcome);
             correctnessContractBreakdown = CheckContract(contract, board, dealer == Player.UnKnown ? Player.North : dealer);
             var pullType = GetPullType(auction);
-            statistics.ContractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, (bidManager.biddingInformation.constructedSouthhandOutcome, pullType)));
+            statistics.ContractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, (bidManager.constructedSouthhandOutcome, pullType)));
             correctnessContract = GetCorrectness(correctnessContractBreakdown);
             statistics.ContractCorrectnessBreakdown.AddOrUpdateDictionary(correctnessContractBreakdown);
             statistics.ContractCorrectness.AddOrUpdateDictionary(correctnessContract);
             if (correctnessContract == CorrectnessContract.InCorrect || correctnessContract == CorrectnessContract.NoFit)
-                inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.biddingInformation.constructedSouthhandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
+                inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.constructedSouthhandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
                     $" Auction:{auction.GetPrettyAuction("|")} Northhand: {board[(int)Player.North]} Southhand: {board[(int)Player.South]}");
 
         }
@@ -254,7 +261,7 @@ namespace Tosr
             if (contract.suit != Suit.NoTrump && Util.GetNumberOfTrumps(contract.suit, northHand, southHand) < 8)
                 return CorrectnessContractBreakdown.NoFit;
             var tricks = SingleDummySolver.SolveSingleDummyExactHands(contract.suit, declarer, northHand, southHand);
-            var expectedContract = Util.GetExpectedContract(tricks);
+            var expectedContract = GetExpectedContract(tricks);
             var expectedContractType = expectedContract.expectedContract;
             confidence = expectedContract.confidence;
 
@@ -274,6 +281,23 @@ namespace Tosr
                 return confidence[ExpectedContract.SmallSlam] + confidence[ExpectedContract.GrandSlam] < 2 ? CorrectnessContractBreakdown.SmallSlamHopeless : CorrectnessContractBreakdown.SmallSlamTooHigh;
 
             return CorrectnessContractBreakdown.GameCorrect;
+
+            static (ExpectedContract expectedContract, Dictionary<ExpectedContract, int> confidence) GetExpectedContract(IEnumerable<int> scores)
+            {
+                ExpectedContract expectedContract;
+                if (scores.Count(x => x == 13) / (double)scores.Count() > .6)
+                    expectedContract = ExpectedContract.GrandSlam;
+                else if (scores.Count(x => x == 12) / (double)scores.Count() > .6)
+                    expectedContract = ExpectedContract.SmallSlam;
+                else if (scores.Count(x => x == 12 || x == 13) / (double)scores.Count() > .6)
+                    expectedContract = scores.Count(x => x == 12) >= scores.Count(x => x == 13) ? ExpectedContract.SmallSlam : ExpectedContract.GrandSlam;
+                else expectedContract = ExpectedContract.Game;
+
+                return (expectedContract, new Dictionary<ExpectedContract, int> {
+                {ExpectedContract.GrandSlam, scores.Count(x => x == 13) },
+                { ExpectedContract.SmallSlam, scores.Count(x => x == 12) },
+                { ExpectedContract.Game, scores.Count(x => x < 12)}});
+            }
         }
     }
 }

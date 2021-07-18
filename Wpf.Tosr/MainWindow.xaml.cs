@@ -293,7 +293,7 @@ namespace Wpf.Tosr
                 await Task.Run(() =>
                 {
                     var progress = new Progress<int>(report => Dispatcher.Invoke(() => toolStripStatusLabel1.Content = $"Hands done: {report}"));
-                    (pbn, report) = batchBidding.Execute(pbn.Boards.Select(x => x.Deal), progress, cancelBatchbidding.Token, Path.GetFileNameWithoutExtension(pbnFilepath));
+                    (pbn, report) = batchBidding.Execute(pbn.Boards.Select(x => x.Deal), progress, Path.GetFileNameWithoutExtension(pbnFilepath), cancelBatchbidding.Token);
                 });
             }
             finally
@@ -319,7 +319,7 @@ namespace Wpf.Tosr
             };
 
             var boards = shufflingDeal.Execute();
-            pbn.Boards = boards.Select(board => new BoardDto { Deal = Util.GetBoardsTosr(board) }).ToList();
+            pbn.Boards = boards.Select((board, Index) => new BoardDto { Deal = Util.GetBoardsTosr(board), BoardNumber = Index + 1 }).ToList();
             pbnFilepath = "";
         }
 
@@ -428,7 +428,7 @@ namespace Wpf.Tosr
 
                 resetEvent.WaitOne();
                 var batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, true);
-                var localPbn = batchBidding.Execute(new[] { pbn.Boards[boardIndex].Deal }, new Progress<int>(), CancellationToken.None, "");
+                var localPbn = batchBidding.Execute(new[] { pbn.Boards[boardIndex].Deal }, new Progress<int>(), "", CancellationToken.None);
                 Auction = localPbn.Item1.Boards.First().Auction ?? new Auction();
                 AuctionViewModel.UpdateAuction(Auction);
                 toolStripStatusLabel1.Content = localPbn.Item1.Boards.First().Description;

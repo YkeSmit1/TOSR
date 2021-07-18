@@ -142,17 +142,6 @@ namespace Common
             return bid + (5 * (((currentBid + 1 - bid) / 5) + 1));
         }
 
-        public static Bid GetBestContract(ExpectedContract expectedContract, Suit item1, Bid currentBid)
-        {
-            return expectedContract switch
-            {
-                ExpectedContract.Game => GetGameContract(item1, currentBid, false),
-                ExpectedContract.SmallSlam => new Bid(6, item1),
-                ExpectedContract.GrandSlam => new Bid(7, item1),
-                _ => throw new InvalidEnumArgumentException(nameof(expectedContract)),
-            };
-        }
-
         // Operators
         public bool Equals(Bid other) => !(other is null) && suit == other.suit && bidType == other.bidType && rank == other.rank;
         public override bool Equals(object obj) => obj is Bid other && Equals(other);

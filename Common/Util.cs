@@ -73,13 +73,6 @@ namespace Common
         BidGame,
     };
 
-    public enum ExpectedContract
-    {
-        Game,
-        SmallSlam,
-        GrandSlam,
-    }
-
     public static class Util
     {
         public static readonly List<Fase> signOffFasesFor3NT = new List<Fase> { Fase.Pull3NTNoAsk, Fase.Pull3NTOneAskMin, Fase.Pull3NTOneAskMax, Fase.Pull3NTTwoAsks };
@@ -263,7 +256,6 @@ namespace Common
         {
             Debug.Assert(northHand.Length == 16);
             Debug.Assert(southHand.Length == 16);
-            // TODO Use single dummy analyses to find out the best trump suit
             var (longestSuit, suitLength) = GetLongestSuit(northHand, southHand);
             // Major always, but only a minor if we have a singleton and 9 or more trumps
             return suitLength > 7 && longestSuit is Suit.Hearts or Suit.Spades || suitLength > 8 && (HasShortage(northHand) || HasShortage(southHand))
@@ -349,23 +341,6 @@ namespace Common
             return suit == Suit.NoTrump ? (int)suit : 3 - (int)suit;
         }
 
-        public static (ExpectedContract expectedContract, Dictionary<ExpectedContract, int> confidence) GetExpectedContract(IEnumerable<int> scores)
-        {
-            ExpectedContract expectedContract;
-            if (scores.Count(x => x == 13) / (double)scores.Count() > .6)
-                expectedContract = ExpectedContract.GrandSlam;
-            else if (scores.Count(x => x == 12) / (double)scores.Count() > .6)
-                expectedContract = ExpectedContract.SmallSlam;
-            else if (scores.Count(x => x == 12 || x == 13) / (double)scores.Count() > .6)
-                expectedContract = scores.Count(x => x == 12) >= scores.Count(x => x == 13) ? ExpectedContract.SmallSlam : ExpectedContract.GrandSlam;
-            else expectedContract = ExpectedContract.Game;
-
-            return (expectedContract, new Dictionary<ExpectedContract, int> {
-                {ExpectedContract.GrandSlam, scores.Count(x => x == 13) },
-                { ExpectedContract.SmallSlam, scores.Count(x => x == 12) },
-                { ExpectedContract.Game, scores.Count(x => x < 12)}});
-        }
-
         public static Player GetPlayer(string player) => player switch
         {
             "N" => Player.North,
@@ -386,10 +361,7 @@ namespace Common
 
         public static string[] GetBoardsTosr(string board)
         {
-            var boardNoDealer = board[2..].Replace('.', ',');
-            var suits = boardNoDealer.Split(" ");
-            var suitsNFirst = suits.ToList().Rotate(3);
-            return suitsNFirst.ToArray();
+            return board[2..].Replace('.', ',').Split(" ").Rotate(3).ToArray();
         }
 
         public static string HandWithx(string hand)
