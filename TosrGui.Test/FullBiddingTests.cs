@@ -38,9 +38,9 @@ namespace TosrGui.Test
 
             Assert.Equal("1♣1NT2♥4♣5♦6♥", auction.GetBidsAsString(Player.North));
             Assert.Equal("1♠2♦3NT5♣6♦Pass", auction.GetBidsAsString(Player.South));
-            Assert.Equal("1♠2♦3NT", bidManager.biddingState.GetBidsAsString(Fase.Shape));
-            Assert.Equal("5♣", bidManager.biddingState.GetBidsAsString(Fase.Controls));
-            Assert.Equal("6♦", bidManager.biddingState.GetBidsAsString(Fase.ScanningControls));
+            Assert.Equal("1♠2♦3NT", bidManager.BiddingState.GetBidsAsString(Fase.Shape));
+            Assert.Equal("5♣", bidManager.BiddingState.GetBidsAsString(Fase.Controls));
+            Assert.Equal("6♦", bidManager.BiddingState.GetBidsAsString(Fase.ScanningControls));
         }
     }
 }

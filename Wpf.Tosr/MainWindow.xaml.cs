@@ -52,7 +52,6 @@ namespace Wpf.Tosr
         private ReverseDictionaries reverseDictionaries;
 
         private static readonly Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
-        private BiddingState biddingState => bidManager.biddingState;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         private readonly ManualResetEvent resetEvent = new(false);
         private Pbn pbn = new();
@@ -177,15 +176,15 @@ namespace Wpf.Tosr
             var bid = (Bid)parameter;
             resetEvent.WaitOne();
             AuctionViewModel.UpdateAuction(Auction);
-            bidManager.SouthBid(biddingState, Auction, deal[(int)Player.South]);
+            bidManager.SouthBid(Auction, deal[(int)Player.South]);
             BiddingBoxViewModel.DoBid.RaiseCanExecuteChanged();
 
-            if (bid != biddingState.CurrentBid)
+            if (bid != bidManager.BiddingState.CurrentBid)
             {
-                MessageBox.Show($"The correct bid is {biddingState.CurrentBid}. Description: {biddingState.CurrentBid.description}.", "Incorrect bid");
+                MessageBox.Show($"The correct bid is {bidManager.BiddingState.CurrentBid}. Description: {bidManager.BiddingState.CurrentBid.description}.", "Incorrect bid");
             }
 
-            BidTillSouth(Auction, biddingState);
+            BidTillSouth(Auction);
         }
 
         private bool ButtonCanExecute(object param)
@@ -194,14 +193,14 @@ namespace Wpf.Tosr
             return Auction.BidIsPossible(bid);
         }
 
-        private void BidTillSouth(Auction auction, BiddingState biddingState)
+        private void BidTillSouth(Auction auction)
         {
             // West
             auction.AddBid(Bid.PassBid);
 
             // North
-            bidManager.NorthBid(biddingState, auction, deal[(int)Player.North]);
-            auction.AddBid(biddingState.CurrentBid);
+            bidManager.NorthBid(auction, deal[(int)Player.North]);
+            auction.AddBid(bidManager.BiddingState.CurrentBid);
 
             // East
             auction.AddBid(Bid.PassBid);
@@ -237,8 +236,6 @@ namespace Wpf.Tosr
 
         private void StartBidding()
         {
-            biddingState.Init();
-
             Auction.Clear();
             Auction.AddBid(Bid.PassBid);
             Auction.AddBid(Bid.OneClub);

@@ -10,7 +10,6 @@ using Newtonsoft.Json;
 using System.Collections.Immutable;
 using Solver;
 using Common;
-using System.ComponentModel;
 
 namespace BiddingLogic
 {
@@ -126,8 +125,8 @@ namespace BiddingLogic
                                 if (!Util.IsFreakHand(suitLengthSouth))
                                 {
                                     _ = bidManager.GetAuction(string.Empty, hand); // No northhand. Just for generating reverse dictionaries
-                                    var isZoom = bidManager.biddingState.IsZoomShape;
-                                    var key = bidManager.biddingState.GetBidsAsString(Fase.Shape);
+                                    var isZoom = bidManager.BiddingState.IsZoomShape;
+                                    var key = bidManager.BiddingState.GetBidsAsString(Fase.Shape);
                                     if (auctions.ContainsKey(key))
                                         auctions[key].pattern.Add(str);
                                     else
@@ -182,7 +181,7 @@ namespace BiddingLogic
                 var board = Util.GetBoardsTosr(shufflingDeal.Execute().First());
 
                 _ = bidManager.GetAuction(string.Empty, board[(int)Player.South]); // No northhand. Just for generating reverse dictionaries
-                auctions.Add(bidManager.biddingState.GetBidsAsString(Fase.Controls), new List<int> { control });
+                auctions.Add(bidManager.BiddingState.GetBidsAsString(Fase.Controls), new List<int> { control });
             }
         }
 
@@ -219,10 +218,10 @@ namespace BiddingLogic
                 if (hand.Length != 16)
                     return;
                 _ = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
-                var key = string.Join("", bidManager.biddingState.GetBids(new[] { Fase.Controls, Fase.ScanningControls }).
-                    Select(bid => bid - (bidManager.biddingState.GetBids(Player.South, Fase.Shape).Last() - Bid.threeDiamondBid)));
+                var key = string.Join("", bidManager.BiddingState.GetBids(Fase.Controls, Fase.ScanningControls).
+                    Select(bid => bid - (bidManager.BiddingState.GetBids(Fase.Shape).Last() - Bid.threeDiamondBid)));
                 if (!auctions.ContainsKey(key))
-                    auctions.Add(key, (new List<string>() { handToStore }, bidManager.biddingState.IsZoomControlScanning));
+                    auctions.Add(key, (new List<string>() { handToStore }, bidManager.BiddingState.IsZoomControlScanning));
                 else if (!auctions[key].controlsScanning.Contains(handToStore))
                     auctions[key].controlsScanning.Add(handToStore);
             }
@@ -233,7 +232,7 @@ namespace BiddingLogic
             logger.Info("Generating dictionaries for sign-off fases");
             var signOfffasesAuctions = new SignOffFasesDictionary();
             var shuffleRestriction = new ShufflingDeal() { South = new South { Controls = new MinMax(2, 12) } };
-            foreach (var fase in Util.signOffFases)
+            foreach (var fase in BiddingState.SignOffFases)
             {
                 var dictionaryForFase = new ControlsOnlyDictionary();
                 foreach (var hcp in Enumerable.Range(8, 15))
@@ -243,21 +242,11 @@ namespace BiddingLogic
                     var bidFromRule = Pinvoke.GetBidFromRule(fase, Fase.Controls, board[(int)Player.South], 0, out _, out _);
                     if (bidFromRule != 0)
                     {
-                        var bid = (fase switch
-                        {
-                            Fase.Pull3NTNoAsk => Bid.threeNTBid + bidFromRule,
-                            Fase.Pull3NTOneAskMin => Bid.threeNTBid + 1,
-                            Fase.Pull3NTOneAskMax => Bid.threeNTBid + 1,
-                            Fase.Pull3NTTwoAsks => Bid.threeNTBid + 1,
-                            Fase.Pull4DiamondsNoAsk => Bid.fourDiamondBid + 2,
-                            Fase.Pull4DiamondsOneAskMin => Bid.fourDiamondBid + 2,
-                            Fase.Pull4DiamondsOneAskMax => Bid.fourDiamondBid + 2,
-                            _ => throw new InvalidEnumArgumentException(nameof(fase)),
-                        }).ToString();
-                        if (!dictionaryForFase.ContainsKey(bid))
-                            dictionaryForFase.Add(bid, new List<int>());
-                        if (!dictionaryForFase[bid].Contains(hcp))
-                            dictionaryForFase[bid].Add(hcp);
+                        var bidStr = BiddingState.GetSignOffBid(fase, Bid.threeNTBid + bidFromRule).ToString();
+                        if (!dictionaryForFase.ContainsKey(bidStr))
+                            dictionaryForFase.Add(bidStr, new List<int>());
+                        if (!dictionaryForFase[bidStr].Contains(hcp))
+                            dictionaryForFase[bidStr].Add(hcp);
                     }
                 }
                 signOfffasesAuctions.Add(fase, dictionaryForFase);
@@ -292,7 +281,7 @@ namespace BiddingLogic
             void BidAndStoreHand(string hand, params string[] suits)
             {
                 _ = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
-                var key = bidManager.biddingState.GetBids(Player.South, Fase.ScanningOther);
+                var key = bidManager.BiddingState.GetBids(Fase.ScanningOther);
                 if (auctions.TryGetValue(key, out var value))
                 {
                     var queenStr = string.Empty;

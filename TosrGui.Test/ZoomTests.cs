@@ -61,7 +61,7 @@ namespace TosrGui.Test
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Equal("6331", BiddingInformation.GetShapeStrFromAuction(auction, shapeAuctions, biddingState).shapes.First());
+            Assert.Equal("6331", BiddingInformation.GetShapeStrFromAuction(shapeAuctions, biddingState).shapes.First());
         }
 
         [Fact()]
@@ -76,7 +76,7 @@ namespace TosrGui.Test
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Equal("4243", BiddingInformation.GetShapeStrFromAuction(auction, shapeAuctions, biddingState).shapes.First());
+            Assert.Equal("4243", BiddingInformation.GetShapeStrFromAuction(shapeAuctions, biddingState).shapes.First());
         }
 
         [Fact()]
@@ -91,7 +91,7 @@ namespace TosrGui.Test
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Throws<InvalidOperationException>(() => BiddingInformation.GetShapeStrFromAuction(auction, shapeAuctions, biddingState));
+            Assert.Throws<InvalidOperationException>(() => BiddingInformation.GetShapeStrFromAuction(shapeAuctions, biddingState));
         }
 
         [Fact()]
@@ -124,9 +124,9 @@ namespace TosrGui.Test
             Assert.Equal("1♠2♦3NT4♥5♦5♠6♦Pass", auction.GetBidsAsString(Player.South));
             Assert.Equal("1♣1NT2♥4♣4♠5♥5NT6♥", auction.GetBidsAsString(Player.North));
 
-            Assert.Equal("1♠2♦3NT", bidManager.biddingState.GetBidsAsString(Fase.Shape));
-            Assert.Equal("", bidManager.biddingState.GetBidsAsString(Fase.Controls));
-            Assert.Equal("4♥5♦5♠6♦", bidManager.biddingState.GetBidsAsString(Fase.ScanningControls));
+            Assert.Equal("1♠2♦3NT", bidManager.BiddingState.GetBidsAsString(Fase.Shape));
+            Assert.Equal("", bidManager.BiddingState.GetBidsAsString(Fase.Controls));
+            Assert.Equal("4♥5♦5♠6♦", bidManager.BiddingState.GetBidsAsString(Fase.ScanningControls));
 
             var southHand = bidManager.biddingInformation.ConstructSouthHand("Axxx,Kxx,Kxx,Kxx");
             Assert.Equal("Kxxx,Ax,xxx,Axxx", southHand.First());

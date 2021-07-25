@@ -114,7 +114,7 @@ namespace BiddingLogic
         private Dictionary<Bid, int> occurrencesForBids;
         public ConstructedSouthhandOutcome constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
 
-        public BiddingState biddingState { get; set; }
+        public BiddingState BiddingState { get; set; }
 
         // Constructor used for test
         public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, RelayBidKindFunc getRelayBidKindFunc) :
@@ -147,13 +147,13 @@ namespace BiddingLogic
             this.bidGenerator = bidGenerator;
             this.fasesWithOffset = fasesWithOffset;
             GetRelayBidKindFunc = GetRelayBidKind;
-            biddingState = new BiddingState(fasesWithOffset);
+            BiddingState = new BiddingState(fasesWithOffset);
         }
 
         public void Init(Auction auction)
         {
-            biddingState = new BiddingState(fasesWithOffset);
-            biddingInformation = new BiddingInformation(reverseDictionaries, auction, biddingState);
+            BiddingState = new BiddingState(fasesWithOffset);
+            biddingInformation = new BiddingInformation(reverseDictionaries, auction, BiddingState);
         }
 
         public Auction GetAuction(string northHand, string southHand)
@@ -177,11 +177,11 @@ namespace BiddingLogic
                         auction.AddBid(Bid.PassBid);
                         break;
                     case Player.North:
-                        NorthBid(biddingState, auction, northHand);
-                        auction.AddBid(biddingState.CurrentBid);
+                        NorthBid(auction, northHand);
+                        auction.AddBid(BiddingState.CurrentBid);
                         break;
                     case Player.South:
-                        SouthBid(biddingState, auction, southHand);
+                        SouthBid(auction, southHand);
                         break;
                     default:
                         throw new InvalidEnumArgumentException(nameof(currentPlayer));
@@ -200,18 +200,18 @@ namespace BiddingLogic
             return auction;
         }
 
-        public void NorthBid(BiddingState biddingState, Auction auction, string northHand)
+        public void NorthBid(Auction auction, string northHand)
         {
             if (auction.IsEndOfBidding())
                 return;
 
-            if (biddingState.Fase != Fase.End && (biddingState.CurrentBid == Bid.PassBid || biddingState.CurrentBid < Bid.sixSpadeBid || !useSingleDummySolver))
-                biddingState.CurrentBid = GetNorthBid(biddingState, auction, northHand);
+            if (BiddingState.Fase != Fase.End && (BiddingState.CurrentBid == Bid.PassBid || BiddingState.CurrentBid < Bid.sixSpadeBid || !useSingleDummySolver))
+                BiddingState.CurrentBid = GetNorthBid(BiddingState, auction, northHand);
             else
             {
-                biddingState.Fase = Fase.End;
+                BiddingState.Fase = Fase.End;
                 // Try to guess contract by using single dummy solver
-                biddingState.CurrentBid = useSingleDummySolver ? CalculateEndContract(auction, northHand, biddingState.CurrentBid) : Bid.PassBid;
+                BiddingState.CurrentBid = useSingleDummySolver ? CalculateEndContract(auction, northHand, BiddingState.CurrentBid) : Bid.PassBid;
             }
         }
 
@@ -444,7 +444,7 @@ namespace BiddingLogic
 
         private Bid CalculateEndContract(Auction auction, string northHand, Bid currentBid)
         {
-            var southInformation = biddingInformation.GetInformationFromAuction(auction, northHand, biddingState);
+            var southInformation = biddingInformation.GetInformationFromAuction(auction, northHand, BiddingState);
             var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
             var tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
             var possibleTricksForBid = tricksForBid.Where(bid => bid.Key >= currentBid);
@@ -454,17 +454,17 @@ namespace BiddingLogic
             return maxBid == currentBid ? Bid.PassBid : maxBid;
         }
 
-        public void SouthBid(BiddingState biddingState, Auction auction, string handsString)
+        public void SouthBid(Auction auction, string handsString)
         {
-            if (biddingState.Fase == Fase.End)
+            if (BiddingState.Fase == Fase.End)
             {
                 auction.AddBid(Bid.PassBid);
-                biddingState.CurrentBid = Bid.PassBid;
+                BiddingState.CurrentBid = Bid.PassBid;
                 return;
             }
-            var (bidIdFromRule, nextfase, description, zoomOffset) = bidGenerator.GetBid(biddingState, handsString);
-            var bidId = biddingState.CalculateBid(bidIdFromRule, description, zoomOffset != 0);
-            auction.AddBid(biddingState.CurrentBid);
+            var (bidIdFromRule, nextfase, description, zoomOffset) = bidGenerator.GetBid(BiddingState, handsString);
+            var bidId = BiddingState.CalculateBid(bidIdFromRule, description, zoomOffset != 0);
+            auction.AddBid(BiddingState.CurrentBid);
 
             var lzoomOffset = nextfase switch
             {
@@ -480,7 +480,7 @@ namespace BiddingLogic
                     throw new InvalidOperationException($"Cannot find {controlsInSuit} in {string.Join('|', biddingInformation.ControlsScanning.Value.controls)}");
 
             }
-            biddingState.UpdateBiddingState(bidIdFromRule, nextfase, bidId, lzoomOffset);
+            BiddingState.UpdateBiddingState(bidIdFromRule, nextfase, bidId, lzoomOffset);
             if (nextfase == Fase.BidGame)
                 auction.responderHasSignedOff = true;
         }
@@ -505,7 +505,7 @@ namespace BiddingLogic
                 if (constructedSouthHand.First() == Util.HandWithx(southHand))
                 {
                     constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
-                    var queens = biddingInformation.GetQueensFromAuction(auction, reverseDictionaries, biddingState);
+                    var queens = biddingInformation.GetQueensFromAuction(auction, reverseDictionaries, BiddingState);
                     if (!BiddingInformation.CheckQueens(queens, southHand))
                         return $"Match is found but queens are wrong : Expected queens: {queens}. SouthHand: {southHand}";
 
@@ -520,8 +520,7 @@ namespace BiddingLogic
             catch (Exception e)
             {
                 constructedSouthhandOutcome = !biddingInformation.ControlsScanning.IsValueCreated ? ConstructedSouthhandOutcome.AuctionNotFoundInControls : ConstructedSouthhandOutcome.NoMatchFound;
-                return $"{e.Message} SouthHand: {southHand}. Projected AKQ controls as 4333:{Util.GetHandWithOnlyControlsAs4333(southHand, "AKQ")}. " +
-                    $"Sign-off fases:{biddingState.BidsPerFase.Where(x => Util.signOffFases.Contains(x.fase))}";
+                return $"{e.Message} SouthHand: {southHand}. Projected AKQ controls as 4333:{Util.GetHandWithOnlyControlsAs4333(southHand, "AKQ")}. ";
             }
         }
 
