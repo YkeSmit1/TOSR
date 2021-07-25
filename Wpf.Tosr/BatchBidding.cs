@@ -48,8 +48,7 @@ namespace Wpf.Tosr
         public enum PullType
         {
             NoPull,
-            PullNT,
-            Pull4Di
+            HasPulled,
         }
 
         public enum ExpectedContract
@@ -121,7 +120,7 @@ namespace Wpf.Tosr
 
                     statistics.handsBid++;
                     var auction = bidManager.GetAuction(board[(int)Player.North], board[(int)Player.South]);
-                    AddHandAndAuction(board, auction, statistics.handsBid);
+                    AddHandAndAuction(board, auction, statistics.handsBid, bidManager.biddingState);
                     pbn.Boards.Add(new BoardDto
                     {
                         Deal = board,
@@ -171,12 +170,12 @@ namespace Wpf.Tosr
             return (pbn, stringbuilder.ToString());
         }
 
-        private void AddHandAndAuction(string[] board, Auction auction, int boardNumber)
+        private void AddHandAndAuction(string[] board, Auction auction, int boardNumber, BiddingState biddingState)
         {
             var suitLengthSouth = board[(int)Player.South].Split(',').Select(x => x.Length);
             var str = string.Join("", suitLengthSouth);
 
-            var strAuction = auction.GetBidsAsString(Fase.Shape);
+            var strAuction = biddingState.GetBidsAsString(Fase.Shape);
 
             AddHandPerAuction(str, strAuction);
 
@@ -190,10 +189,10 @@ namespace Wpf.Tosr
             var contract = auction.currentContract > new Bid(7, Suit.NoTrump) ? new Bid(7, Suit.NoTrump) : auction.currentContract;
             statistics.contracts.AddOrUpdateDictionary(contract);
             if (!auction.responderHasSignedOff)
-                statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Last(bid => bid.bidType == BidType.bid) - auction.GetBids(Player.South, Fase.Shape).Last());
+                statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Last(bid => bid.bidType == BidType.bid) - biddingState.GetBids(Player.South, Fase.Shape).Last());
             statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthhandOutcome);
             correctnessContractBreakdown = CheckContract(contract, board, dealer == Player.UnKnown ? Player.North : dealer);
-            var pullType = GetPullType(auction);
+            var pullType = biddingState.GetPullBids(Player.South).Any() ? PullType.HasPulled : PullType.NoPull;
             statistics.ContractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, (bidManager.constructedSouthhandOutcome, pullType)));
             correctnessContract = GetCorrectness(correctnessContractBreakdown);
             statistics.ContractCorrectnessBreakdown.AddOrUpdateDictionary(correctnessContractBreakdown);
@@ -202,15 +201,6 @@ namespace Wpf.Tosr
                 inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.constructedSouthhandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
                     $" Auction:{auction.GetPrettyAuction("|")} Northhand: {board[(int)Player.North]} Southhand: {board[(int)Player.South]}");
             endContracts.Add(auction.currentContract);
-        }
-
-        private static PullType GetPullType(Auction auction)
-        {
-            var signOffBidsNT = auction.GetPullBids(Player.South, Util.signOffFasesFor3NT.ToArray());
-            if (signOffBidsNT.Any())
-                return PullType.PullNT;
-            var signOffBids4Di = auction.GetPullBids(Player.South, Util.signOffFasesFor4Di.ToArray());
-            return signOffBids4Di.Any() ? PullType.Pull4Di : PullType.NoPull;
         }
 
         private static CorrectnessContract GetCorrectness(CorrectnessContractBreakdown correctnessContractBreakdown)

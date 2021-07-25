@@ -1,8 +1,8 @@
-﻿using System;
+﻿using BiddingLogic;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using BiddingLogic;
 using Xunit;
 
 namespace Common.Test
@@ -18,12 +18,12 @@ namespace Common.Test
             Assert.Equal(expectedBidsNorth, actualBidsNorth);
         }
 
-        public static void AssertHand(BiddingInformation bidManager, Auction auction, string northHand, string southHand, ReverseDictionaries reverseDictionaries)
+        public static void AssertHand(BiddingInformation biddingInformation, Auction auction, string northHand, string southHand, ReverseDictionaries reverseDictionaries, BiddingState biddingState)
         {
-            var constructedSouthHand = bidManager.ConstructSouthHand(northHand);
+            var constructedSouthHand = biddingInformation.ConstructSouthHand(northHand);
             Assert.Equal(Util.HandWithx(southHand), constructedSouthHand.First());
 
-            var queens = bidManager.GetQueensFromAuction(auction, reverseDictionaries);
+            var queens = biddingInformation.GetQueensFromAuction(auction, reverseDictionaries, biddingState);
             Assert.True(BiddingInformation.CheckQueens(queens, southHand));
         }
     }

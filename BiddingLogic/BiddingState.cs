@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Common;
 
 namespace BiddingLogic
@@ -14,6 +15,9 @@ namespace BiddingLogic
 
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         public Fase PreviousFase { get; private set; }
+        public List<(Fase fase, Bid bid)> BidsPerFase { get; set; } = new();
+        public bool IsZoomShape { get; set; }
+        public bool IsZoomControlScanning { get; set; }
 
         public BiddingState(Dictionary<Fase, bool> fasesWithOffset)
         {
@@ -29,6 +33,9 @@ namespace BiddingLogic
             FaseOffset = 0;
             NextBidIdForRule = 0;
             PreviousFase = Fase.Unknown;
+            BidsPerFase.Clear();
+            IsZoomShape = false;
+            IsZoomControlScanning = false;
         }
         public int CalculateBid(int bidIdFromRule, string description, bool zoom)
         {
@@ -40,10 +47,17 @@ namespace BiddingLogic
             }
 
             CurrentBid = Bid.GetBid(bidId);
-            CurrentBid.fase = Util.signOffFasesWithout3NTNoAsk.Contains(Fase) ? PreviousFase : Fase;
-            CurrentBid.pullFase = Util.signOffFases.Contains(Fase) ? Fase : Fase.Unknown;
+            BidsPerFase.Add((Util.signOffFasesWithout3NTNoAsk.Contains(Fase) ? PreviousFase : Fase, CurrentBid));
+            if (Util.signOffFasesWithout3NTNoAsk.Contains(Fase))
+                BidsPerFase.Add((Fase, CurrentBid));
+            if (zoom)
+            {
+                if (Fase == Fase.Shape)
+                    IsZoomShape = true;
+                if (Fase == Fase.ScanningControls)
+                    IsZoomControlScanning = true;
+            }
             CurrentBid.description = description;
-            CurrentBid.zoom = zoom;
             return bidId;
         }
 
@@ -104,5 +118,37 @@ namespace BiddingLogic
             RelayBidIdLastFase = Bid.GetBidId(relayBid) - (Fase == Fase.Pull3NTNoAsk ? 0 : NextBidIdForRule) - FaseOffset + (relayBid == Bid.fourDiamondBid ? 1 : 0);
             return relayBid;
         }
+
+        public string GetBidsAsString(Fase fase)
+        {
+            return GetBidsAsString(new Fase[] { fase });
+        }
+
+        public string GetBidsAsString(Fase[] fases)
+        {
+            return string.Join("", BidsPerFase.Where(x => fases.Contains(x.fase)).Select(x => x.bid));
+        }
+
+        public IEnumerable<Bid> GetBids(Player player, Fase fase)
+        {
+            return GetBids(new Fase[] { fase });
+        }
+
+        public IEnumerable<Bid> GetBids(Fase[] fases)
+        {
+            return BidsPerFase.Where(x => fases.Contains(x.fase)).Select(x => x.bid);
+        }
+
+        public IEnumerable<Bid> GetPullBids(Player player)
+        {
+            return BidsPerFase.Where(x => Util.signOffFases.Contains(x.fase)).Select(x => x.bid);
+        }
+
+        public Fase GetPullFase()
+        {
+            return BidsPerFase.Where(x => Util.signOffFases.Contains(x.fase)).Select(x => x.fase).SingleOrDefault();
+        }
+
+
     }
 }

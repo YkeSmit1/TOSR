@@ -114,6 +114,8 @@ namespace BiddingLogic
         private Dictionary<Bid, int> occurrencesForBids;
         public ConstructedSouthhandOutcome constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
 
+        public BiddingState biddingState { get; set; }
+
         // Constructor used for test
         public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, RelayBidKindFunc getRelayBidKindFunc) :
             this(bidGenerator, fasesWithOffset)
@@ -145,11 +147,13 @@ namespace BiddingLogic
             this.bidGenerator = bidGenerator;
             this.fasesWithOffset = fasesWithOffset;
             GetRelayBidKindFunc = GetRelayBidKind;
+            biddingState = new BiddingState(fasesWithOffset);
         }
 
         public void Init(Auction auction)
         {
-            biddingInformation = new BiddingInformation(reverseDictionaries, auction);
+            biddingState = new BiddingState(fasesWithOffset);
+            biddingInformation = new BiddingInformation(reverseDictionaries, auction, biddingState);
         }
 
         public Auction GetAuction(string northHand, string southHand)
@@ -160,10 +164,9 @@ namespace BiddingLogic
             loggerBidding.Info($"North:{northHand} South:{southHand}");
 
             var auction = new Auction();
-            biddingInformation = new BiddingInformation(reverseDictionaries, auction);
-            var biddingState = new BiddingState(fasesWithOffset);
             var currentPlayer = Player.West;
             occurrencesForBids = null;
+            Init(auction);
 
             do
             {
@@ -216,7 +219,7 @@ namespace BiddingLogic
         {
             if (biddingState.Fase != Fase.Shape && reverseDictionaries != null && !string.IsNullOrWhiteSpace(northHand))
             {
-                var southInformation = biddingInformation.GetInformationFromAuction(auction, northHand);
+                var southInformation = biddingInformation.GetInformationFromAuction(auction, northHand, biddingState);
                 var trumpSuit = Util.GetTrumpSuitShape(northHand, southInformation.Shapes.First());
 
                 if (biddingState.Fase == Fase.BidGame)
@@ -441,7 +444,7 @@ namespace BiddingLogic
 
         private Bid CalculateEndContract(Auction auction, string northHand, Bid currentBid)
         {
-            var southInformation = biddingInformation.GetInformationFromAuction(auction, northHand);
+            var southInformation = biddingInformation.GetInformationFromAuction(auction, northHand, biddingState);
             var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
             var tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
             var possibleTricksForBid = tricksForBid.Where(bid => bid.Key >= currentBid);
@@ -502,7 +505,7 @@ namespace BiddingLogic
                 if (constructedSouthHand.First() == Util.HandWithx(southHand))
                 {
                     constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
-                    var queens = biddingInformation.GetQueensFromAuction(auction, reverseDictionaries);
+                    var queens = biddingInformation.GetQueensFromAuction(auction, reverseDictionaries, biddingState);
                     if (!BiddingInformation.CheckQueens(queens, southHand))
                         return $"Match is found but queens are wrong : Expected queens: {queens}. SouthHand: {southHand}";
 
@@ -518,7 +521,7 @@ namespace BiddingLogic
             {
                 constructedSouthhandOutcome = !biddingInformation.ControlsScanning.IsValueCreated ? ConstructedSouthhandOutcome.AuctionNotFoundInControls : ConstructedSouthhandOutcome.NoMatchFound;
                 return $"{e.Message} SouthHand: {southHand}. Projected AKQ controls as 4333:{Util.GetHandWithOnlyControlsAs4333(southHand, "AKQ")}. " +
-                    $"Sign-off fases:{auction.GetBids(Player.South, Util.signOffFases.ToArray()).FirstOrDefault()?.fase}";
+                    $"Sign-off fases:{biddingState.BidsPerFase.Where(x => Util.signOffFases.Contains(x.fase))}";
             }
         }
 

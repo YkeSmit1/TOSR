@@ -140,7 +140,7 @@ namespace TosrGui.Test
                 "4NT", "5♣"},
             new[]{
                 Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Pull3NTNoAsk,
+                Fase.Unknown, Fase.Unknown,
                 Fase.Unknown, Fase.Controls,
                 Fase.Unknown, Fase.ScanningControls},
             new[]{
@@ -157,7 +157,7 @@ namespace TosrGui.Test
                 "5♥", "5♠"},
             new[]{
                 Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Pull3NTNoAsk,
+                Fase.Unknown, Fase.Unknown,
                 Fase.Unknown, Fase.Controls,
                 Fase.Unknown, Fase.ScanningControls },
             new[]{
@@ -189,7 +189,7 @@ namespace TosrGui.Test
                 "5♣", "5NT"},
             new[]{
                 Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Pull3NTNoAsk,
+                Fase.Unknown, Fase.Unknown,
                 Fase.Unknown, Fase.Controls,
                 Fase.Unknown, Fase.ScanningControls },
             new[]{
@@ -221,7 +221,7 @@ namespace TosrGui.Test
                 "4NT", "5♣" },
             new[]{
                 Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Pull3NTNoAsk,
+                Fase.Unknown, Fase.Unknown,
                 Fase.Unknown, Fase.Controls,
                 Fase.Unknown, Fase.ScanningControls },
             new[]{
@@ -253,7 +253,7 @@ namespace TosrGui.Test
                 "4♠", "5♦"},
             new[]{
                 Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Pull3NTNoAsk,
+                Fase.Unknown, Fase.Unknown,
                 Fase.Unknown, Fase.Controls,
                 Fase.Unknown, Fase.ScanningControls },
             new[]{
@@ -402,18 +402,27 @@ namespace TosrGui.Test
             }
             var auction = new Auction();
             Assert.Equal(bids.Length, fases.Length);
+            SetBids(auction, bids);
+            var biddingState = new BiddingState(new Dictionary<Fase, bool>());
             var enumerable = fases.Zip(pullFases, (x, y) => (x, y)).Zip(bids, (x, z) => (z, x.x, x.y));
-            SetBids(auction, enumerable);
-            var actual = string.Join("", BiddingInformation.GetAuctionForFaseWithOffset(auction, zoomOffset, Fase.Controls, Fase.ScanningControls));
+            foreach (var x in enumerable)
+            {
+                if (x.x != Fase.Unknown)
+                    biddingState.BidsPerFase.Add((x.x, StringToBid(x.z)));
+                if (x.y != Fase.Unknown)
+                    biddingState.BidsPerFase.Add((x.y, StringToBid(x.z)));
+            }
+
+            var actual = string.Join("", BiddingInformation.GetAuctionForFaseWithOffset(auction, zoomOffset, biddingState, Fase.Controls, Fase.ScanningControls));
             Assert.Equal(expected, actual);
         }
 
-        private static void SetBids(Auction auction, IEnumerable<(string, Fase, Fase)> bidsStr)
+        private static void SetBids(Auction auction, IEnumerable<string> bidsStr)
         {
             auction.bids.Clear();
             var biddingRound = 1;
             var player = Player.North;
-            var lbids = bidsStr.Select(bidstr => new Bid(int.Parse(bidstr.Item1.Substring(0, 1)), Util.GetSuit(bidstr.Item1[1..])) { fase = bidstr.Item2, pullFase = bidstr.Item3 });
+            var lbids = bidsStr.Select(bidstr => StringToBid(bidstr));
             foreach (var bid in lbids)
             {
                 if (player == Player.North)
@@ -428,6 +437,11 @@ namespace TosrGui.Test
                     player = Player.North;
                 }
             }
+        }
+
+        private static Bid StringToBid(string bidstr)
+        {
+            return new Bid(int.Parse(bidstr.Substring(0, 1)), Util.GetSuit(bidstr[1..]));
         }
     }
 }

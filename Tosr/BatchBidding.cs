@@ -289,7 +289,7 @@ namespace Tosr
                     expectedContract = ExpectedContract.GrandSlam;
                 else if (scores.Count(x => x == 12) / (double)scores.Count() > .6)
                     expectedContract = ExpectedContract.SmallSlam;
-                else if (scores.Count(x => x == 12 || x == 13) / (double)scores.Count() > .6)
+                else if (scores.Count(x => x is 12 or 13) / (double)scores.Count() > .6)
                     expectedContract = scores.Count(x => x == 12) >= scores.Count(x => x == 13) ? ExpectedContract.SmallSlam : ExpectedContract.GrandSlam;
                 else expectedContract = ExpectedContract.Game;
 

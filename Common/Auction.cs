@@ -88,36 +88,9 @@ namespace Common
             return bids.Where(x => x.Value.ContainsKey(player)).Aggregate(string.Empty, (current, biddingRound) => current + biddingRound.Value[player]);
         }
 
-        public string GetBidsAsString(Fase fase)
-        {
-            return GetBidsAsString(new Fase[] { fase });
-        }
-
-        public string GetBidsAsString(Fase[] fases)
-        {
-            const Player south = Player.South;
-            return bids.Where(x => x.Value.TryGetValue(south, out var bid) && fases.Contains(bid.fase)).
-                Aggregate(string.Empty, (current, biddingRound) => current + biddingRound.Value[south]);
-        }
-
         public IEnumerable<Bid> GetBids(Player player)
         {
             return bids.Where(x => x.Value.ContainsKey(player)).Select(x => x.Value[player]);
-        }
-
-        public IEnumerable<Bid> GetBids(Player player, Fase fase)
-        {
-            return GetBids(player, new Fase[] { fase });
-        }
-
-        public IEnumerable<Bid> GetBids(Player player, Fase[] fases)
-        {
-            return bids.Where(x => x.Value.TryGetValue(player, out var bid) && fases.Contains(bid.fase)).Select(x => x.Value[player]);
-        }
-
-        public IEnumerable<Bid> GetPullBids(Player player, Fase[] fases)
-        {
-            return bids.Where(x => x.Value.TryGetValue(player, out var bid) && fases.Contains(bid.pullFase)).Select(x => x.Value[player]);
         }
 
         public void SetBids(Player player, IEnumerable<Bid> newBids)

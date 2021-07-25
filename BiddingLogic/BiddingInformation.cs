@@ -22,30 +22,30 @@ namespace BiddingLogic
         public Lazy<(List<string> controls, int zoomOffset)> ControlsScanning { get; set; }
         private readonly ReverseDictionaries reverseDictionaries;
 
-        public BiddingInformation(ReverseDictionaries reverseDictionaries, Auction auction)
+        public BiddingInformation(ReverseDictionaries reverseDictionaries, Auction auction, BiddingState biddingState)
         {
-            Shape = new Lazy<(List<string> shapes, int zoomOffset)>(() => GetShapeStrFromAuction(auction, reverseDictionaries.ShapeAuctions));
-            ControlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() => GetControlsScanningStrFromAuction(auction, reverseDictionaries, Shape.Value.zoomOffset, Shape.Value.shapes.Last()));
+            Shape = new Lazy<(List<string> shapes, int zoomOffset)>(() => GetShapeStrFromAuction(auction, reverseDictionaries.ShapeAuctions, biddingState));
+            ControlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() => GetControlsScanningStrFromAuction(auction, reverseDictionaries, Shape.Value.zoomOffset, Shape.Value.shapes.Last(), biddingState));
             this.reverseDictionaries = reverseDictionaries;
         }
 
-        public SouthInformation GetInformationFromAuction(Auction auction, string northHand)
+        public SouthInformation GetInformationFromAuction(Auction auction, string northHand, BiddingState biddingState)
         {
             var southInformation = new SouthInformation
             {
                 Shapes = Shape.Value.shapes,
-                Hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions)
+                Hcp = GetHcpFromAuction(auction, reverseDictionaries.SignOffFasesAuctions, biddingState)
             };
 
-            southInformation.ControlBidCount = auction.GetBids(Player.South, Fase.Controls).Count();
-            var controls = GetAuctionForFaseWithOffset(auction, Shape.Value.zoomOffset, Fase.Controls).ToList();
+            southInformation.ControlBidCount = biddingState.GetBids(Player.South, Fase.Controls).Count();
+            var controls = GetAuctionForFaseWithOffset(auction, Shape.Value.zoomOffset, biddingState, Fase.Controls).ToList();
             if (controls.Count > 0)
             {
                 var possibleControls = reverseDictionaries.ControlsOnlyAuctions[string.Join("", controls)];
                 southInformation.Controls = new MinMax(possibleControls.First(), possibleControls.Last());
             }
 
-            southInformation.ControlsScanningBidCount = GetAuctionForFaseWithOffset(auction, Shape.Value.zoomOffset, Fase.ScanningControls).Count();
+            southInformation.ControlsScanningBidCount = GetAuctionForFaseWithOffset(auction, Shape.Value.zoomOffset, biddingState, Fase.ScanningControls).Count();
 
             if (ControlsScanning.IsValueCreated)
             {
@@ -54,7 +54,7 @@ namespace BiddingLogic
                     throw new InvalidOperationException($"No matches found. NorthHand:{northHand}");
 
                 southInformation.SpecificControls = matches.Select(match => match.Split(',').Select(x => Regex.Replace(x, "[^AK]", "")).ToArray());
-                southInformation.Queens = GetQueensFromAuction(auction, reverseDictionaries);
+                southInformation.Queens = GetQueensFromAuction(auction, reverseDictionaries, biddingState);
             }
 
             loggerBidding.Info($"SouthInformation. {JsonConvert.SerializeObject(southInformation)}");
@@ -79,9 +79,9 @@ namespace BiddingLogic
 
         /// <summary>
         /// Lookup in the shape dictionary. If not found, it tries to find an auction when the last bid was done with zoom
-        public static (List<string> shapes, int zoomOffset) GetShapeStrFromAuction(Auction auction, ShapeDictionary shapeAuctions)
+        public static (List<string> shapes, int zoomOffset) GetShapeStrFromAuction(Auction auction, ShapeDictionary shapeAuctions, BiddingState biddingState)
         {
-            var allBids = auction.GetBids(Player.South, Fase.Shape);
+            var allBids = biddingState.GetBids(Player.South, Fase.Shape);
             if (shapeAuctions.TryGetValue(string.Join("", allBids), out var shape))
                 return (shape.pattern, shape.zoom ? 2 : 0);
 
@@ -102,9 +102,9 @@ namespace BiddingLogic
         /// <summary>
         /// Lookup in the controlScanning dictionary. If not found, it tries to find an auction when the last bid was done with zoom
         /// </summary>
-        private static (List<string> controls, int zoomOffset) GetControlsScanningStrFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, int zoomOffsetShape, string shapeStr)
+        private static (List<string> controls, int zoomOffset) GetControlsScanningStrFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, int zoomOffsetShape, string shapeStr, BiddingState biddingState)
         {
-            var bidsForFase = GetAuctionForFaseWithOffset(auction, zoomOffsetShape, Fase.Controls, Fase.ScanningControls).ToList();
+            var bidsForFase = GetAuctionForFaseWithOffset(auction, zoomOffsetShape, biddingState, Fase.Controls, Fase.ScanningControls).ToList();
             var controlScanningAuctions = reverseDictionaries.GetControlScanningDictionary(shapeStr);
 
             if (controlScanningAuctions.TryGetValue(string.Join("", bidsForFase), out var controls))
@@ -131,10 +131,10 @@ namespace BiddingLogic
         /// <param name="auction">Generated auction </param>
         /// <param name="fase">Which fases to get the offset from</param>
         /// <returns></returns>
-        public static IEnumerable<Bid> GetAuctionForFaseWithOffset(Auction auction, int zoomOffset, params Fase[] fases)
+        public static IEnumerable<Bid> GetAuctionForFaseWithOffset(Auction auction, int zoomOffset, BiddingState biddingState, params Fase[] fases)
         {
-            var lastBidShape = auction.GetBids(Player.South, Fase.Shape).Last();
-            var bidsForFases = auction.GetBids(Player.South, fases);
+            var lastBidShape = biddingState.GetBids(Player.South, Fase.Shape).Last();
+            var bidsForFases = biddingState.GetBids(fases);
             var offSet = lastBidShape - Bid.threeDiamondBid;
             if (zoomOffset != 0)
                 bidsForFases = new[] { lastBidShape }.Concat(bidsForFases);
@@ -143,12 +143,13 @@ namespace BiddingLogic
             var fourCLubsRelayOffSet = 0;
             var signOffOffset = 0;
             var previousBid = lastBidShape;
-            var bidPull3NTNoAsk = auction.GetBids(Player.South).Where(bid => bid.pullFase == Fase.Pull3NTNoAsk);
+            var pullBids = biddingState.GetPullBids(Player.South);
+            var bidPull3NTNoAsk = biddingState.GetBids(Player.South, Fase.Pull3NTNoAsk);
             var signOffBid = GetSignOffBid();
 
             var bidsForFasesResult = bidsForFases.Select(b =>
             {
-                if (Util.signOffFases.Contains(b.pullFase) || (bidPull3NTNoAsk.Count() == 1 && signOffOffset == 0 && b > bidPull3NTNoAsk.Single()))
+                if (pullBids.Contains(b) || (bidPull3NTNoAsk.Count() == 1 && signOffOffset == 0 && b > bidPull3NTNoAsk.Single()))
                     signOffOffset = signOffBid - previousBid;
 
                 if (used4ClAsRelay && b > Bid.fourClubBid)
@@ -162,12 +163,11 @@ namespace BiddingLogic
 
             Bid GetSignOffBid()
             {
-                var signOffBiddingRounds = auction.bids.Where(bids => bids.Value.TryGetValue(Player.South, out var bid) && Util.signOffFases.Contains(bid.pullFase));
-                if (!signOffBiddingRounds.Any())
+                if (!pullBids.Any())
                     return Bid.PassBid;
-                var signOffBiddingRound = signOffBiddingRounds.Single();
+                var signOffBiddingRound = auction.bids.Where(bids => bids.Value.TryGetValue(Player.South, out var bid) && bid == pullBids.Single()).Single();
                 // Return the next bid. The sign-off bid only shows points
-                if (signOffBiddingRound.Value[Player.South].pullFase == Fase.Pull3NTNoAsk)
+                if (bidPull3NTNoAsk.Any())
                     return auction.bids[signOffBiddingRound.Key + 1].TryGetValue(Player.North, out var bidNorth) ? bidNorth - 1 : Bid.PassBid;
 
                 var signoffBidNorth = signOffBiddingRound.Value[Player.North];
@@ -176,25 +176,25 @@ namespace BiddingLogic
             }
         }
 
-        private static MinMax GetHcpFromAuction(Auction auction, FaseDictionary faseAuctions)
+        private static MinMax GetHcpFromAuction(Auction auction, FaseDictionary faseAuctions, BiddingState biddingState)
         {
-            var signOffBids = auction.GetPullBids(Player.South, Util.signOffFases.ToArray());
-            if (signOffBids.Count() == 1)
+            var pullFase = biddingState.GetPullFase();
+            var pullBids = biddingState.GetPullBids(Player.South).SingleOrDefault();
+            if (pullFase != default)
             {
-                var signOffBid = signOffBids.Single();
-                var sigOffBidStr = (signOffBid.pullFase switch
+                var sigOffBidStr = (pullFase switch
                 {
-                    Fase.Pull3NTNoAsk => signOffBid,
+                    Fase.Pull3NTNoAsk => pullBids,
                     Fase.Pull3NTOneAskMin => Bid.threeNTBid + 1,
                     Fase.Pull3NTOneAskMax => Bid.threeNTBid + 1,
                     Fase.Pull3NTTwoAsks => Bid.threeNTBid + 1,
                     Fase.Pull4DiamondsNoAsk => Bid.fourDiamondBid + 2,
                     Fase.Pull4DiamondsOneAskMin => Bid.fourDiamondBid + 2,
                     Fase.Pull4DiamondsOneAskMax => Bid.fourDiamondBid + 2,
-                    _ => throw new InvalidEnumArgumentException(nameof(signOffBid.pullFase)),
+                    _ => throw new InvalidEnumArgumentException(nameof(pullFase)),
                 }).ToString();
                 // TODO handle case where sign-off bid is 4NT
-                if (faseAuctions[signOffBid.pullFase].TryGetValue(sigOffBidStr, out var hcps))
+                if (faseAuctions[pullFase].TryGetValue(sigOffBidStr, out var hcps))
                     return new MinMax(hcps.Min(), hcps.Max());
             }
 
@@ -204,13 +204,13 @@ namespace BiddingLogic
         /// <summary>
         /// Returns a string of 4 characters when each character is "Y" "N" "X". "X" means not yet known.
         /// </summary>
-        public string GetQueensFromAuction(Auction auction, ReverseDictionaries reverseDictionaries)
+        public string GetQueensFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, BiddingState biddingState)
         {
             // Because the last shape is the one with the highest numeric value generated in ReverseDictionaries
             string shapeStr = Shape.Value.shapes.Last();
             int zoomOffset = ControlsScanning.Value.zoomOffset;
-            var lastBidPreviousFase = auction.GetBids(Player.South, new[] { Fase.Controls, Fase.ScanningControls }).Last();
-            var queensBids = auction.GetBids(Player.South, Fase.ScanningOther);
+            var lastBidPreviousFase = biddingState.GetBids(new[] { Fase.Controls, Fase.ScanningControls }).Last();
+            var queensBids = biddingState.GetBids(Player.South, Fase.ScanningOther);
             var offset = lastBidPreviousFase - ReverseDictionaries.GetOffsetBidForQueens(shapeStr);
             if (zoomOffset != 0)
             {

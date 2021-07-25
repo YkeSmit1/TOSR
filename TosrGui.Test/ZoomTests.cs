@@ -4,8 +4,8 @@ using System.Text;
 using System.Linq;
 using Xunit;
 using Moq;
-using BiddingLogic;
 using Common;
+using BiddingLogic;
 
 namespace TosrGui.Test
 {
@@ -55,11 +55,13 @@ namespace TosrGui.Test
             // Setup
             var auction = new Auction();
             var newBids = new List<Bid> { new Bid(1, Suit.Hearts), new Bid(3, Suit.Hearts) };
-            newBids.ForEach(bid => bid.fase = Fase.Shape);
+            var biddingState = new BiddingState(fasesWithOffset);
+            foreach (var bid in newBids)
+                biddingState.BidsPerFase.Add((Fase.Shape, bid));
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Equal("6331", BiddingInformation.GetShapeStrFromAuction(auction, shapeAuctions).shapes.First());
+            Assert.Equal("6331", BiddingInformation.GetShapeStrFromAuction(auction, shapeAuctions, biddingState).shapes.First());
         }
 
         [Fact()]
@@ -68,11 +70,13 @@ namespace TosrGui.Test
             // Setup
             var auction = new Auction();
             var newBids = new List<Bid> { new Bid(1, Suit.Spades), new Bid(3, Suit.Spades) };
-            newBids.ForEach(bid => bid.fase = Fase.Shape);
+            var biddingState = new BiddingState(fasesWithOffset);
+            foreach (var bid in newBids)
+                biddingState.BidsPerFase.Add((Fase.Shape, bid));
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Equal("4243", BiddingInformation.GetShapeStrFromAuction(auction, shapeAuctions).shapes.First());
+            Assert.Equal("4243", BiddingInformation.GetShapeStrFromAuction(auction, shapeAuctions, biddingState).shapes.First());
         }
 
         [Fact()]
@@ -81,11 +85,13 @@ namespace TosrGui.Test
             // Setup
             var auction = new Auction();
             var newBids = new List<Bid> { new Bid(1, Suit.Hearts), new Bid(3, Suit.Spades) };
-            newBids.ForEach(bid => bid.fase = Fase.Shape);
+            var biddingState = new BiddingState(fasesWithOffset);
+            foreach (var bid in newBids)
+                biddingState.BidsPerFase.Add((Fase.Shape, bid));
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Throws<InvalidOperationException>(() => BiddingInformation.GetShapeStrFromAuction(auction, shapeAuctions));
+            Assert.Throws<InvalidOperationException>(() => BiddingInformation.GetShapeStrFromAuction(auction, shapeAuctions, biddingState));
         }
 
         [Fact()]
@@ -118,9 +124,9 @@ namespace TosrGui.Test
             Assert.Equal("1♠2♦3NT4♥5♦5♠6♦Pass", auction.GetBidsAsString(Player.South));
             Assert.Equal("1♣1NT2♥4♣4♠5♥5NT6♥", auction.GetBidsAsString(Player.North));
 
-            Assert.Equal("1♠2♦3NT", auction.GetBidsAsString(Fase.Shape));
-            Assert.Equal("", auction.GetBidsAsString(Fase.Controls));
-            Assert.Equal("4♥5♦5♠6♦", auction.GetBidsAsString(Fase.ScanningControls));
+            Assert.Equal("1♠2♦3NT", bidManager.biddingState.GetBidsAsString(Fase.Shape));
+            Assert.Equal("", bidManager.biddingState.GetBidsAsString(Fase.Controls));
+            Assert.Equal("4♥5♦5♠6♦", bidManager.biddingState.GetBidsAsString(Fase.ScanningControls));
 
             var southHand = bidManager.biddingInformation.ConstructSouthHand("Axxx,Kxx,Kxx,Kxx");
             Assert.Equal("Kxxx,Ax,xxx,Axxx", southHand.First());

@@ -125,9 +125,9 @@ namespace BiddingLogic
 
                                 if (!Util.IsFreakHand(suitLengthSouth))
                                 {
-                                    var auction = bidManager.GetAuction(string.Empty, hand); // No northhand. Just for generating reverse dictionaries
-                                    var isZoom = auction.GetBids(Player.South, Fase.Shape).Any(x => x.zoom);
-                                    var key = auction.GetBidsAsString(Fase.Shape);
+                                    _ = bidManager.GetAuction(string.Empty, hand); // No northhand. Just for generating reverse dictionaries
+                                    var isZoom = bidManager.biddingState.IsZoomShape;
+                                    var key = bidManager.biddingState.GetBidsAsString(Fase.Shape);
                                     if (auctions.ContainsKey(key))
                                         auctions[key].pattern.Add(str);
                                     else
@@ -181,8 +181,8 @@ namespace BiddingLogic
                 shufflingDeal.South.Controls = new MinMax(control, control);
                 var board = Util.GetBoardsTosr(shufflingDeal.Execute().First());
 
-                var auction = bidManager.GetAuction(string.Empty, board[(int)Player.South]); // No northhand. Just for generating reverse dictionaries
-                auctions.Add(auction.GetBidsAsString(Fase.Controls), new List<int> { control });
+                _ = bidManager.GetAuction(string.Empty, board[(int)Player.South]); // No northhand. Just for generating reverse dictionaries
+                auctions.Add(bidManager.biddingState.GetBidsAsString(Fase.Controls), new List<int> { control });
             }
         }
 
@@ -218,12 +218,11 @@ namespace BiddingLogic
             {
                 if (hand.Length != 16)
                     return;
-                var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
-                var key = string.Join("", auction.GetBids(Player.South, new[] { Fase.Controls, Fase.ScanningControls }).
-                    Select(bid => bid - (auction.GetBids(Player.South, Fase.Shape).Last() - Bid.threeDiamondBid)));
-                var isZoom = auction.GetBids(Player.South, Fase.ScanningControls).Any(x => x.zoom);
+                _ = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
+                var key = string.Join("", bidManager.biddingState.GetBids(new[] { Fase.Controls, Fase.ScanningControls }).
+                    Select(bid => bid - (bidManager.biddingState.GetBids(Player.South, Fase.Shape).Last() - Bid.threeDiamondBid)));
                 if (!auctions.ContainsKey(key))
-                    auctions.Add(key, (new List<string>() { handToStore }, isZoom));
+                    auctions.Add(key, (new List<string>() { handToStore }, bidManager.biddingState.IsZoomControlScanning));
                 else if (!auctions[key].controlsScanning.Contains(handToStore))
                     auctions[key].controlsScanning.Add(handToStore);
             }
@@ -292,8 +291,8 @@ namespace BiddingLogic
 
             void BidAndStoreHand(string hand, params string[] suits)
             {
-                var auction = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
-                var key = auction.GetBids(Player.South, Fase.ScanningOther);
+                _ = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
+                var key = bidManager.biddingState.GetBids(Player.South, Fase.ScanningOther);
                 if (auctions.TryGetValue(key, out var value))
                 {
                     var queenStr = string.Empty;

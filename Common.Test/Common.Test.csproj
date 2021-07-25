@@ -9,8 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BiddingLogic\BiddingLogic.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
-    <ProjectReference Include="..\Tosr\Tosr.csproj" />
   </ItemGroup>
 
 </Project>

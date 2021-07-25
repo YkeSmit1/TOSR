@@ -68,7 +68,7 @@ namespace TosrIntegration.Test
             var constructedSouthHand = bidManager.biddingInformation.ConstructSouthHand(northHand);
             Assert.Equal(Util.HandWithx(southHand), constructedSouthHand.First());
 
-            var queens = bidManager.biddingInformation.GetQueensFromAuction(auction, reverseDictionaries);
+            var queens = bidManager.biddingInformation.GetQueensFromAuction(auction, reverseDictionaries, bidManager.biddingState);
             Assert.True(BiddingInformation.CheckQueens(queens, southHand));
         }
     }
