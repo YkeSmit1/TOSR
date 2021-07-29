@@ -61,7 +61,7 @@ namespace TosrGui.Test
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Equal("6331", BiddingInformation.GetShapeStrFromAuction(shapeAuctions, biddingState).shapes.First());
+            Assert.Equal("6331", BiddingInformation.GetInformationFromBids(shapeAuctions, biddingState.GetBids(Fase.Shape)).information.First());
         }
 
         [Fact()]
@@ -76,7 +76,7 @@ namespace TosrGui.Test
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Equal("4243", BiddingInformation.GetShapeStrFromAuction(shapeAuctions, biddingState).shapes.First());
+            Assert.Equal("4243", BiddingInformation.GetInformationFromBids(shapeAuctions, biddingState.GetBids(Fase.Shape)).information.First());
         }
 
         [Fact()]
@@ -91,7 +91,7 @@ namespace TosrGui.Test
             auction.SetBids(Player.South, newBids);
 
             // Act and assert
-            Assert.Throws<InvalidOperationException>(() => BiddingInformation.GetShapeStrFromAuction(shapeAuctions, biddingState));
+            Assert.Throws<InvalidOperationException>(() => BiddingInformation.GetInformationFromBids(shapeAuctions, biddingState.GetBids(Fase.Shape)));
         }
 
         [Fact()]

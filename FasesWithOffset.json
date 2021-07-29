@@ -1,6 +1,6 @@
 {
 	"Shape": false,
-	"Controls": false,
+	"Controls": true,
 	"ScanningControls": true,
 	"ScanningOther": true
 }

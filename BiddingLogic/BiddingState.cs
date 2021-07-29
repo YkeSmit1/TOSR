@@ -84,6 +84,8 @@ namespace BiddingLogic
             if (nextfase != Fase)
             {
                 // Specific for zoom. TODO Code is ugly, needs improvement
+                if (zoomOffset != 0)
+                    zoomOffset--;
                 RelayBidIdLastFase = bidId + 1 - zoomOffset;
                 Fase = nextfase;
                 FaseOffset = 0;

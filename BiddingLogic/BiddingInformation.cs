@@ -10,9 +10,7 @@ using Solver;
 
 namespace BiddingLogic
 {
-    using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
     using FaseDictionary = Dictionary<Fase, Dictionary<string, List<int>>>;
-    using ControlScanningDictionary = Dictionary<string, (List<string> controlsScanning, bool zoom)>;
 
     public class BiddingInformation
     {
@@ -24,9 +22,17 @@ namespace BiddingLogic
 
         public BiddingInformation(ReverseDictionaries reverseDictionaries, Auction auction, BiddingState biddingState)
         {
-            Shape = new Lazy<(List<string> shapes, int zoomOffset)>(() => GetShapeStrFromAuction(reverseDictionaries.ShapeAuctions, biddingState));
-            ControlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() => GetControlsScanningStrFromAuction(reverseDictionaries.GetControlScanningDictionary(Shape.Value.shapes.Last()), auction,
-                Shape.Value.zoomOffset, biddingState));
+            Shape = new Lazy<(List<string> shapes, int zoomOffset)>(() =>
+            {
+                var bidsForFase = biddingState.GetBids(Fase.Shape);
+                return GetInformationFromBids(reverseDictionaries.ShapeAuctions, bidsForFase);
+            });
+            ControlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() =>
+            {
+                var dictionary = reverseDictionaries.GetControlScanningDictionary(Shape.Value.shapes.Last());
+                var bidsForFase = GetAuctionForFaseWithOffset(auction, Shape.Value.zoomOffset, biddingState, Fase.Controls, Fase.ScanningControls).ToList();
+                return GetInformationFromBids(dictionary, bidsForFase);
+            });
             this.reverseDictionaries = reverseDictionaries;
         }
 
@@ -86,52 +92,26 @@ namespace BiddingLogic
         }
 
         /// <summary>
-        /// Lookup in the shape dictionary. If not found, it tries to find an auction when the last bid was done with zoom
+        /// Lookup in the dictionary. If not found, it tries to find an auction when the last bid was done with zoom
         /// </summary>
-        public static (List<string> shapes, int zoomOffset) GetShapeStrFromAuction(ShapeDictionary shapeAuctions, BiddingState biddingState)
+        public static (List<string> information, int zoomOffset) GetInformationFromBids(Dictionary<string, (List<string> pattern, bool zoom)> dictionary, IEnumerable<Bid> bidsForFase)
         {
-            var allBids = biddingState.GetBids(Fase.Shape);
-            if (shapeAuctions.TryGetValue(string.Join("", allBids), out var shape))
-                return (shape.pattern, shape.zoom ? 2 : 0);
+            if (dictionary.TryGetValue(string.Join("", bidsForFase), out var information))
+                return (information.pattern, information.zoom ? 2 : 0);
 
-            var lastBid = allBids.Last();
-            var firstBid = allBids.First();
-            var allButLastBid = allBids.Take(allBids.Count() - 1);
+            var lastBid = bidsForFase.Last();
+            var firstBid = bidsForFase.First();
+            var allButLastBid = bidsForFase.Take(bidsForFase.Count() - 1);
             for (var bid = lastBid - 1; bid >= firstBid; bid--)
             {
                 var allBidsNew = allButLastBid.Append(bid);
                 var bidsStr = string.Join("", allBidsNew);
                 // Add two because auction is two bids lower if zoom applies
-                if (shapeAuctions.TryGetValue(bidsStr, out var zoom) && zoom.zoom)
-                    return (zoom.pattern, lastBid - bid + 2);
+                if (dictionary.TryGetValue(bidsStr, out var informationZoom) && informationZoom.zoom)
+                    return (informationZoom.pattern, lastBid - bid + 2);
             }
 
-            throw new InvalidOperationException($"{ string.Join("", allBids) } not found in shape dictionary");
-        }
-
-        /// <summary>
-        /// Lookup in the controlScanning dictionary. If not found, it tries to find an auction when the last bid was done with zoom
-        /// </summary>
-        private static (List<string> controls, int zoomOffset) GetControlsScanningStrFromAuction(ControlScanningDictionary controlScanningAuctions, Auction auction, int zoomOffsetShape, BiddingState biddingState)
-        {
-            var bidsForFase = GetAuctionForFaseWithOffset(auction, zoomOffsetShape, biddingState, Fase.Controls, Fase.ScanningControls).ToList();
-            if (controlScanningAuctions.TryGetValue(string.Join("", bidsForFase), out var controls))
-                return (controls.controlsScanning, controls.zoom ? 1 : 0);
-
-            var lastBid = bidsForFase.Last();
-            var firstBid = bidsForFase.First();
-            var allButLastBid = bidsForFase.Take(bidsForFase.Count - 1);
-            for (var bid = lastBid - 1; bid >= firstBid; bid--)
-            {
-                var allBidsNew = allButLastBid.Append(bid);
-                var bidsStr = string.Join("", allBidsNew);
-                // Add one because auction is one bids lower if zoom applies
-                if (controlScanningAuctions.TryGetValue(bidsStr, out var zoom) && zoom.zoom)
-                    return (zoom.controlsScanning, lastBid - bid + 1);
-            }
-
-            throw new InvalidOperationException($"{ string.Join("", bidsForFase) } not found in controls scanning dictionary. Auction:{auction.GetPrettyAuction("|")}. " +
-                $"zoom-offset shape:{zoomOffsetShape}");
+            throw new InvalidOperationException($"{ string.Join("", bidsForFase) } not found in dictionary");
         }
 
         /// <summary>
@@ -197,10 +177,7 @@ namespace BiddingLogic
             var queensBids = biddingState.GetBids(Fase.ScanningOther);
             var offset = lastBidPreviousFase - ReverseDictionaries.GetOffsetBidForQueens(shapeStr);
             if (zoomOffset != 0)
-            {
                 queensBids = new[] { lastBidPreviousFase }.Concat(queensBids);
-                zoomOffset++;
-            }
 
             if (!queensBids.Any())
                 return null;

@@ -5,23 +5,29 @@ using Newtonsoft.Json;
 using Xunit;
 using Common;
 using BiddingLogic;
+using Common.Test;
 
 namespace TosrIntegration.Test
 {
     [Collection("Sequential")]
-    public class BiddingSystemTest
+    public class BiddingSystemTest : IClassFixture<BaseTestFixture>
     {
-        [Fact]
-        public static void ExecuteTest()
+        public BiddingSystemTest(BaseTestFixture fixture)
         {
-            var fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
-            var bidGenerator = new BidGenerator();
+            Fixture = fixture;
+        }
+
+        private BaseTestFixture Fixture { get; }
+
+        [Fact]
+        public void ExecuteTest()
+        {
             var expectedSouthBids = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("expectedSouthBidsPerHand.json"));
-            Pinvoke.Setup("Tosr.db3");
-            BidManager bidManager = new BidManager(bidGenerator, fasesWithOffset);
+            _ = Pinvoke.Setup("Tosr.db3");
+            var bidManager = new BidManager(new BidGenerator(), Fixture.fasesWithOffset, Fixture.reverseDictionaries, false);
             foreach (var (hand, expectedBids) in expectedSouthBids)
             {
-                var generatedAuction = bidManager.GetAuction(string.Empty, hand);
+                var generatedAuction = bidManager.GetAuction("", hand);
                 var generatedSouthBids = generatedAuction.GetBidsAsString(Player.South);
                 Assert.Equal(expectedBids, generatedSouthBids);
             }
