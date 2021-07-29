@@ -128,40 +128,31 @@ namespace BiddingLogic
             if (zoomOffset != 0)
                 bidsForFases = new[] { lastBidShape }.Concat(bidsForFases);
 
-            var used4ClAsRelay = Used4ClAsRelay(auction);
-            var fourCLubsRelayOffSet = 0;
-            var signOffOffset = 0;
-            var previousBid = lastBidShape;
             var pullBid = biddingState.GetPullBid();
+            var pullFase = biddingState.GetPullFase();
             var bidPull3NTNoAsk = biddingState.GetBids(Fase.Pull3NTNoAsk);
-            var signOffBid = GetSignOffBid();
+
+            int offsetRelayBid = 0;
 
             var bidsForFasesResult = bidsForFases.Select(b =>
             {
-                if (pullBid == b || (bidPull3NTNoAsk.Count() == 1 && signOffOffset == 0 && b > bidPull3NTNoAsk.Single()))
-                    signOffOffset = signOffBid - previousBid;
-
-                if (used4ClAsRelay && b > Bid.fourClubBid)
-                    fourCLubsRelayOffSet = 1;
-                previousBid = b;
-
-                return b += zoomOffset - fourCLubsRelayOffSet - offSet - signOffOffset;
+                offsetRelayBid -= GetOffsetRelayBid(b);
+                return b + zoomOffset + offsetRelayBid - offSet;
             });
 
             return bidsForFasesResult;
 
-            Bid GetSignOffBid()
+            int GetOffsetRelayBid(Bid currentBid)
             {
-                if (pullBid == default)
-                    return Bid.PassBid;
-                var signOffBiddingRound = auction.bids.Where(bids => bids.Value.TryGetValue(Player.South, out var bid) && bid == pullBid).Single();
-                // Return the next bid. The sign-off bid only shows points
-                if (bidPull3NTNoAsk.Any())
-                    return auction.bids[signOffBiddingRound.Key + 1].TryGetValue(Player.North, out var bidNorth) ? bidNorth - 1 : Bid.PassBid;
+                var previousBidSouth = auction.GetRelativeBid(currentBid, -1, Player.South);
+                if (previousBidSouth == default)
+                    return 0;
+                var previousBidNorth = auction.GetRelativeBid(currentBid, 0, Player.North);
 
-                var signoffBidNorth = signOffBiddingRound.Value[Player.North];
-                var bid = signoffBidNorth.suit == Suit.NoTrump ? signoffBidNorth - 1 : signoffBidNorth;
-                return bid;
+                // In case of 3NT pull without ask, use the bid before. The sign-off bid only shows points
+                return previousBidSouth == bidPull3NTNoAsk.SingleOrDefault()
+                    ? previousBidNorth - auction.GetRelativeBid(currentBid, -2, Player.South) - 1
+                    : previousBidNorth - previousBidSouth - (currentBid == pullBid && BiddingState.SignOffFasesFor4Di.Contains(pullFase) ? 0 : 1);
             }
         }
 
@@ -179,10 +170,9 @@ namespace BiddingLogic
             if (zoomOffset != 0)
                 queensBids = new[] { lastBidPreviousFase }.Concat(queensBids);
 
+            queensBids = queensBids.Select(bid => bid + zoomOffset - offset);
             if (!queensBids.Any())
                 return null;
-
-            queensBids = queensBids.Select(bid => bid - offset + zoomOffset);
             var queensAuctions = reverseDictionaries.GetQueensDictionary(shapeStr);
             var bidsForFaseQueens = string.Join("", queensBids);
               
@@ -217,19 +207,6 @@ namespace BiddingLogic
             var shapesOrdered = shapes.OrderByDescending(x => x.Item1).ThenBy(x => x.index).ToList(); // {5,4,3,1}
             var queensOrdered = new string(shapes.Select(x => queens[shapesOrdered.IndexOf(x)]).ToArray());
             return queensOrdered;
-        }
-
-        private static bool Used4ClAsRelay(Auction auction)
-        {
-            var previousBiddingRound = auction.bids.First();
-            foreach (var biddingRound in auction.bids.Skip(1))
-            {
-                if (biddingRound.Value.TryGetValue(Player.North, out var bid) && bid == Bid.fourClubBid)
-                    return previousBiddingRound.Value[Player.South] == Bid.threeSpadeBid;
-
-                previousBiddingRound = biddingRound;
-            }
-            return false;
         }
 
         private static IEnumerable<string> GetMatchesWithNorthHand(List<string> shapeLengthStrs, List<string> possibleControls, string northHandStr)

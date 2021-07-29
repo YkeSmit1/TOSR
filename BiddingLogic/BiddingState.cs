@@ -9,7 +9,7 @@ namespace BiddingLogic
     public class BiddingState
     {
         private static List<Fase> SignOffFasesFor3NT { get; } = new List<Fase> { Fase.Pull3NTNoAsk, Fase.Pull3NTOneAskMin, Fase.Pull3NTOneAskMax, Fase.Pull3NTTwoAsks };
-        private static List<Fase> SignOffFasesFor4Di { get; } = new List<Fase> { Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAskMin, Fase.Pull4DiamondsOneAskMax };
+        public static List<Fase> SignOffFasesFor4Di { get; } = new List<Fase> { Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAskMin, Fase.Pull4DiamondsOneAskMax };
         public static List<Fase> SignOffFases { get; } = SignOffFasesFor3NT.Concat(SignOffFasesFor4Di).ToList();
         private static List<Fase> SignOffFasesWithout3NTNoAsk { get; } = SignOffFasesFor4Di.Concat(new[] { Fase.Pull3NTOneAskMin, Fase.Pull3NTOneAskMax, Fase.Pull3NTTwoAsks }).ToList();
 

@@ -11,6 +11,7 @@ namespace Common.Test
     {
         public static void AssertAuction(string expectedBidsNorth, string expectedBidsSouth, Auction auction)
         {
+            auction.CheckConsistency();
             var actualBidsSouth = auction.GetBidsAsString(Player.South);
             var actualBidsNorth = auction.GetBidsAsString(Player.North);
 

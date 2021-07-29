@@ -11,7 +11,7 @@ namespace Common
     public class Auction
     {
         public Player CurrentPlayer { get; set; }
-        public int CurrentBiddingRound { get; set; }
+        public int CurrentBiddingRound { get; set; } = 1;
         public Dictionary<int, Dictionary<Player, Bid>> bids { get; set; } = new Dictionary<int, Dictionary<Player, Bid>>();
         public Bid currentContract = Bid.PassBid;
         public bool responderHasSignedOff = false;
@@ -104,19 +104,6 @@ namespace Common
             }
         }
 
-        public bool Used4ClAsRelay()
-        {
-            var previousBiddingRound = bids.First();
-            foreach (var biddingRound in bids.Skip(1))
-            {
-                if (biddingRound.Value.TryGetValue(Player.North, out var bid) && bid == Bid.fourClubBid)
-                    return previousBiddingRound.Value[Player.South] == Bid.threeSpadeBid;
-
-                previousBiddingRound = biddingRound;
-            }
-            return false;
-        }
-
         public void CheckConsistency()
         {
             var bidsSouth = GetBids(Player.South);
@@ -151,6 +138,14 @@ namespace Common
                     Util.IsSameTeam(CurrentPlayer, GetDeclarer(currentContract.suit)),
                 _ => throw new InvalidEnumArgumentException(nameof(bid.bidType), (int)bid.bidType, null),
             };
+        }
+
+        public Bid GetRelativeBid(Bid currentBid, int level, Player player)
+        {
+            var biddingRound = bids.Single(bids => bids.Value.Where(y => y.Value == currentBid).Any());
+            if (biddingRound.Key + level < 1)
+                return default;
+            return bids[biddingRound.Key + level].TryGetValue(player, out var bid) ? bid : default;
         }
     }
 }
