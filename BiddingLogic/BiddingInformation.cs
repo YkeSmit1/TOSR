@@ -124,23 +124,8 @@ namespace BiddingLogic
         {
             var lastBidShape = biddingState.GetBids(Fase.Shape).Last();
             var bidsForFases = biddingState.GetBids(fases);
-            var offSet = lastBidShape - Bid.threeDiamondBid;
-            if (zoomOffset != 0)
-                bidsForFases = new[] { lastBidShape }.Concat(bidsForFases);
 
-            var pullBid = biddingState.GetPullBid();
-            var pullFase = biddingState.GetPullFase();
-            var bidPull3NTNoAsk = biddingState.GetBids(Fase.Pull3NTNoAsk);
-
-            int offsetRelayBid = 0;
-
-            var bidsForFasesResult = bidsForFases.Select(b =>
-            {
-                offsetRelayBid -= GetOffsetRelayBid(b);
-                return b + zoomOffset + offsetRelayBid - offSet;
-            });
-
-            return bidsForFasesResult;
+            return GetBidsForFaseWithOffset(bidsForFases, Bid.threeDiamondBid, lastBidShape, zoomOffset, GetOffsetRelayBid);
 
             int GetOffsetRelayBid(Bid currentBid)
             {
@@ -150,9 +135,9 @@ namespace BiddingLogic
                 var previousBidNorth = auction.GetRelativeBid(currentBid, 0, Player.North);
 
                 // In case of 3NT pull without ask, use the bid before. The sign-off bid only shows points
-                return previousBidSouth == bidPull3NTNoAsk.SingleOrDefault()
+                return previousBidSouth == biddingState.GetBids(Fase.Pull3NTNoAsk).SingleOrDefault()
                     ? previousBidNorth - auction.GetRelativeBid(currentBid, -2, Player.South) - 1
-                    : previousBidNorth - previousBidSouth - (currentBid == pullBid && BiddingState.SignOffFasesFor4Di.Contains(pullFase) ? 0 : 1);
+                    : previousBidNorth - previousBidSouth - (currentBid == biddingState.GetPullBid() && BiddingState.SignOffFasesFor4Di.Contains(biddingState.GetPullFase()) ? 0 : 1);
             }
         }
 
@@ -162,19 +147,17 @@ namespace BiddingLogic
         public string GetQueensFromAuction(Auction auction, ReverseDictionaries reverseDictionaries, BiddingState biddingState)
         {
             // Because the last shape is the one with the highest numeric value generated in ReverseDictionaries
-            string shapeStr = Shape.Value.shapes.Last();
-            int zoomOffset = ControlsScanning.Value.zoomOffset;
-            var lastBidPreviousFase = biddingState.GetBids(Fase.ScanningControls).Last();
+            var shapeStr = Shape.Value.shapes.Last();
+            var zoomOffset = ControlsScanning.Value.zoomOffset;
+            var lastBidScanningControl = biddingState.GetBids(Fase.ScanningControls).Last();
             var queensBids = biddingState.GetBids(Fase.ScanningOther);
-            var offset = lastBidPreviousFase - ReverseDictionaries.GetOffsetBidForQueens(shapeStr);
-            if (zoomOffset != 0)
-                queensBids = new[] { lastBidPreviousFase }.Concat(queensBids);
+            var offsetBid = ReverseDictionaries.GetOffsetBidForQueens(shapeStr);
 
-            queensBids = queensBids.Select(bid => bid + zoomOffset - offset);
-            if (!queensBids.Any())
+            var queensBidsResult = GetBidsForFaseWithOffset(queensBids, offsetBid, lastBidScanningControl, zoomOffset, GetOffsetRelayBid);
+            if (!queensBidsResult.Any())
                 return null;
             var queensAuctions = reverseDictionaries.GetQueensDictionary(shapeStr);
-            var bidsForFaseQueens = string.Join("", queensBids);
+            var bidsForFaseQueens = string.Join("", queensBidsResult);
               
             if (queensAuctions.TryGetValue(bidsForFaseQueens, out var queens))
             {
@@ -184,6 +167,33 @@ namespace BiddingLogic
 
             throw new InvalidOperationException($"{ bidsForFaseQueens } not found in queens dictionary. Auction:{auction.GetPrettyAuction("|")}. " +
                 $"zoom-offset control scanning:{zoomOffset}");
+
+            int GetOffsetRelayBid(Bid currentBid)
+            {
+                if (currentBid == biddingState.GetPullBid())
+                    return 0;
+                var previousBidSouth = auction.GetRelativeBid(currentBid, -1, Player.South);
+                if (previousBidSouth == default)
+                    return 0;
+                var previousBidNorth = auction.GetRelativeBid(currentBid, 0, Player.North);
+
+                return previousBidNorth - previousBidSouth - 1;
+            }
+        }
+
+        private static IEnumerable<Bid> GetBidsForFaseWithOffset(IEnumerable<Bid> bidsForFases, Bid offSetBid, Bid lastBidPreviousFase, int zoomOffset, Func<Bid, int> GetOffsetRelayBid)
+        {
+            var offset = lastBidPreviousFase - offSetBid;
+            if (zoomOffset != 0)
+                bidsForFases = new[] { lastBidPreviousFase }.Concat(bidsForFases);
+
+            var offsetRelayBid = 0;
+            var bidsForFasesResult = bidsForFases.Select(b =>
+            {
+                offsetRelayBid -= GetOffsetRelayBid(b);
+                return b + zoomOffset + offsetRelayBid - offset;
+            });
+            return bidsForFasesResult;
         }
 
         private static MinMax GetHcpFromAuction(FaseDictionary faseAuctions, BiddingState biddingState)
