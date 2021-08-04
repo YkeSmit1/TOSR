@@ -180,7 +180,7 @@ namespace Wpf.Tosr
             AddHandPerAuction(str, strAuction);
 
             // Start calculating hand
-            if (!auction.responderHasSignedOff)
+            if (!auction.responderHasSignedOff && !bidManager.HasSkippedControlScanningFase)
                 expectedSouthHands.AppendLine($"Board:{boardNumber} { bidManager.ConstructSouthHandSafe(board, auction)}");
 
             var longestSuit = Util.GetLongestSuit(board[(int)Player.North], board[(int)Player.South]);

@@ -52,7 +52,7 @@ namespace BiddingLogic
                 var possibleControls = reverseDictionaries.ControlsOnlyAuctions[string.Join("", controls)];
                 southInformation.Controls = new MinMax(possibleControls.First(), possibleControls.Last());
                 // Special case if relayer is able figure out the position of controls
-                if (southInformation.ControlsScanningBidCount == 0)
+                if (southInformation.ControlsScanningBidCount == 0 && possibleControls.Distinct().Count() == 1)
                 {
                     var matches = GetMatchesWithNorthHand(Shape.Value.shapes, possibleControls.First(), northHand);
                     if (matches.Count() == 1)
@@ -153,7 +153,7 @@ namespace BiddingLogic
             var queensBids = biddingState.GetBids(Fase.ScanningOther);
             var offsetBid = ReverseDictionaries.GetOffsetBidForQueens(shapeStr);
 
-            var queensBidsResult = GetBidsForFaseWithOffset(queensBids, offsetBid, lastBidScanningControl, zoomOffset, GetOffsetRelayBid);
+            var queensBidsResult = GetBidsForFaseWithOffset(queensBids, offsetBid, lastBidScanningControl, zoomOffset, GetOffsetRelayBid).ToList();
             if (!queensBidsResult.Any())
                 return null;
             var queensAuctions = reverseDictionaries.GetQueensDictionary(shapeStr);

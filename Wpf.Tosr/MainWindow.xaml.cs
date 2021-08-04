@@ -278,7 +278,6 @@ namespace Wpf.Tosr
         {
             resetEvent.WaitOne();
             panelNorth.Visibility = Visibility.Hidden;
-            var batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, toolStripMenuItemUseSolver.IsChecked);
             toolStripStatusLabel1.Content = "Batch bidding hands...";
             cancelBatchbidding.Dispose();
             cancelBatchbidding = new CancellationTokenSource();
@@ -287,6 +286,7 @@ namespace Wpf.Tosr
             try
             {
                 Cursor = Cursors.Wait;
+                var batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, toolStripMenuItemUseSolver.IsChecked);
                 await Task.Run(() =>
                 {
                     var progress = new Progress<int>(report => Dispatcher.Invoke(() => toolStripStatusLabel1.Content = $"Hands done: {report}"));
