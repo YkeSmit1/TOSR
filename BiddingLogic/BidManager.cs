@@ -332,7 +332,7 @@ namespace BiddingLogic
                 bid = GetEndContract(possibleContracts, biddingState.CurrentBid);
                 if (bid != null)
                 {
-                    if (biddingState.Fase == Fase.ScanningOther)
+                    if (biddingState.Fase == Fase.ScanningOther && southInformation.SpecificControls != null)
                         constructedSouthhandOutcome = southInformation.SpecificControls.Count() == 1 ?
                             ConstructedSouthhandOutcome.SouthhandMatches : ConstructedSouthhandOutcome.MultipleMatchesFound;
                     biddingState.Fase = Fase.End;
