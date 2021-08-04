@@ -115,6 +115,8 @@ namespace BiddingLogic
         public ConstructedSouthhandOutcome constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
 
         public BiddingState BiddingState { get; set; }
+        private bool CanSkipControlScanningFase { get; set; } = true;
+        public bool HasSkippedControlScanningFase { get; private set; } = false;
 
         // Constructor used for test
         public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, RelayBidKindFunc getRelayBidKindFunc) :
@@ -243,6 +245,10 @@ namespace BiddingLogic
                     if (useSingleDummySolverDuringRelaying)
                         if (TryGetEndContract(southInformation, out var bid))
                             return bid;
+                    if (CanSkipControlScanningFase)
+                        if (TryGetAskQueensBid(southInformation, out var askQueensbid))
+                            return askQueensbid;
+
                 }
             }
 
@@ -326,7 +332,7 @@ namespace BiddingLogic
                 bid = GetEndContract(possibleContracts, biddingState.CurrentBid);
                 if (bid != null)
                 {
-                    if (biddingState.Fase == Fase.ScanningOther)
+                    if (biddingState.Fase == Fase.ScanningOther && southInformation.SpecificControls != null)
                         constructedSouthhandOutcome = southInformation.SpecificControls.Count() == 1 ?
                             ConstructedSouthhandOutcome.SouthhandMatches : ConstructedSouthhandOutcome.MultipleMatchesFound;
                     biddingState.Fase = Fase.End;
@@ -337,6 +343,22 @@ namespace BiddingLogic
 
                 return bid != null;
             }
+
+            bool TryGetAskQueensBid(SouthInformation southInformation, out Bid askQueensbid)
+            {
+                askQueensbid = null;
+                if (southInformation.SpecificControls != null && southInformation.Controls.Min >= 6 && biddingState.Fase == Fase.ScanningControls)
+                {
+                    askQueensbid = Bid.NextBid(Bid.NextBid(biddingState.CurrentBid));
+                    biddingState.Fase = Fase.ScanningOther;
+                    biddingState.RelayBidIdLastFase++;
+                    loggerBidding.Info("Special ask for queens because controls >= 6 and controls scanning is known");
+                    HasSkippedControlScanningFase = true;
+                    return true;
+                }
+                return false;
+            }
+
 
             Bid GetRelayBid()
             {
@@ -469,11 +491,11 @@ namespace BiddingLogic
             var lzoomOffset = nextfase switch
             {
                 Fase.Controls => reverseDictionaries == null ? zoomOffset : biddingInformation.Shape.Value.zoomOffset,
-                Fase.ScanningOther => reverseDictionaries == null ? zoomOffset : biddingInformation.ControlsScanning.Value.zoomOffset,
+                Fase.ScanningOther => reverseDictionaries == null ? zoomOffset : HasSkippedControlScanningFase ? 0 : biddingInformation.ControlsScanning.Value.zoomOffset,
                 _ => 0,
             };
             // Check if controls and their positions are correctly evaluated.
-            if (nextfase == Fase.ScanningOther && reverseDictionaries != null)
+            if (nextfase == Fase.ScanningOther && reverseDictionaries != null && !HasSkippedControlScanningFase)
             {
                 var controlsInSuit = Util.GetHandWithOnlyControlsAs4333(handsString, "AK");
                 if (!biddingInformation.ControlsScanning.Value.controls.Contains(controlsInSuit))
