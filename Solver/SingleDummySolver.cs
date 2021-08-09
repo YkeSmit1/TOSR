@@ -36,7 +36,7 @@ namespace Solver
             return shufflingDeal.Execute();
         }
 
-        public static Dictionary<Bid, int> SolveSingleDummy(string northHand, SouthInformation southInformation, int numberOfHands, Dictionary<Suit, Player> declarers)
+        public static Dictionary<Bid, int> SolveSingleDummy(string northHand, SouthInformation southInformation, int numberOfHands, Dictionary<Suit, Player> declarers, SuitSelection suitSelection)
         {
             var tricksPerContract = new Dictionary<Bid, int>();
             var shufflingDeal = new ShufflingDeal
@@ -51,22 +51,28 @@ namespace Solver
                 shufflingDeal.South.Shape = shape;
 
                 if (southInformation.SpecificControls == null)
-                    ShuffleAndUpdate(shufflingDeal, shape);
+                    ShuffleAndUpdate(shape);
                 else
                     foreach (var specificControls in southInformation.SpecificControls)
                     {
                         shufflingDeal.South.SpecificControls = specificControls;
-                        ShuffleAndUpdate(shufflingDeal, shape);
+                        ShuffleAndUpdate(shape);
                     }
             }
             return tricksPerContract;
 
-            void ShuffleAndUpdate(ShufflingDeal shufflingDeal, string shape)
+            void ShuffleAndUpdate(string shape)
             {
                 var handsForSolver = shufflingDeal.Execute();
-                // TODO extend for multiple trump suits and for NT
-                var (suit, length) = Util.GetLongestSuitShape(northHand, shape);
-                CalculateAndUpdateDictionary(handsForSolver, length >= 8 ? suit : Suit.NoTrump);
+                var suits = suitSelection switch
+                {
+                    SuitSelection.LongestSuit => new [] { Util.GetLongestSuitShape(northHand, shape).Item1 },
+                    SuitSelection.LongestSuitAndNT => Util.GetSuitsWithFitShape(northHand, shape),
+                    SuitSelection.AllSuits => Util.GetSuitsWithFitShape(northHand, shape).Append(Suit.NoTrump),
+                    _ => throw new ArgumentException(null, nameof(suitSelection))
+                };
+                foreach (var suit in suits)
+                    CalculateAndUpdateDictionary(handsForSolver, suit);
             }
 
             void CalculateAndUpdateDictionary(IEnumerable<string> handsForSolver, Suit suit)

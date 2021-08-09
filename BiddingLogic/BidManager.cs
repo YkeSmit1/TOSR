@@ -13,13 +13,6 @@ namespace BiddingLogic
 {
     using RelayBidKindFunc = Func<Auction, string, SouthInformation, BidManager.RelayBidKind>;
 
-    public enum BidPosibilities
-    {
-        CannotBid,
-        CanInvestigate,
-        CannotInvestigate
-    }
-
     public enum ConstructedSouthhandOutcome
     {
         NotSet,
@@ -30,6 +23,14 @@ namespace BiddingLogic
         IncorrectSouthhand,
         NoMatchFoundNoQueens,
     }
+
+    public enum ExpectedContract
+    {
+        Game,
+        SmallSlam,
+        GrandSlam,
+    }
+
 
     public class BidManager
     {
@@ -104,6 +105,7 @@ namespace BiddingLogic
         private readonly ReverseDictionaries reverseDictionaries = null;
         private readonly bool useSingleDummySolver = false;
         private readonly bool useSingleDummySolverDuringRelaying = false;
+        public SuitSelection SuitSelection { get; set; } = SuitSelection.AllSuits;
 
         private readonly RelayBidKindFunc GetRelayBidKindFunc = null;
 
@@ -355,39 +357,41 @@ namespace BiddingLogic
 
         public static Bid GetEndContract(Dictionary<Bid, int> possibleContracts, Bid currentBid)
         {
-            Dictionary<Bid, (int occurrences, BidPosibilities posibility)> enrichedContracts = possibleContracts.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value, GetBidPosibility(kvp.Key, currentBid)));
-            GroupGameContracts();
-            var reachableContracts = enrichedContracts.Where(y => y.Value.posibility != BidPosibilities.CannotBid).ToDictionary(x => x.Key, y => y.Value);
+            var reachableContracts = possibleContracts.Where(y => CanBeBid(y.Key, currentBid));
+            var reachableContractsGrouped = reachableContracts.GroupBy(x => x.Key.rank < 6 ? GetBestGame(x.Key.suit) : x.Key).ToDictionary(g => g.Key, g => g.Sum(v => v.Value));
+            var investigatableContracts = reachableContractsGrouped.Where(y => CanBeInvestigated(y.Key, currentBid));
 
-            var bid = reachableContracts.Count switch
+            var bid = reachableContractsGrouped.Count switch
             {
                 0 => Bid.PassBid,
-                1 => reachableContracts.Single().Key,
-                _ => reachableContracts.Count(y => y.Value.posibility == BidPosibilities.CanInvestigate) <= 1
-                        ? reachableContracts.MaxBy(y => y.Value.occurrences).First().Key
+                1 => reachableContractsGrouped.Single().Key,
+                _ => investigatableContracts.GroupBy(x => GetContractType(x.Key)).Count() <= 1
+                        ? reachableContractsGrouped.MaxBy(y => y.Value).First().Key
                         : null,
             };
 
-            var bidString = bid == null ? "Relay a bit more" : $"Bid: {bid}";
-            loggerBidding.Info($"{reachableContracts.Count} contracts are possible. " +
+            loggerBidding.Info($"{reachableContracts.Count()} contracts are possible. " +
                 $"Reachable contracts: {string.Join(';', reachableContracts.Select(y => y.Key))}. " +
-                $"Investigatable contracts: {string.Join(';', reachableContracts.Where(y => y.Value.posibility == BidPosibilities.CanInvestigate).Select(y => y.Key))} {bidString}");
+                $"Investigatable contracts: {string.Join(';', investigatableContracts.Select(y => y.Key))} " +
+                $"{(bid == null ? "Relay a bit more" : $"Bid: {bid}")}");
             loggerBidding.Info("*************************");
 
             return bid;
 
-            void GroupGameContracts()
+            Bid GetBestGame(Suit suit) => reachableContracts.Where(x => x.Key.suit == suit && x.Key.rank < 6).MinBy(x => x.Key).Single().Key;
+            static bool CanBeBid(Bid contract, Bid currentBid) => contract >= currentBid && contract != currentBid + 1;
+            static bool CanBeInvestigated(Bid contract, Bid currentBid) => contract != currentBid && contract != currentBid + 3;
+
+            static ExpectedContract GetContractType(Bid bid)
             {
-                var bestGames = enrichedContracts.Where(x => x.Key.rank < 6 && x.Value.posibility != BidPosibilities.CannotBid).MinBy(x => x.Key);
-                if (bestGames.Any())
+                return bid.rank switch
                 {
-                    var bestGame = bestGames.Single().Key;
-                    enrichedContracts = enrichedContracts.GroupBy(x => x.Key.rank < 6 ? bestGame : x.Key)
-                        .ToDictionary(g => g.Key, g => (g.Sum(v => v.Value.occurrences),
-                            g.Key == bestGame ? g.Any(v => v.Value.posibility == BidPosibilities.CanInvestigate) ? BidPosibilities.CanInvestigate :
-                                BidPosibilities.CannotInvestigate : g.Single().Value.posibility));
-                }
+                    6 => ExpectedContract.SmallSlam,
+                    7 => ExpectedContract.GrandSlam,
+                    _ => ExpectedContract.Game,
+                };
             }
+
         }
 
         public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, SouthInformation southInformation)
@@ -418,24 +422,15 @@ namespace BiddingLogic
             var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
             bool canReuseSolverOutput = biddingState.Fase == Fase.ScanningControls && southInformation.ControlsScanningBidCount > 0;
             if (!canReuseSolverOutput || occurrencesForBids == null)
-                occurrencesForBids = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
+                occurrencesForBids = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers, SuitSelection);
             loggerBidding.Info($"Occurrences by bid in GetPossibleContractsFromAuction: {JsonConvert.SerializeObject(occurrencesForBids)}");
 
             return occurrencesForBids;
         }
 
-        private static BidPosibilities GetBidPosibility(Bid contract, Bid currentBid)
-        {
-            if (contract < currentBid || contract == currentBid + 1)
-                return BidPosibilities.CannotBid;
-            if (contract == currentBid || contract == currentBid + 3)
-                return BidPosibilities.CannotInvestigate;
-            return BidPosibilities.CanInvestigate;
-        }
-
         private Dictionary<int, double> GetConfidenceTricks(string northHand, SouthInformation southInformation, Dictionary<Suit, Player> declarers)
         {
-            occurrencesForBids = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
+            occurrencesForBids = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers, SuitSelection.LongestSuit);
             var nrOfHands = occurrencesForBids.Sum(x => x.Value);
             var groupedTricked = occurrencesForBids.GroupBy(x => x.Key.rank + 6);
             var confidenceTricks = groupedTricked.ToDictionary(bid => bid.Key, bid => (double)100 * bid.Select(x => x.Value).Sum() / nrOfHands);
@@ -446,7 +441,7 @@ namespace BiddingLogic
         {
             var southInformation = biddingInformation.GetInformationFromAuction(auction, northHand, BiddingState);
             var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
-            var tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
+            var tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers, SuitSelection);
             var possibleTricksForBid = tricksForBid.Where(bid => bid.Key >= currentBid);
             if (!possibleTricksForBid.Any())
                 return Bid.PassBid;
@@ -500,7 +495,7 @@ namespace BiddingLogic
                 {
                     constructedSouthhandOutcome = ConstructedSouthhandOutcome.MultipleMatchesFound;
                     return $"Multiple matches found. Matches: {string.Join('|', constructedSouthHand)}. NorthHand: {northHand}. SouthHand: {southHand}";
-                }
+    }
 
                 if (constructedSouthHand.First() == Util.HandWithx(southHand))
                 {
@@ -510,7 +505,7 @@ namespace BiddingLogic
                         return $"Match is found but queens are wrong : Expected queens: {queens}. SouthHand: {southHand}";
 
                     return $"Match is found: {constructedSouthHand.First()}. NorthHand: {northHand}. SouthHand: {southHand}";
-                }
+}
                 else
                 {
                     constructedSouthhandOutcome = ConstructedSouthhandOutcome.IncorrectSouthhand;
