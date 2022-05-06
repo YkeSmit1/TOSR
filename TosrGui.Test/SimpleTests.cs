@@ -2,6 +2,7 @@ using BiddingLogic;
 using Xunit;
 using Common;
 using System.Collections.Generic;
+using Common.Tosr;
 
 namespace TosrGui.Test
 {
@@ -57,7 +58,7 @@ namespace TosrGui.Test
         [Fact()]
         public void SouthHandWithxTest()
         {
-            Assert.Equal("Ax,Kxxx,xxxxx,xx", Util.HandWithx("A5,KQ65,QT987,42"));
+            Assert.Equal("Ax,Kxxx,xxxxx,xx", UtilTosr.HandWithX("A5,KQ65,QT987,42"));
         }
 
         [Fact()]

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using BiddingLogic;
+using Common.Tosr;
 
 namespace Common.Test
 {
@@ -16,8 +17,8 @@ namespace Common.Test
             fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
             reverseDictionaries = new ReverseDictionaries(fasesWithOffset, new Progress<string>());
 
-            BidManager.SetSystemParameters(Util.ReadResource("BiddingLogic.SystemParameters.json"));
-            BidManager.SetOptimizationParameters(Util.ReadResource("BiddingLogic.OptimizationParameters.json"));
+            BidManager.SetSystemParameters(UtilTosr.ReadResource("BiddingLogic.SystemParameters.json"));
+            BidManager.SetOptimizationParameters(UtilTosr.ReadResource("BiddingLogic.OptimizationParameters.json"));
         }
     }
 }

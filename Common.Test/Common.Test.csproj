@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BiddingLogic\BiddingLogic.csproj" />
+    <ProjectReference Include="..\Common.Tosr\Common.Tosr.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
   </ItemGroup>
 

@@ -34,6 +34,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BiddingLogic\BiddingLogic.csproj" />
+    <ProjectReference Include="..\Common.Tosr\Common.Tosr.csproj" />
     <ProjectReference Include="..\Solver\Solver.csproj" />
     <ProjectReference Include="..\Wpf.BidControls\Wpf.BidControls.csproj" />
   </ItemGroup>

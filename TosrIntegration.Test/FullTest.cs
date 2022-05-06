@@ -8,6 +8,7 @@ using Common;
 using NLog;
 using System.Linq;
 using Common.Test;
+using Common.Tosr;
 
 namespace TosrIntegration.Test
 {
@@ -70,7 +71,7 @@ namespace TosrIntegration.Test
             Assert.Equal(expectedBidsNorth, actualBidsNorth);
 
             var constructedSouthHand = bidManager.biddingInformation.ConstructSouthHand(northHand);
-            Assert.Equal(Util.HandWithx(southHand), constructedSouthHand.First());
+            Assert.Equal(UtilTosr.HandWithX(southHand), constructedSouthHand.First());
             Assert.True(BiddingInformation.CheckQueens(bidManager.biddingInformation.GetQueensFromAuction(auction, reverseDictionaries, bidManager.BiddingState), southHand));
         }
     }

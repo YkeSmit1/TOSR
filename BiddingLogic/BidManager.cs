@@ -8,6 +8,7 @@ using Common;
 using Solver;
 using MoreLinq;
 using System.ComponentModel;
+using Common.Tosr;
 
 namespace BiddingLogic
 {
@@ -475,7 +476,7 @@ namespace BiddingLogic
             // Check if controls and their positions are correctly evaluated.
             if (nextfase == Fase.ScanningOther && reverseDictionaries != null)
             {
-                var controlsInSuit = Util.GetHandWithOnlyControlsAs4333(handsString, "AK");
+                var controlsInSuit = UtilTosr.GetHandWithOnlyControlsAs4333(handsString, "AK");
                 if (!biddingInformation.ControlsScanning.Value.controls.Contains(controlsInSuit))
                     throw new InvalidOperationException($"Cannot find {controlsInSuit} in {string.Join('|', biddingInformation.ControlsScanning.Value.controls)}");
 
@@ -502,7 +503,7 @@ namespace BiddingLogic
                     return $"Multiple matches found. Matches: {string.Join('|', constructedSouthHand)}. NorthHand: {northHand}. SouthHand: {southHand}";
                 }
 
-                if (constructedSouthHand.First() == Util.HandWithx(southHand))
+                if (constructedSouthHand.First() == UtilTosr.HandWithX(southHand))
                 {
                     constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
                     var queens = biddingInformation.GetQueensFromAuction(auction, reverseDictionaries, BiddingState);
@@ -520,7 +521,7 @@ namespace BiddingLogic
             catch (Exception e)
             {
                 constructedSouthhandOutcome = !biddingInformation.ControlsScanning.IsValueCreated ? ConstructedSouthhandOutcome.AuctionNotFoundInControls : ConstructedSouthhandOutcome.NoMatchFound;
-                return $"{e.Message} SouthHand: {southHand}. Projected AKQ controls as 4333:{Util.GetHandWithOnlyControlsAs4333(southHand, "AKQ")}. ";
+                return $"{e.Message} SouthHand: {southHand}. Projected AKQ controls as 4333:{UtilTosr.GetHandWithOnlyControlsAs4333(southHand, "AKQ")}. ";
             }
         }
 

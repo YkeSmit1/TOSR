@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Common.Tosr\Common.Tosr.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
   </ItemGroup>
 
@@ -12,6 +13,13 @@
     <Content Include="deal319\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="deal319\html\**" />
+    <Content Remove="deal319\html\**" />
+    <EmbeddedResource Remove="deal319\html\**" />
+    <None Remove="deal319\html\**" />
   </ItemGroup>
 
 </Project>

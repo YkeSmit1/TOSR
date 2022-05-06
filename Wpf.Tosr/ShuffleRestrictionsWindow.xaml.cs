@@ -13,6 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Common.Tosr;
 
 namespace Wpf.Tosr
 {
@@ -60,7 +61,7 @@ namespace Wpf.Tosr
             if (textBoxShape.Text.ToCharArray().Select(x => int.Parse(x.ToString())).Sum() != 13)
                 return HandleError("Sum of suit lengths should be 13");
             else
-            if (Util.IsFreakHand(textBoxShape.Text.ToCharArray().ToList().Select(x => int.Parse(x.ToString()))))
+            if (UtilTosr.IsFreakHand(textBoxShape.Text.ToCharArray().ToList().Select(x => int.Parse(x.ToString()))))
                 return HandleError("Cannot bid a freak-hand");
             else
             {

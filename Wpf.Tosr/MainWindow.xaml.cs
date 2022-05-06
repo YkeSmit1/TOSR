@@ -21,6 +21,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Common.Tosr;
 using Wpf.BidControls.ViewModels;
 using Path = System.IO.Path;
 
@@ -150,7 +151,7 @@ namespace Wpf.Tosr
                     Settings.Default.systemParametersPath = "";
                 }
             }
-            BidManager.SetSystemParameters(Util.ReadResource(defaultSystemParameters));
+            BidManager.SetSystemParameters(UtilTosr.ReadResource(defaultSystemParameters));
         }
 
         private void UseSavedOptimizationParameters()
@@ -168,7 +169,7 @@ namespace Wpf.Tosr
                     Settings.Default.optimizationParametersPath = "";
                 }
             }
-            BidManager.SetOptimizationParameters(Util.ReadResource(defaultOptimizationParameters));
+            BidManager.SetOptimizationParameters(UtilTosr.ReadResource(defaultOptimizationParameters));
         }
 
         private void ClickBiddingBoxButton(object parameter)
@@ -252,7 +253,7 @@ namespace Wpf.Tosr
                 var board = shufflingDeal.Execute().First();
                 deal = Util.GetBoardsTosr(board);
             }
-            while (Util.IsFreakHand(deal[(int)Player.South].Split(',').Select(x => x.Length)));
+            while (UtilTosr.IsFreakHand(deal[(int)Player.South].Split(',').Select(x => x.Length)));
             panelNorth.Visibility = Visibility.Hidden;
             ShowBothHands();
         }
@@ -569,8 +570,8 @@ namespace Wpf.Tosr
 
         private void ToolStripMenuItemUseDefaultParametersClick(object sender, EventArgs e)
         {
-            BidManager.SetSystemParameters(Util.ReadResource(defaultSystemParameters));
-            BidManager.SetOptimizationParameters(Util.ReadResource(defaultOptimizationParameters));
+            BidManager.SetSystemParameters(UtilTosr.ReadResource(defaultSystemParameters));
+            BidManager.SetOptimizationParameters(UtilTosr.ReadResource(defaultOptimizationParameters));
         }
 
         private void ToolStripComboBoxFilterSelectedIndexChanged(object sender, EventArgs e)

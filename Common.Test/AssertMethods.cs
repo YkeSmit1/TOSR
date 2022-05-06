@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Common.Tosr;
 using Xunit;
 
 namespace Common.Test
@@ -22,7 +23,7 @@ namespace Common.Test
         public static void AssertHand(BiddingInformation biddingInformation, Auction auction, string northHand, string southHand, ReverseDictionaries reverseDictionaries, BiddingState biddingState)
         {
             var constructedSouthHand = biddingInformation.ConstructSouthHand(northHand);
-            Assert.Equal(Util.HandWithx(southHand), constructedSouthHand.First());
+            Assert.Equal(UtilTosr.HandWithX(southHand), constructedSouthHand.First());
 
             var queens = biddingInformation.GetQueensFromAuction(auction, reverseDictionaries, biddingState);
             Assert.True(BiddingInformation.CheckQueens(queens, southHand));

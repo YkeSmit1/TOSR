@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Common;
+using Common.Tosr;
 
 namespace Solver
 {
@@ -23,7 +24,7 @@ namespace Solver
         public static List<int> SolveSingleDummyExactHands(Suit trumpSuit, Player declarer, string northHand, string southHand)
         {
             var handsForSolver = GetHandsForSolverExactHands(northHand, southHand).ToArray();
-            return Api.SolveAllBoards(handsForSolver, Util.GetDDSSuit(trumpSuit), Util.GetDDSFirst(declarer)).ToList();
+            return Api.SolveAllBoards(handsForSolver, UtilTosr.GetDdsSuit(trumpSuit), UtilTosr.GetDdsFirst(declarer)).ToList();
         }
 
         private static IEnumerable<string> GetHandsForSolverExactHands(string northHandStr, string southHandStr)
@@ -71,7 +72,7 @@ namespace Solver
 
             void CalculateAndUpdateDictionary(IEnumerable<string> handsForSolver, Suit suit)
             {
-                foreach (var trick in Api.SolveAllBoards(handsForSolver, Util.GetDDSSuit(suit), Util.GetDDSFirst(declarers[suit])))
+                foreach (var trick in Api.SolveAllBoards(handsForSolver, UtilTosr.GetDdsSuit(suit), UtilTosr.GetDdsFirst(declarers[suit])))
                     tricksPerContract.AddOrUpdateDictionary(new Bid(trick - 6, suit));
             }
         }

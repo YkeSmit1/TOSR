@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using System.Collections.Immutable;
 using Solver;
 using Common;
+using Common.Tosr;
 
 namespace BiddingLogic
 {
@@ -122,7 +123,7 @@ namespace BiddingLogic
                                 var suitLengthSouth = hand.Split(',').Select(x => x.Length);
                                 var str = string.Join("", suitLengthSouth);
 
-                                if (!Util.IsFreakHand(suitLengthSouth))
+                                if (!UtilTosr.IsFreakHand(suitLengthSouth))
                                 {
                                     _ = bidManager.GetAuction(string.Empty, hand); // No northhand. Just for generating reverse dictionaries
                                     var isZoom = bidManager.BiddingState.IsZoomShape;
@@ -207,7 +208,7 @@ namespace BiddingLogic
                 {
                     foreach (var hcp in GetHcpGeneratorGeneral().Invoke(hand))
                     {
-                        if (Util.TryAddQuacksTillHCP(hcp, ref lsuits, suitLength))
+                        if (UtilTosr.TryAddQuacksTillHcp(hcp, ref lsuits, suitLength))
                             BidAndStoreHand(ConstructHand(suitLength, lsuits), hand);
                     }
                 }
@@ -345,7 +346,7 @@ namespace BiddingLogic
 
         public QueensDictionary GetQueensDictionary(string handShape)
         {
-            var n = Util.NrOfShortages(handShape);
+            var n = UtilTosr.NrOfShortages(handShape);
             var queensAuctions = n switch
             {
                 0 => QueensAuction0,
@@ -358,7 +359,7 @@ namespace BiddingLogic
 
         public ControlScanningDictionary GetControlScanningDictionary(string handShape)
         {
-            return Util.NrOfShortages(handShape) switch
+            return UtilTosr.NrOfShortages(handShape) switch
             {
                 0 => ControlScanningAuctions0,
                 1 => ControlScanningAuctions1,
@@ -370,7 +371,7 @@ namespace BiddingLogic
         public static Bid GetOffsetBidForQueens(string shapeStr)
         {
             // TODO this should be determined when creating queens dictionaries
-            return Util.NrOfShortages(shapeStr) switch
+            return UtilTosr.NrOfShortages(shapeStr) switch
             {
                 0 => Bid.fiveHeartsBid,
                 1 => Bid.fiveClubBid,

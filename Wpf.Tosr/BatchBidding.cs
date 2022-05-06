@@ -13,6 +13,7 @@ using System.Threading;
 using System.ComponentModel;
 using BiddingLogic;
 using System.Windows;
+using Common.Tosr;
 
 namespace Wpf.Tosr
 {
@@ -111,7 +112,7 @@ namespace Wpf.Tosr
             {
                 try
                 {
-                    if (Util.IsFreakHand(board[(int)Player.South].Split(',').Select(x => x.Length)))
+                    if (UtilTosr.IsFreakHand(board[(int)Player.South].Split(',').Select(x => x.Length)))
                     {
                         logger.Debug($"Hand {board[(int)Player.South]} is a freak hand. Will not be bid");
                         statistics.handsNotBidBecauseofFreakhand++;
@@ -145,7 +146,7 @@ namespace Wpf.Tosr
                 {
                     statistics.handsNotBidBecauseOfError++;
                     logger.Warn(exception, $"Error:{exception.Message}. Board:{statistics.handsBid}. North hand:{board[(int)Player.North]}. South hand:{board[(int)Player.South]}. Controls:{Util.GetControlCount(board[(int)Player.South])}. " +
-                        $"HCP: {Util.GetHcpCount(board[(int)Player.South])}. Projected AK as 4333: {Util.GetHandWithOnlyControlsAs4333(board[(int)Player.South], "AK")}");
+                        $"HCP: {Util.GetHcpCount(board[(int)Player.South])}. Projected AK as 4333: {UtilTosr.GetHandWithOnlyControlsAs4333(board[(int)Player.South], "AK")}");
                     stringbuilder.AppendLine($"{exception.Message}. Board:{statistics.handsBid}");
                     pbn.Boards.Add(new BoardDto
                     {
