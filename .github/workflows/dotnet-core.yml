@@ -30,6 +30,8 @@ jobs:
     - name: Restore from cache and install vcpkg
       # Download and build vcpkg, without installing any port. If content is cached already, it is a no-op.
       uses: lukka/run-vcpkg@v10
+      with: 
+        runVcpkgInstall: true
     # Now that vcpkg is installed, it is being used to run with desired arguments.
     - name: Install SQLiteCpp using vcpg      
       run: |
