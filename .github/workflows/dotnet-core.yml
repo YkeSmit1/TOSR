@@ -21,6 +21,8 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
+    - name: add source to nuget 
+      run: dotnet nuget add source "https://nuget.pkg.github.com/YkeSmit1/index.json" --name "githubfeed" --username "YkeSmit1" --password "${{ secrets.GITHUB_TOKEN }}"     
     - name: Install dependencies
       run: dotnet restore
     - name: NuGet Restore
