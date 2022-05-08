@@ -181,7 +181,7 @@ namespace BiddingLogic
                 shufflingDeal.South.Controls = new MinMax(control, control);
                 var board = Util.GetBoardsTosr(shufflingDeal.Execute().First());
 
-                _ = bidManager.GetAuction(string.Empty, board[(int)Player.South]); // No northhand. Just for generating reverse dictionaries
+                _ = bidManager.GetAuction(string.Empty, board[Player.South]); // No northhand. Just for generating reverse dictionaries
                 auctions.Add(bidManager.BiddingState.GetBidsAsString(Fase.Controls), new List<int> { control });
             }
         }
@@ -240,7 +240,7 @@ namespace BiddingLogic
                 {
                     shuffleRestriction.South.Hcp = new MinMax(hcp, hcp);
                     var board = Util.GetBoardsTosr(shuffleRestriction.Execute().First());
-                    var bidFromRule = Pinvoke.GetBidFromRule(fase, Fase.Controls, board[(int)Player.South], 0, out _, out _);
+                    var bidFromRule = Pinvoke.GetBidFromRule(fase, Fase.Controls, board[Player.South], 0, out _, out _);
                     if (bidFromRule != 0)
                     {
                         var bidStr = BiddingState.GetSignOffBid(fase, Bid.threeNTBid + bidFromRule).ToString();

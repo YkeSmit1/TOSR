@@ -92,7 +92,7 @@ namespace Wpf.Tosr
             this.useSingleDummySolver = useSingleDummySolver;
         }
 
-        public (Pbn, string) Execute(IEnumerable<string[]> boards, IProgress<int> progress, string batchName, CancellationToken token)
+        public (Pbn, string) Execute(IEnumerable<Dictionary<Player, string>> boards, IProgress<int> progress, string batchName, CancellationToken token)
         {
             var pbn = new Pbn();
             handPerAuction.Clear();
@@ -112,15 +112,15 @@ namespace Wpf.Tosr
             {
                 try
                 {
-                    if (UtilTosr.IsFreakHand(board[(int)Player.South].Split(',').Select(x => x.Length)))
+                    if (UtilTosr.IsFreakHand(board[Player.South].Split(',').Select(x => x.Length)))
                     {
-                        logger.Debug($"Hand {board[(int)Player.South]} is a freak hand. Will not be bid");
+                        logger.Debug($"Hand {board[Player.South]} is a freak hand. Will not be bid");
                         statistics.handsNotBidBecauseofFreakhand++;
                         continue;
                     }
 
                     statistics.handsBid++;
-                    var auction = bidManager.GetAuction(board[(int)Player.North], board[(int)Player.South]);
+                    var auction = bidManager.GetAuction(board[Player.North], board[Player.South]);
                     AddHandAndAuction(board, auction, statistics.handsBid, bidManager.BiddingState);
                     pbn.Boards.Add(new BoardDto
                     {
@@ -145,8 +145,8 @@ namespace Wpf.Tosr
                 catch (Exception exception)
                 {
                     statistics.handsNotBidBecauseOfError++;
-                    logger.Warn(exception, $"Error:{exception.Message}. Board:{statistics.handsBid}. North hand:{board[(int)Player.North]}. South hand:{board[(int)Player.South]}. Controls:{Util.GetControlCount(board[(int)Player.South])}. " +
-                        $"HCP: {Util.GetHcpCount(board[(int)Player.South])}. Projected AK as 4333: {UtilTosr.GetHandWithOnlyControlsAs4333(board[(int)Player.South], "AK")}");
+                    logger.Warn(exception, $"Error:{exception.Message}. Board:{statistics.handsBid}. North hand:{board[Player.North]}. South hand:{board[Player.South]}. Controls:{Util.GetControlCount(board[Player.South])}. " +
+                        $"HCP: {Util.GetHcpCount(board[Player.South])}. Projected AK as 4333: {UtilTosr.GetHandWithOnlyControlsAs4333(board[Player.South], "AK")}");
                     stringbuilder.AppendLine($"{exception.Message}. Board:{statistics.handsBid}");
                     pbn.Boards.Add(new BoardDto
                     {
@@ -171,9 +171,9 @@ namespace Wpf.Tosr
             return (pbn, stringbuilder.ToString());
         }
 
-        private void AddHandAndAuction(string[] board, Auction auction, int boardNumber, BiddingState biddingState)
+        private void AddHandAndAuction(Dictionary<Player, string> board, Auction auction, int boardNumber, BiddingState biddingState)
         {
-            var suitLengthSouth = board[(int)Player.South].Split(',').Select(x => x.Length);
+            var suitLengthSouth = board[Player.South].Split(',').Select(x => x.Length);
             var str = string.Join("", suitLengthSouth);
 
             var strAuction = biddingState.GetBidsAsString(Fase.Shape);
@@ -184,7 +184,7 @@ namespace Wpf.Tosr
             if (!auction.responderHasSignedOff)
                 expectedSouthHands.AppendLine($"Board:{boardNumber} { bidManager.ConstructSouthHandSafe(board, auction)}");
 
-            var longestSuit = Util.GetLongestSuit(board[(int)Player.North], board[(int)Player.South]);
+            var longestSuit = Util.GetLongestSuit(board[Player.North], board[Player.South]);
             var dealer = auction.GetDeclarer(3 - longestSuit.Item1);
             statistics.dealers.AddOrUpdateDictionary(dealer);
             var contract = auction.currentContract > new Bid(7, Suit.NoTrump) ? new Bid(7, Suit.NoTrump) : auction.currentContract;
@@ -200,7 +200,7 @@ namespace Wpf.Tosr
             statistics.ContractCorrectness.AddOrUpdateDictionary(correctnessContract);
             if (correctnessContract is CorrectnessContract.InCorrect or CorrectnessContract.NoFit)
                 inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.constructedSouthhandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
-                    $" Auction:{auction.GetPrettyAuction("|")} Northhand: {board[(int)Player.North]} Southhand: {board[(int)Player.South]}");
+                    $" Auction:{auction.GetPrettyAuction("|")} Northhand: {board[Player.North]} Southhand: {board[Player.South]}");
             endContracts.Add(auction.currentContract);
         }
 
@@ -245,13 +245,13 @@ namespace Wpf.Tosr
             }
         }
 
-        private CorrectnessContractBreakdown CheckContract(Bid contract, string[] board, Player declarer)
+        private CorrectnessContractBreakdown CheckContract(Bid contract, Dictionary<Player, string> board, Player declarer)
         {
             confidence = new Dictionary<ExpectedContract, int>();
             if (!useSingleDummySolver)
                 return CorrectnessContractBreakdown.Unknown;
-            var northHand = board[(int)Player.North];
-            var southHand = board[(int)Player.South];
+            var northHand = board[Player.North];
+            var southHand = board[Player.South];
             if (contract.suit != Suit.NoTrump && Util.GetNumberOfTrumps(contract.suit, northHand, southHand) < 8)
                 return CorrectnessContractBreakdown.NoFit;
             var tricks = SingleDummySolver.SolveSingleDummyExactHands(contract.suit, declarer, northHand, southHand);

@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj" />
+    <PackageReference Include="Common.BridgeClasses" Version="1.0.5" />
   </ItemGroup>
 
 </Project>

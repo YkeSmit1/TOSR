@@ -489,10 +489,10 @@ namespace BiddingLogic
         /// <summary>
         /// Construct southhand to compare with the actual southhand
         /// </summary>
-        public string ConstructSouthHandSafe(string[] hand, Auction auction)
+        public string ConstructSouthHandSafe(Dictionary<Player, string> hand, Auction auction)
         {
-            var northHand = hand[(int)Player.North];
-            var southHand = hand[(int)Player.South];
+            var northHand = hand[Player.North];
+            var southHand = hand[Player.South];
 
             try
             {

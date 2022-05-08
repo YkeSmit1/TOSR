@@ -24,12 +24,12 @@ namespace TosrGui.Test
             Assert.All(boards, (board) =>
             {
                 var hands = Util.GetBoardsTosr(board);
-                Assert.All(hands, (hand) => Assert.Equal(16, hand.Length));
+                Assert.All(hands, (hand) => Assert.Equal(16, hand.Value.Length));
                 // Check north
-                var handNorth = hands[(int)Player.North];
+                var handNorth = hands[Player.North];
                 Assert.InRange(Util.GetHcpCount(handNorth), 16, 37);
                 // Check south
-                var handSouth = hands[(int)Player.South];
+                var handSouth = hands[Player.South];
                 Assert.InRange(Util.GetHcpCount(handSouth), 7, 37);
                 Assert.InRange(Util.GetControlCount(handSouth), 2, 12);
             });
@@ -117,17 +117,17 @@ namespace TosrGui.Test
         private static void CheckBoard(string board, ShufflingDeal shufflingDeal)
         {
             var hands = Util.GetBoardsTosr(board);
-            Assert.All(hands, (hand) => Assert.Equal(16, hand.Length));
+            Assert.All(hands, (hand) => Assert.Equal(16, hand.Value.Length));
             // Check north
-            var actualNandNorth = hands[(int)Player.North];
+            var actualNandNorth = hands[Player.North];
             Assert.Equal(string.Join(",", shufflingDeal.North.Hand), actualNandNorth);
             // Check south
-            var actualHandSouth = hands[(int)Player.South];
+            var actualHandSouth = hands[Player.South];
             Assert.Equal(shufflingDeal.South.Controls.Min, Util.GetControlCount(actualHandSouth));
             var suits = actualHandSouth.Split(',');
             Assert.Equal(shufflingDeal.South.Shape, string.Join("", suits.Select(suit => suit.Length.ToString())));
             if (shufflingDeal.South.Hcp != null)
-                Assert.InRange(Util.GetHcpCount(hands[(int)Player.South]), shufflingDeal.South.Hcp.Min, shufflingDeal.South.Hcp.Max);
+                Assert.InRange(Util.GetHcpCount(hands[Player.South]), shufflingDeal.South.Hcp.Min, shufflingDeal.South.Hcp.Max);
 
             foreach (var suit in suits.Select((x, Index) => (x, Index)))
             {

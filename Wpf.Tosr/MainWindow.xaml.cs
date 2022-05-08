@@ -46,7 +46,7 @@ namespace Wpf.Tosr
         private Auction Auction = new();
 
 
-        private string[] deal;
+        private Dictionary<Player, string> deal;
         private ShufflingDeal shufflingDeal = new() { NrOfHands = 1 };
 
         private BidManager bidManager;
@@ -177,7 +177,7 @@ namespace Wpf.Tosr
             var bid = (Bid)parameter;
             resetEvent.WaitOne();
             AuctionViewModel.UpdateAuction(Auction);
-            bidManager.SouthBid(Auction, deal[(int)Player.South]);
+            bidManager.SouthBid(Auction, deal[Player.South]);
             BiddingBoxViewModel.DoBid.RaiseCanExecuteChanged();
 
             if (bid != bidManager.BiddingState.CurrentBid)
@@ -200,7 +200,7 @@ namespace Wpf.Tosr
             auction.AddBid(Bid.PassBid);
 
             // North
-            bidManager.NorthBid(auction, deal[(int)Player.North]);
+            bidManager.NorthBid(auction, deal[Player.North]);
             auction.AddBid(bidManager.BiddingState.CurrentBid);
 
             // East
@@ -217,7 +217,7 @@ namespace Wpf.Tosr
             }
         }
 
-        private void AddBoardToInteractivePBNFile(string[] deal, Auction auction)
+        private void AddBoardToInteractivePBNFile(Dictionary<Player, string> deal, Auction auction)
         {
             interactivePbn.Boards.Add(new BoardDto
             {
@@ -237,7 +237,7 @@ namespace Wpf.Tosr
 
         private void StartBidding()
         {
-            Auction.Clear();
+            Auction.Clear(Player.West);
             Auction.AddBid(Bid.PassBid);
             Auction.AddBid(Bid.OneClub);
             Auction.AddBid(Bid.PassBid);
@@ -253,7 +253,7 @@ namespace Wpf.Tosr
                 var board = shufflingDeal.Execute().First();
                 deal = Util.GetBoardsTosr(board);
             }
-            while (UtilTosr.IsFreakHand(deal[(int)Player.South].Split(',').Select(x => x.Length)));
+            while (UtilTosr.IsFreakHand(deal[Player.South].Split(',').Select(x => x.Length)));
             panelNorth.Visibility = Visibility.Hidden;
             ShowBothHands();
         }
@@ -263,7 +263,7 @@ namespace Wpf.Tosr
             try
             {
                 resetEvent.WaitOne();
-                Auction = bidManager.GetAuction(deal[(int)Player.North], deal[(int)Player.South]);
+                Auction = bidManager.GetAuction(deal[Player.North], deal[Player.South]);
                 BiddingBoxViewModel.DoBid.RaiseCanExecuteChanged();
                 AuctionViewModel.UpdateAuction(Auction);
                 BiddingBoxView.IsEnabled = true;
@@ -508,8 +508,8 @@ namespace Wpf.Tosr
 
         private void ShowBothHands()
         {
-            HandViewModelNorth.ShowHand(deal[(int)Player.North], toolStripMenuItemAlternateSuits.IsChecked, "default");
-            HandViewModelSouth.ShowHand(deal[(int)Player.South], toolStripMenuItemAlternateSuits.IsChecked, "default");
+            HandViewModelNorth.ShowHand(deal[Player.North], toolStripMenuItemAlternateSuits.IsChecked, "default");
+            HandViewModelSouth.ShowHand(deal[Player.South], toolStripMenuItemAlternateSuits.IsChecked, "default");
         }
 
         private void Window_Closed(object sender, EventArgs e)

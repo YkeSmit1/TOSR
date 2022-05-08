@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Common.Tosr\Common.Tosr.csproj" />
-    <ProjectReference Include="..\Common\Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,6 +19,11 @@
     <Content Remove="deal319\html\**" />
     <EmbeddedResource Remove="deal319\html\**" />
     <None Remove="deal319\html\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Common.BridgeClasses" Version="1.0.5" />
+    <PackageReference Include="NLog" Version="4.7.15" />
   </ItemGroup>
 
 </Project>
