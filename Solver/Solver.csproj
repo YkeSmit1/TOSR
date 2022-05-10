@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Common.BridgeClasses" Version="1.0.5" />
+    <PackageReference Include="Common.BridgeClasses" Version="1.0.6" />
     <PackageReference Include="NLog" Version="4.7.15" />
   </ItemGroup>
 

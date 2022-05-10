@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Common.BridgeClasses" Version="1.0.5" />
+    <PackageReference Include="Common.BridgeClasses" Version="1.0.6" />
     <PackageReference Include="ObjectCloner" Version="2.2.2" />
     <PackageReference Include="Refractored.MvvmHelpers" Version="1.6.2" />
   </ItemGroup>

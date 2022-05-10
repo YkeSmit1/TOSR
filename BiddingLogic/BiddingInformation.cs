@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Common;
+using Common.Tosr;
 using Newtonsoft.Json;
 using NLog;
 using Solver;
@@ -125,7 +126,7 @@ namespace BiddingLogic
             var lastBidShape = biddingState.GetBids(Fase.Shape).Last();
             var bidsForFases = biddingState.GetBids(fases);
 
-            return GetBidsForFaseWithOffset(bidsForFases, Bid.threeDiamondBid, lastBidShape, zoomOffset, GetOffsetRelayBid);
+            return GetBidsForFaseWithOffset(bidsForFases, Bids.threeDiamondBid, lastBidShape, zoomOffset, GetOffsetRelayBid);
 
             int GetOffsetRelayBid(Bid currentBid)
             {

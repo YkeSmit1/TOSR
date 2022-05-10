@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using Common;
+using Common.Tosr;
 
 namespace BiddingLogic
 {
@@ -49,7 +50,7 @@ namespace BiddingLogic
             var bidId = bidIdFromRule + RelayBidIdLastFase + FaseOffset;
             if (bidIdFromRule == 0)
             {
-                CurrentBid = SignOffFasesFor4Di.Contains(Fase) ? Bid.fourHeartsBid : Bid.PassBid;
+                CurrentBid = SignOffFasesFor4Di.Contains(Fase) ? Bids.fourHeartsBid : Bid.PassBid;
                 return bidId;
             }
 
@@ -124,7 +125,7 @@ namespace BiddingLogic
                     _ => throw new ArgumentOutOfRangeException(nameof(controlBidCount)),
                 };
             }
-            RelayBidIdLastFase = Bid.GetBidId(relayBid) - (Fase == Fase.Pull3NTNoAsk ? 0 : NextBidIdForRule) - FaseOffset + (relayBid == Bid.fourDiamondBid ? 1 : 0);
+            RelayBidIdLastFase = Bid.GetBidId(relayBid) - (Fase == Fase.Pull3NTNoAsk ? 0 : NextBidIdForRule) - FaseOffset + (relayBid == Bids.fourDiamondBid ? 1 : 0);
             return relayBid;
         }
 
@@ -153,12 +154,12 @@ namespace BiddingLogic
             return (pullFase switch
             {
                 Fase.Pull3NTNoAsk => pullBid,
-                Fase.Pull3NTOneAskMin => Bid.threeNTBid + 1,
-                Fase.Pull3NTOneAskMax => Bid.threeNTBid + 1,
-                Fase.Pull3NTTwoAsks => Bid.threeNTBid + 1,
-                Fase.Pull4DiamondsNoAsk => Bid.fourDiamondBid + 2,
-                Fase.Pull4DiamondsOneAskMin => Bid.fourDiamondBid + 2,
-                Fase.Pull4DiamondsOneAskMax => Bid.fourDiamondBid + 2,
+                Fase.Pull3NTOneAskMin => Bids.threeNTBid + 1,
+                Fase.Pull3NTOneAskMax => Bids.threeNTBid + 1,
+                Fase.Pull3NTTwoAsks => Bids.threeNTBid + 1,
+                Fase.Pull4DiamondsNoAsk => Bids.fourDiamondBid + 2,
+                Fase.Pull4DiamondsOneAskMin => Bids.fourDiamondBid + 2,
+                Fase.Pull4DiamondsOneAskMax => Bids.fourDiamondBid + 2,
                 _ => throw new InvalidEnumArgumentException(nameof(pullFase)),
             });
         }

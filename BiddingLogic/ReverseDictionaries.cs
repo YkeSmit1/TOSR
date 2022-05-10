@@ -220,7 +220,7 @@ namespace BiddingLogic
                     return;
                 _ = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
                 var key = string.Join("", bidManager.BiddingState.GetBids(Fase.Controls, Fase.ScanningControls).
-                    Select(bid => bid - (bidManager.BiddingState.GetBids(Fase.Shape).Last() - Bid.threeDiamondBid)));
+                    Select(bid => bid - (bidManager.BiddingState.GetBids(Fase.Shape).Last() - Bids.threeDiamondBid)));
                 if (!auctions.ContainsKey(key))
                     auctions.Add(key, (new List<string>() { handToStore }, bidManager.BiddingState.IsZoomControlScanning));
                 else if (!auctions[key].controlsScanning.Contains(handToStore))
@@ -243,7 +243,7 @@ namespace BiddingLogic
                     var bidFromRule = Pinvoke.GetBidFromRule(fase, Fase.Controls, board[Player.South], 0, out _, out _);
                     if (bidFromRule != 0)
                     {
-                        var bidStr = BiddingState.GetSignOffBid(fase, Bid.threeNTBid + bidFromRule).ToString();
+                        var bidStr = BiddingState.GetSignOffBid(fase, Bids.threeNTBid + bidFromRule).ToString();
                         if (!dictionaryForFase.ContainsKey(bidStr))
                             dictionaryForFase.Add(bidStr, new List<int>());
                         if (!dictionaryForFase[bidStr].Contains(hcp))
@@ -373,9 +373,9 @@ namespace BiddingLogic
             // TODO this should be determined when creating queens dictionaries
             return UtilTosr.NrOfShortages(shapeStr) switch
             {
-                0 => Bid.fiveHeartsBid,
-                1 => Bid.fiveClubBid,
-                2 => Bid.fiveDiamondBid,
+                0 => Bids.fiveHeartsBid,
+                1 => Bids.fiveClubBid,
+                2 => Bids.fiveDiamondBid,
                 _ => throw new ArgumentException("Unsupported number of shortages", nameof(shapeStr)),
             };
         }

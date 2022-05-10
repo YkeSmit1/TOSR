@@ -239,7 +239,7 @@ namespace Wpf.Tosr
         {
             Auction.Clear(Player.West);
             Auction.AddBid(Bid.PassBid);
-            Auction.AddBid(Bid.OneClub);
+            Auction.AddBid(new Bid(1, Suit.Clubs));
             Auction.AddBid(Bid.PassBid);
             BiddingBoxViewModel.DoBid.RaiseCanExecuteChanged();
             AuctionViewModel.UpdateAuction(Auction);

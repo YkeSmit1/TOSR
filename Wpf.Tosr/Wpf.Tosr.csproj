@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Common.BridgeClasses" Version="1.0.5" />
+    <PackageReference Include="Common.BridgeClasses" Version="1.0.6" />
     <PackageReference Include="Extended.Wpf.Toolkit" Version="4.3.0" />
   </ItemGroup>
 
