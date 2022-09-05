@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:converters="clr-namespace:Wpf.BidControls.Converters"             
              xmlns:viewModels="clr-namespace:Wpf.BidControls.ViewModels"
+             xmlns:common="clr-namespace:Common;assembly=Common"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.DataContext>
@@ -16,18 +17,18 @@
         <converters:BidToRankStringConverter x:Key="BidToRankStringConverter"/>
         <DataTemplate x:Key="NonSuitBidsTemplate">
             <Button Content="{Binding}" Height="23" Width="40" Margin="1,1,1,1" Background="White"
-                    Command="{Binding Path=DataContext.DoBid, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}} }" 
+                    Command="{Binding Path=DataContext.(viewModels:BiddingBoxViewModel.DoBid), RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}} }" 
                     CommandParameter="{Binding}"/>
         </DataTemplate>
 
         <DataTemplate x:Key="DataTemplateLevel2">
             <Button Height="23" Width="40" Margin="1,1,1,1" Background="White"
-                    Command="{Binding Path=DataContext.DoBid, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}, AncestorLevel=2} }" 
+                    Command="{Binding Path=DataContext.(viewModels:BiddingBoxViewModel.DoBid), RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}, AncestorLevel=2} }" 
                     CommandParameter="{Binding}">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{Binding Converter={StaticResource BidToRankStringConverter}}"/>
                     <TextBlock Text="{Binding Converter={StaticResource BidToSuitStringConverter}}" 
-                        Foreground="{Binding suit, Converter={StaticResource SuitToColorConverter}}"/>
+                        Foreground="{Binding (common:Bid.suit), Converter={StaticResource SuitToColorConverter}}"/>
                 </StackPanel>   
             </Button>
         </DataTemplate>

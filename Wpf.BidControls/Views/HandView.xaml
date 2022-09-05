@@ -29,8 +29,9 @@
                         <Canvas>
                             <Image Canvas.Left="{Binding Index}">
                                 <Image.Source>
+                                    <!-- ReSharper disable once Xaml.BindingWithContextNotResolved -->
                                     <CroppedBitmap Source="{Binding DataContext.CardImageSettings.CardImage, Source={x:Reference ProxyElement}}" 
-                                                SourceRect="{Binding Converter={StaticResource CardToImageRectConverter}}"/>
+                                                   SourceRect="{Binding Converter={StaticResource CardToImageRectConverter}}"/>
                                 </Image.Source>
                             </Image>
                         </Canvas>
