@@ -18,7 +18,7 @@
         <converters:PlayerToVisibilityConverter x:Key="PlayerToVisibilityConverter"/>
     </UserControl.Resources>
     <Grid>
-        <StackPanel Grid.Column="2">
+        <StackPanel>
             <Canvas Panel.ZIndex="10">
                 <Label Content="?" Canvas.Left="175" 
                        Canvas.Top="{Binding Auction.CurrentBiddingRound, Converter={StaticResource BiddingRoundToTopConverter}}"

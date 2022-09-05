@@ -20,7 +20,7 @@
                     CommandParameter="{Binding}"/>
         </DataTemplate>
 
-        <DataTemplate x:Key="DataTemplate_Level2">
+        <DataTemplate x:Key="DataTemplateLevel2">
             <Button Height="23" Width="40" Margin="1,1,1,1" Background="White"
                     Command="{Binding Path=DataContext.DoBid, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}, AncestorLevel=2} }" 
                     CommandParameter="{Binding}">
@@ -33,7 +33,7 @@
         </DataTemplate>
 
         <DataTemplate x:Key="DataTemplateLevel1">
-            <ItemsControl ItemsSource="{Binding}" ItemTemplate="{StaticResource DataTemplate_Level2}">
+            <ItemsControl ItemsSource="{Binding}" ItemTemplate="{StaticResource DataTemplateLevel2}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Orientation="Horizontal"/>
@@ -43,7 +43,7 @@
         </DataTemplate>
     </UserControl.Resources>
     <Grid>
-        <StackPanel Grid.Column="1">
+        <StackPanel>
             <ItemsControl ItemsSource="{Binding SuitBids}" ItemTemplate="{StaticResource DataTemplateLevel1}"/>
             <ItemsControl ItemsSource="{Binding NonSuitBids}" ItemTemplate="{StaticResource NonSuitBidsTemplate}">
                 <ItemsControl.ItemsPanel>

@@ -34,8 +34,8 @@ namespace Wpf.Tosr
         // ViewModels
         private BiddingBoxViewModel BiddingBoxViewModel => (BiddingBoxViewModel)BiddingBoxView.DataContext;
         private AuctionViewModel AuctionViewModel => (AuctionViewModel)AuctionView.DataContext;
-        private HandViewModel HandViewModelNorth => (HandViewModel)panelNorth.DataContext;
-        private HandViewModel HandViewModelSouth => (HandViewModel)panelSouth.DataContext;
+        private HandViewModel HandViewModelNorth => (HandViewModel)PanelNorth.DataContext;
+        private HandViewModel HandViewModelSouth => (HandViewModel)PanelSouth.DataContext;
         // ReSharper disable once InconsistentNaming
         private Auction Auction = new();
 
@@ -65,8 +65,8 @@ namespace Wpf.Tosr
             FillFilteredComboBox();
 
             // Need to set in code because of a .net core bug
-            numericUpDown1.Maximum = 100_000;
-            numericUpDown1.Value = 1000;
+            NumericUpDown1.Maximum = 100_000;
+            NumericUpDown1.Value = 1000;
             if (PInvoke.Setup("Tosr.db3") != 0)
             {
                 MessageBox.Show("Cannot find file Tosr.db3", "Error");
@@ -78,9 +78,9 @@ namespace Wpf.Tosr
             shufflingDeal.South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) };
 
             // Load user settings
-            toolStripMenuItemUseSolver.IsChecked = Settings.Default.useSolver;
-            toolStripMenuItemAlternateSuits.IsChecked = Settings.Default.alternateSuits;
-            numericUpDown1.Value = Settings.Default.numberOfHandsToBid;
+            ToolStripMenuItemUseSolver.IsChecked = Settings.Default.useSolver;
+            ToolStripMenuItemAlternateSuits.IsChecked = Settings.Default.alternateSuits;
+            NumericUpDown1.Value = Settings.Default.numberOfHandsToBid;
             UseSavedSystemParameters();
             UseSavedOptimizationParameters();
             if (File.Exists("interactive.pbn"))
@@ -91,7 +91,7 @@ namespace Wpf.Tosr
                 {
                     pbnFilepath = Settings.Default.pbnFilePath;
                     await pbn.LoadAsync(pbnFilepath);
-                    toolStripComboBoxFilter.SelectedItem = Settings.Default.filter;
+                    ToolStripComboBoxFilter.SelectedItem = Settings.Default.filter;
                     ApplyFilter();
                     boardIndex = Math.Min(Settings.Default.boardNumber, filteredPbn.Boards.Count - 1);
                     LoadCurrentBoard();
@@ -108,10 +108,10 @@ namespace Wpf.Tosr
                 StartBidding();
             }
 
-            toolStripStatusLabel1.Content = "Generating reverse dictionaries...";
+            ToolStripStatusLabel1.Content = "Generating reverse dictionaries...";
             await Task.Run(() =>
             {
-                var progress = new Progress<string>(report => Dispatcher.Invoke(() => toolStripStatusLabel1.Content = $"Generating dictionary {report}..."));
+                var progress = new Progress<string>(report => Dispatcher.Invoke(() => ToolStripStatusLabel1.Content = $"Generating dictionary {report}..."));
                 reverseDictionaries = new ReverseDictionaries(FasesWithOffset, progress);
                 bidManager = new BidManager(new BidGeneratorDescription(), FasesWithOffset, reverseDictionaries, true);
                 Dispatcher.Invoke(() => bidManager.Init(Auction));
@@ -121,13 +121,13 @@ namespace Wpf.Tosr
 
         private void ApplyFilter()
         {
-            filteredPbn.Boards = (string)toolStripComboBoxFilter.SelectedItem == "All" ? pbn.Boards :
-                pbn.Boards.Where(b => b.Description != null && b.Description.Split(':')[0] == (string)toolStripComboBoxFilter.SelectedItem).ToList();
+            filteredPbn.Boards = (string)ToolStripComboBoxFilter.SelectedItem == "All" ? pbn.Boards :
+                pbn.Boards.Where(b => b.Description != null && b.Description.Split(':')[0] == (string)ToolStripComboBoxFilter.SelectedItem).ToList();
         }
 
         private void FillFilteredComboBox()
         {
-            toolStripComboBoxFilter.ItemsSource = Enum.GetNames(typeof(BatchBidding.CorrectnessContract)).Append("All");
+            ToolStripComboBoxFilter.ItemsSource = Enum.GetNames(typeof(BatchBidding.CorrectnessContract)).Append("All");
         }
 
         private void UseSavedSystemParameters()
@@ -206,7 +206,7 @@ namespace Wpf.Tosr
             if (auction.IsEndOfBidding())
             {
                 BiddingBoxView.IsEnabled = false;
-                panelNorth.Visibility = Visibility.Visible;
+                PanelNorth.Visibility = Visibility.Visible;
                 AddBoardToInteractivePbnFile(deal, auction);
             }
         }
@@ -249,7 +249,7 @@ namespace Wpf.Tosr
                 deal = Util.GetBoardsTosr(board);
             }
             while (UtilTosr.IsFreakHand(deal[Player.South].Split(',').Select(x => x.Length)));
-            panelNorth.Visibility = Visibility.Hidden;
+            PanelNorth.Visibility = Visibility.Hidden;
             ShowBothHands();
         }
 
@@ -262,7 +262,7 @@ namespace Wpf.Tosr
                 BiddingBoxViewModel.DoBid.RaiseCanExecuteChanged();
                 AuctionViewModel.UpdateAuction(Auction);
                 BiddingBoxView.IsEnabled = true;
-                panelNorth.Visibility = Visibility.Visible;
+                PanelNorth.Visibility = Visibility.Visible;
             }
             catch (Exception exception)
             {
@@ -273,9 +273,9 @@ namespace Wpf.Tosr
         private async void ButtonBatchBiddingClick(object sender, EventArgs e)
         {
             resetEvent.WaitOne();
-            panelNorth.Visibility = Visibility.Hidden;
-            var batchBidding = new BatchBidding(reverseDictionaries, FasesWithOffset, toolStripMenuItemUseSolver.IsChecked);
-            toolStripStatusLabel1.Content = "Batch bidding hands...";
+            PanelNorth.Visibility = Visibility.Hidden;
+            var batchBidding = new BatchBidding(reverseDictionaries, FasesWithOffset, ToolStripMenuItemUseSolver.IsChecked);
+            ToolStripStatusLabel1.Content = "Batch bidding hands...";
             cancelBatchBidding.Dispose();
             cancelBatchBidding = new CancellationTokenSource();
             string report = "";
@@ -285,7 +285,7 @@ namespace Wpf.Tosr
                 Cursor = Cursors.Wait;
                 await Task.Run(() =>
                 {
-                    var progress = new Progress<int>(message => Dispatcher.Invoke(() => toolStripStatusLabel1.Content = $"Hands done: {message}"));
+                    var progress = new Progress<int>(message => Dispatcher.Invoke(() => ToolStripStatusLabel1.Content = $"Hands done: {message}"));
                     (pbn, report) = batchBidding.Execute(pbn.Boards.Select(x => x.Deal), progress, Path.GetFileNameWithoutExtension(pbnFilepath), cancelBatchBidding.Token);
                 });
             }
@@ -293,7 +293,7 @@ namespace Wpf.Tosr
             {
                 Cursor = oldCursor;
             }
-            toolStripComboBoxFilter.SelectedItem = Settings.Default.filter;
+            ToolStripComboBoxFilter.SelectedItem = Settings.Default.filter;
             ApplyFilter();
             boardIndex = 0;
             LoadCurrentBoard();
@@ -322,7 +322,7 @@ namespace Wpf.Tosr
             try
             {
                 Cursor = Cursors.Wait;
-                if (numericUpDown1.Value != null) GenerateBoards(numericUpDown1.Value.Value);
+                if (NumericUpDown1.Value != null) GenerateBoards(NumericUpDown1.Value.Value);
             }
             finally
             {
@@ -417,7 +417,7 @@ namespace Wpf.Tosr
 
         private void ToolStripMenuItemOneBoardClick(object sender, EventArgs e)
         {
-            if (int.TryParse(toolStripTextBoxBoard.Text, out var board) && board <= pbn.Boards.Count)
+            if (int.TryParse(ToolStripTextBoxBoard.Text, out var board) && board <= pbn.Boards.Count)
             {
                 boardIndex = filteredPbn.Boards.IndexOf(filteredPbn.Boards.Single(b => b.BoardNumber == board));
                 LoadCurrentBoard();
@@ -427,7 +427,7 @@ namespace Wpf.Tosr
                 var localPbn = batchBidding.Execute(new[] { pbn.Boards[boardIndex].Deal }, new Progress<int>(), "", CancellationToken.None);
                 Auction = localPbn.Item1.Boards.First().Auction ?? new Auction();
                 AuctionViewModel.UpdateAuction(Auction);
-                toolStripStatusLabel1.Content = localPbn.Item1.Boards.First().Description;
+                ToolStripStatusLabel1.Content = localPbn.Item1.Boards.First().Description;
             }
         }
 
@@ -435,10 +435,10 @@ namespace Wpf.Tosr
         {
             StartBidding();
             bidManager.Init(Auction);
-            panelNorth.Visibility = Visibility.Hidden;
+            PanelNorth.Visibility = Visibility.Hidden;
             if (interactivePbn.Boards.Any())
                 interactivePbn.Boards.RemoveAt(interactivePbn.Boards.Count - 1);
-            toolStripStatusLabel1.Content = "";
+            ToolStripStatusLabel1.Content = "";
             resetEvent.WaitOne();
         }
 
@@ -493,31 +493,31 @@ namespace Wpf.Tosr
 
             if (filteredPbn.Boards.Count > 0)
             {
-                toolStripTextBoxBoard.Text = Convert.ToString(filteredPbn.Boards[boardIndex].BoardNumber);
+                ToolStripTextBoxBoard.Text = Convert.ToString(filteredPbn.Boards[boardIndex].BoardNumber);
                 var board = filteredPbn.Boards[boardIndex];
                 deal = board.Deal;
-                panelNorth.Visibility = Visibility.Visible;
+                PanelNorth.Visibility = Visibility.Visible;
                 ShowBothHands();
                 Auction = board.Auction ?? new Auction();
                 AuctionViewModel.UpdateAuction(Auction);
-                toolStripStatusLabel1.Content = board.Description;
+                ToolStripStatusLabel1.Content = board.Description;
             }
         }
 
         private void ShowBothHands()
         {
-            HandViewModelNorth.ShowHand(deal[Player.North], toolStripMenuItemAlternateSuits.IsChecked, "default");
-            HandViewModelSouth.ShowHand(deal[Player.South], toolStripMenuItemAlternateSuits.IsChecked, "default");
+            HandViewModelNorth.ShowHand(deal[Player.North], ToolStripMenuItemAlternateSuits.IsChecked, "default");
+            HandViewModelSouth.ShowHand(deal[Player.South], ToolStripMenuItemAlternateSuits.IsChecked, "default");
         }
 
         private void Window_Closed(object sender, EventArgs e)
         {
-            Settings.Default.useSolver = toolStripMenuItemUseSolver.IsChecked;
-            Settings.Default.alternateSuits = toolStripMenuItemAlternateSuits.IsChecked;
+            Settings.Default.useSolver = ToolStripMenuItemUseSolver.IsChecked;
+            Settings.Default.alternateSuits = ToolStripMenuItemAlternateSuits.IsChecked;
             Settings.Default.boardNumber = boardIndex;
-            Settings.Default.numberOfHandsToBid = numericUpDown1.Value.Value;
+            Settings.Default.numberOfHandsToBid = NumericUpDown1.Value.Value;
             Settings.Default.pbnFilePath = pbn.Boards.Count > 0 ? pbnFilepath : "";
-            Settings.Default.filter = (string)toolStripComboBoxFilter.SelectedItem;
+            Settings.Default.filter = (string)ToolStripComboBoxFilter.SelectedItem;
             Settings.Default.Save();
         }
 
