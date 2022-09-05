@@ -62,15 +62,17 @@ namespace Wpf.Tosr
         private class Statistics
         {
             public int handsBid;
+            // ReSharper disable once NotAccessedField.Local
             public int handsNotBidBecauseofFreakhand;
+            // ReSharper disable once NotAccessedField.Local
             public int handsNotBidBecauseOfError;
-            public SortedDictionary<Bid, int> contracts = new();
-            public SortedDictionary<ConstructedSouthhandOutcome, int> outcomes = new();
-            public SortedDictionary<Player, int> dealers = new();
-            public SortedDictionary<int, int> bidsNonShape = new();
-            public SortedDictionary<(CorrectnessContractBreakdown, (ConstructedSouthhandOutcome, PullType)), int> ContractCorrectnessBreakdownOutcome = new();
-            public SortedDictionary<CorrectnessContract, int> ContractCorrectness = new();
-            public SortedDictionary<CorrectnessContractBreakdown, int> ContractCorrectnessBreakdown = new();
+            public readonly SortedDictionary<Bid, int> contracts = new();
+            public readonly SortedDictionary<ConstructedSouthHandOutcome, int> outcomes = new();
+            public readonly SortedDictionary<Player, int> dealers = new();
+            public readonly SortedDictionary<int, int> bidsNonShape = new();
+            public readonly SortedDictionary<(CorrectnessContractBreakdown, (ConstructedSouthHandOutcome, PullType)), int> contractCorrectnessBreakdownOutcome = new();
+            public readonly SortedDictionary<CorrectnessContract, int> contractCorrectness = new();
+            public readonly SortedDictionary<CorrectnessContractBreakdown, int> contractCorrectnessBreakdown = new();
 
         }
 
@@ -79,7 +81,7 @@ namespace Wpf.Tosr
         private readonly StringBuilder expectedSouthHands = new();
         private readonly StringBuilder inCorrectContracts = new();
         private readonly BidManager bidManager;
-        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly bool useSingleDummySolver;
         private CorrectnessContractBreakdown correctnessContractBreakdown;
         private CorrectnessContract correctnessContract;
@@ -98,23 +100,24 @@ namespace Wpf.Tosr
             handPerAuction.Clear();
 
             var stopwatch = Stopwatch.StartNew();
-            var stringbuilder = new StringBuilder();
+            var stringBuilder = new StringBuilder();
 
-            if (boards == null || !boards.Any())
+            var boardsList = boards.ToList();
+            if (!boardsList.Any())
             {
                 MessageBox.Show("Cannot do batchbidding. Generate hands first.", "Error");
                 return (pbn, "");
             }
 
-            logger.Info($"Start batchbidding. Number of boards : {boards.Count()}");
+            Logger.Info($"Start batchbidding. Number of boards : {boardsList.Count}");
 
-            foreach (var board in boards)
+            foreach (var board in boardsList)
             {
                 try
                 {
                     if (UtilTosr.IsFreakHand(board[Player.South].Split(',').Select(x => x.Length)))
                     {
-                        logger.Debug($"Hand {board[Player.South]} is a freak hand. Will not be bid");
+                        Logger.Debug($"Hand {board[Player.South]} is a freak hand. Will not be bid");
                         statistics.handsNotBidBecauseofFreakhand++;
                         continue;
                     }
@@ -145,9 +148,9 @@ namespace Wpf.Tosr
                 catch (Exception exception)
                 {
                     statistics.handsNotBidBecauseOfError++;
-                    logger.Warn(exception, $"Error:{exception.Message}. Board:{statistics.handsBid}. North hand:{board[Player.North]}. South hand:{board[Player.South]}. Controls:{Util.GetControlCount(board[Player.South])}. " +
+                    Logger.Warn(exception, $"Error:{exception.Message}. Board:{statistics.handsBid}. North hand:{board[Player.North]}. South hand:{board[Player.South]}. Controls:{Util.GetControlCount(board[Player.South])}. " +
                         $"HCP: {Util.GetHcpCount(board[Player.South])}. Projected AK as 4333: {UtilTosr.GetHandWithOnlyControlsAs4333(board[Player.South], "AK")}");
-                    stringbuilder.AppendLine($"{exception.Message}. Board:{statistics.handsBid}");
+                    stringBuilder.AppendLine($"{exception.Message}. Board:{statistics.handsBid}");
                     pbn.Boards.Add(new BoardDto
                     {
                         Deal = board,
@@ -160,15 +163,15 @@ namespace Wpf.Tosr
                 }
             }
             progress.Report(statistics.handsBid);
-            stringbuilder.AppendLine(@$"Seconds elapsed: {stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture)}");
-            stringbuilder.AppendLine(@"Duplicate auctions are written to ""HandPerAuction.txt""");
-            stringbuilder.AppendLine(@"Statistics are written to ""Statistics.txt""");
-            stringbuilder.AppendLine(@"Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
-            stringbuilder.AppendLine(@"Incorrect contract hands are written to ""IncorrectContract.txt""");
+            stringBuilder.AppendLine(@$"Seconds elapsed: {stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture)}");
+            stringBuilder.AppendLine(@"Duplicate auctions are written to ""HandPerAuction.txt""");
+            stringBuilder.AppendLine(@"Statistics are written to ""Statistics.txt""");
+            stringBuilder.AppendLine(@"Error info for hand-matching is written to ""ExpectedSouthHands.txt""");
+            stringBuilder.AppendLine(@"Incorrect contract hands are written to ""IncorrectContract.txt""");
             SaveAuctions(batchName);
 
-            logger.Info($"End batchbidding");
-            return (pbn, stringbuilder.ToString());
+            Logger.Info($"End batchbidding");
+            return (pbn, stringBuilder.ToString());
         }
 
         private void AddHandAndAuction(Dictionary<Player, string> board, Auction auction, int boardNumber, BiddingState biddingState)
@@ -191,15 +194,15 @@ namespace Wpf.Tosr
             statistics.contracts.AddOrUpdateDictionary(contract);
             if (!auction.responderHasSignedOff)
                 statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Last(bid => bid.bidType == BidType.bid) - biddingState.GetBids(Fase.Shape).Last());
-            statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthhandOutcome);
+            statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthHandOutcome);
             correctnessContractBreakdown = CheckContract(contract, board, dealer == Player.UnKnown ? Player.North : dealer);
             var pullType = biddingState.GetPullBid() != default ? PullType.HasPulled : PullType.NoPull;
-            statistics.ContractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, (bidManager.constructedSouthhandOutcome, pullType)));
+            statistics.contractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, (bidManager.constructedSouthHandOutcome, pullType)));
             correctnessContract = GetCorrectness(correctnessContractBreakdown);
-            statistics.ContractCorrectnessBreakdown.AddOrUpdateDictionary(correctnessContractBreakdown);
-            statistics.ContractCorrectness.AddOrUpdateDictionary(correctnessContract);
+            statistics.contractCorrectnessBreakdown.AddOrUpdateDictionary(correctnessContractBreakdown);
+            statistics.contractCorrectness.AddOrUpdateDictionary(correctnessContract);
             if (correctnessContract is CorrectnessContract.InCorrect or CorrectnessContract.NoFit)
-                inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.constructedSouthhandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
+                inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.constructedSouthHandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
                     $" Auction:{auction.GetPrettyAuction("|")} Northhand: {board[Player.North]} Southhand: {board[Player.South]}");
             endContracts.Add(auction.currentContract);
         }
@@ -228,7 +231,7 @@ namespace Wpf.Tosr
 
         private void SaveAuctions(string batchName)
         {
-            logger.Info("Save auctions");
+            Logger.Info("Save auctions");
             var multiHandPerAuction = handPerAuction.Where(x => x.Value.Count > 1).ToDictionary(x => x.Key, x => x.Value);
             File.WriteAllText("txt\\HandPerAuction.txt", JsonConvert.SerializeObject(multiHandPerAuction, Formatting.Indented));
             File.WriteAllText("txt\\Statistics.txt", JsonConvert.SerializeObject(statistics, Formatting.Indented));
@@ -238,10 +241,10 @@ namespace Wpf.Tosr
             File.WriteAllText("txt\\IncorrectContract.txt", string.Join('\n', list));
             if (!string.IsNullOrWhiteSpace(batchName))
             {
-                string pathEndcontracts = $"txt\\endcontracts_{batchName}.csv";
-                if (!File.Exists(pathEndcontracts))
-                    File.WriteAllText(pathEndcontracts, string.Join(',', Enumerable.Range(1, endContracts.Count)));
-                File.AppendAllText(pathEndcontracts, $"\n{string.Join(',', endContracts)}");
+                var pathEndContracts = $"txt\\endcontracts_{batchName}.csv";
+                if (!File.Exists(pathEndContracts))
+                    File.WriteAllText(pathEndContracts, string.Join(',', Enumerable.Range(1, endContracts.Count)));
+                File.AppendAllText(pathEndContracts, $"\n{string.Join(',', endContracts)}");
             }
         }
 
@@ -276,18 +279,19 @@ namespace Wpf.Tosr
             static (ExpectedContract expectedContract, Dictionary<ExpectedContract, int> confidence) GetExpectedContract(IEnumerable<int> scores)
             {
                 ExpectedContract expectedContract;
-                if (scores.Count(x => x == 13) / (double)scores.Count() > .6)
+                var scoresList = scores.ToList();
+                if (scoresList.Count(x => x == 13) / (double)scoresList.Count > .6)
                     expectedContract = ExpectedContract.GrandSlam;
-                else if (scores.Count(x => x == 12) / (double)scores.Count() > .6)
+                else if (scoresList.Count(x => x == 12) / (double)scoresList.Count > .6)
                     expectedContract = ExpectedContract.SmallSlam;
-                else if (scores.Count(x => x == 12 || x == 13) / (double)scores.Count() > .6)
-                    expectedContract = scores.Count(x => x == 12) >= scores.Count(x => x == 13) ? ExpectedContract.SmallSlam : ExpectedContract.GrandSlam;
+                else if (scoresList.Count(x => x == 12 || x == 13) / (double)scoresList.Count > .6)
+                    expectedContract = scoresList.Count(x => x == 12) >= scoresList.Count(x => x == 13) ? ExpectedContract.SmallSlam : ExpectedContract.GrandSlam;
                 else expectedContract = ExpectedContract.Game;
 
                 return (expectedContract, new Dictionary<ExpectedContract, int> {
-                {ExpectedContract.GrandSlam, scores.Count(x => x == 13) },
-                { ExpectedContract.SmallSlam, scores.Count(x => x == 12) },
-                { ExpectedContract.Game, scores.Count(x => x < 12)}});
+                {ExpectedContract.GrandSlam, scoresList.Count(x => x == 13) },
+                { ExpectedContract.SmallSlam, scoresList.Count(x => x == 12) },
+                { ExpectedContract.Game, scoresList.Count(x => x < 12)}});
             }
 
         }

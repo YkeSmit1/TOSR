@@ -4,9 +4,9 @@ namespace Wpf.BidControls
 {
     public class Card
     {
-        public Suit Suit { get; set; }
-        public Face Face { get; set; }
+        public Suit Suit { get; init; }
+        public Face Face { get; init; }
         public int Index { get; set; }
-        public CardImageSettings CardImageSettings { get; set; }
+        public CardImageSettings CardImageSettings { get; init; }
     }
 }

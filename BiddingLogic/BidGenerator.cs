@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Common;
+﻿using System.Text;
 
 namespace BiddingLogic
 {
@@ -9,8 +6,8 @@ namespace BiddingLogic
     {
         public (int, Fase, string, int) GetBid(BiddingState biddingState, string handsString)
         {
-            var bidFromRule = Pinvoke.GetBidFromRule(biddingState.Fase, biddingState.PreviousFase, handsString, biddingState.NextBidIdForRule, out var nextfase, out var zoomOffset);
-            return (bidFromRule, nextfase, string.Empty, zoomOffset);
+            var bidFromRule = PInvoke.GetBidFromRule(biddingState.Fase, biddingState.PreviousFase, handsString, biddingState.NextBidIdForRule, out var nextFase, out var zoomOffset);
+            return (bidFromRule, nextFase, string.Empty, zoomOffset);
 
         }
     }
@@ -19,9 +16,9 @@ namespace BiddingLogic
         public (int, Fase, string, int) GetBid(BiddingState biddingState, string handsString)
         {
             var description = new StringBuilder(128);
-            var bidFromRule = Pinvoke.GetBidFromRuleEx(biddingState.Fase, biddingState.PreviousFase, handsString, biddingState.NextBidIdForRule, out var nextfase, description);
+            var bidFromRule = PInvoke.GetBidFromRuleEx(biddingState.Fase, biddingState.PreviousFase, handsString, biddingState.NextBidIdForRule, out var nextFase, description);
 
-            return (bidFromRule, nextfase, description.ToString(), 0);
+            return (bidFromRule, nextFase, description.ToString(), 0);
 
         }
     }

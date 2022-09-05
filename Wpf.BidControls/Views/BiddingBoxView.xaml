@@ -32,7 +32,7 @@
             </Button>
         </DataTemplate>
 
-        <DataTemplate x:Key="DataTemplate_Level1">
+        <DataTemplate x:Key="DataTemplateLevel1">
             <ItemsControl ItemsSource="{Binding}" ItemTemplate="{StaticResource DataTemplate_Level2}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -44,7 +44,7 @@
     </UserControl.Resources>
     <Grid>
         <StackPanel Grid.Column="1">
-            <ItemsControl ItemsSource="{Binding SuitBids}" ItemTemplate="{StaticResource DataTemplate_Level1}"/>
+            <ItemsControl ItemsSource="{Binding SuitBids}" ItemTemplate="{StaticResource DataTemplateLevel1}"/>
             <ItemsControl ItemsSource="{Binding NonSuitBids}" ItemTemplate="{StaticResource NonSuitBidsTemplate}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
 using NLog;
@@ -22,7 +20,7 @@ namespace BiddingLogic
 
     public class ListComparer<T> : IEqualityComparer<IEnumerable<T>>
     {
-        public bool Equals(IEnumerable<T> x, IEnumerable<T> y) => x.SequenceEqual(y);
+        public bool Equals(IEnumerable<T> x, IEnumerable<T> y) => (x ?? Array.Empty<T>()).SequenceEqual(y ?? Array.Empty<T>());
         public int GetHashCode(IEnumerable<T> obj) => 0;
     }
 
@@ -39,10 +37,10 @@ namespace BiddingLogic
         private QueensDictionary QueensAuction2 { get; }
 
         private readonly Dictionary<Fase, bool> fasesWithOffset;
-        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-        private static readonly int[] suitLengthNoSingleton = new[] { 4, 3, 3, 3 };
-        private static readonly int[] suitLengthSingleton = new[] { 5, 4, 3, 1 };
-        private static readonly int[] suitLength2Singletons = new[] { 6, 5, 1, 1 };
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly int[] SuitLengthNoSingleton = { 4, 3, 3, 3 };
+        private static readonly int[] SuitLengthSingleton = { 5, 4, 3, 1 };
+        private static readonly int[] SuitLength2Singletons = { 6, 5, 1, 1 };
 
         public ReverseDictionaries(ShapeDictionary shapeAuctions, ControlsOnlyDictionary controlsOnlyAuctions,
             ControlScanningDictionary controlScanningAuctions, SignOffFasesDictionary signOffFasesAuctions)
@@ -81,15 +79,15 @@ namespace BiddingLogic
             progress.Report("done");
         }
 
-        private static Dictionary<T, U> LoadAuctions<T, U>(string fileName, Func<int, Dictionary<T, U>> generateAuctions, int nrOfShortage)
+        private static Dictionary<T, TU> LoadAuctions<T, TU>(string fileName, Func<int, Dictionary<T, TU>> generateAuctions, int nrOfShortage)
         {
             var logger = LogManager.GetCurrentClassLogger();
 
-            Dictionary<T, U> auctions;
+            Dictionary<T, TU> auctions;
             // Generate only if file does not exist or is older then one day
             if (File.Exists(fileName) && File.GetLastWriteTime(fileName) > DateTime.Now - TimeSpan.FromDays(1))
             {
-                auctions = JsonConvert.DeserializeObject<Dictionary<T, U>>(File.ReadAllText(fileName));
+                auctions = JsonConvert.DeserializeObject<Dictionary<T, TU>>(File.ReadAllText(fileName));
             }
             else
             {
@@ -104,9 +102,9 @@ namespace BiddingLogic
             return auctions;
         }
 
-        public ShapeDictionary GenerateAuctionsForShape(int nrOfShortages)
+        private ShapeDictionary GenerateAuctionsForShape(int nrOfShortages)
         {
-            logger.Info("Generating dictionaries for shape");
+            Logger.Info("Generating dictionaries for shape");
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
             var auctions = new ShapeDictionary();
             var regex = new Regex("x");
@@ -120,12 +118,12 @@ namespace BiddingLogic
                                 var hand = new string('x', spades) + "," + new string('x', hearts) + "," + new string('x', diamonds) + "," + new string('x', clubs);
                                 // We need a hand with two controls. Otherwise engine cannot find a bid
                                 hand = regex.Replace(hand, "A", 1);
-                                var suitLengthSouth = hand.Split(',').Select(x => x.Length);
+                                var suitLengthSouth = hand.Split(',').Select(x => x.Length).ToList();
                                 var str = string.Join("", suitLengthSouth);
 
                                 if (!UtilTosr.IsFreakHand(suitLengthSouth))
                                 {
-                                    _ = bidManager.GetAuction(string.Empty, hand); // No northhand. Just for generating reverse dictionaries
+                                    _ = bidManager.GetAuction(string.Empty, hand); // No north hand. Just for generating reverse dictionaries
                                     var isZoom = bidManager.BiddingState.IsZoomShape;
                                     var key = bidManager.BiddingState.GetBidsAsString(Fase.Shape);
                                     if (auctions.ContainsKey(key))
@@ -137,9 +135,9 @@ namespace BiddingLogic
             return auctions;
         }
 
-        public ControlsOnlyDictionary GenerateAuctionsForControlsOnly(int nrOfShortages)
+        private ControlsOnlyDictionary GenerateAuctionsForControlsOnly(int nrOfShortages)
         {
-            logger.Info("Generating dictionaries for controls only");
+            Logger.Info("Generating dictionaries for controls only");
             var auctions = new ControlsOnlyDictionary();
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
 
@@ -181,14 +179,14 @@ namespace BiddingLogic
                 shufflingDeal.South.Controls = new MinMax(control, control);
                 var board = Util.GetBoardsTosr(shufflingDeal.Execute().First());
 
-                _ = bidManager.GetAuction(string.Empty, board[Player.South]); // No northhand. Just for generating reverse dictionaries
+                _ = bidManager.GetAuction(string.Empty, board[Player.South]); // No north hand. Just for generating reverse dictionaries
                 auctions.Add(bidManager.BiddingState.GetBidsAsString(Fase.Controls), new List<int> { control });
             }
         }
 
-        public ControlScanningDictionary GenerateAuctionsForControlsScanning(int nrOfShortages)
+        private ControlScanningDictionary GenerateAuctionsForControlsScanning(int nrOfShortages)
         {
-            logger.Info($"Generating dictionaries for controlsScanning. Shortages:{nrOfShortages}");
+            Logger.Info($"Generating dictionaries for controlsScanning. Shortages:{nrOfShortages}");
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
             var auctions = new ControlScanningDictionary();
             var controls = new[] { "", "A", "K", "AK" };
@@ -202,14 +200,14 @@ namespace BiddingLogic
 
             void BidAndStoreHandsByHcp(int[] suitLength, params string[] suits)
             {
-                var lsuits = ObjectCloner.ObjectCloner.DeepClone(suits);
-                var hand = ConstructHand(suitLengthNoSingleton, lsuits);
+                var lSuits = ObjectCloner.ObjectCloner.DeepClone(suits);
+                var hand = ConstructHand(SuitLengthNoSingleton, lSuits);
                 if (Util.GetControlCount(hand) > 1)
                 {
                     foreach (var hcp in GetHcpGeneratorGeneral().Invoke(hand))
                     {
-                        if (UtilTosr.TryAddQuacksTillHcp(hcp, ref lsuits, suitLength))
-                            BidAndStoreHand(ConstructHand(suitLength, lsuits), hand);
+                        if (UtilTosr.TryAddQuacksTillHcp(hcp, ref lSuits, suitLength))
+                            BidAndStoreHand(ConstructHand(suitLength, lSuits), hand);
                     }
                 }
             }
@@ -218,9 +216,9 @@ namespace BiddingLogic
             {
                 if (hand.Length != 16)
                     return;
-                _ = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
+                _ = bidManager.GetAuction(string.Empty, hand);// No north hand. Just for generating reverse dictionaries
                 var key = string.Join("", bidManager.BiddingState.GetBids(Fase.Controls, Fase.ScanningControls).
-                    Select(bid => bid - (bidManager.BiddingState.GetBids(Fase.Shape).Last() - Bids.threeDiamondBid)));
+                    Select(bid => bid - (bidManager.BiddingState.GetBids(Fase.Shape).Last() - Bids.ThreeDiamondBid)));
                 if (!auctions.ContainsKey(key))
                     auctions.Add(key, (new List<string>() { handToStore }, bidManager.BiddingState.IsZoomControlScanning));
                 else if (!auctions[key].controlsScanning.Contains(handToStore))
@@ -230,8 +228,8 @@ namespace BiddingLogic
 
         private SignOffFasesDictionary GenerateAuctionsForSignOffFases(int nrOfShortages)
         {
-            logger.Info("Generating dictionaries for sign-off fases");
-            var signOfffasesAuctions = new SignOffFasesDictionary();
+            Logger.Info("Generating dictionaries for sign-off fases");
+            var signOffFasesAuctions = new SignOffFasesDictionary();
             var shuffleRestriction = new ShufflingDeal() { South = new South { Controls = new MinMax(2, 12) } };
             foreach (var fase in BiddingState.SignOffFases)
             {
@@ -240,24 +238,24 @@ namespace BiddingLogic
                 {
                     shuffleRestriction.South.Hcp = new MinMax(hcp, hcp);
                     var board = Util.GetBoardsTosr(shuffleRestriction.Execute().First());
-                    var bidFromRule = Pinvoke.GetBidFromRule(fase, Fase.Controls, board[Player.South], 0, out _, out _);
+                    var bidFromRule = PInvoke.GetBidFromRule(fase, Fase.Controls, board[Player.South], 0, out _, out _);
                     if (bidFromRule != 0)
                     {
-                        var bidStr = BiddingState.GetSignOffBid(fase, Bids.threeNTBid + bidFromRule).ToString();
+                        var bidStr = BiddingState.GetSignOffBid(fase, Bids.ThreeNTBid + bidFromRule).ToString();
                         if (!dictionaryForFase.ContainsKey(bidStr))
                             dictionaryForFase.Add(bidStr, new List<int>());
                         if (!dictionaryForFase[bidStr].Contains(hcp))
                             dictionaryForFase[bidStr].Add(hcp);
                     }
                 }
-                signOfffasesAuctions.Add(fase, dictionaryForFase);
+                signOffFasesAuctions.Add(fase, dictionaryForFase);
             }
-            return signOfffasesAuctions;
+            return signOffFasesAuctions;
         }
 
-        public QueensDictionary GenerateQueensDictionary(int nrOfShortages)
+        private QueensDictionary GenerateQueensDictionary(int nrOfShortages)
         {
-            logger.Info("Generating dictionaries for queens");
+            Logger.Info("Generating dictionaries for queens");
 
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
             var auctions = new Dictionary<IEnumerable<Bid>, string>(new ListComparer<Bid>());
@@ -281,8 +279,8 @@ namespace BiddingLogic
 
             void BidAndStoreHand(string hand, params string[] suits)
             {
-                _ = bidManager.GetAuction(string.Empty, hand);// No northhand. Just for generating reverse dictionaries
-                var key = bidManager.BiddingState.GetBids(Fase.ScanningOther);
+                _ = bidManager.GetAuction(string.Empty, hand);// No north hand. Just for generating reverse dictionaries
+                var key = bidManager.BiddingState.GetBids(Fase.ScanningOther).ToList();
                 if (auctions.TryGetValue(key, out var value))
                 {
                     var queenStr = string.Empty;
@@ -312,11 +310,8 @@ namespace BiddingLogic
             {
                 foreach (var group in partialAuctions.GroupBy(key => key.auction, new ListComparer<Bid>()))
                 {
-                    var values = group.ToList().Select(x => x.queens);
-                    var queenStr = string.Empty;
-                    Debug.Assert(values.All(x => x.Length == 4));
-                    foreach (var i in Enumerable.Range(0, 4))
-                        queenStr += values.All(x => x[i] == values.First()[i]) ? values.First()[i] : 'X';
+                    var values = group.ToList().Select(x => x.queens).ToList();
+                    var queenStr = Enumerable.Range(0, 4).Aggregate(string.Empty, (current, i) => current + (values.All(x => x[i] == values.First()[i]) ? values.First()[i] : 'X'));
                     auctions.Add(group.Key, queenStr);
                 }
             }
@@ -327,16 +322,16 @@ namespace BiddingLogic
         {
             return nrOfShortages switch
             {
-                0 => suitLengthNoSingleton,
-                1 => suitLengthSingleton,
-                2 => suitLength2Singletons,
-                _ => throw new ArgumentOutOfRangeException(nameof(nrOfShortages), "nrOfshortages should be 0, 1 or 2")
+                0 => SuitLengthNoSingleton,
+                1 => SuitLengthSingleton,
+                2 => SuitLength2Singletons,
+                _ => throw new ArgumentOutOfRangeException(nameof(nrOfShortages), "nrOfShortages should be 0, 1 or 2")
             };
         }
 
         private static Func<string, int[]> GetHcpGeneratorGeneral()
         {
-            return (hand) => Util.GetControlCount(hand) == 4 && Util.GetHcpCount(hand) < 12 ? (new int[] { 0, 12 }) : (new int[] { 0 });
+            return (hand) => Util.GetControlCount(hand) == 4 && Util.GetHcpCount(hand) < 12 ? (new[] { 0, 12 }) : (new[] { 0 });
         }
 
         private static string ConstructHand(int[] suitLength, params string[] suits)
@@ -352,7 +347,7 @@ namespace BiddingLogic
                 0 => QueensAuction0,
                 1 => QueensAuction1,
                 2 => QueensAuction2,
-                _ => throw new ArgumentException("nrOfshortages should be 0, 1 or 2", nameof(handShape)),
+                _ => throw new ArgumentException("nrOfShortages should be 0, 1 or 2", nameof(handShape)),
             };
             return queensAuctions;
         }
@@ -364,7 +359,7 @@ namespace BiddingLogic
                 0 => ControlScanningAuctions0,
                 1 => ControlScanningAuctions1,
                 2 => ControlScanningAuctions2,
-                _ => throw new ArgumentException("nrOfshortages should be 0, 1 or 2", nameof(handShape)),
+                _ => throw new ArgumentException("nrOfShortages should be 0, 1 or 2", nameof(handShape)),
             };
         }
 
@@ -373,9 +368,9 @@ namespace BiddingLogic
             // TODO this should be determined when creating queens dictionaries
             return UtilTosr.NrOfShortages(shapeStr) switch
             {
-                0 => Bids.fiveHeartsBid,
-                1 => Bids.fiveClubBid,
-                2 => Bids.fiveDiamondBid,
+                0 => Bids.FiveHeartsBid,
+                1 => Bids.FiveClubBid,
+                2 => Bids.FiveDiamondBid,
                 _ => throw new ArgumentException("Unsupported number of shortages", nameof(shapeStr)),
             };
         }

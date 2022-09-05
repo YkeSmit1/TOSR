@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
 using Common;
 using MvvmHelpers;
 using MvvmHelpers.Commands;
@@ -13,11 +9,10 @@ namespace Wpf.BidControls.ViewModels
 {
     public class BiddingBoxViewModel : ObservableObject
     {
-        public ObservableCollection<Grouping<int, Bid>> SuitBids { get; set; } = new();
-        public ObservableCollection<Bid> NonSuitBids { get; set; } = new();
+        public ObservableCollection<Grouping<int, Bid>> SuitBids { get; }
+        public ObservableCollection<Bid> NonSuitBids { get; }
 
         public Command DoBid { get; set; }
-        public bool IsEnabled { get; set; }
 
         public BiddingBoxViewModel()
         {

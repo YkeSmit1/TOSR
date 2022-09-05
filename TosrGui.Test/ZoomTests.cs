@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
 using Xunit;
 using Moq;
@@ -54,7 +53,7 @@ namespace TosrGui.Test
         {
             // Setup
             var auction = new Auction();
-            var newBids = new List<Bid> { new Bid(1, Suit.Hearts), new Bid(3, Suit.Hearts) };
+            var newBids = new List<Bid> { new(1, Suit.Hearts), new(3, Suit.Hearts) };
             var biddingState = new BiddingState(fasesWithOffset);
             foreach (var bid in newBids)
                 biddingState.BidsPerFase.Add((Fase.Shape, bid));
@@ -69,7 +68,7 @@ namespace TosrGui.Test
         {
             // Setup
             var auction = new Auction();
-            var newBids = new List<Bid> { new Bid(1, Suit.Spades), new Bid(3, Suit.Spades) };
+            var newBids = new List<Bid> { new(1, Suit.Spades), new(3, Suit.Spades) };
             var biddingState = new BiddingState(fasesWithOffset);
             foreach (var bid in newBids)
                 biddingState.BidsPerFase.Add((Fase.Shape, bid));
@@ -84,7 +83,7 @@ namespace TosrGui.Test
         {
             // Setup
             var auction = new Auction();
-            var newBids = new List<Bid> { new Bid(1, Suit.Hearts), new Bid(3, Suit.Spades) };
+            var newBids = new List<Bid> { new(1, Suit.Hearts), new(3, Suit.Spades) };
             var biddingState = new BiddingState(fasesWithOffset);
             foreach (var bid in newBids)
                 biddingState.BidsPerFase.Add((Fase.Shape, bid));

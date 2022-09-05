@@ -20,7 +20,7 @@
     <Grid>
         <StackPanel Grid.Column="2">
             <Canvas Panel.ZIndex="10">
-                <Label x:Name="labelQuestionmark" Content="?" Canvas.Left="175" 
+                <Label Content="?" Canvas.Left="175" 
                        Canvas.Top="{Binding Auction.CurrentBiddingRound, Converter={StaticResource BiddingRoundToTopConverter}}"
                        Visibility="{Binding Auction, Converter={StaticResource PlayerToVisibilityConverter}}"/>
             </Canvas>

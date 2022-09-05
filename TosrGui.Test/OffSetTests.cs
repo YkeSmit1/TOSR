@@ -2,9 +2,9 @@
 using BiddingLogic;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Common;
 using System.Linq;
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
 namespace TosrGui.Test
 {
@@ -427,7 +427,7 @@ namespace TosrGui.Test
             {
                 if (player == Player.North)
                 {
-                    auction.bids[biddingRound] = new Dictionary<Player, Bid>(new List<KeyValuePair<Player, Bid>> { new KeyValuePair<Player, Bid>(player, bid) });
+                    auction.bids[biddingRound] = new Dictionary<Player, Bid>(new List<KeyValuePair<Player, Bid>> { new(player, bid) });
                     player = Player.South;
                 }
                 else

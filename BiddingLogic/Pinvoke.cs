@@ -1,10 +1,9 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text;
-using Common;
 
 namespace BiddingLogic
 {
-    public class Pinvoke
+    public static class PInvoke
     {
         [DllImport("Engine.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = false)]
         public static extern int GetBidFromRuleEx(Fase fase, Fase previousFase, string hand, int lastBidId, out Fase newFase, StringBuilder description);

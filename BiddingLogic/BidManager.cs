@@ -14,21 +14,21 @@ namespace BiddingLogic
 {
     using RelayBidKindFunc = Func<Auction, string, SouthInformation, BidManager.RelayBidKind>;
 
-    public enum BidPosibilities
+    public enum BidPossibilities
     {
         CannotBid,
         CanInvestigate,
         CannotInvestigate
     }
 
-    public enum ConstructedSouthhandOutcome
+    public enum ConstructedSouthHandOutcome
     {
         NotSet,
         AuctionNotFoundInControls,
         NoMatchFound,
-        SouthhandMatches,
+        SouthHandMatches,
         MultipleMatchesFound,
-        IncorrectSouthhand,
+        IncorrectSouthHand,
         NoMatchFoundNoQueens,
     }
 
@@ -36,8 +36,11 @@ namespace BiddingLogic
     {
         public enum RelayBidKind
         {
+            // Don't change this. It will break the unit test
             Relay,
+            // ReSharper disable once InconsistentNaming
             fourDiamondEndSignal,
+            // ReSharper disable once InconsistentNaming
             gameBid,
         }
 
@@ -63,7 +66,7 @@ namespace BiddingLogic
             public int numberOfHandsForSolver;
         }
 
-        public class RequirementsForRelayBidConverter : JsonConverter
+        private class RequirementsForRelayBidConverter : JsonConverter
         {
             public override bool CanConvert(Type objectType)
             {
@@ -72,15 +75,8 @@ namespace BiddingLogic
 
             public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
             {
-                JArray jArray = JArray.Load(reader);
-                var requirementsForRelayBid = new List<((double min, double max) range, RelayBidKind relayBidKind)>();
-                foreach (var entry in jArray)
-                {
-                    var range = ValueTuple.Create((double)entry[0][0], (double)entry[0][1]);
-                    var item = (((double, double), RelayBidKind))ValueTuple.Create(range, Enum.Parse(typeof(RelayBidKind), entry[1].ToString()));
-                    requirementsForRelayBid.Add(item);
-                }
-                return requirementsForRelayBid;
+                return JArray.Load(reader).Select(entry => (((double)entry[0]?[0], (double)entry[0]?[1]),
+                    Enum.Parse<RelayBidKind>(entry[1].ToString()))).ToList();
             }
 
             public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
@@ -102,27 +98,27 @@ namespace BiddingLogic
 
         private readonly IBidGenerator bidGenerator;
         private readonly Dictionary<Fase, bool> fasesWithOffset;
-        private readonly ReverseDictionaries reverseDictionaries = null;
-        private readonly bool useSingleDummySolver = false;
-        private readonly bool useSingleDummySolverDuringRelaying = false;
+        private readonly ReverseDictionaries reverseDictionaries;
+        private readonly bool useSingleDummySolver;
+        private readonly bool useSingleDummySolverDuringRelaying;
 
-        private readonly RelayBidKindFunc GetRelayBidKindFunc = null;
+        private readonly RelayBidKindFunc getRelayBidKindFunc;
 
-        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-        private static readonly Logger loggerBidding = LogManager.GetLogger("bidding");
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger LoggerBidding = LogManager.GetLogger("bidding");
 
         public BiddingInformation biddingInformation;
         private Dictionary<Bid, int> occurrencesForBids;
-        public ConstructedSouthhandOutcome constructedSouthhandOutcome = ConstructedSouthhandOutcome.NotSet;
+        public ConstructedSouthHandOutcome constructedSouthHandOutcome = ConstructedSouthHandOutcome.NotSet;
 
-        public BiddingState BiddingState { get; set; }
+        public BiddingState BiddingState { get; private set; }
 
         // Constructor used for test
         public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, RelayBidKindFunc getRelayBidKindFunc) :
             this(bidGenerator, fasesWithOffset)
         {
             this.reverseDictionaries = reverseDictionaries;
-            GetRelayBidKindFunc = getRelayBidKindFunc;
+            this.getRelayBidKindFunc = getRelayBidKindFunc;
         }
 
         // Standard constructor
@@ -139,7 +135,7 @@ namespace BiddingLogic
             this.useSingleDummySolver = useSingleDummySolver;
             this.useSingleDummySolverDuringRelaying = useSingleDummySolverDuringRelaying;
             if (useSingleDummySolver)
-                GetRelayBidKindFunc = GetRelayBidKindSolver;
+                getRelayBidKindFunc = GetRelayBidKindSolver;
         }
 
         // Constructor used for generate reverse dictionaries
@@ -147,7 +143,7 @@ namespace BiddingLogic
         {
             this.bidGenerator = bidGenerator;
             this.fasesWithOffset = fasesWithOffset;
-            GetRelayBidKindFunc = GetRelayBidKind;
+            getRelayBidKindFunc = GetRelayBidKind;
             BiddingState = new BiddingState(fasesWithOffset);
         }
 
@@ -159,10 +155,10 @@ namespace BiddingLogic
 
         public Auction GetAuction(string northHand, string southHand)
         {
-            logger.Debug($"Starting GetAuction for hand : {southHand}");
-            loggerBidding.Info("");
-            loggerBidding.Info("*** Start bidding ***");
-            loggerBidding.Info($"North:{northHand} South:{southHand}");
+            Logger.Debug($"Starting GetAuction for hand : {southHand}");
+            LoggerBidding.Info("");
+            LoggerBidding.Info("*** Start bidding ***");
+            LoggerBidding.Info($"North:{northHand} South:{southHand}");
 
             var auction = new Auction();
             var currentPlayer = Player.West;
@@ -194,10 +190,10 @@ namespace BiddingLogic
             }
             while (!auction.IsEndOfBidding());
 
-            logger.Debug($"Ending GetAuction for hand : {southHand}");
-            loggerBidding.Info("Auction:");
-            loggerBidding.Info($"{auction.GetPrettyAuction("\n")}");
-            loggerBidding.Info("*** End bidding ***");
+            Logger.Debug($"Ending GetAuction for hand : {southHand}");
+            LoggerBidding.Info("Auction:");
+            LoggerBidding.Info($"{auction.GetPrettyAuction("\n")}");
+            LoggerBidding.Info("*** End bidding ***");
             return auction;
         }
 
@@ -206,7 +202,7 @@ namespace BiddingLogic
             if (auction.IsEndOfBidding())
                 return;
 
-            if (BiddingState.Fase != Fase.End && (BiddingState.CurrentBid == Bid.PassBid || BiddingState.CurrentBid < Bids.sixSpadeBid || !useSingleDummySolver))
+            if (BiddingState.Fase != Fase.End && (BiddingState.CurrentBid == Bid.PassBid || BiddingState.CurrentBid < Bids.SixSpadeBid || !useSingleDummySolver))
                 BiddingState.CurrentBid = GetNorthBid(BiddingState, auction, northHand);
             else
             {
@@ -258,13 +254,13 @@ namespace BiddingLogic
             bool CanSignOff(Suit trumpSuit)
             {
                 if (trumpSuit != Suit.NoTrump)
-                    return biddingState.CurrentBid < Bids.fourClubBid;
+                    return biddingState.CurrentBid < Bids.FourClubBid;
 
                 // NoTrump
-                if (biddingState.CurrentBid >= Bids.fourNTBid)
+                if (biddingState.CurrentBid >= Bids.FourNTBid)
                     return false;
                 var shapeOrdered = new string(biddingInformation.Shape.Value.shapes.First().ToCharArray().OrderByDescending(x => x).ToArray());
-                if (auction.GetBids(Player.North).Any(bid => bid == Bids.threeNTBid) && shapeOrdered != "7330")
+                if (auction.GetBids(Player.North).Any(bid => bid == Bids.ThreeNTBid) && shapeOrdered != "7330")
                     return false;
                 return true;
             }
@@ -275,9 +271,9 @@ namespace BiddingLogic
                 var controlBidCount = southInformation.ControlBidCount;
                 if (systemParameters.hcpRelayerToSignOffInNT.TryGetValue(controlBidCount, out var hcps) && hcps.Contains(hcpNorth))
                 {
-                    noTrumpBid = biddingState.CurrentBid < Bids.threeNTBid ? Bids.threeNTBid : Bids.fourNTBid;
+                    noTrumpBid = biddingState.CurrentBid < Bids.ThreeNTBid ? Bids.ThreeNTBid : Bids.FourNTBid;
                     biddingState.UpdateBiddingStateSignOff(controlBidCount, noTrumpBid);
-                    loggerBidding.Info($"Signed off with {noTrumpBid} because HCP {hcpNorth} was found in {string.Join(",", hcps)} for ControlBidCount:{controlBidCount}");
+                    LoggerBidding.Info($"Signed off with {noTrumpBid} because HCP {hcpNorth} was found in {string.Join(",", hcps)} for ControlBidCount:{controlBidCount}");
                     return true;
                 }
                 noTrumpBid = null;
@@ -289,23 +285,23 @@ namespace BiddingLogic
                 suitBid = null;
                 var controlBidCount = southInformation.ControlBidCount;
                 var hcpNorth = Util.GetHcpCount(northHand);
-                if (controlBidCount == 0 && hcpNorth <= systemParameters.requiredMaxHcpToBid4Diamond && biddingState.CurrentBid >= Bids.threeSpadeBid)
+                if (controlBidCount == 0 && hcpNorth <= systemParameters.requiredMaxHcpToBid4Diamond && biddingState.CurrentBid >= Bids.ThreeSpadeBid)
                 {
-                    loggerBidding.Info($"Signed off with {Bids.fourDiamondBid} because hcp {hcpNorth} was smaller or equal then {systemParameters.requiredMaxHcpToBid4Diamond} for ControlBidCount:{controlBidCount}");
-                    biddingState.UpdateBiddingStateSignOff(controlBidCount, Bids.fourDiamondBid);
-                    suitBid = Bids.fourDiamondBid;
+                    LoggerBidding.Info($"Signed off with {Bids.FourDiamondBid} because hcp {hcpNorth} was smaller or equal then {systemParameters.requiredMaxHcpToBid4Diamond} for ControlBidCount:{controlBidCount}");
+                    biddingState.UpdateBiddingStateSignOff(controlBidCount, Bids.FourDiamondBid);
+                    suitBid = Bids.FourDiamondBid;
                     return true;
                 }
                 if (controlBidCount == 1)
                 {
-                    var relayBidkind = GetRelayBidKindFunc(auction, northHand, southInformation);
-                    switch (relayBidkind)
+                    var relayBidKind = getRelayBidKindFunc(auction, northHand, southInformation);
+                    switch (relayBidKind)
                     {
                         case RelayBidKind.Relay:
                             return false;
                         case RelayBidKind.fourDiamondEndSignal:
-                            biddingState.UpdateBiddingStateSignOff(controlBidCount, Bids.fourDiamondBid);
-                            suitBid = Bids.fourDiamondBid;
+                            biddingState.UpdateBiddingStateSignOff(controlBidCount, Bids.FourDiamondBid);
+                            suitBid = Bids.FourDiamondBid;
                             return true;
                         case RelayBidKind.gameBid:
                             biddingState.Fase = Fase.End;
@@ -313,7 +309,7 @@ namespace BiddingLogic
                             suitBid = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, false);
                             return true;
                         default:
-                            throw new InvalidEnumArgumentException(nameof(relayBidkind));
+                            throw new InvalidEnumArgumentException(nameof(relayBidKind));
                     }
                 }
                 return false;
@@ -321,15 +317,15 @@ namespace BiddingLogic
 
             bool TryGetEndContract(SouthInformation southInformation, out Bid bid)
             {
-                loggerBidding.Info($"TryGetEndContract. Current contract:{biddingState.CurrentBid}");
+                LoggerBidding.Info($"TryGetEndContract. Current contract:{biddingState.CurrentBid}");
 
                 var possibleContracts = GetPossibleContractsFromAuction(auction, northHand, southInformation, biddingState);
                 bid = GetEndContract(possibleContracts, biddingState.CurrentBid);
                 if (bid != null)
                 {
                     if (biddingState.Fase == Fase.ScanningOther)
-                        constructedSouthhandOutcome = southInformation.SpecificControls.Count() == 1 ?
-                            ConstructedSouthhandOutcome.SouthhandMatches : ConstructedSouthhandOutcome.MultipleMatchesFound;
+                        constructedSouthHandOutcome = southInformation.SpecificControls.Count() == 1 ?
+                            ConstructedSouthHandOutcome.SouthHandMatches : ConstructedSouthHandOutcome.MultipleMatchesFound;
                     biddingState.Fase = Fase.End;
                     auction.responderHasSignedOff = true;
                 }
@@ -341,13 +337,13 @@ namespace BiddingLogic
 
             Bid GetRelayBid()
             {
-                if (biddingState.CurrentBid == Bids.threeSpadeBid && biddingState.Fase != Fase.Shape && reverseDictionaries != null)
+                if (biddingState.CurrentBid == Bids.ThreeSpadeBid && biddingState.Fase != Fase.Shape && reverseDictionaries != null)
                 {
                     var shapeOrdered = new string(biddingInformation.Shape.Value.shapes.First().ToCharArray().OrderByDescending(x => x).ToArray());
                     if (shapeOrdered != "7330")
                     {
                         biddingState.RelayBidIdLastFase++;
-                        return Bids.fourClubBid;
+                        return Bids.FourClubBid;
                     }
                 }
                 return Bid.NextBid(biddingState.CurrentBid);
@@ -356,59 +352,59 @@ namespace BiddingLogic
 
         public static Bid GetEndContract(Dictionary<Bid, int> possibleContracts, Bid currentBid)
         {
-            Dictionary<Bid, (int occurrences, BidPosibilities posibility)> enrichedContracts = possibleContracts.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value, GetBidPosibility(kvp.Key, currentBid)));
+            Dictionary<Bid, (int occurrences, BidPossibilities posibility)> enrichedContracts = possibleContracts.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value, GetBidPossibility(kvp.Key, currentBid)));
             GroupGameContracts();
-            var reachableContracts = enrichedContracts.Where(y => y.Value.posibility != BidPosibilities.CannotBid).ToDictionary(x => x.Key, y => y.Value);
+            var reachableContracts = enrichedContracts.Where(y => y.Value.posibility != BidPossibilities.CannotBid).ToDictionary(x => x.Key, y => y.Value);
 
             var bid = reachableContracts.Count switch
             {
                 0 => Bid.PassBid,
                 1 => reachableContracts.Single().Key,
-                _ => reachableContracts.Count(y => y.Value.posibility == BidPosibilities.CanInvestigate) <= 1
+                _ => reachableContracts.Count(y => y.Value.posibility == BidPossibilities.CanInvestigate) <= 1
                         ? reachableContracts.MaxBy(y => y.Value.occurrences).First().Key
                         : null,
             };
 
             var bidString = bid == null ? "Relay a bit more" : $"Bid: {bid}";
-            loggerBidding.Info($"{reachableContracts.Count} contracts are possible. " +
+            LoggerBidding.Info($"{reachableContracts.Count} contracts are possible. " +
                 $"Reachable contracts: {string.Join(';', reachableContracts.Select(y => y.Key))}. " +
-                $"Investigatable contracts: {string.Join(';', reachableContracts.Where(y => y.Value.posibility == BidPosibilities.CanInvestigate).Select(y => y.Key))} {bidString}");
-            loggerBidding.Info("*************************");
+                $"Investigatable contracts: {string.Join(';', reachableContracts.Where(y => y.Value.posibility == BidPossibilities.CanInvestigate).Select(y => y.Key))} {bidString}");
+            LoggerBidding.Info("*************************");
 
             return bid;
 
             void GroupGameContracts()
             {
-                var bestGames = enrichedContracts.Where(x => x.Key.rank < 6 && x.Value.posibility != BidPosibilities.CannotBid).MinBy(x => x.Key);
+                var bestGames = enrichedContracts.Where(x => x.Key.rank < 6 && x.Value.posibility != BidPossibilities.CannotBid).MinBy(x => x.Key);
                 if (bestGames.Any())
                 {
                     var bestGame = bestGames.Single().Key;
                     enrichedContracts = enrichedContracts.GroupBy(x => x.Key.rank < 6 ? bestGame : x.Key)
                         .ToDictionary(g => g.Key, g => (g.Sum(v => v.Value.occurrences),
-                            g.Key == bestGame ? g.Any(v => v.Value.posibility == BidPosibilities.CanInvestigate) ? BidPosibilities.CanInvestigate :
-                                BidPosibilities.CannotInvestigate : g.Single().Value.posibility));
+                            g.Key == bestGame ? g.Any(v => v.Value.posibility == BidPossibilities.CanInvestigate) ? BidPossibilities.CanInvestigate :
+                                BidPossibilities.CannotInvestigate : g.Single().Value.posibility));
                 }
             }
         }
 
-        public RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, SouthInformation southInformation)
+        private RelayBidKind GetRelayBidKindSolver(Auction auction, string northHand, SouthInformation southInformation)
         {
-            var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
+            var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, auction.GetDeclarerOrNorth);
             var confidenceTricks = GetConfidenceTricks(northHand, southInformation, declarers);
             var confidenceToBidSlam = (confidenceTricks.TryGetValue(12, out var smallSlamTricks) ? smallSlamTricks : 0.0) + (confidenceTricks.TryGetValue(13, out var grandSlamTricks) ? grandSlamTricks : 0.0);
-            var relayBidkind = systemParameters.requirementsForRelayBid.Where(x => confidenceToBidSlam >= x.range.min && confidenceToBidSlam <= x.range.max).First().relayBidKind;
-            loggerBidding.Info($"RelayBidkind:{relayBidkind} confidence in GetRelayBid:{JsonConvert.SerializeObject(confidenceTricks)}");
-            return relayBidkind;
+            var relayBidKind = systemParameters.requirementsForRelayBid.First(x => confidenceToBidSlam >= x.range.min && confidenceToBidSlam <= x.range.max).relayBidKind;
+            LoggerBidding.Info($"RelayBidkind:{relayBidKind} confidence in GetRelayBid:{JsonConvert.SerializeObject(confidenceTricks)}");
+            return relayBidKind;
         }
 
-        public static RelayBidKind GetRelayBidKind(Auction auction, string northHand, SouthInformation southInformation)
+        private static RelayBidKind GetRelayBidKind(Auction auction, string northHand, SouthInformation southInformation)
         {
             var hcp = Util.GetHcpCount(northHand);
-            loggerBidding.Info($"GetRelaybid no solver HCP:{hcp}");
+            LoggerBidding.Info($"GetRelaybid no solver HCP:{hcp}");
             return hcp switch
             {
-                var x when x < 19 => RelayBidKind.gameBid,
-                var x when x >= 19 && x < 22 => RelayBidKind.fourDiamondEndSignal,
+                < 19 => RelayBidKind.gameBid,
+                < 22 and >= 19 => RelayBidKind.fourDiamondEndSignal,
                 _ => RelayBidKind.Relay,
             };
         }
@@ -416,22 +412,22 @@ namespace BiddingLogic
         private Dictionary<Bid, int> GetPossibleContractsFromAuction(Auction auction, string northHand,
             SouthInformation southInformation, BiddingState biddingState)
         {
-            var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
+            var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, auction.GetDeclarerOrNorth);
             bool canReuseSolverOutput = biddingState.Fase == Fase.ScanningControls && southInformation.ControlsScanningBidCount > 0;
             if (!canReuseSolverOutput || occurrencesForBids == null)
                 occurrencesForBids = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
-            loggerBidding.Info($"Occurrences by bid in GetPossibleContractsFromAuction: {JsonConvert.SerializeObject(occurrencesForBids)}");
+            LoggerBidding.Info($"Occurrences by bid in GetPossibleContractsFromAuction: {JsonConvert.SerializeObject(occurrencesForBids)}");
 
             return occurrencesForBids;
         }
 
-        private static BidPosibilities GetBidPosibility(Bid contract, Bid currentBid)
+        private static BidPossibilities GetBidPossibility(Bid contract, Bid currentBid)
         {
             if (contract < currentBid || contract == currentBid + 1)
-                return BidPosibilities.CannotBid;
+                return BidPossibilities.CannotBid;
             if (contract == currentBid || contract == currentBid + 3)
-                return BidPosibilities.CannotInvestigate;
-            return BidPosibilities.CanInvestigate;
+                return BidPossibilities.CannotInvestigate;
+            return BidPossibilities.CanInvestigate;
         }
 
         private Dictionary<int, double> GetConfidenceTricks(string northHand, SouthInformation southInformation, Dictionary<Suit, Player> declarers)
@@ -446,9 +442,9 @@ namespace BiddingLogic
         private Bid CalculateEndContract(Auction auction, string northHand, Bid currentBid)
         {
             var southInformation = biddingInformation.GetInformationFromAuction(auction, northHand, BiddingState);
-            var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, suit => auction.GetDeclarerOrNorth(suit));
+            var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, auction.GetDeclarerOrNorth);
             var tricksForBid = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
-            var possibleTricksForBid = tricksForBid.Where(bid => bid.Key >= currentBid);
+            var possibleTricksForBid = tricksForBid.Where(bid => bid.Key >= currentBid).ToList();
             if (!possibleTricksForBid.Any())
                 return Bid.PassBid;
             var maxBid = possibleTricksForBid.MaxBy(x => x.Value).First().Key;
@@ -463,31 +459,31 @@ namespace BiddingLogic
                 BiddingState.CurrentBid = Bid.PassBid;
                 return;
             }
-            var (bidIdFromRule, nextfase, description, zoomOffset) = bidGenerator.GetBid(BiddingState, handsString);
+            var (bidIdFromRule, nextFase, description, zoomOffset) = bidGenerator.GetBid(BiddingState, handsString);
             var bidId = BiddingState.CalculateBid(bidIdFromRule, description, zoomOffset != 0);
             auction.AddBid(BiddingState.CurrentBid);
 
-            var lzoomOffset = nextfase switch
+            var lZoomOffset = nextFase switch
             {
                 Fase.Controls => reverseDictionaries == null ? zoomOffset : biddingInformation.Shape.Value.zoomOffset,
                 Fase.ScanningOther => reverseDictionaries == null ? zoomOffset : biddingInformation.ControlsScanning.Value.zoomOffset,
                 _ => 0,
             };
             // Check if controls and their positions are correctly evaluated.
-            if (nextfase == Fase.ScanningOther && reverseDictionaries != null)
+            if (nextFase == Fase.ScanningOther && reverseDictionaries != null)
             {
                 var controlsInSuit = UtilTosr.GetHandWithOnlyControlsAs4333(handsString, "AK");
                 if (!biddingInformation.ControlsScanning.Value.controls.Contains(controlsInSuit))
                     throw new InvalidOperationException($"Cannot find {controlsInSuit} in {string.Join('|', biddingInformation.ControlsScanning.Value.controls)}");
 
             }
-            BiddingState.UpdateBiddingState(bidIdFromRule, nextfase, bidId, lzoomOffset);
-            if (nextfase == Fase.BidGame)
+            BiddingState.UpdateBiddingState(bidIdFromRule, nextFase, bidId, lZoomOffset);
+            if (nextFase == Fase.BidGame)
                 auction.responderHasSignedOff = true;
         }
 
         /// <summary>
-        /// Construct southhand to compare with the actual southhand
+        /// Construct south hand to compare with the actual south hand
         /// </summary>
         public string ConstructSouthHandSafe(Dictionary<Player, string> hand, Auction auction)
         {
@@ -496,17 +492,17 @@ namespace BiddingLogic
 
             try
             {
-                var constructedSouthHand = biddingInformation.ConstructSouthHand(northHand);
-                if (constructedSouthHand.Count() > 1)
+                var constructedSouthHand = biddingInformation.ConstructSouthHand(northHand).ToList();
+                if (constructedSouthHand.Count > 1)
                 {
-                    constructedSouthhandOutcome = ConstructedSouthhandOutcome.MultipleMatchesFound;
+                    constructedSouthHandOutcome = ConstructedSouthHandOutcome.MultipleMatchesFound;
                     return $"Multiple matches found. Matches: {string.Join('|', constructedSouthHand)}. NorthHand: {northHand}. SouthHand: {southHand}";
                 }
 
                 if (constructedSouthHand.First() == UtilTosr.HandWithX(southHand))
                 {
-                    constructedSouthhandOutcome = ConstructedSouthhandOutcome.SouthhandMatches;
-                    var queens = biddingInformation.GetQueensFromAuction(auction, reverseDictionaries, BiddingState);
+                    constructedSouthHandOutcome = ConstructedSouthHandOutcome.SouthHandMatches;
+                    var queens = biddingInformation.GetQueensFromAuction(auction, BiddingState);
                     if (!BiddingInformation.CheckQueens(queens, southHand))
                         return $"Match is found but queens are wrong : Expected queens: {queens}. SouthHand: {southHand}";
 
@@ -514,13 +510,13 @@ namespace BiddingLogic
                 }
                 else
                 {
-                    constructedSouthhandOutcome = ConstructedSouthhandOutcome.IncorrectSouthhand;
+                    constructedSouthHandOutcome = ConstructedSouthHandOutcome.IncorrectSouthHand;
                     return $"SouthHand is not equal to expected. Expected: {constructedSouthHand.First()}. NorthHand: {northHand}. SouthHand: {southHand}";
                 }
             }
             catch (Exception e)
             {
-                constructedSouthhandOutcome = !biddingInformation.ControlsScanning.IsValueCreated ? ConstructedSouthhandOutcome.AuctionNotFoundInControls : ConstructedSouthhandOutcome.NoMatchFound;
+                constructedSouthHandOutcome = !biddingInformation.ControlsScanning.IsValueCreated ? ConstructedSouthHandOutcome.AuctionNotFoundInControls : ConstructedSouthHandOutcome.NoMatchFound;
                 return $"{e.Message} SouthHand: {southHand}. Projected AKQ controls as 4333:{UtilTosr.GetHandWithOnlyControlsAs4333(southHand, "AKQ")}. ";
             }
         }

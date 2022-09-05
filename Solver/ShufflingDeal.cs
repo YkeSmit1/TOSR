@@ -19,30 +19,30 @@ namespace Solver
             Max = max;
         }
 
-        public int Min { get; set; }
-        public int Max { get; set; }
+        public int Min { get; init; }
+        public int Max { get; init; }
     }
     public class North
     {
-        public string[] Hand { get; set; }
-        public MinMax Hcp { get; set; }
+        public string[] Hand { get; init; }
+        public MinMax Hcp { get; init; }
     }
     public class South
     {
-        public string[] Hand { get; set; }
-        public MinMax Hcp { get; set; } = new MinMax(8, 37);
+        public string[] Hand { get; init; }
+        public MinMax Hcp { get; set; } = new(8, 37);
         public MinMax Controls { get; set; }
         public string[] SpecificControls { get; set; }
-        public string Queens { get; set; }
+        public string Queens { get; init; }
         public string Shape { get; set; }
     }
 
     public class ShufflingDeal
     {
-        public North North { get; set; } = new North();
-        public South South { get; set; } = new South();
-        private readonly Random seed = new Random();
-        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        public North North { get; set; } = new();
+        public South South { get; set; } = new();
+        private readonly Random seed = new();
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         public string[] Execute()
         {
@@ -57,7 +57,7 @@ namespace Solver
             return boards.ToArray();
         }
 
-        public int NrOfHands { get; set; } = 10;
+        public int NrOfHands { get; init; } = 10;
 
         private void GenerateTclScript()
         {
@@ -72,21 +72,20 @@ namespace Solver
                 var topCards = !string.IsNullOrWhiteSpace(South.Queens)
                     ? South.SpecificControls.Zip(South.Queens.Select(x => x == 'Y' ? "Q" : ""), (controls, queens) => controls + queens).ToArray()
                     : South.SpecificControls;
-                sb.AppendLine($"stack_cards south " +
-                    (!string.IsNullOrWhiteSpace(topCards[0]) ? $"spades {topCards[0]} " : "") +
-                    (!string.IsNullOrWhiteSpace(topCards[1]) ? $"hearts {topCards[1]} " : "") +
-                    (!string.IsNullOrWhiteSpace(topCards[2]) ? $"diamonds {topCards[2]} " : "") +
-                    (!string.IsNullOrWhiteSpace(topCards[3]) ? $"clubs {topCards[3]} " : ""));
+                sb.AppendLine(
+                    @$"stack_cards south {
+                        (!string.IsNullOrWhiteSpace(topCards[0]) ? $"spades {topCards[0]} " : "")}{
+                            (!string.IsNullOrWhiteSpace(topCards[1]) ? $"hearts {topCards[1]} " : "")}{
+                                (!string.IsNullOrWhiteSpace(topCards[2]) ? $"diamonds {topCards[2]} " : "")}{
+                                    (!string.IsNullOrWhiteSpace(topCards[3]) ? $"clubs {topCards[3]} " : "")}");
             }
             if (South.Shape != null)
             {
                 Debug.Assert(South.Shape.Length == 4);
                 sb.AppendLine($"shapeclass exact_shape {{expr $s=={South.Shape[0]} && $h=={South.Shape[1]} && $d=={South.Shape[2]} && $c=={South.Shape[3]}}}");
-                if (South.Controls != null)
-                    sb.AppendLine($"deal::input smartstack south exact_shape controls {South.Controls.Min} {South.Controls.Max}");
-                else
-                    sb.AppendLine($"deal::input smartstack south exact_shape");
-
+                sb.AppendLine(South.Controls != null
+                    ? $"deal::input smartstack south exact_shape controls {South.Controls.Min} {South.Controls.Max}"
+                    : $"deal::input smartstack south exact_shape");
             }
             sb.AppendLine("");
             if (!string.IsNullOrWhiteSpace(South.Queens))
@@ -102,7 +101,7 @@ namespace Solver
 
             if (!string.IsNullOrWhiteSpace(South.Queens))
             {
-                foreach (var queen in South.Queens.Select((x, Index) => (x, Index)).Where(queen => queen.x == 'N'))
+                foreach (var queen in South.Queens.Select((x, index) => (x, Index: index)).Where(queen => queen.x == 'N'))
                     sb.AppendLine($"\treject if {{[has_queen south {GetDealSuit(queen.Index)}]}}");
             }
 
@@ -125,7 +124,7 @@ namespace Solver
 
             sb.AppendLine("\taccept");
             sb.AppendLine("}");
-            var shuffleFilepath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "deal319", "shuffle.tcl");
+            var shuffleFilepath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty, "deal319", "shuffle.tcl");
             File.WriteAllText(shuffleFilepath, sb.ToString());
 
             static string GetDealSuit(int suitIndex) => suitIndex switch
@@ -141,7 +140,7 @@ namespace Solver
 
         private string[] RunDeal(int nrOfHands)
         {
-            var directory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "deal319");
+            var directory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty, "deal319");
 
             var startInfo = new ProcessStartInfo
             {
@@ -165,7 +164,7 @@ namespace Solver
             {
                 using var errorReader = process.StandardError;
                 var message = $"Dealer has incorrect exit code: {process.ExitCode}. Error:{errorReader.ReadToEnd()}";
-                logger.Warn(message);
+                Logger.Warn(message);
                 throw new Exception(message);
             }
 

@@ -9,28 +9,21 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Common.Tosr;
 using Wpf.BidControls.ViewModels;
 using Path = System.IO.Path;
+// ReSharper disable PossibleInvalidOperationException
 
 namespace Wpf.Tosr
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
         public MainWindow()
         {
@@ -43,6 +36,7 @@ namespace Wpf.Tosr
         private AuctionViewModel AuctionViewModel => (AuctionViewModel)AuctionView.DataContext;
         private HandViewModel HandViewModelNorth => (HandViewModel)panelNorth.DataContext;
         private HandViewModel HandViewModelSouth => (HandViewModel)panelSouth.DataContext;
+        // ReSharper disable once InconsistentNaming
         private Auction Auction = new();
 
 
@@ -52,33 +46,33 @@ namespace Wpf.Tosr
         private BidManager bidManager;
         private ReverseDictionaries reverseDictionaries;
 
-        private static readonly Dictionary<Fase, bool> fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
-        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Dictionary<Fase, bool> FasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly ManualResetEvent resetEvent = new(false);
         private Pbn pbn = new();
         private readonly Pbn interactivePbn = new();
         private readonly Pbn filteredPbn = new();
         private int boardIndex;
         private string pbnFilepath;
-        private CancellationTokenSource cancelBatchbidding = new();
+        private CancellationTokenSource cancelBatchBidding = new();
 
         private readonly string defaultSystemParameters = "BiddingLogic.SystemParameters.json";
         private readonly string defaultOptimizationParameters = "BiddingLogic.OptimizationParameters.json";
 
         private async void Form1Load(object sender, EventArgs e)
         {
-            logger.Info("Starting program");
+            Logger.Info("Starting program");
             FillFilteredComboBox();
 
             // Need to set in code because of a .net core bug
             numericUpDown1.Maximum = 100_000;
             numericUpDown1.Value = 1000;
-            if (Pinvoke.Setup("Tosr.db3") != 0)
+            if (PInvoke.Setup("Tosr.db3") != 0)
             {
                 MessageBox.Show("Cannot find file Tosr.db3", "Error");
                 return;
             }
-            logger.Info($"Initialized engine with database '{"Tosr.db3"}'");
+            Logger.Info($"Initialized engine with database '{"Tosr.db3"}'");
 
             shufflingDeal.North = new North { Hcp = new MinMax(16, 37) };
             shufflingDeal.South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) };
@@ -90,13 +84,13 @@ namespace Wpf.Tosr
             UseSavedSystemParameters();
             UseSavedOptimizationParameters();
             if (File.Exists("interactive.pbn"))
-                interactivePbn.Load("interactive.pbn"); ;
+                await interactivePbn.LoadAsync("interactive.pbn");
             if (File.Exists(Settings.Default.pbnFilePath))
             {
                 try
                 {
                     pbnFilepath = Settings.Default.pbnFilePath;
-                    pbn.Load(pbnFilepath);
+                    await pbn.LoadAsync(pbnFilepath);
                     toolStripComboBoxFilter.SelectedItem = Settings.Default.filter;
                     ApplyFilter();
                     boardIndex = Math.Min(Settings.Default.boardNumber, filteredPbn.Boards.Count - 1);
@@ -104,7 +98,7 @@ namespace Wpf.Tosr
                 }
                 catch (Exception exception)
                 {
-                    MessageBox.Show($"Error loading PBN file. {exception.Message}", "Error");
+                    MessageBox.Show($"Error loading Pbn file. {exception.Message}", "Error");
                 }
             }
             if (pbn.Boards.Count == 0)
@@ -118,8 +112,8 @@ namespace Wpf.Tosr
             await Task.Run(() =>
             {
                 var progress = new Progress<string>(report => Dispatcher.Invoke(() => toolStripStatusLabel1.Content = $"Generating dictionary {report}..."));
-                reverseDictionaries = new ReverseDictionaries(fasesWithOffset, progress);
-                bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, true);
+                reverseDictionaries = new ReverseDictionaries(FasesWithOffset, progress);
+                bidManager = new BidManager(new BidGeneratorDescription(), FasesWithOffset, reverseDictionaries, true);
                 Dispatcher.Invoke(() => bidManager.Init(Auction));
                 resetEvent.Set();
             });
@@ -213,11 +207,12 @@ namespace Wpf.Tosr
             {
                 BiddingBoxView.IsEnabled = false;
                 panelNorth.Visibility = Visibility.Visible;
-                AddBoardToInteractivePBNFile(deal, auction);
+                AddBoardToInteractivePbnFile(deal, auction);
             }
         }
 
-        private void AddBoardToInteractivePBNFile(Dictionary<Player, string> deal, Auction auction)
+        // ReSharper disable once ParameterHidesMember
+        private void AddBoardToInteractivePbnFile(Dictionary<Player, string> deal, Auction auction)
         {
             interactivePbn.Boards.Add(new BoardDto
             {
@@ -279,10 +274,10 @@ namespace Wpf.Tosr
         {
             resetEvent.WaitOne();
             panelNorth.Visibility = Visibility.Hidden;
-            var batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, toolStripMenuItemUseSolver.IsChecked);
+            var batchBidding = new BatchBidding(reverseDictionaries, FasesWithOffset, toolStripMenuItemUseSolver.IsChecked);
             toolStripStatusLabel1.Content = "Batch bidding hands...";
-            cancelBatchbidding.Dispose();
-            cancelBatchbidding = new CancellationTokenSource();
+            cancelBatchBidding.Dispose();
+            cancelBatchBidding = new CancellationTokenSource();
             string report = "";
             var oldCursor = Cursor;
             try
@@ -290,8 +285,8 @@ namespace Wpf.Tosr
                 Cursor = Cursors.Wait;
                 await Task.Run(() =>
                 {
-                    var progress = new Progress<int>(report => Dispatcher.Invoke(() => toolStripStatusLabel1.Content = $"Hands done: {report}"));
-                    (pbn, report) = batchBidding.Execute(pbn.Boards.Select(x => x.Deal), progress, Path.GetFileNameWithoutExtension(pbnFilepath), cancelBatchbidding.Token);
+                    var progress = new Progress<int>(message => Dispatcher.Invoke(() => toolStripStatusLabel1.Content = $"Hands done: {message}"));
+                    (pbn, report) = batchBidding.Execute(pbn.Boards.Select(x => x.Deal), progress, Path.GetFileNameWithoutExtension(pbnFilepath), cancelBatchBidding.Token);
                 });
             }
             finally
@@ -309,15 +304,15 @@ namespace Wpf.Tosr
 
         private void GenerateBoards(int batchSize)
         {
-            var shufflingDeal = new ShufflingDeal()
+            var lShufflingDeal = new ShufflingDeal()
             {
                 NrOfHands = batchSize,
                 North = new North { Hcp = new MinMax(16, 37) },
                 South = new South { Hcp = new MinMax(8, 37), Controls = new MinMax(2, 12) }
             };
 
-            var boards = shufflingDeal.Execute();
-            pbn.Boards = boards.Select((board, Index) => new BoardDto { Deal = Util.GetBoardsTosr(board), BoardNumber = Index + 1 }).ToList();
+            var boards = lShufflingDeal.Execute();
+            pbn.Boards = boards.Select((board, index) => new BoardDto { Deal = Util.GetBoardsTosr(board), BoardNumber = index + 1 }).ToList();
             pbnFilepath = "";
         }
 
@@ -327,7 +322,7 @@ namespace Wpf.Tosr
             try
             {
                 Cursor = Cursors.Wait;
-                GenerateBoards((int)numericUpDown1.Value);
+                if (numericUpDown1.Value != null) GenerateBoards(numericUpDown1.Value.Value);
             }
             finally
             {
@@ -339,6 +334,7 @@ namespace Wpf.Tosr
         {
             var localShufflingDeal = ObjectCloner.ObjectCloner.DeepClone(shufflingDeal);
             var shuffleRestrictionsForm = new ShuffleRestrictionsWindow(localShufflingDeal);
+            // ReSharper disable once PossibleInvalidOperationException
             if (shuffleRestrictionsForm.ShowDialog().Value)
                 shufflingDeal = localShufflingDeal;
         }
@@ -353,9 +349,10 @@ namespace Wpf.Tosr
                     DefaultExt = "pbn"
                 };
 
+                // ReSharper disable once PossibleInvalidOperationException
                 if (openFileDialogDatabase.ShowDialog().Value)
                 {
-                    if (Pinvoke.Setup("Tosr.db3") != 0)
+                    if (PInvoke.Setup("Tosr.db3") != 0)
                     {
                         MessageBox.Show($"Cannot find file {openFileDialogDatabase.FileName}", "Error");
                     }
@@ -376,21 +373,21 @@ namespace Wpf.Tosr
         {
             try
             {
-                var saveFileDialogPBN = new SaveFileDialog
+                var saveFileDialogPbn = new SaveFileDialog
                 {
                     DefaultExt = "pbn"
                 };
 
-                if (saveFileDialogPBN.ShowDialog().Value)
+                if (saveFileDialogPbn.ShowDialog().Value)
                 {
-                    pbn.Save(saveFileDialogPBN.FileName);
-                    pbnFilepath = saveFileDialogPBN.FileName;
+                    pbn.Save(saveFileDialogPbn.FileName);
+                    pbnFilepath = saveFileDialogPbn.FileName;
                     Title = $"{Path.GetFileName(pbnFilepath)} Board: {boardIndex} from {pbn.Boards.Count}";
                 }
             }
             catch (Exception exception)
             {
-                MessageBox.Show($"Error saving PBN file. {exception.Message}", "Error");
+                MessageBox.Show($"Error saving Pbn file. {exception.Message}", "Error");
             }
         }
 
@@ -398,14 +395,15 @@ namespace Wpf.Tosr
         {
             try
             {
-                var openFileDialogPBN = new OpenFileDialog()
+                var openFileDialogPbn = new OpenFileDialog()
                 {
                     DefaultExt = "pbn"
                 };
-                if (openFileDialogPBN.ShowDialog().Value)
+                // ReSharper disable once PossibleInvalidOperationException
+                if (openFileDialogPbn.ShowDialog().Value)
                 {
-                    pbn.Load(openFileDialogPBN.FileName);
-                    pbnFilepath = openFileDialogPBN.FileName;
+                    pbn.Load(openFileDialogPbn.FileName);
+                    pbnFilepath = openFileDialogPbn.FileName;
                     ApplyFilter();
                     boardIndex = 0;
                     LoadCurrentBoard();
@@ -413,7 +411,7 @@ namespace Wpf.Tosr
             }
             catch (Exception exception)
             {
-                MessageBox.Show($"Error loading PBN file. {exception.Message}", "Error");
+                MessageBox.Show($"Error loading Pbn file. {exception.Message}", "Error");
             }
         }
 
@@ -425,7 +423,7 @@ namespace Wpf.Tosr
                 LoadCurrentBoard();
 
                 resetEvent.WaitOne();
-                var batchBidding = new BatchBidding(reverseDictionaries, fasesWithOffset, true);
+                var batchBidding = new BatchBidding(reverseDictionaries, FasesWithOffset, true);
                 var localPbn = batchBidding.Execute(new[] { pbn.Boards[boardIndex].Deal }, new Progress<int>(), "", CancellationToken.None);
                 Auction = localPbn.Item1.Boards.First().Auction ?? new Auction();
                 AuctionViewModel.UpdateAuction(Auction);
@@ -474,20 +472,20 @@ namespace Wpf.Tosr
             }
         }
 
-        private void ToolStripTextBoxBoardLeave(object sender, EventArgs e)
-        {
-            if (int.TryParse(toolStripTextBoxBoard.Text, out var board) && filteredPbn.Boards.Any(b => b.BoardNumber == board))
-            {
-                boardIndex = filteredPbn.Boards.IndexOf(filteredPbn.Boards.Single(b => b.BoardNumber == board));
-                LoadCurrentBoard();
-            }
-        }
+        //private void ToolStripTextBoxBoardLeave(object sender, EventArgs e)
+        //{
+        //    if (int.TryParse(toolStripTextBoxBoard.Text, out var board) && filteredPbn.Boards.Any(b => b.BoardNumber == board))
+        //    {
+        //        boardIndex = filteredPbn.Boards.IndexOf(filteredPbn.Boards.Single(b => b.BoardNumber == board));
+        //        LoadCurrentBoard();
+        //    }
+        //}
 
         private void LoadCurrentBoard()
         {
             if (pbn.Boards.Count == 0)
             {
-                MessageBox.Show("No valid PBN file is loaded.", "Error");
+                MessageBox.Show("No valid Pbn file is loaded.", "Error");
                 return;
             }
 
@@ -517,7 +515,7 @@ namespace Wpf.Tosr
             Settings.Default.useSolver = toolStripMenuItemUseSolver.IsChecked;
             Settings.Default.alternateSuits = toolStripMenuItemAlternateSuits.IsChecked;
             Settings.Default.boardNumber = boardIndex;
-            Settings.Default.numberOfHandsToBid = (int)numericUpDown1.Value;
+            Settings.Default.numberOfHandsToBid = numericUpDown1.Value.Value;
             Settings.Default.pbnFilePath = pbn.Boards.Count > 0 ? pbnFilepath : "";
             Settings.Default.filter = (string)toolStripComboBoxFilter.SelectedItem;
             Settings.Default.Save();
@@ -525,7 +523,7 @@ namespace Wpf.Tosr
 
         private void ToolStripMenuItemAbortClick(object sender, EventArgs e)
         {
-            cancelBatchbidding.Cancel();
+            cancelBatchBidding.Cancel();
         }
 
         private void ToolStripMenuItemLoadSystemParametersClick(object sender, EventArgs e)
@@ -585,16 +583,16 @@ namespace Wpf.Tosr
         {
             try
             {
-                var saveFileDialogPBN = new SaveFileDialog()
+                var saveFileDialogPbn = new SaveFileDialog()
                 {
                     DefaultExt = "pbn"
                 };
-                if (saveFileDialogPBN.ShowDialog().Value)
-                    filteredPbn.Save(saveFileDialogPBN.FileName);
+                if (saveFileDialogPbn.ShowDialog().Value)
+                    filteredPbn.Save(saveFileDialogPbn.FileName);
             }
             catch (Exception exception)
             {
-                MessageBox.Show($"Error saving filtered PBN file. {exception.Message}", "Error");
+                MessageBox.Show($"Error saving filtered Pbn file. {exception.Message}", "Error");
             }
         }
 

@@ -1,26 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Wpf.BidControls
 {
     public class CardImageSettings
     {
         public string CardImage { get; set; }
-        public bool FirstCardIsAce { get; set; }
-        public int TopClubs { get; set; }
-        public int TopDiamonds { get; set; }
-        public int TopHearts { get; set; }
-        public int TopSpades { get; set; }
-        public int XOffSet { get; set; }
-        public int CardWidth { get; set; }
-        public int CardHeight { get; set; }
-        public int XCardPadding { get; set; }
-        public int CardDistance { get; set; }
+        public bool FirstCardIsAce { get; init; }
+        public int TopClubs { get; init; }
+        public int TopDiamonds { get; init; }
+        public int TopHearts { get; init; }
+        public int TopSpades { get; init; }
+        public int XOffSet { get; init; }
+        public int CardWidth { get; init; }
+        public int CardHeight { get; init; }
+        public int XCardPadding { get; init; }
+        public int CardDistance { get; init; }
 
-        public static CardImageSettings DefaultCardImageSettings = new CardImageSettings
+        private static readonly CardImageSettings DefaultCardImageSettings = new()
         {
             CardImage = "/Wpf.BidControls;component/Views/cardfaces.png",
             FirstCardIsAce = true,
@@ -35,7 +31,8 @@ namespace Wpf.BidControls
             CardDistance = 20
         };
 
-        public static CardImageSettings BBOCardImageSettings = new CardImageSettings
+        // ReSharper disable once InconsistentNaming
+        private static readonly CardImageSettings BBOCardImageSettings = new()
         {
             CardImage = "/Wpf.BidControls;component/Views/cardfaces2.jpg",
             FirstCardIsAce = false,

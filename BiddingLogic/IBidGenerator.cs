@@ -1,6 +1,4 @@
-﻿using Common;
-
-namespace BiddingLogic
+﻿namespace BiddingLogic
 {
     public interface IBidGenerator
     {

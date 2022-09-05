@@ -1,14 +1,11 @@
 ﻿using BiddingLogic;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Common.Tosr;
 using Xunit;
 
 namespace Common.Test
 {
-    public class AssertMethods
+    public static class AssertMethods
     {
         public static void AssertAuction(string expectedBidsNorth, string expectedBidsSouth, Auction auction)
         {
@@ -25,7 +22,7 @@ namespace Common.Test
             var constructedSouthHand = biddingInformation.ConstructSouthHand(northHand);
             Assert.Equal(UtilTosr.HandWithX(southHand), constructedSouthHand.First());
 
-            var queens = biddingInformation.GetQueensFromAuction(auction, reverseDictionaries, biddingState);
+            var queens = biddingInformation.GetQueensFromAuction(auction, biddingState);
             Assert.True(BiddingInformation.CheckQueens(queens, southHand));
         }
     }

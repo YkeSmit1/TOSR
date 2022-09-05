@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Common;
 using MvvmHelpers;
 
@@ -11,7 +8,7 @@ namespace Wpf.BidControls.ViewModels
 {
     public class HandViewModel : ObservableObject
     {
-        public ObservableCollection<Card> Cards { get; set; } = new();
+        public ObservableCollection<Card> Cards { get; } = new();
         public CardImageSettings CardImageSettings { get; set; }
         public HandViewModel()
         {

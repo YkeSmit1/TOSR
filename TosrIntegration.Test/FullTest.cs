@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Xunit;
 using Xunit.Abstractions;
 using BiddingLogic;
@@ -42,8 +41,9 @@ namespace TosrIntegration.Test
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
 
+        // ReSharper disable once NotAccessedField.Local
         private readonly ITestOutputHelper output;
-        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         public FullTest(BaseTestFixture fixture, ITestOutputHelper output)
         {
@@ -59,9 +59,9 @@ namespace TosrIntegration.Test
         {
             if (testName is null)
                 throw new ArgumentNullException(nameof(testName));
-            logger.Info($"Executing testcase {testName}");
+            Logger.Info($"Executing testcase {testName}");
 
-            _ = Pinvoke.Setup("Tosr.db3");
+            _ = PInvoke.Setup("Tosr.db3");
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction(string.Empty, southHand);
             var actualBidsSouth = auction.GetBidsAsString(Player.South);
@@ -72,7 +72,7 @@ namespace TosrIntegration.Test
 
             var constructedSouthHand = bidManager.biddingInformation.ConstructSouthHand(northHand);
             Assert.Equal(UtilTosr.HandWithX(southHand), constructedSouthHand.First());
-            Assert.True(BiddingInformation.CheckQueens(bidManager.biddingInformation.GetQueensFromAuction(auction, reverseDictionaries, bidManager.BiddingState), southHand));
+            Assert.True(BiddingInformation.CheckQueens(bidManager.biddingInformation.GetQueensFromAuction(auction, bidManager.BiddingState), southHand));
         }
     }
 }

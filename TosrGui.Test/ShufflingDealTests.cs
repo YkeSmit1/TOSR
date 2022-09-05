@@ -1,7 +1,6 @@
 ﻿using Xunit;
 using Solver;
 using System;
-using System.Text;
 using Common;
 using System.Linq;
 
@@ -57,7 +56,7 @@ namespace TosrGui.Test
         public void ShapeSpecificControlTest()
         {
             const string expectedNorthHand = "QJ32.AQJ2.A32.K2";
-            var specificControls = new string[] { "AK", "", "K", "" };
+            var specificControls = new[] { "AK", "", "K", "" };
             const string shape = "5413";
             const int controls = 4;
 
@@ -79,7 +78,7 @@ namespace TosrGui.Test
             const string queens = "YNNX";
             const string shape = "5413";
             const int controls = 4;
-            var specificControls = new string[] { "AK", "", "K", "" };
+            var specificControls = new[] { "AK", "", "K", "" };
 
             var shufflingDeal = new ShufflingDeal()
             {
@@ -99,7 +98,7 @@ namespace TosrGui.Test
             const string queens = "YNNX";
             const string shape = "5413";
             const int controls = 4;
-            var specificControls = new string[] { "AK", "", "K", "" };
+            var specificControls = new[] { "AK", "", "K", "" };
             const int minHcp = 14;
             const int maxHcp = 15;
 
@@ -129,7 +128,7 @@ namespace TosrGui.Test
             if (shufflingDeal.South.Hcp != null)
                 Assert.InRange(Util.GetHcpCount(hands[Player.South]), shufflingDeal.South.Hcp.Min, shufflingDeal.South.Hcp.Max);
 
-            foreach (var suit in suits.Select((x, Index) => (x, Index)))
+            foreach (var suit in suits.Select((x, index) => (x, Index: index)))
             {
                 var specificControls = shufflingDeal.South.SpecificControls;
                 if (specificControls != null)

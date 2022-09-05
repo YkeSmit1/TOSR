@@ -1,12 +1,10 @@
-﻿using Common;
-using Common.Test;
+﻿using Common.Test;
 using NLog;
-using System;
 using System.Collections.Generic;
-using System.Text;
 using BiddingLogic;
 using Xunit;
 using Xunit.Abstractions;
+// ReSharper disable NotAccessedField.Local
 
 namespace TosrIntegration.Test
 {
@@ -80,7 +78,7 @@ namespace TosrIntegration.Test
     public class ParametersTest : IClassFixture<BaseTestFixture>
     {
         private readonly ITestOutputHelper output;
-        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
@@ -96,7 +94,7 @@ namespace TosrIntegration.Test
         [MemberData(nameof(TestCaseProviderParameters.TestCasesSystemParameters), MemberType = typeof(TestCaseProviderParameters))]
         public void TestAuctionsSystemParameters(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth, string parameters)
         {
-            SetupTest.setupTest(testName, logger);
+            SetupTest.Setup(testName, Logger);
             var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, true);
             BidManager.SetSystemParameters(parameters);
             var auction = bidManager.GetAuction(northHand, southHand);

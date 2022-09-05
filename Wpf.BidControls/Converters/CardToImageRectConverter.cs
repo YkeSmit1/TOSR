@@ -1,10 +1,7 @@
 ﻿using Common;
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 
@@ -15,6 +12,7 @@ namespace Wpf.BidControls.Converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var card = (Card)value;
+            Debug.Assert(card != null, nameof(card) + " != null");
             var settings = card.CardImageSettings;
             var suit = card.Suit;
             var face = settings.FirstCardIsAce ? (int)card.Face : card.Face == Face.Ace ? 12 : (int)card.Face - 1;

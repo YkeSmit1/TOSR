@@ -6,14 +6,16 @@ using System.Text;
 
 namespace Solver
 {
-    public class Api
+    public static class Api
     {
         /// <summary>
         /// Solve a hand dd
         /// </summary>
         /// <param name="hand">Example"N:AT5.AJT.A632.KJ7 Q763.KQ9.KQJ94.T 942.87653..98653 KJ8.42.T875.AQ42"</param>
+        /// <param name="trumpSuit"></param>
+        /// <param name="first"></param>
         /// <returns></returns>
-        public static int SolveBoardPBN(string hand, int trumpSuit, int first)
+        public static int SolveBoardPbn(string hand, int trumpSuit, int first)
         {
             DealPbn deal = CreateDeal(hand, trumpSuit, first);
 
@@ -21,7 +23,7 @@ namespace Solver
             var solution = 1; // one solution;
             var mode = 0; // automatic. Fastest;
 
-            var res = Pinvoke.SolveBoardPBN(deal, target, solution, mode, out var ddsResult, 0);
+            var res = Pinvoke.SolveBoardPbn(deal, target, solution, mode, out var ddsResult, 0);
             if (res != 1)
             {
                 var line = new StringBuilder(80);
@@ -37,27 +39,28 @@ namespace Solver
         /// </summary>
         public static IEnumerable<int> SolveAllBoards(IEnumerable<string> hands, int trumpSuit, int first)
         {
-            var nrOfHands = hands.Count();
+            var handList = hands.ToList();
+            var nrOfHands = handList.Count;
 
-            var dealsPBN = new DealPbn[BoardsPBN.MAXNOOFBOARDS];
+            var dealsPbn = new DealPbn[BoardsPbn.MaxNoOfBoards];
             for (var i = 0; i < nrOfHands; i++)
             {
-                dealsPBN[i] = CreateDeal(hands.ElementAt(i), trumpSuit, first);
+                dealsPbn[i] = CreateDeal(handList.ElementAt(i), trumpSuit, first);
             }
 
-            var boardsBPN = new BoardsPBN
+            var boardsBpn = new BoardsPbn
             {
                 noOfBoards = nrOfHands,
-                dealsPBN = dealsPBN,
-                targets = Enumerable.Repeat(-1, BoardsPBN.MAXNOOFBOARDS).ToArray(),
-                solutions = Enumerable.Repeat(1, BoardsPBN.MAXNOOFBOARDS).ToArray(),
-                modes = Enumerable.Repeat(0, BoardsPBN.MAXNOOFBOARDS).ToArray()
+                dealsPbn = dealsPbn,
+                targets = Enumerable.Repeat(-1, BoardsPbn.MaxNoOfBoards).ToArray(),
+                solutions = Enumerable.Repeat(1, BoardsPbn.MaxNoOfBoards).ToArray(),
+                modes = Enumerable.Repeat(0, BoardsPbn.MaxNoOfBoards).ToArray()
             };
 
-            IntPtr boardsBPNPtr = Marshal.AllocHGlobal(Marshal.SizeOf(boardsBPN));
-            Marshal.StructureToPtr(boardsBPN, boardsBPNPtr, false);
+            IntPtr boardsBpnPtr = Marshal.AllocHGlobal(Marshal.SizeOf(boardsBpn));
+            Marshal.StructureToPtr(boardsBpn, boardsBpnPtr, false);
 
-            var res = Pinvoke.SolveAllBoards(boardsBPNPtr, out var solvedBoards);
+            var res = Pinvoke.SolveAllBoards(boardsBpnPtr, out var solvedBoards);
 
             if (res != 1)
             {
@@ -71,13 +74,13 @@ namespace Solver
                 yield return 13 - solvedBoards.solvedBoards[i].score[0];
             }
         }
-        private static DealPbn CreateDeal(string hand, int trumpSuit, int lfirst)
+        private static DealPbn CreateDeal(string hand, int trumpSuit, int first)
         {
             hand = hand.PadRight(80, '\0');
             var deal = new DealPbn
             {
                 trump = trumpSuit,
-                first = lfirst,
+                first = first,
                 currentTrickRank = new int[3],
                 currentTrickSuit = new int[3],
                 remainCards = hand.ToCharArray()

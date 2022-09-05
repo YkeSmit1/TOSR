@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Common;
 using Common.Tosr;
 
@@ -9,13 +7,13 @@ namespace Solver
 {
     public class SouthInformation
     {
-        public IEnumerable<string> Shapes { get; set; }
-        public MinMax Hcp { get; set; }
+        public IEnumerable<string> Shapes { get; init; }
+        public MinMax Hcp { get; init; }
         public MinMax Controls { get; set; }
         public IEnumerable<string[]> SpecificControls { get; set; }
         public string Queens { get; set; }
-        public int ControlBidCount { get; set; }
-        public int ControlsScanningBidCount { get; set; }
+        public int ControlBidCount { get; init; }
+        public int ControlsScanningBidCount { get; init; }
 
     }
 
@@ -52,17 +50,17 @@ namespace Solver
                 shufflingDeal.South.Shape = shape;
 
                 if (southInformation.SpecificControls == null)
-                    ShuffleAndUpdate(shufflingDeal, shape);
+                    ShuffleAndUpdate(shape);
                 else
                     foreach (var specificControls in southInformation.SpecificControls)
                     {
                         shufflingDeal.South.SpecificControls = specificControls;
-                        ShuffleAndUpdate(shufflingDeal, shape);
+                        ShuffleAndUpdate(shape);
                     }
             }
             return tricksPerContract;
 
-            void ShuffleAndUpdate(ShufflingDeal shufflingDeal, string shape)
+            void ShuffleAndUpdate(string shape)
             {
                 var handsForSolver = shufflingDeal.Execute();
                 // TODO extend for multiple trump suits and for NT

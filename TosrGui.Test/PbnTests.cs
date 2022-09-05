@@ -1,8 +1,5 @@
 ﻿using Xunit;
 using Common;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -28,7 +25,7 @@ namespace TosrGui.Test
             pbn.Load(filePath);
             pbn.Save(filePathActual);
 
-            var expected = File.ReadAllLines(filePath).Select(x => x.Trim()).Select(x => Regex.Replace(Regex.Replace(x, " =[0-9]= ", "\t"), " {2,}", "\t"));
+            var expected = File.ReadAllLines(filePath).Select(x => x.Trim()).Select(x => Regex.Replace(Regex.Replace(x, " =[0-9]= ", "\t"), " {2,}", "\t")).ToList();
             var actual = File.ReadAllLines(filePathActual);
             foreach (var line in actual)
             {

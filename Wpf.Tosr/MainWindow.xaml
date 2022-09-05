@@ -76,9 +76,9 @@
                 <MenuItem Name="toolStripMenuItemLoadOptimizationParameters" Header="Optimization parameters" Click="ToolStripMenuItemLoadOptimizationParametersClick"/>
                 <MenuItem Name="toolStripMenuItemUseDefaultParameters" Header="Use default parameters" Click="ToolStripMenuItemUseDefaultParametersClick"/>
                 <Separator/>
-                <MenuItem Name="toolStripMenuItemLoadSet" Header="Load set from PBN" Click="ToolStripMenuItemLoadSetClick"/>
-                <MenuItem Name="toolStripMenuItemSaveSet" Header="Save set to PBN" Click="ToolStripMenuItemSaveSetClick"/>
-                <MenuItem Name="toolStripMenuItemSaveFilteredSet" Header="Save filtered set to PBN" Click="ToolStripMenuItemSaveFilteredSetClick"/>
+                <MenuItem Name="toolStripMenuItemLoadSet" Header="Load set from Pbn" Click="ToolStripMenuItemLoadSetClick"/>
+                <MenuItem Name="toolStripMenuItemSaveSet" Header="Save set to Pbn" Click="ToolStripMenuItemSaveSetClick"/>
+                <MenuItem Name="toolStripMenuItemSaveFilteredSet" Header="Save filtered set to Pbn" Click="ToolStripMenuItemSaveFilteredSetClick"/>
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Name="toolStripMenuItem13" Header="View bidding" Command="{StaticResource ViewBiddingCommand}"/>

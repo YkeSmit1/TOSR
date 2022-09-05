@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using NLog;
 using Xunit;
 using Common;
@@ -40,7 +39,7 @@ namespace TosrIntegration.Test
         private readonly Dictionary<Fase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
 
-        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         public QueensTest(BaseTestFixture fixture)
         {
@@ -55,9 +54,9 @@ namespace TosrIntegration.Test
             // This test can fail because it relies on the sampling and dds.
             if (testName is null)
                 throw new ArgumentNullException(nameof(testName));
-            logger.Info($"Executing testcase {testName}");
+            Logger.Info($"Executing testcase {testName}");
 
-            _ = Pinvoke.Setup("Tosr.db3");
+            _ = PInvoke.Setup("Tosr.db3");
             var bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, true, false);
             var auction = bidManager.GetAuction(northHand, southHand);
             var actualBidsSouth = auction.GetBidsAsString(Player.South);
@@ -69,7 +68,7 @@ namespace TosrIntegration.Test
             var constructedSouthHand = bidManager.biddingInformation.ConstructSouthHand(northHand);
             Assert.Equal(UtilTosr.HandWithX(southHand), constructedSouthHand.First());
 
-            var queens = bidManager.biddingInformation.GetQueensFromAuction(auction, reverseDictionaries, bidManager.BiddingState);
+            var queens = bidManager.biddingInformation.GetQueensFromAuction(auction, bidManager.BiddingState);
             Assert.True(BiddingInformation.CheckQueens(queens, southHand));
         }
     }

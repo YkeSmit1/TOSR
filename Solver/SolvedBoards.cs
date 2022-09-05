@@ -6,7 +6,7 @@ namespace Solver
     {
         public int noOfBoards;
 
-        [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.Struct, SizeConst = BoardsPBN.MAXNOOFBOARDS)]
+        [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.Struct, SizeConst = BoardsPbn.MaxNoOfBoards)]
         public FutureTricks[] solvedBoards;
     }
 }
