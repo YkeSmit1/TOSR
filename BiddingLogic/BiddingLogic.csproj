@@ -28,7 +28,7 @@
   <ItemGroup>
     <PackageReference Include="Common.BridgeClasses" Version="1.0.6" />
     <PackageReference Include="morelinq" Version="3.3.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="NLog" Version="4.7.15" />
     <PackageReference Include="ObjectCloner" Version="2.2.2" />
   </ItemGroup>
