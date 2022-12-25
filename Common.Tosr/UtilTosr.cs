@@ -64,26 +64,6 @@ namespace Common.Tosr
             return hcp == Util.GetHcpCount(suits);
         }
 
-        public static bool TryAddJacksTillHcp(int hcp, ref string[] suits, int[] suitLength)
-        {
-            if (hcp <= Util.GetHcpCount(suits))
-                return true;
-
-            var suitToAdd = 3;
-            while (hcp != Util.GetHcpCount(suits))
-            {
-                if (suitToAdd == 0)
-                    return false;
-
-                if (suits[suitToAdd].Length < suitLength[suitToAdd])
-                    suits[suitToAdd] += 'J';
-
-                suitToAdd--;
-            }
-
-            return hcp == Util.GetHcpCount(suits);
-        }
-
         public static int NrOfShortages(string hand)
         {
             return hand.Select(x => int.Parse(x.ToString())).Count(y => y <= 1);

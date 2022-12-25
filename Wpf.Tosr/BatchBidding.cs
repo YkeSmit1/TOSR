@@ -19,7 +19,7 @@ namespace Wpf.Tosr
 {
     public class BatchBidding
     {
-        public enum CorrectnessContractBreakdown
+        private enum CorrectnessContractBreakdown
         {
             GameCorrect,
             MissedGoodSmallSlam,
@@ -46,13 +46,13 @@ namespace Wpf.Tosr
             NoFit,
         }
 
-        public enum PullType
+        private enum PullType
         {
             NoPull,
             HasPulled,
         }
 
-        public enum ExpectedContract
+        private enum ExpectedContract
         {
             Game,
             SmallSlam,
@@ -63,7 +63,7 @@ namespace Wpf.Tosr
         {
             public int handsBid;
             // ReSharper disable once NotAccessedField.Local
-            public int handsNotBidBecauseofFreakhand;
+            public int handsNotBidBecauseOfFreakhand;
             // ReSharper disable once NotAccessedField.Local
             public int handsNotBidBecauseOfError;
             public readonly SortedDictionary<Bid, int> contracts = new();
@@ -118,7 +118,7 @@ namespace Wpf.Tosr
                     if (UtilTosr.IsFreakHand(board[Player.South].Split(',').Select(x => x.Length)))
                     {
                         Logger.Debug($"Hand {board[Player.South]} is a freak hand. Will not be bid");
-                        statistics.handsNotBidBecauseofFreakhand++;
+                        statistics.handsNotBidBecauseOfFreakhand++;
                         continue;
                     }
 
@@ -170,7 +170,7 @@ namespace Wpf.Tosr
             stringBuilder.AppendLine(@"Incorrect contract hands are written to ""IncorrectContract.txt""");
             SaveAuctions(batchName);
 
-            Logger.Info($"End batchbidding");
+            Logger.Info("End batchbidding");
             return (pbn, stringBuilder.ToString());
         }
 
@@ -203,7 +203,7 @@ namespace Wpf.Tosr
             statistics.contractCorrectness.AddOrUpdateDictionary(correctnessContract);
             if (correctnessContract is CorrectnessContract.InCorrect or CorrectnessContract.NoFit)
                 inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.constructedSouthHandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
-                    $" Auction:{auction.GetPrettyAuction("|")} Northhand: {board[Player.North]} Southhand: {board[Player.South]}");
+                    $" Auction:{auction.GetPrettyAuction("|")} NorthHand: {board[Player.North]} SouthHand: {board[Player.South]}");
             endContracts.Add(auction.currentContract);
         }
 
@@ -293,7 +293,6 @@ namespace Wpf.Tosr
                 { ExpectedContract.SmallSlam, scoresList.Count(x => x == 12) },
                 { ExpectedContract.Game, scoresList.Count(x => x < 12)}});
             }
-
         }
     }
 }

@@ -6,7 +6,6 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using Common;
 using Solver;
-using MoreLinq;
 using System.ComponentModel;
 using Common.Tosr;
 
@@ -361,7 +360,7 @@ namespace BiddingLogic
                 0 => Bid.PassBid,
                 1 => reachableContracts.Single().Key,
                 _ => reachableContracts.Count(y => y.Value.posibility == BidPossibilities.CanInvestigate) <= 1
-                        ? reachableContracts.MaxBy(y => y.Value.occurrences).First().Key
+                        ? reachableContracts.MaxBy(y => y.Value.occurrences).Key
                         : null,
             };
 
@@ -375,15 +374,14 @@ namespace BiddingLogic
 
             void GroupGameContracts()
             {
-                var bestGames = enrichedContracts.Where(x => x.Key.rank < 6 && x.Value.posibility != BidPossibilities.CannotBid).MinBy(x => x.Key);
-                if (bestGames.Any())
-                {
-                    var bestGame = bestGames.Single().Key;
-                    enrichedContracts = enrichedContracts.GroupBy(x => x.Key.rank < 6 ? bestGame : x.Key)
-                        .ToDictionary(g => g.Key, g => (g.Sum(v => v.Value.occurrences),
-                            g.Key == bestGame ? g.Any(v => v.Value.posibility == BidPossibilities.CanInvestigate) ? BidPossibilities.CanInvestigate :
-                                BidPossibilities.CannotInvestigate : g.Single().Value.posibility));
-                }
+                var pairs = enrichedContracts.Where(x => x.Key.rank < 6 && x.Value.posibility != BidPossibilities.CannotBid).ToList();
+                if (!pairs.Any())
+                    return;
+                enrichedContracts = enrichedContracts.GroupBy(x => x.Key.rank < 6 ? pairs.MinBy(x1 => x1.Key).Key : x.Key)
+                    .ToDictionary(g => g.Key, g => (g.Sum(v => v.Value.occurrences),
+                        g.Key == pairs.MinBy(x => x.Key).Key
+                            ? g.Any(v => v.Value.posibility == BidPossibilities.CanInvestigate) ? BidPossibilities.CanInvestigate : BidPossibilities.CannotInvestigate
+                            : g.Single().Value.posibility));
             }
         }
 
@@ -447,7 +445,7 @@ namespace BiddingLogic
             var possibleTricksForBid = tricksForBid.Where(bid => bid.Key >= currentBid).ToList();
             if (!possibleTricksForBid.Any())
                 return Bid.PassBid;
-            var maxBid = possibleTricksForBid.MaxBy(x => x.Value).First().Key;
+            var maxBid = possibleTricksForBid.MaxBy(x => x.Value).Key;
             return maxBid == currentBid ? Bid.PassBid : maxBid;
         }
 

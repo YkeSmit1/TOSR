@@ -16,7 +16,6 @@ using System.Windows.Input;
 using Common.Tosr;
 using Wpf.BidControls.ViewModels;
 using Path = System.IO.Path;
-// ReSharper disable PossibleInvalidOperationException
 
 namespace Wpf.Tosr
 {
@@ -56,8 +55,8 @@ namespace Wpf.Tosr
         private string pbnFilepath;
         private CancellationTokenSource cancelBatchBidding = new();
 
-        private readonly string defaultSystemParameters = "BiddingLogic.SystemParameters.json";
-        private readonly string defaultOptimizationParameters = "BiddingLogic.OptimizationParameters.json";
+        private const string DefaultSystemParameters = "BiddingLogic.SystemParameters.json";
+        private const string DefaultOptimizationParameters = "BiddingLogic.OptimizationParameters.json";
 
         private async void Form1Load(object sender, EventArgs e)
         {
@@ -145,7 +144,7 @@ namespace Wpf.Tosr
                     Settings.Default.systemParametersPath = "";
                 }
             }
-            BidManager.SetSystemParameters(UtilTosr.ReadResource(defaultSystemParameters));
+            BidManager.SetSystemParameters(UtilTosr.ReadResource(DefaultSystemParameters));
         }
 
         private void UseSavedOptimizationParameters()
@@ -163,7 +162,7 @@ namespace Wpf.Tosr
                     Settings.Default.optimizationParametersPath = "";
                 }
             }
-            BidManager.SetOptimizationParameters(UtilTosr.ReadResource(defaultOptimizationParameters));
+            BidManager.SetOptimizationParameters(UtilTosr.ReadResource(DefaultOptimizationParameters));
         }
 
         private void ClickBiddingBoxButton(object parameter)
@@ -378,7 +377,7 @@ namespace Wpf.Tosr
                     DefaultExt = "pbn"
                 };
 
-                if (saveFileDialogPbn.ShowDialog().Value)
+                if (saveFileDialogPbn.ShowDialog().GetValueOrDefault())
                 {
                     pbn.Save(saveFileDialogPbn.FileName);
                     pbnFilepath = saveFileDialogPbn.FileName;
@@ -515,7 +514,7 @@ namespace Wpf.Tosr
             Settings.Default.useSolver = ToolStripMenuItemUseSolver.IsChecked;
             Settings.Default.alternateSuits = ToolStripMenuItemAlternateSuits.IsChecked;
             Settings.Default.boardNumber = boardIndex;
-            Settings.Default.numberOfHandsToBid = NumericUpDown1.Value.Value;
+            Settings.Default.numberOfHandsToBid = NumericUpDown1.Value.GetValueOrDefault();
             Settings.Default.pbnFilePath = pbn.Boards.Count > 0 ? pbnFilepath : "";
             Settings.Default.filter = (string)ToolStripComboBoxFilter.SelectedItem;
             Settings.Default.Save();
@@ -532,7 +531,7 @@ namespace Wpf.Tosr
             {
                 DefaultExt = "json"
             };
-            if (openFileDialogSystemParameters.ShowDialog().Value)
+            if (openFileDialogSystemParameters.ShowDialog().GetValueOrDefault())
             {
                 try
                 {
@@ -552,7 +551,7 @@ namespace Wpf.Tosr
             {
                 DefaultExt = "json"
             };
-            if (openFileDialogOptimizationParameters.ShowDialog().Value)
+            if (openFileDialogOptimizationParameters.ShowDialog().GetValueOrDefault())
             {
                 try
                 {
@@ -568,8 +567,8 @@ namespace Wpf.Tosr
 
         private void ToolStripMenuItemUseDefaultParametersClick(object sender, EventArgs e)
         {
-            BidManager.SetSystemParameters(UtilTosr.ReadResource(defaultSystemParameters));
-            BidManager.SetOptimizationParameters(UtilTosr.ReadResource(defaultOptimizationParameters));
+            BidManager.SetSystemParameters(UtilTosr.ReadResource(DefaultSystemParameters));
+            BidManager.SetOptimizationParameters(UtilTosr.ReadResource(DefaultOptimizationParameters));
         }
 
         private void ToolStripComboBoxFilterSelectedIndexChanged(object sender, EventArgs e)
@@ -587,7 +586,7 @@ namespace Wpf.Tosr
                 {
                     DefaultExt = "pbn"
                 };
-                if (saveFileDialogPbn.ShowDialog().Value)
+                if (saveFileDialogPbn.ShowDialog().GetValueOrDefault())
                     filteredPbn.Save(saveFileDialogPbn.FileName);
             }
             catch (Exception exception)

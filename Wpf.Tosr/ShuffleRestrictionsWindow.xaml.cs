@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Windows;
 using Common.Tosr;
-// ReSharper disable PossibleInvalidOperationException
 
 namespace Wpf.Tosr
 {
@@ -24,20 +23,21 @@ namespace Wpf.Tosr
         {
             CheckBoxControls.IsChecked = shufflingDeal.South.Controls != null;
             CheckBoxShape.IsChecked = shufflingDeal.South.Shape != null;
-            if (CheckBoxControls.IsChecked.Value)
+            if (CheckBoxControls.IsChecked.GetValueOrDefault())
                 NumericUpDownControls.Value = shufflingDeal.South.Controls?.Min;
-            if (CheckBoxShape.IsChecked.Value)
+            if (CheckBoxShape.IsChecked.GetValueOrDefault())
                 TextBoxShape.Text = shufflingDeal.South.Shape ?? string.Empty;
         }
         private void FormToObject()
         {
-            shufflingDeal.South.Controls = CheckBoxControls.IsChecked.Value ? new MinMax { Min = NumericUpDownControls.Value.Value, Max = NumericUpDownControls.Value.Value } : null;
-            shufflingDeal.South.Shape = CheckBoxShape.IsChecked.Value ? TextBoxShape.Text : null;
+            shufflingDeal.South.Controls = CheckBoxControls.IsChecked.GetValueOrDefault()
+                ? new MinMax { Min = NumericUpDownControls.Value.GetValueOrDefault(), Max = NumericUpDownControls.Value.GetValueOrDefault() } : null;
+            shufflingDeal.South.Shape = CheckBoxShape.IsChecked.GetValueOrDefault() ? TextBoxShape.Text : null;
         }
 
         private bool Validate()
         {
-            if (!CheckBoxShape.IsChecked.Value)
+            if (!CheckBoxShape.IsChecked.GetValueOrDefault())
                 return true;
             if (!TextBoxShape.Text.All(char.IsDigit))
                 return HandleError("Shape should be all digits");

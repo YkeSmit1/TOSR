@@ -83,7 +83,7 @@ namespace BiddingLogic
         {
             Logger.Debug($"Starting ConstructSouthHand for northhand : {northHand}");
             var possibleControls = ControlsScanning.Value.controls;
-            var matches = GetMatchesWithNorthHand(Shape.Value.shapes, possibleControls, northHand).ToList();
+            var matches = GetMatchesWithNorthHand(Shape.Value.shapes, possibleControls, northHand);
             if (!matches.Any())
                 throw new InvalidOperationException($"No matches found. Possible controls: {string.Join('|', possibleControls)}. NorthHand: {northHand}.");
 
@@ -207,8 +207,8 @@ namespace BiddingLogic
             {
                 var sigOffBid = BiddingState.GetSignOffBid(pullFase, pullBid);
                 // TODO handle case where sign-off bid is 4NT
-                if (faseAuctions[pullFase].TryGetValue(sigOffBid.ToString(), out var hcps))
-                    return new MinMax(hcps.Min(), hcps.Max());
+                if (faseAuctions[pullFase].TryGetValue(sigOffBid.ToString(), out var hcpList))
+                    return new MinMax(hcpList.Min(), hcpList.Max());
             }
 
             return new MinMax(8, 37);
@@ -222,30 +222,27 @@ namespace BiddingLogic
             return queensOrdered;
         }
 
-        private static IEnumerable<string> GetMatchesWithNorthHand(List<string> shapeLengthStrs, List<string> possibleControls, string northHandStr)
+        private static List<string> GetMatchesWithNorthHand(IEnumerable<string> shapeLengths, IEnumerable<string> possibleControls, string northHand)
         {
-            var northHand = northHandStr.Split(',');
-            foreach (var controlStr in possibleControls)
-            {
-                var controls = controlStr.Split(',').Select(x => x.TrimEnd('x')).ToArray();
-                var controlByShapes = shapeLengthStrs.Select(shapeLengthStr => MergeControlAndShape(controls, shapeLengthStr)).Where(x => x.Sum(y => y.Length) == 13);
-                var southHands = controlByShapes.Where(controlByShape => Match(controlByShape.ToArray(), northHand));
-                foreach (var southHand in southHands)
-                    yield return string.Join(',', southHand);
-            }
+            return possibleControls
+                .Select(control => control.Split(',').Select(x => x.TrimEnd('x')))
+                .Select(controls => shapeLengths.Select(shapeLengthStr => MergeControlAndShape(controls, shapeLengthStr)).Where(x => x.Sum(y => y.Length) == 13))
+                .Select(controlsByShapes => controlsByShapes.Where(controlByShape => Match(controlByShape, northHand.Split(','))))
+                .SelectMany(southHands => southHands)
+                .Select(southHand => string.Join(',', southHand)).ToList();
         }
 
         /// <summary>
         /// Try to find control matches without asking for it
         /// </summary>
         /// <returns>List of possible matches with regard to the north hand</returns>
-        private static IEnumerable<string> GetMatchesWithNorthHand(IReadOnlyCollection<string> shapeLengthStrs, int controlCount, string northHandStr)
+        private static IEnumerable<string> GetMatchesWithNorthHand(IReadOnlyCollection<string> shapeLengths, int controlCount, string northHandStr)
         {
             var northHand = northHandStr.Split(',');
             foreach (var controlStr in GenerateControlLocations(controlCount))
             {
                 var controls = controlStr.Split(',');
-                var controlByShapes = shapeLengthStrs.Select(shapeLengthStr => MergeControlAndShape(controls, shapeLengthStr)).Where(x => x.Sum(y => y.Length) == 13);
+                var controlByShapes = shapeLengths.Select(shapeLengthStr => MergeControlAndShape(controls, shapeLengthStr)).Where(x => x.Sum(y => y.Length) == 13);
                 var southHands = controlByShapes.Where(controlByShape => Match(controlByShape.ToArray(), northHand));
                 foreach (var southHand in southHands)
                     yield return string.Join(',', southHand);
@@ -272,21 +269,18 @@ namespace BiddingLogic
         /// <param name="controls">{"A","","Q","K"}</param>
         /// <param name="shapeLengthStr">"3451"</param>
         /// <returns>{"Qxx","xxxx","Axxxx","K"}</returns>
-        public static IEnumerable<string> MergeControlAndShape(string[] controls, string shapeLengthStr)
+        public static IEnumerable<string> MergeControlAndShape(IEnumerable<string> controls, string shapeLengthStr)
         {
             var shapes = shapeLengthStr.ToArray().Select((x, index) => (int.Parse(x.ToString()), index)).ToList(); // {3,4,5,1}
             // Sort by length, then by position 
             var shapesOrdered = shapes.OrderByDescending(x => x.Item1).ThenBy(x => x.index).ToList(); // {5,4,3,1}
-            return shapes.Select(shape => controls[shapesOrdered.IndexOf(shape)].PadRight(shape.Item1, 'x'));
+            return shapes.Select(shape => controls.ToArray()[shapesOrdered.IndexOf(shape)].PadRight(shape.Item1, 'x'));
         }
 
-        private static bool Match(string[] hand1, string[] hand2)
+        private static bool Match(IEnumerable<string> hand1, IEnumerable<string> hand2)
         {
             var relevantCards = new[] { 'A', 'K' };
-            foreach (var suit in hand1.Zip(hand2, (x, y) => (x, y)))
-                if (relevantCards.Any(c => suit.x.Contains(c) && suit.y.Contains(c)))
-                    return false;
-            return true;
+            return hand1.Zip(hand2, (x, y) => (x, y)).All(suit => !relevantCards.Any(c => suit.x.Contains(c) && suit.y.Contains(c)));
         }
 
         public static bool CheckQueens(string queens, string hand)

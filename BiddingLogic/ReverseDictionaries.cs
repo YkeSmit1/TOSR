@@ -97,7 +97,7 @@ namespace BiddingLogic
                 var path = Path.GetDirectoryName(fileName);
                 if (!string.IsNullOrWhiteSpace(path))
                     Directory.CreateDirectory(path);
-                File.WriteAllText(fileName, JsonConvert.SerializeObject(sortedAuctions, Formatting.Indented));
+                File.WriteAllText(fileName!, JsonConvert.SerializeObject(sortedAuctions, Formatting.Indented));
             }
             return auctions;
         }
@@ -109,10 +109,10 @@ namespace BiddingLogic
             var auctions = new ShapeDictionary();
             var regex = new Regex("x");
 
-            for (int spades = 0; spades < 8; spades++)
-                for (int hearts = 0; hearts < 8; hearts++)
-                    for (int diamonds = 0; diamonds < 8; diamonds++)
-                        for (int clubs = 0; clubs < 8; clubs++)
+            for (var spades = 0; spades < 8; spades++)
+                for (var hearts = 0; hearts < 8; hearts++)
+                    for (var diamonds = 0; diamonds < 8; diamonds++)
+                        for (var clubs = 0; clubs < 8; clubs++)
                             if (spades + hearts + diamonds + clubs == 13)
                             {
                                 var hand = new string('x', spades) + "," + new string('x', hearts) + "," + new string('x', diamonds) + "," + new string('x', clubs);
@@ -164,13 +164,11 @@ namespace BiddingLogic
             var oneAskAuction = new ControlsOnlyDictionary();
             foreach (var auction in auctions.Keys)
             {
-                if (auction.Length == 4)
-                {
-                    var key = auction.Substring(0, 2);
-                    if (!oneAskAuction.ContainsKey(key))
-                        oneAskAuction.Add(key, new List<int>());
-                    oneAskAuction[key].Add(auctions[auction].First());
-                }
+                if (auction.Length != 4) continue;
+                var key = auction[..2];
+                if (!oneAskAuction.ContainsKey(key))
+                    oneAskAuction.Add(key, new List<int>());
+                oneAskAuction[key].Add(auctions[auction].First());
             }
             return auctions.Concat(oneAskAuction).ToDictionary(pair => pair.Key, pair => pair.Value);
 

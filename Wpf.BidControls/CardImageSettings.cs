@@ -5,16 +5,16 @@ namespace Wpf.BidControls
     public class CardImageSettings
     {
         public string CardImage { get; set; }
-        public bool FirstCardIsAce { get; init; }
-        public int TopClubs { get; init; }
-        public int TopDiamonds { get; init; }
-        public int TopHearts { get; init; }
-        public int TopSpades { get; init; }
-        public int XOffSet { get; init; }
-        public int CardWidth { get; init; }
-        public int CardHeight { get; init; }
-        public int XCardPadding { get; init; }
-        public int CardDistance { get; init; }
+        public bool FirstCardIsAce { get; private init; }
+        public int TopClubs { get; private init; }
+        public int TopDiamonds { get; private init; }
+        public int TopHearts { get; private init; }
+        public int TopSpades { get; private init; }
+        public int XOffSet { get; private init; }
+        public int CardWidth { get; private init; }
+        public int CardHeight { get; private init; }
+        public int XCardPadding { get; private init; }
+        public int CardDistance { get; private init; }
 
         private static readonly CardImageSettings DefaultCardImageSettings = new()
         {

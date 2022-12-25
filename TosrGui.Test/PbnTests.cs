@@ -12,7 +12,7 @@ namespace TosrGui.Test
         [Fact()]
         public void LoadSaveTest()
         {
-            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             ExecuteAndCompare(path, "Example.pbn");
             ExecuteAndCompare(path, "CursusSlotdrive.pbn");
         }

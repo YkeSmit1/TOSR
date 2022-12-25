@@ -16,7 +16,7 @@ namespace Wpf.BidControls.Converters
             var settings = card.CardImageSettings;
             var suit = card.Suit;
             var face = settings.FirstCardIsAce ? (int)card.Face : card.Face == Face.Ace ? 12 : (int)card.Face - 1;
-            var topy = suit switch
+            var topY = suit switch
             {
                 Suit.Clubs => settings.TopClubs,
                 Suit.Diamonds => settings.TopDiamonds,
@@ -24,8 +24,8 @@ namespace Wpf.BidControls.Converters
                 Suit.Spades => settings.TopSpades,
                 _ => throw new ArgumentException(nameof(suit)),
             };
-            var topx = settings.XOffSet + (settings.CardWidth * face);
-            return new Int32Rect(topx, topy, settings.CardWidth - settings.XCardPadding, settings.CardHeight);
+            var topX = settings.XOffSet + (settings.CardWidth * face);
+            return new Int32Rect(topX, topY, settings.CardWidth - settings.XCardPadding, settings.CardHeight);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

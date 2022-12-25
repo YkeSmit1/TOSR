@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net7.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
@@ -61,7 +61,7 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <PropertyGroup>
       <TosrBuildDirectory>$(ProjectDir)bin\$(Configuration)\$(TargetFramework)</TosrBuildDirectory>
-      <TosrIntegrationTestBuildDirectory>$(ProjectDir)..\TosrIntegration.Test\bin\$(Configuration)\$(TargetFramework)</TosrIntegrationTestBuildDirectory>
+      <TosrIntegrationTestBuildDirectory>$(ProjectDir)..\TosrIntegration.Test\bin\$(Configuration)\net7.0</TosrIntegrationTestBuildDirectory>
     </PropertyGroup>
     <Copy SourceFiles="$(TosrBuildDirectory)\Engine.dll;$(TosrBuildDirectory)\sqlite3.dll" DestinationFolder="$(TosrIntegrationTestBuildDirectory)" />
   </Target>
