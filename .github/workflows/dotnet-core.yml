@@ -20,7 +20,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.x
+        dotnet-version: 7.0.x
     - name: add source to nuget 
       run: dotnet nuget add source "https://nuget.pkg.github.com/YkeSmit1/index.json" --name "githubfeed" --username "YkeSmit1" --password "${{ secrets.GITHUB_TOKEN }}"     
     - name: Install dependencies
@@ -47,4 +47,4 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: distribute
-        path: .\Tosr\bin\Release\net5.0-windows\
+        path: .\Tosr\bin\Release\net7.0-windows\
