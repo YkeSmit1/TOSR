@@ -106,7 +106,7 @@ namespace BiddingLogic
         public void UpdateBiddingStateSignOff(int controlBidCount, Bid relayBid)
         {
             PreviousFase = Fase;
-            if (relayBid.suit == Suit.NoTrump)
+            if (relayBid.Suit == Suit.NoTrump)
             {
                 Fase = controlBidCount switch
                 {

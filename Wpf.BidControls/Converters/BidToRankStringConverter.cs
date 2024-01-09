@@ -12,7 +12,7 @@ namespace Wpf.BidControls.Converters
         {
             var bid = (Bid)value;
             Debug.Assert(bid != null, nameof(bid) + " != null");
-            return bid.bidType == BidType.bid ? bid.rank : bid;
+            return bid.bidType == BidType.bid ? bid.Rank : bid;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

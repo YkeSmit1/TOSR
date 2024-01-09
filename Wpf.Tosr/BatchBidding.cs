@@ -132,7 +132,7 @@ namespace Wpf.Tosr
                         BoardNumber = statistics.handsBid,
                         Event = "TOSR Batchbidding",
                         Date = DateTime.Now,
-                        Declarer = auction.GetDeclarerOrNorth(auction.currentContract.suit),
+                        Declarer = auction.GetDeclarerOrNorth(auction.currentContract.Suit),
                         Dealer = Player.West,
                         Vulnerable = "None",
                         Description = $"{correctnessContract}: {correctnessContractBreakdown}{JsonConvert.SerializeObject(confidence)}"
@@ -255,24 +255,24 @@ namespace Wpf.Tosr
                 return CorrectnessContractBreakdown.Unknown;
             var northHand = board[Player.North];
             var southHand = board[Player.South];
-            if (contract.suit != Suit.NoTrump && Util.GetNumberOfTrumps(contract.suit, northHand, southHand) < 8)
+            if (contract.Suit != Suit.NoTrump && Util.GetNumberOfTrumps(contract.Suit, northHand, southHand) < 8)
                 return CorrectnessContractBreakdown.NoFit;
-            var tricks = SingleDummySolver.SolveSingleDummyExactHands(contract.suit, declarer, northHand, southHand);
+            var tricks = SingleDummySolver.SolveSingleDummyExactHands(contract.Suit, declarer, northHand, southHand);
             var expectedContract = GetExpectedContract(tricks);
             var expectedContractType = expectedContract.expectedContract;
             confidence = expectedContract.confidence;
 
-            return expectedContractType == ExpectedContract.GrandSlam && contract.rank == 7
+            return expectedContractType == ExpectedContract.GrandSlam && contract.Rank == 7
                 ? CorrectnessContractBreakdown.GrandSlamCorrect
-                : expectedContractType == ExpectedContract.GrandSlam && contract.rank < 7
+                : expectedContractType == ExpectedContract.GrandSlam && contract.Rank < 7
                 ? confidence[ExpectedContract.GrandSlam] > 8 ? CorrectnessContractBreakdown.MissedLaydownGrandSlam : CorrectnessContractBreakdown.MissedGoodGrandSlam
-                : expectedContractType == ExpectedContract.SmallSlam && contract.rank == 6
+                : expectedContractType == ExpectedContract.SmallSlam && contract.Rank == 6
                 ? CorrectnessContractBreakdown.SmallSlamCorrect
-                : expectedContractType == ExpectedContract.SmallSlam && contract.rank < 6
+                : expectedContractType == ExpectedContract.SmallSlam && contract.Rank < 6
                 ? confidence[ExpectedContract.SmallSlam] + confidence[ExpectedContract.GrandSlam] > 8 ? CorrectnessContractBreakdown.MissedLaydownSmallSlam : CorrectnessContractBreakdown.MissedGoodSmallSlam
-                : expectedContractType != ExpectedContract.GrandSlam && contract.rank == 7
+                : expectedContractType != ExpectedContract.GrandSlam && contract.Rank == 7
                 ? confidence[ExpectedContract.GrandSlam] < 2 ? CorrectnessContractBreakdown.GrandSlamHopeless : CorrectnessContractBreakdown.GrandSlamTooHigh
-                : expectedContractType != ExpectedContract.SmallSlam && contract.rank == 6
+                : expectedContractType != ExpectedContract.SmallSlam && contract.Rank == 6
                 ? confidence[ExpectedContract.SmallSlam] + confidence[ExpectedContract.GrandSlam] < 2 ? CorrectnessContractBreakdown.SmallSlamHopeless : CorrectnessContractBreakdown.SmallSlamTooHigh
                 : CorrectnessContractBreakdown.GameCorrect;
 

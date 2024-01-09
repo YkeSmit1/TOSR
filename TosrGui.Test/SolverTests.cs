@@ -29,7 +29,7 @@ namespace TosrGui.Test
 
             foreach (var contracts in scores.Keys)
             {
-                Assert.InRange(contracts.rank + 6, 10, 12);
+                Assert.InRange(contracts.Rank + 6, 10, 12);
             }
         }
     }

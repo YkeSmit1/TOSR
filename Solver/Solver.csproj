@@ -1,29 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Common.Tosr\Common.Tosr.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <Content Include="deal319\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
   <ItemGroup>
     <Compile Remove="deal319\html\**" />
     <Content Remove="deal319\html\**" />
     <EmbeddedResource Remove="deal319\html\**" />
     <None Remove="deal319\html\**" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="Common.BridgeClasses" Version="1.0.6" />
+    <PackageReference Include="Common.BridgeClasses" Version="1.0.7" />
     <PackageReference Include="NLog" Version="4.7.15" />
   </ItemGroup>
-
 </Project>

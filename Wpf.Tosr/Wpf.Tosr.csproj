@@ -1,11 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
-
   <ItemGroup>
     <None Remove="Resources\first.png" />
     <None Remove="Resources\last.png" />
@@ -16,7 +14,6 @@
     <None Remove="Resources\shuffle.png" />
     <None Remove="Resources\stumbleupon.png" />
   </ItemGroup>
-
   <ItemGroup>
     <Resource Include="Resources\first.png" />
     <Resource Include="Resources\page_restrictions.png" />
@@ -27,19 +24,16 @@
     <Resource Include="Resources\next.png" />
     <Resource Include="Resources\previous.png" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="Common.BridgeClasses" Version="1.0.6" />
-    <PackageReference Include="Extended.Wpf.Toolkit" Version="4.3.0" />
+    <PackageReference Include="Common.BridgeClasses" Version="1.0.7" />
+    <PackageReference Include="Extended.Wpf.Toolkit" Version="4.5.1" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\BiddingLogic\BiddingLogic.csproj" />
     <ProjectReference Include="..\Common.Tosr\Common.Tosr.csproj" />
     <ProjectReference Include="..\Solver\Solver.csproj" />
     <ProjectReference Include="..\Wpf.BidControls\Wpf.BidControls.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Update="Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -47,7 +41,6 @@
       <AutoGen>True</AutoGen>
     </Compile>
   </ItemGroup>
-
   <ItemGroup>
     <None Update="nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -57,13 +50,11 @@
       <Generator>SettingsSingleFileGenerator</Generator>
     </None>
   </ItemGroup>
-
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <PropertyGroup>
       <TosrBuildDirectory>$(ProjectDir)bin\$(Configuration)\$(TargetFramework)</TosrBuildDirectory>
-      <TosrIntegrationTestBuildDirectory>$(ProjectDir)..\TosrIntegration.Test\bin\$(Configuration)\net7.0</TosrIntegrationTestBuildDirectory>
+      <TosrIntegrationTestBuildDirectory>$(ProjectDir)..\TosrIntegration.Test\bin\$(Configuration)\net8.0</TosrIntegrationTestBuildDirectory>
     </PropertyGroup>
     <Copy SourceFiles="$(TosrBuildDirectory)\Engine.dll;$(TosrBuildDirectory)\sqlite3.dll" DestinationFolder="$(TosrIntegrationTestBuildDirectory)" />
   </Target>
-
 </Project>

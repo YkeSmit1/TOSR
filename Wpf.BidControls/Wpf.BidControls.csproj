@@ -1,21 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>net7.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="Common.BridgeClasses" Version="1.0.6" />
+    <PackageReference Include="Common.BridgeClasses" Version="1.0.7" />
     <PackageReference Include="ObjectCloner" Version="2.2.2" />
     <PackageReference Include="Refractored.MvvmHelpers" Version="1.6.2" />
   </ItemGroup>
-
   <ItemGroup>
     <Resource Include="Views\cardfaces.png" />
     <Resource Include="Views\cardfaces2.jpg" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Update="Views\AuctionView.xaml.cs">
       <SubType>Code</SubType>
@@ -27,7 +23,6 @@
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
-
   <ItemGroup>
     <Page Update="Views\AuctionView.xaml">
       <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
@@ -42,5 +37,4 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
-
 </Project>

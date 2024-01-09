@@ -184,7 +184,7 @@ namespace BiddingLogic
                 }
 
                 currentPlayer = currentPlayer == Player.South ? Player.West : currentPlayer + 1;
-                if (auction.bids.Count > 30)
+                if (auction.Bids.Count > 30)
                     throw new InvalidOperationException("Bidding is stuck in a loop");
             }
             while (!auction.IsEndOfBidding());
@@ -374,10 +374,10 @@ namespace BiddingLogic
 
             void GroupGameContracts()
             {
-                var pairs = enrichedContracts.Where(x => x.Key.rank < 6 && x.Value.posibility != BidPossibilities.CannotBid).ToList();
+                var pairs = enrichedContracts.Where(x => x.Key.Rank < 6 && x.Value.posibility != BidPossibilities.CannotBid).ToList();
                 if (!pairs.Any())
                     return;
-                enrichedContracts = enrichedContracts.GroupBy(x => x.Key.rank < 6 ? pairs.MinBy(x1 => x1.Key).Key : x.Key)
+                enrichedContracts = enrichedContracts.GroupBy(x => x.Key.Rank < 6 ? pairs.MinBy(x1 => x1.Key).Key : x.Key)
                     .ToDictionary(g => g.Key, g => (g.Sum(v => v.Value.occurrences),
                         g.Key == pairs.MinBy(x => x.Key).Key
                             ? g.Any(v => v.Value.posibility == BidPossibilities.CanInvestigate) ? BidPossibilities.CanInvestigate : BidPossibilities.CannotInvestigate
@@ -432,7 +432,7 @@ namespace BiddingLogic
         {
             occurrencesForBids = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
             var nrOfHands = occurrencesForBids.Sum(x => x.Value);
-            var groupedTricked = occurrencesForBids.GroupBy(x => x.Key.rank + 6);
+            var groupedTricked = occurrencesForBids.GroupBy(x => x.Key.Rank + 6);
             var confidenceTricks = groupedTricked.ToDictionary(bid => bid.Key, bid => (double)100 * bid.Select(x => x.Value).Sum() / nrOfHands);
             return confidenceTricks;
         }

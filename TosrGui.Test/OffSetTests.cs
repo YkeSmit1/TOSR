@@ -419,7 +419,7 @@ namespace TosrGui.Test
 
         private static void SetBids(Auction auction, IEnumerable<string> bidsStr)
         {
-            auction.bids.Clear();
+            auction.Bids.Clear();
             var biddingRound = 1;
             var player = Player.North;
             var lbids = bidsStr.Select(bidstr => StringToBid(bidstr));
@@ -427,12 +427,12 @@ namespace TosrGui.Test
             {
                 if (player == Player.North)
                 {
-                    auction.bids[biddingRound] = new Dictionary<Player, Bid>(new List<KeyValuePair<Player, Bid>> { new(player, bid) });
+                    auction.Bids[biddingRound] = new Dictionary<Player, Bid>(new List<KeyValuePair<Player, Bid>> { new(player, bid) });
                     player = Player.South;
                 }
                 else
                 {
-                    auction.bids[biddingRound].Add(player, bid);
+                    auction.Bids[biddingRound].Add(player, bid);
                     biddingRound++;
                     player = Player.North;
                 }

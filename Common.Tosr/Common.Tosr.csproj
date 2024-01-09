@@ -1,11 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="Common.BridgeClasses" Version="1.0.6" />
+    <PackageReference Include="Common.BridgeClasses" Version="1.0.7" />
   </ItemGroup>
-
 </Project>
