@@ -38,7 +38,7 @@ namespace TosrIntegration.Test
     [Collection("Sequential")]
     public class FullTest : IClassFixture<BaseTestFixture>
     {
-        private readonly Dictionary<Fase, bool> fasesWithOffset;
+        private readonly Dictionary<Phase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
 
         // ReSharper disable once NotAccessedField.Local

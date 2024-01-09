@@ -10,7 +10,7 @@ using Solver;
 
 namespace BiddingLogic
 {
-    using FaseDictionary = Dictionary<Fase, Dictionary<string, List<int>>>;
+    using PhaseDictionary = Dictionary<Phase, Dictionary<string, List<int>>>;
 
     public class BiddingInformation
     {
@@ -24,14 +24,14 @@ namespace BiddingLogic
         {
             Shape = new Lazy<(List<string> shapes, int zoomOffset)>(() =>
             {
-                var bidsForFase = biddingState.GetBids(Fase.Shape);
-                return GetInformationFromBids(reverseDictionaries.ShapeAuctions, bidsForFase);
+                var bidsForPhase = biddingState.GetBids(Phase.Shape);
+                return GetInformationFromBids(reverseDictionaries.ShapeAuctions, bidsForPhase);
             });
             ControlsScanning = new Lazy<(List<string> controls, int zoomOffset)>(() =>
             {
                 var dictionary = reverseDictionaries.GetControlScanningDictionary(Shape.Value.shapes.Last());
-                var bidsForFase = GetAuctionForFaseWithOffset(auction, Shape.Value.zoomOffset, biddingState, Fase.Controls, Fase.ScanningControls).ToList();
-                return GetInformationFromBids(dictionary, bidsForFase);
+                var bidsForPhase = GetAuctionForPhaseWithOffset(auction, Shape.Value.zoomOffset, biddingState, Phase.Controls, Phase.ScanningControls).ToList();
+                return GetInformationFromBids(dictionary, bidsForPhase);
             });
             this.reverseDictionaries = reverseDictionaries;
         }
@@ -41,17 +41,17 @@ namespace BiddingLogic
             var southInformation = new SouthInformation
             {
                 Shapes = Shape.Value.shapes,
-                Hcp = GetHcpFromAuction(reverseDictionaries.SignOffFasesAuctions, biddingState),
-                ControlBidCount = biddingState.GetBids(Fase.Controls).Count(),
-                ControlsScanningBidCount = biddingState.GetBids(Fase.ScanningControls).Count()
+                Hcp = GetHcpFromAuction(reverseDictionaries.SignOffPhasesAuctions, biddingState),
+                ControlBidCount = biddingState.GetBids(Phase.Controls).Count(),
+                ControlsScanningBidCount = biddingState.GetBids(Phase.ScanningControls).Count()
             };
 
-            var controls = GetAuctionForFaseWithOffset(auction, Shape.Value.zoomOffset, biddingState, Fase.Controls).ToList();
+            var controls = GetAuctionForPhaseWithOffset(auction, Shape.Value.zoomOffset, biddingState, Phase.Controls).ToList();
             if (controls.Count > 0)
             {
                 var possibleControls = reverseDictionaries.ControlsOnlyAuctions[string.Join("", controls)];
                 southInformation.Controls = new MinMax(possibleControls.First(), possibleControls.Last());
-                // Special case if relay-er is able figure out the position of controls
+                // Special case if relay-er is able to figure out the position of controls
                 if (southInformation.ControlsScanningBidCount == 0)
                 {
                     var matches = GetMatchesWithNorthHand(Shape.Value.shapes, possibleControls.First(), northHand).ToList();
@@ -94,9 +94,9 @@ namespace BiddingLogic
         /// <summary>
         /// Lookup in the dictionary. If not found, it tries to find an auction when the last bid was done with zoom
         /// </summary>
-        public static (List<string> information, int zoomOffset) GetInformationFromBids(Dictionary<string, (List<string> pattern, bool zoom)> dictionary, IEnumerable<Bid> bidsForFase)
+        public static (List<string> information, int zoomOffset) GetInformationFromBids(Dictionary<string, (List<string> pattern, bool zoom)> dictionary, IEnumerable<Bid> bidsForPhase)
         {
-            var bids = bidsForFase.ToList();
+            var bids = bidsForPhase.ToList();
             if (dictionary.TryGetValue(string.Join("", bids), out var information))
                 return (information.pattern, information.zoom ? 2 : 0);
 
@@ -123,12 +123,12 @@ namespace BiddingLogic
         /// <param name="biddingState"></param>
         /// <param name="fases">Which fases to get the offset from</param>
         /// <returns></returns>
-        public static IEnumerable<Bid> GetAuctionForFaseWithOffset(Auction auction, int zoomOffset, BiddingState biddingState, params Fase[] fases)
+        public static IEnumerable<Bid> GetAuctionForPhaseWithOffset(Auction auction, int zoomOffset, BiddingState biddingState, params Phase[] fases)
         {
-            var lastBidShape = biddingState.GetBids(Fase.Shape).Last();
-            var bidsForFases = biddingState.GetBids(fases);
+            var lastBidShape = biddingState.GetBids(Phase.Shape).Last();
+            var bidsForPhases = biddingState.GetBids(fases);
 
-            return GetBidsForFaseWithOffset(bidsForFases, Bids.ThreeDiamondBid, lastBidShape, zoomOffset, GetOffsetRelayBid);
+            return GetBidsForPhaseWithOffset(bidsForPhases, Bids.ThreeDiamondBid, lastBidShape, zoomOffset, GetOffsetRelayBid);
 
             int GetOffsetRelayBid(Bid currentBid)
             {
@@ -138,9 +138,9 @@ namespace BiddingLogic
                 var previousBidNorth = auction.GetRelativeBid(currentBid, 0, Player.North);
 
                 // In case of 3NT pull without ask, use the bid before. The sign-off bid only shows points
-                return previousBidSouth == biddingState.GetBids(Fase.Pull3NTNoAsk).SingleOrDefault()
+                return previousBidSouth == biddingState.GetBids(Phase.Pull3NTNoAsk).SingleOrDefault()
                     ? previousBidNorth - auction.GetRelativeBid(currentBid, -2, Player.South) - 1
-                    : previousBidNorth - previousBidSouth - (currentBid == biddingState.GetPullBid() && BiddingState.SignOffFasesFor4Di.Contains(biddingState.GetPullFase()) ? 0 : 1);
+                    : previousBidNorth - previousBidSouth - (currentBid == biddingState.GetPullBid() && BiddingState.SignOffPhasesFor4Di.Contains(biddingState.GetPullPhase()) ? 0 : 1);
             }
         }
 
@@ -152,23 +152,23 @@ namespace BiddingLogic
             // Because the last shape is the one with the highest numeric value generated in ReverseDictionaries
             var shapeStr = Shape.Value.shapes.Last();
             var zoomOffset = ControlsScanning.Value.zoomOffset;
-            var lastBidScanningControl = biddingState.GetBids(Fase.ScanningControls).Last();
-            var queensBids = biddingState.GetBids(Fase.ScanningOther);
+            var lastBidScanningControl = biddingState.GetBids(Phase.ScanningControls).Last();
+            var queensBids = biddingState.GetBids(Phase.ScanningOther);
             var offsetBid = ReverseDictionaries.GetOffsetBidForQueens(shapeStr);
 
-            var queensBidsResult = GetBidsForFaseWithOffset(queensBids, offsetBid, lastBidScanningControl, zoomOffset, GetOffsetRelayBid).ToList();
+            var queensBidsResult = GetBidsForPhaseWithOffset(queensBids, offsetBid, lastBidScanningControl, zoomOffset, GetOffsetRelayBid).ToList();
             if (!queensBidsResult.Any())
                 return null;
             var queensAuctions = reverseDictionaries.GetQueensDictionary(shapeStr);
-            var bidsForFaseQueens = string.Join("", queensBidsResult);
+            var bidsForPhaseQueens = string.Join("", queensBidsResult);
               
-            if (queensAuctions.TryGetValue(bidsForFaseQueens, out var queens))
+            if (queensAuctions.TryGetValue(bidsForPhaseQueens, out var queens))
             {
-                Logger.Debug($"Found queens for auction. Queens:{queens}. QueensBids:{bidsForFaseQueens}. Auction:{auction.GetPrettyAuction("|")}");
+                Logger.Debug($"Found queens for auction. Queens:{queens}. QueensBids:{bidsForPhaseQueens}. Auction:{auction.GetPrettyAuction("|")}");
                 return GetQueensOrdered(shapeStr, queens);
             }
 
-            throw new InvalidOperationException($"{ bidsForFaseQueens } not found in queens dictionary. Auction:{auction.GetPrettyAuction("|")}. " +
+            throw new InvalidOperationException($"{ bidsForPhaseQueens } not found in queens dictionary. Auction:{auction.GetPrettyAuction("|")}. " +
                 $"zoom-offset control scanning:{zoomOffset}");
 
             int GetOffsetRelayBid(Bid currentBid)
@@ -184,30 +184,30 @@ namespace BiddingLogic
             }
         }
 
-        private static IEnumerable<Bid> GetBidsForFaseWithOffset(IEnumerable<Bid> bidsForFases, Bid offSetBid, Bid lastBidPreviousFase, int zoomOffset, Func<Bid, int> getOffsetRelayBid)
+        private static IEnumerable<Bid> GetBidsForPhaseWithOffset(IEnumerable<Bid> bidsForPhases, Bid offSetBid, Bid lastBidPreviousPhase, int zoomOffset, Func<Bid, int> getOffsetRelayBid)
         {
-            var offset = lastBidPreviousFase - offSetBid;
+            var offset = lastBidPreviousPhase - offSetBid;
             if (zoomOffset != 0)
-                bidsForFases = new[] { lastBidPreviousFase }.Concat(bidsForFases);
+                bidsForPhases = new[] { lastBidPreviousPhase }.Concat(bidsForPhases);
 
             var offsetRelayBid = 0;
-            var bidsForFasesResult = bidsForFases.Select(b =>
+            var bidsForPhasesResult = bidsForPhases.Select(b =>
             {
                 offsetRelayBid -= getOffsetRelayBid(b);
                 return b + zoomOffset + offsetRelayBid - offset;
             });
-            return bidsForFasesResult;
+            return bidsForPhasesResult;
         }
 
-        private static MinMax GetHcpFromAuction(FaseDictionary faseAuctions, BiddingState biddingState)
+        private static MinMax GetHcpFromAuction(PhaseDictionary faseAuctions, BiddingState biddingState)
         {
-            var pullFase = biddingState.GetPullFase();
+            var pullPhase = biddingState.GetPullPhase();
             var pullBid = biddingState.GetPullBid();
-            if (pullFase != default)
+            if (pullPhase != default)
             {
-                var sigOffBid = BiddingState.GetSignOffBid(pullFase, pullBid);
+                var sigOffBid = BiddingState.GetSignOffBid(pullPhase, pullBid);
                 // TODO handle case where sign-off bid is 4NT
-                if (faseAuctions[pullFase].TryGetValue(sigOffBid.ToString(), out var hcpList))
+                if (faseAuctions[pullPhase].TryGetValue(sigOffBid.ToString(), out var hcpList))
                     return new MinMax(hcpList.Min(), hcpList.Max());
             }
 

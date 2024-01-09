@@ -2,6 +2,6 @@
 {
     public interface IBidGenerator
     {
-        (int, Fase, string, int) GetBid(BiddingState biddingState, string handsString);
+        (int, Phase, string, int) GetBid(BiddingState biddingState, string handsString);
     }
 }

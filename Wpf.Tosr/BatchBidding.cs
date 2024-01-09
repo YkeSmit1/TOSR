@@ -88,7 +88,7 @@ namespace Wpf.Tosr
         private Dictionary<ExpectedContract, int> confidence;
         private readonly List<Bid> endContracts = new();
 
-        public BatchBidding(ReverseDictionaries reverseDictionaries, Dictionary<Fase, bool> fasesWithOffset, bool useSingleDummySolver)
+        public BatchBidding(ReverseDictionaries reverseDictionaries, Dictionary<Phase, bool> fasesWithOffset, bool useSingleDummySolver)
         {
             bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, useSingleDummySolver);
             this.useSingleDummySolver = useSingleDummySolver;
@@ -179,7 +179,7 @@ namespace Wpf.Tosr
             var suitLengthSouth = board[Player.South].Split(',').Select(x => x.Length);
             var str = string.Join("", suitLengthSouth);
 
-            var strAuction = biddingState.GetBidsAsString(Fase.Shape);
+            var strAuction = biddingState.GetBidsAsString(Phase.Shape);
 
             AddHandPerAuction(str, strAuction);
 
@@ -193,7 +193,7 @@ namespace Wpf.Tosr
             var contract = auction.currentContract > new Bid(7, Suit.NoTrump) ? new Bid(7, Suit.NoTrump) : auction.currentContract;
             statistics.contracts.AddOrUpdateDictionary(contract);
             if (!auction.responderHasSignedOff)
-                statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Last(bid => bid.bidType == BidType.bid) - biddingState.GetBids(Fase.Shape).Last());
+                statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Last(bid => bid.bidType == BidType.bid) - biddingState.GetBids(Phase.Shape).Last());
             statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthHandOutcome);
             correctnessContractBreakdown = CheckContract(contract, board, dealer == Player.UnKnown ? Player.North : dealer);
             var pullType = biddingState.GetPullBid() != default ? PullType.HasPulled : PullType.NoPull;

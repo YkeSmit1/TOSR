@@ -1,6 +1,6 @@
 ﻿namespace BiddingLogic
 {
-    public enum Fase
+    public enum Phase
     {
         Unknown,
         Shape,

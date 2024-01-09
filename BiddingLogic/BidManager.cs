@@ -96,7 +96,7 @@ namespace BiddingLogic
         }
 
         private readonly IBidGenerator bidGenerator;
-        private readonly Dictionary<Fase, bool> fasesWithOffset;
+        private readonly Dictionary<Phase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
         private readonly bool useSingleDummySolver;
         private readonly bool useSingleDummySolverDuringRelaying;
@@ -113,7 +113,7 @@ namespace BiddingLogic
         public BiddingState BiddingState { get; private set; }
 
         // Constructor used for test
-        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, RelayBidKindFunc getRelayBidKindFunc) :
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Phase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, RelayBidKindFunc getRelayBidKindFunc) :
             this(bidGenerator, fasesWithOffset)
         {
             this.reverseDictionaries = reverseDictionaries;
@@ -121,13 +121,13 @@ namespace BiddingLogic
         }
 
         // Standard constructor
-        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, bool useSingleDummySolver) :
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Phase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, bool useSingleDummySolver) :
             this(bidGenerator, fasesWithOffset, reverseDictionaries, useSingleDummySolver, useSingleDummySolver)
         {
         }
 
         // Standard constructor
-        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, bool useSingleDummySolver, bool useSingleDummySolverDuringRelaying) :
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Phase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, bool useSingleDummySolver, bool useSingleDummySolverDuringRelaying) :
             this(bidGenerator, fasesWithOffset)
         {
             this.reverseDictionaries = reverseDictionaries;
@@ -138,7 +138,7 @@ namespace BiddingLogic
         }
 
         // Constructor used for generate reverse dictionaries
-        public BidManager(IBidGenerator bidGenerator, Dictionary<Fase, bool> fasesWithOffset)
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Phase, bool> fasesWithOffset)
         {
             this.bidGenerator = bidGenerator;
             this.fasesWithOffset = fasesWithOffset;
@@ -201,11 +201,11 @@ namespace BiddingLogic
             if (auction.IsEndOfBidding())
                 return;
 
-            if (BiddingState.Fase != Fase.End && (BiddingState.CurrentBid == Bid.PassBid || BiddingState.CurrentBid < Bids.SixSpadeBid || !useSingleDummySolver))
+            if (BiddingState.Phase != Phase.End && (BiddingState.CurrentBid == Bid.PassBid || BiddingState.CurrentBid < Bids.SixSpadeBid || !useSingleDummySolver))
                 BiddingState.CurrentBid = GetNorthBid(BiddingState, auction, northHand);
             else
             {
-                BiddingState.Fase = Fase.End;
+                BiddingState.Phase = Phase.End;
                 // Try to guess contract by using single dummy solver
                 BiddingState.CurrentBid = useSingleDummySolver ? CalculateEndContract(auction, northHand, BiddingState.CurrentBid) : Bid.PassBid;
             }
@@ -213,12 +213,12 @@ namespace BiddingLogic
 
         private Bid GetNorthBid(BiddingState biddingState, Auction auction, string northHand)
         {
-            if (biddingState.Fase != Fase.Shape && reverseDictionaries != null && !string.IsNullOrWhiteSpace(northHand))
+            if (biddingState.Phase != Phase.Shape && reverseDictionaries != null && !string.IsNullOrWhiteSpace(northHand))
             {
                 var southInformation = biddingInformation.GetInformationFromAuction(auction, northHand, biddingState);
                 var trumpSuit = Util.GetTrumpSuitShape(northHand, southInformation.Shapes.First());
 
-                if (biddingState.Fase == Fase.BidGame)
+                if (biddingState.Phase == Phase.BidGame)
                     return GetGameBid(trumpSuit);
 
                 if (CanSignOff(trumpSuit))
@@ -246,7 +246,7 @@ namespace BiddingLogic
 
             Bid GetGameBid(Suit trumpSuit)
             {
-                biddingState.Fase = Fase.End;
+                biddingState.Phase = Phase.End;
                 return Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, true);
             }
 
@@ -303,7 +303,7 @@ namespace BiddingLogic
                             suitBid = Bids.FourDiamondBid;
                             return true;
                         case RelayBidKind.gameBid:
-                            biddingState.Fase = Fase.End;
+                            biddingState.Phase = Phase.End;
                             auction.responderHasSignedOff = true;
                             suitBid = Bid.GetGameContractSafe(trumpSuit, biddingState.CurrentBid, false);
                             return true;
@@ -322,10 +322,10 @@ namespace BiddingLogic
                 bid = GetEndContract(possibleContracts, biddingState.CurrentBid);
                 if (bid != null)
                 {
-                    if (biddingState.Fase == Fase.ScanningOther)
+                    if (biddingState.Phase == Phase.ScanningOther)
                         constructedSouthHandOutcome = southInformation.SpecificControls.Count() == 1 ?
                             ConstructedSouthHandOutcome.SouthHandMatches : ConstructedSouthHandOutcome.MultipleMatchesFound;
-                    biddingState.Fase = Fase.End;
+                    biddingState.Phase = Phase.End;
                     auction.responderHasSignedOff = true;
                 }
 
@@ -336,12 +336,12 @@ namespace BiddingLogic
 
             Bid GetRelayBid()
             {
-                if (biddingState.CurrentBid == Bids.ThreeSpadeBid && biddingState.Fase != Fase.Shape && reverseDictionaries != null)
+                if (biddingState.CurrentBid == Bids.ThreeSpadeBid && biddingState.Phase != Phase.Shape && reverseDictionaries != null)
                 {
                     var shapeOrdered = new string(biddingInformation.Shape.Value.shapes.First().ToCharArray().OrderByDescending(x => x).ToArray());
                     if (shapeOrdered != "7330")
                     {
-                        biddingState.RelayBidIdLastFase++;
+                        biddingState.RelayBidIdLastPhase++;
                         return Bids.FourClubBid;
                     }
                 }
@@ -411,7 +411,7 @@ namespace BiddingLogic
             SouthInformation southInformation, BiddingState biddingState)
         {
             var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, auction.GetDeclarerOrNorth);
-            bool canReuseSolverOutput = biddingState.Fase == Fase.ScanningControls && southInformation.ControlsScanningBidCount > 0;
+            bool canReuseSolverOutput = biddingState.Phase == Phase.ScanningControls && southInformation.ControlsScanningBidCount > 0;
             if (!canReuseSolverOutput || occurrencesForBids == null)
                 occurrencesForBids = SingleDummySolver.SolveSingleDummy(northHand, southInformation, optimizationParameters.numberOfHandsForSolver, declarers);
             LoggerBidding.Info($"Occurrences by bid in GetPossibleContractsFromAuction: {JsonConvert.SerializeObject(occurrencesForBids)}");
@@ -451,32 +451,32 @@ namespace BiddingLogic
 
         public void SouthBid(Auction auction, string handsString)
         {
-            if (BiddingState.Fase == Fase.End)
+            if (BiddingState.Phase == Phase.End)
             {
                 auction.AddBid(Bid.PassBid);
                 BiddingState.CurrentBid = Bid.PassBid;
                 return;
             }
-            var (bidIdFromRule, nextFase, description, zoomOffset) = bidGenerator.GetBid(BiddingState, handsString);
+            var (bidIdFromRule, nextPhase, description, zoomOffset) = bidGenerator.GetBid(BiddingState, handsString);
             var bidId = BiddingState.CalculateBid(bidIdFromRule, description, zoomOffset != 0);
             auction.AddBid(BiddingState.CurrentBid);
 
-            var lZoomOffset = nextFase switch
+            var lZoomOffset = nextPhase switch
             {
-                Fase.Controls => reverseDictionaries == null ? zoomOffset : biddingInformation.Shape.Value.zoomOffset,
-                Fase.ScanningOther => reverseDictionaries == null ? zoomOffset : biddingInformation.ControlsScanning.Value.zoomOffset,
+                Phase.Controls => reverseDictionaries == null ? zoomOffset : biddingInformation.Shape.Value.zoomOffset,
+                Phase.ScanningOther => reverseDictionaries == null ? zoomOffset : biddingInformation.ControlsScanning.Value.zoomOffset,
                 _ => 0,
             };
             // Check if controls and their positions are correctly evaluated.
-            if (nextFase == Fase.ScanningOther && reverseDictionaries != null)
+            if (nextPhase == Phase.ScanningOther && reverseDictionaries != null)
             {
                 var controlsInSuit = UtilTosr.GetHandWithOnlyControlsAs4333(handsString, "AK");
                 if (!biddingInformation.ControlsScanning.Value.controls.Contains(controlsInSuit))
                     throw new InvalidOperationException($"Cannot find {controlsInSuit} in {string.Join('|', biddingInformation.ControlsScanning.Value.controls)}");
 
             }
-            BiddingState.UpdateBiddingState(bidIdFromRule, nextFase, bidId, lZoomOffset);
-            if (nextFase == Fase.BidGame)
+            BiddingState.UpdateBiddingState(bidIdFromRule, nextPhase, bidId, lZoomOffset);
+            if (nextPhase == Phase.BidGame)
                 auction.responderHasSignedOff = true;
         }
 

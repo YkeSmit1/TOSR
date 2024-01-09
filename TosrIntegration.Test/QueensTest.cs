@@ -36,7 +36,7 @@ namespace TosrIntegration.Test
     [Collection("Sequential")]
     public class QueensTest : IClassFixture<BaseTestFixture>
     {
-        private readonly Dictionary<Fase, bool> fasesWithOffset;
+        private readonly Dictionary<Phase, bool> fasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

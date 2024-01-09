@@ -18,13 +18,13 @@ namespace TosrGui.Test
                 "3♥", "3NT",
                 "4♣", "4♦" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown },
                 "3NT4♦" };
 
 
@@ -33,13 +33,13 @@ namespace TosrGui.Test
                 "3♥", "3♠",
                 "4♣", "4♦" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown },
                 "3♠4♣" };
 
             yield return new object[] { "OffSet", 0, new[]{
@@ -47,13 +47,13 @@ namespace TosrGui.Test
                 "3♦", "3♥",
                 "3♠", "3NT" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown },
                 "3♠4♣" };
 
             yield return new object[] { "OffSetUse4ClAsRelay", 0, new[]{
@@ -61,13 +61,13 @@ namespace TosrGui.Test
                 "3♦", "3♠",
                 "4♣", "4♦" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown },
                 "3NT4♦" };
 
             // Zoom test
@@ -76,13 +76,13 @@ namespace TosrGui.Test
                 "3♥", "3NT",
                 "4♣", "4♦" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown },
                 "3♠4♦4♠" };
 
             yield return new object[] { "Use4ClAsRelayZoom", 2, new[]{
@@ -90,13 +90,13 @@ namespace TosrGui.Test
                 "3♥", "3♠",
                 "4♣", "4♦" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown },
                 "3♠4♣4♥" };
 
             // ♣♦♥♠
@@ -105,13 +105,13 @@ namespace TosrGui.Test
                 "3♦", "3♥",
                 "3♠", "3NT" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown },
                 "3♠4♣4♥" };
             // ♣♦♥♠
             yield return new object[] { "OffSetUse4ClAsRelayZoom", 2, new[]{
@@ -119,13 +119,13 @@ namespace TosrGui.Test
                 "3♦", "3♠",
                 "4♣", "4♦" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown },
                 "3♠4♦4♠" };
 
             // Pull tests
@@ -139,15 +139,15 @@ namespace TosrGui.Test
                 "4♥", "4♠",
                 "4NT", "5♣"},
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls},
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls},
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull3NTNoAsk,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull3NTNoAsk,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown },
                 "3♠4♣" };
 
             yield return new object[] { "Simple0_", 0, new[]{
@@ -156,15 +156,15 @@ namespace TosrGui.Test
                 "5♣", "5♦",
                 "5♥", "5♠"},
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull3NTNoAsk,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull3NTNoAsk,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown },
                 "3♠4♣" };
 
             yield return new object[] { "Simple1", 0, new[]{
@@ -172,13 +172,13 @@ namespace TosrGui.Test
                 "3♥", "3♠",
                 "3NT", "4♣" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.Controls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.Controls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull3NTOneAskMin },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull3NTOneAskMin },
                 "3♠4♣" };
 
             // ♣♦♥♠
@@ -188,15 +188,15 @@ namespace TosrGui.Test
                 "4♦", "4NT",
                 "5♣", "5NT"},
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull3NTNoAsk,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull3NTNoAsk,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown },
                 "4♣5♣" };
 
             yield return new object[] { "OffSet1", 0, new[]{
@@ -204,13 +204,13 @@ namespace TosrGui.Test
                 "3♦", "3♥",
                 "3NT", "4♣" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.Controls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.Controls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull3NTOneAskMin },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull3NTOneAskMin },
                 "3♠4♣" };
 
             // Zoom test
@@ -220,15 +220,15 @@ namespace TosrGui.Test
                 "4♥", "4♠",
                 "4NT", "5♣" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull3NTNoAsk,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull3NTNoAsk,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown },
                 "3♠4♣4♥" };
 
             yield return new object[] { "SimpelZoom1", 2, new[]{
@@ -236,13 +236,13 @@ namespace TosrGui.Test
                 "3♥", "3♠",
                 "3NT", "4♣" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.Controls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.Controls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull3NTOneAskMin },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull3NTOneAskMin },
                 "3♠4♣4♥" };
 
             // ♣♦♥♠
@@ -252,15 +252,15 @@ namespace TosrGui.Test
                 "4♦", "4♥",
                 "4♠", "5♦"},
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull3NTNoAsk,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull3NTNoAsk,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown },
                 "3♠4♣4NT" };
 
             yield return new object[] { "OffSetZoom1", 2, new[]{
@@ -268,13 +268,13 @@ namespace TosrGui.Test
                 "3♦", "3♥",
                 "3NT", "4♣" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.Controls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.Controls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull3NTOneAskMin },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull3NTOneAskMin },
                 "3♠4♣4♥" };
 
             // Pull tests
@@ -287,13 +287,13 @@ namespace TosrGui.Test
                 "4♦", "4NT",
                 "5♣", "5♦" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull4DiamondsNoAsk,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull4DiamondsNoAsk,
+                Phase.Unknown, Phase.Unknown },
                 "3NT4♦" };
 
             yield return new object[] { "Simple1", 0, new[]{
@@ -301,13 +301,13 @@ namespace TosrGui.Test
                 "3♥", "3NT",
                 "4♦", "4♠" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull4DiamondsOneAskMax },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull4DiamondsOneAskMax },
                 "3NT4♦" };
 
             yield return new object[] { "OffSet0", 0, new[]{
@@ -315,13 +315,13 @@ namespace TosrGui.Test
                 "4♦", "4♠",
                 "4NT", "5♣" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull4DiamondsNoAsk,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull4DiamondsNoAsk,
+                Phase.Unknown, Phase.Unknown },
                 "3♠4♣" };
 
             yield return new object[] { "OffSet1", 0, new[]{
@@ -329,13 +329,13 @@ namespace TosrGui.Test
                 "3♦", "3♥",
                 "4♦", "4♠" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.Controls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.Controls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull4DiamondsOneAskMin },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull4DiamondsOneAskMin },
                 "3♠4♣" };
 
             // Zoom test
@@ -344,13 +344,13 @@ namespace TosrGui.Test
                 "4♦", "4NT",
                 "5♣", "5♦" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull4DiamondsOneAskMax,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull4DiamondsOneAskMax,
+                Phase.Unknown, Phase.Unknown },
                 "3♠4♦4♠" };
 
             yield return new object[] { "OffSetZoom", 2, new[]{
@@ -358,13 +358,13 @@ namespace TosrGui.Test
                 "4♦", "4♠",
                 "4NT", "5♣" },
             new[]{
-                Fase.Unknown, Fase.Shape,
-                Fase.Unknown, Fase.Controls,
-                Fase.Unknown, Fase.ScanningControls },
+                Phase.Unknown, Phase.Shape,
+                Phase.Unknown, Phase.Controls,
+                Phase.Unknown, Phase.ScanningControls },
             new[]{
-                Fase.Unknown, Fase.Unknown,
-                Fase.Unknown, Fase.Pull4DiamondsOneAskMin,
-                Fase.Unknown, Fase.Unknown },
+                Phase.Unknown, Phase.Unknown,
+                Phase.Unknown, Phase.Pull4DiamondsOneAskMin,
+                Phase.Unknown, Phase.Unknown },
                 "3♠4♣4♥" };
         }
     }
@@ -374,46 +374,46 @@ namespace TosrGui.Test
     {
         [Theory]
         [MemberData(nameof(TestCaseProvider.TestCasesNoPull), MemberType = typeof(TestCaseProvider))]
-        public void GetAuctionForFaseWithOffsetNoPullTest(string testName, int zoomOffset, string[] bids, Fase[] fases, Fase[] pullFases, string expected)
+        public void GetAuctionForPhaseWithOffsetNoPullTest(string testName, int zoomOffset, string[] bids, Phase[] phases, Phase[] pullPhases, string expected)
         {
-            TestFaseWithOffset(testName, zoomOffset, bids, fases, pullFases, expected);
+            TestPhaseWithOffset(testName, zoomOffset, bids, phases, pullPhases, expected);
         }
 
         [Theory]
         [MemberData(nameof(TestCaseProvider.TestCasesPull3NT), MemberType = typeof(TestCaseProvider))]
-        public void GetAuctionForFaseWithOffsetPull3NTTest(string testName, int zoomOffset, string[] bids, Fase[] fases, Fase[] pullFases, string expected)
+        public void GetAuctionForPhaseWithOffsetPull3NTTest(string testName, int zoomOffset, string[] bids, Phase[] phases, Phase[] pullPhases, string expected)
         {
-            TestFaseWithOffset(testName, zoomOffset, bids, fases, pullFases, expected);
+            TestPhaseWithOffset(testName, zoomOffset, bids, phases, pullPhases, expected);
         }
 
         [Theory]
         [MemberData(nameof(TestCaseProvider.TestCasesPull4Di), MemberType = typeof(TestCaseProvider))]
-        public void GetAuctionForFaseWithOffsetPull4DiTest(string testName, int zoomOffset, string[] bids, Fase[] fases, Fase[] pullFases, string expected)
+        public void GetAuctionForPhaseWithOffsetPull4DiTest(string testName, int zoomOffset, string[] bids, Phase[] phases, Phase[] pullPhases, string expected)
         {
-            TestFaseWithOffset(testName, zoomOffset, bids, fases, pullFases, expected);
+            TestPhaseWithOffset(testName, zoomOffset, bids, phases, pullPhases, expected);
         }
 
 
-        private static void TestFaseWithOffset(string testName, int zoomOffset, string[] bids, Fase[] fases, Fase[] pullFases, string expected)
+        private static void TestPhaseWithOffset(string testName, int zoomOffset, string[] bids, Phase[] phases, Phase[] pullPhases, string expected)
         {
             if (testName is null)
             {
                 throw new ArgumentNullException(nameof(testName));
             }
             var auction = new Auction();
-            Assert.Equal(bids.Length, fases.Length);
+            Assert.Equal(bids.Length, phases.Length);
             SetBids(auction, bids);
-            var biddingState = new BiddingState(new Dictionary<Fase, bool>());
-            var enumerable = fases.Zip(pullFases, (x, y) => (x, y)).Zip(bids, (x, z) => (z, x.x, x.y));
+            var biddingState = new BiddingState(new Dictionary<Phase, bool>());
+            var enumerable = phases.Zip(pullPhases, (x, y) => (x, y)).Zip(bids, (x, z) => (z, x.x, x.y));
             foreach (var x in enumerable)
             {
-                if (x.x != Fase.Unknown)
-                    biddingState.BidsPerFase.Add((x.x, StringToBid(x.z)));
-                if (x.y != Fase.Unknown)
-                    biddingState.BidsPerFase.Add((x.y, StringToBid(x.z)));
+                if (x.x != Phase.Unknown)
+                    biddingState.BidsPerPhase.Add((x.x, StringToBid(x.z)));
+                if (x.y != Phase.Unknown)
+                    biddingState.BidsPerPhase.Add((x.y, StringToBid(x.z)));
             }
 
-            var actual = string.Join("", BiddingInformation.GetAuctionForFaseWithOffset(auction, zoomOffset, biddingState, Fase.Controls, Fase.ScanningControls));
+            var actual = string.Join("", BiddingInformation.GetAuctionForPhaseWithOffset(auction, zoomOffset, biddingState, Phase.Controls, Phase.ScanningControls));
             Assert.Equal(expected, actual);
         }
 

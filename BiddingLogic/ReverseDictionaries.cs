@@ -15,7 +15,7 @@ namespace BiddingLogic
     using ShapeDictionary = Dictionary<string, (List<string> pattern, bool zoom)>;
     using ControlsOnlyDictionary = Dictionary<string, List<int>>;
     using ControlScanningDictionary = Dictionary<string, (List<string> controlsScanning, bool zoom)>;
-    using SignOffFasesDictionary = Dictionary<Fase, Dictionary<string, List<int>>>;
+    using SignOffPhasesDictionary = Dictionary<Phase, Dictionary<string, List<int>>>;
     using QueensDictionary = Dictionary<string, string>;
 
     public class ListComparer<T> : IEqualityComparer<IEnumerable<T>>
@@ -31,29 +31,29 @@ namespace BiddingLogic
         private ControlScanningDictionary ControlScanningAuctions0 { get; }
         private ControlScanningDictionary ControlScanningAuctions1 { get; }
         private ControlScanningDictionary ControlScanningAuctions2 { get; }
-        public SignOffFasesDictionary SignOffFasesAuctions { get; }
+        public SignOffPhasesDictionary SignOffPhasesAuctions { get; }
         private QueensDictionary QueensAuction0 { get; }
         private QueensDictionary QueensAuction1 { get; }
         private QueensDictionary QueensAuction2 { get; }
 
-        private readonly Dictionary<Fase, bool> fasesWithOffset;
+        private readonly Dictionary<Phase, bool> phasesWithOffset;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly int[] SuitLengthNoSingleton = { 4, 3, 3, 3 };
         private static readonly int[] SuitLengthSingleton = { 5, 4, 3, 1 };
         private static readonly int[] SuitLength2Singletons = { 6, 5, 1, 1 };
 
         public ReverseDictionaries(ShapeDictionary shapeAuctions, ControlsOnlyDictionary controlsOnlyAuctions,
-            ControlScanningDictionary controlScanningAuctions, SignOffFasesDictionary signOffFasesAuctions)
+            ControlScanningDictionary controlScanningAuctions, SignOffPhasesDictionary signOffPhasesAuctions)
         {
             ShapeAuctions = shapeAuctions;
             ControlsOnlyAuctions = controlsOnlyAuctions;
             ControlScanningAuctions0 = controlScanningAuctions;
-            SignOffFasesAuctions = signOffFasesAuctions;
+            SignOffPhasesAuctions = signOffPhasesAuctions;
         }
 
-        public ReverseDictionaries(Dictionary<Fase, bool> fasesWithOffset, IProgress<string> progress)
+        public ReverseDictionaries(Dictionary<Phase, bool> phasesWithOffset, IProgress<string> progress)
         {
-            this.fasesWithOffset = fasesWithOffset;
+            this.phasesWithOffset = phasesWithOffset;
 
             progress.Report(nameof(ShapeAuctions));
             ShapeAuctions = LoadAuctions("txt\\AuctionsByShape.txt", GenerateAuctionsForShape, 0);
@@ -67,8 +67,8 @@ namespace BiddingLogic
             progress.Report(nameof(ControlScanningAuctions2));
             ControlScanningAuctions2 = LoadAuctions("txt\\AuctionsByControlsScanning2.txt", GenerateAuctionsForControlsScanning, 2);
 
-            progress.Report(nameof(SignOffFasesAuctions));
-            SignOffFasesAuctions = LoadAuctions("txt\\AuctionsBySignOffFases.txt", GenerateAuctionsForSignOffFases, 0);
+            progress.Report(nameof(SignOffPhasesAuctions));
+            SignOffPhasesAuctions = LoadAuctions("txt\\AuctionsBySignOffPhases.txt", GenerateAuctionsForSignOffPhases, 0);
 
             progress.Report(nameof(QueensAuction0));
             QueensAuction0 = LoadAuctions("txt\\AuctionsByQueen0.txt", GenerateQueensDictionary, 0);
@@ -105,7 +105,7 @@ namespace BiddingLogic
         private ShapeDictionary GenerateAuctionsForShape(int nrOfShortages)
         {
             Logger.Info("Generating dictionaries for shape");
-            var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
+            var bidManager = new BidManager(new BidGenerator(), phasesWithOffset);
             var auctions = new ShapeDictionary();
             var regex = new Regex("x");
 
@@ -125,7 +125,7 @@ namespace BiddingLogic
                                 {
                                     _ = bidManager.GetAuction(string.Empty, hand); // No north hand. Just for generating reverse dictionaries
                                     var isZoom = bidManager.BiddingState.IsZoomShape;
-                                    var key = bidManager.BiddingState.GetBidsAsString(Fase.Shape);
+                                    var key = bidManager.BiddingState.GetBidsAsString(Phase.Shape);
                                     if (auctions.ContainsKey(key))
                                         auctions[key].pattern.Add(str);
                                     else
@@ -139,7 +139,7 @@ namespace BiddingLogic
         {
             Logger.Info("Generating dictionaries for controls only");
             var auctions = new ControlsOnlyDictionary();
-            var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
+            var bidManager = new BidManager(new BidGenerator(), phasesWithOffset);
 
             var shufflingDeal = new ShufflingDeal
             {
@@ -178,14 +178,14 @@ namespace BiddingLogic
                 var board = Util.GetBoardsTosr(shufflingDeal.Execute().First());
 
                 _ = bidManager.GetAuction(string.Empty, board[Player.South]); // No north hand. Just for generating reverse dictionaries
-                auctions.Add(bidManager.BiddingState.GetBidsAsString(Fase.Controls), new List<int> { control });
+                auctions.Add(bidManager.BiddingState.GetBidsAsString(Phase.Controls), new List<int> { control });
             }
         }
 
         private ControlScanningDictionary GenerateAuctionsForControlsScanning(int nrOfShortages)
         {
             Logger.Info($"Generating dictionaries for controlsScanning. Shortages:{nrOfShortages}");
-            var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
+            var bidManager = new BidManager(new BidGenerator(), phasesWithOffset);
             var auctions = new ControlScanningDictionary();
             var controls = new[] { "", "A", "K", "AK" };
 
@@ -215,8 +215,8 @@ namespace BiddingLogic
                 if (hand.Length != 16)
                     return;
                 _ = bidManager.GetAuction(string.Empty, hand);// No north hand. Just for generating reverse dictionaries
-                var key = string.Join("", bidManager.BiddingState.GetBids(Fase.Controls, Fase.ScanningControls).
-                    Select(bid => bid - (bidManager.BiddingState.GetBids(Fase.Shape).Last() - Bids.ThreeDiamondBid)));
+                var key = string.Join("", bidManager.BiddingState.GetBids(Phase.Controls, Phase.ScanningControls).
+                    Select(bid => bid - (bidManager.BiddingState.GetBids(Phase.Shape).Last() - Bids.ThreeDiamondBid)));
                 if (!auctions.ContainsKey(key))
                     auctions.Add(key, (new List<string>() { handToStore }, bidManager.BiddingState.IsZoomControlScanning));
                 else if (!auctions[key].controlsScanning.Contains(handToStore))
@@ -224,38 +224,38 @@ namespace BiddingLogic
             }
         }
 
-        private SignOffFasesDictionary GenerateAuctionsForSignOffFases(int nrOfShortages)
+        private SignOffPhasesDictionary GenerateAuctionsForSignOffPhases(int nrOfShortages)
         {
             Logger.Info("Generating dictionaries for sign-off fases");
-            var signOffFasesAuctions = new SignOffFasesDictionary();
+            var signOffPhasesAuctions = new SignOffPhasesDictionary();
             var shuffleRestriction = new ShufflingDeal() { South = new South { Controls = new MinMax(2, 12) } };
-            foreach (var fase in BiddingState.SignOffFases)
+            foreach (var fase in BiddingState.SignOffPhases)
             {
-                var dictionaryForFase = new ControlsOnlyDictionary();
+                var dictionaryForPhase = new ControlsOnlyDictionary();
                 foreach (var hcp in Enumerable.Range(8, 15))
                 {
                     shuffleRestriction.South.Hcp = new MinMax(hcp, hcp);
                     var board = Util.GetBoardsTosr(shuffleRestriction.Execute().First());
-                    var bidFromRule = PInvoke.GetBidFromRule(fase, Fase.Controls, board[Player.South], 0, out _, out _);
+                    var bidFromRule = PInvoke.GetBidFromRule(fase, Phase.Controls, board[Player.South], 0, out _, out _);
                     if (bidFromRule != 0)
                     {
                         var bidStr = BiddingState.GetSignOffBid(fase, Bids.ThreeNTBid + bidFromRule).ToString();
-                        if (!dictionaryForFase.ContainsKey(bidStr))
-                            dictionaryForFase.Add(bidStr, new List<int>());
-                        if (!dictionaryForFase[bidStr].Contains(hcp))
-                            dictionaryForFase[bidStr].Add(hcp);
+                        if (!dictionaryForPhase.ContainsKey(bidStr))
+                            dictionaryForPhase.Add(bidStr, new List<int>());
+                        if (!dictionaryForPhase[bidStr].Contains(hcp))
+                            dictionaryForPhase[bidStr].Add(hcp);
                     }
                 }
-                signOffFasesAuctions.Add(fase, dictionaryForFase);
+                signOffPhasesAuctions.Add(fase, dictionaryForPhase);
             }
-            return signOffFasesAuctions;
+            return signOffPhasesAuctions;
         }
 
         private QueensDictionary GenerateQueensDictionary(int nrOfShortages)
         {
             Logger.Info("Generating dictionaries for queens");
 
-            var bidManager = new BidManager(new BidGenerator(), fasesWithOffset);
+            var bidManager = new BidManager(new BidGenerator(), phasesWithOffset);
             var auctions = new Dictionary<IEnumerable<Bid>, string>(new ListComparer<Bid>());
             var partialAuctions = new List<(IEnumerable<Bid> auction, string queens)>();
             var controls = new[] { "", "Q" };
@@ -278,7 +278,7 @@ namespace BiddingLogic
             void BidAndStoreHand(string hand, params string[] suits)
             {
                 _ = bidManager.GetAuction(string.Empty, hand);// No north hand. Just for generating reverse dictionaries
-                var key = bidManager.BiddingState.GetBids(Fase.ScanningOther).ToList();
+                var key = bidManager.BiddingState.GetBids(Phase.ScanningOther).ToList();
                 if (auctions.TryGetValue(key, out var value))
                 {
                     var queenStr = string.Empty;

@@ -9,92 +9,92 @@ namespace BiddingLogic
 {
     public class BiddingState
     {
-        private static List<Fase> SignOffFasesFor3NT { get; } = new() { Fase.Pull3NTNoAsk, Fase.Pull3NTOneAskMin, Fase.Pull3NTOneAskMax, Fase.Pull3NTTwoAsks };
-        public static List<Fase> SignOffFasesFor4Di { get; } = new() { Fase.Pull4DiamondsNoAsk, Fase.Pull4DiamondsOneAskMin, Fase.Pull4DiamondsOneAskMax };
-        public static List<Fase> SignOffFases { get; } = SignOffFasesFor3NT.Concat(SignOffFasesFor4Di).ToList();
-        private static List<Fase> SignOffFasesWithout3NTNoAsk { get; } = SignOffFasesFor4Di.Concat(new[] { Fase.Pull3NTOneAskMin, Fase.Pull3NTOneAskMax, Fase.Pull3NTTwoAsks }).ToList();
+        private static List<Phase> SignOffPhasesFor3NT { get; } = new() { Phase.Pull3NTNoAsk, Phase.Pull3NTOneAskMin, Phase.Pull3NTOneAskMax, Phase.Pull3NTTwoAsks };
+        public static List<Phase> SignOffPhasesFor4Di { get; } = new() { Phase.Pull4DiamondsNoAsk, Phase.Pull4DiamondsOneAskMin, Phase.Pull4DiamondsOneAskMax };
+        public static List<Phase> SignOffPhases { get; } = SignOffPhasesFor3NT.Concat(SignOffPhasesFor4Di).ToList();
+        private static List<Phase> SignOffPhasesWithout3NTNoAsk { get; } = SignOffPhasesFor4Di.Concat(new[] { Phase.Pull3NTOneAskMin, Phase.Pull3NTOneAskMax, Phase.Pull3NTTwoAsks }).ToList();
 
-        public Fase Fase { get; set; }
+        public Phase Phase { get; set; }
         public Bid CurrentBid { get; set; }
-        public int RelayBidIdLastFase { get; set; }
+        public int RelayBidIdLastPhase { get; set; }
         public int NextBidIdForRule { get; private set; }
-        private int FaseOffset { get; set; }
+        private int PhaseOffset { get; set; }
 
-        private readonly Dictionary<Fase, bool> fasesWithOffset;
-        public Fase PreviousFase { get; private set; }
-        public List<(Fase fase, Bid bid)> BidsPerFase { get; } = new();
+        private readonly Dictionary<Phase, bool> phasesWithOffset;
+        public Phase PreviousPhase { get; private set; }
+        public List<(Phase phase, Bid bid)> BidsPerPhase { get; } = new();
         public bool IsZoomShape { get; private set; }
         public bool IsZoomControlScanning { get; private set; }
 
-        public BiddingState(Dictionary<Fase, bool> fasesWithOffset)
+        public BiddingState(Dictionary<Phase, bool> phasesWithOffset)
         {
-            this.fasesWithOffset = fasesWithOffset;
+            this.phasesWithOffset = phasesWithOffset;
             Init();
         }
 
         private void Init()
         {
-            Fase = Fase.Shape;
+            Phase = Phase.Shape;
             CurrentBid = Bid.PassBid;
-            RelayBidIdLastFase = 0;
-            FaseOffset = 0;
+            RelayBidIdLastPhase = 0;
+            PhaseOffset = 0;
             NextBidIdForRule = 0;
-            PreviousFase = Fase.Unknown;
-            BidsPerFase.Clear();
+            PreviousPhase = Phase.Unknown;
+            BidsPerPhase.Clear();
             IsZoomShape = false;
             IsZoomControlScanning = false;
         }
 
         public int CalculateBid(int bidIdFromRule, string description, bool zoom)
         {
-            var bidId = bidIdFromRule + RelayBidIdLastFase + FaseOffset;
+            var bidId = bidIdFromRule + RelayBidIdLastPhase + PhaseOffset;
             if (bidIdFromRule == 0)
             {
-                CurrentBid = SignOffFasesFor4Di.Contains(Fase) ? Bids.FourHeartsBid : Bid.PassBid;
+                CurrentBid = SignOffPhasesFor4Di.Contains(Phase) ? Bids.FourHeartsBid : Bid.PassBid;
                 return bidId;
             }
 
             CurrentBid = Bid.GetBid(bidId);
-            BidsPerFase.Add((SignOffFasesWithout3NTNoAsk.Contains(Fase) ? PreviousFase : Fase, CurrentBid));
-            if (SignOffFasesWithout3NTNoAsk.Contains(Fase))
-                BidsPerFase.Add((Fase, CurrentBid));
+            BidsPerPhase.Add((SignOffPhasesWithout3NTNoAsk.Contains(Phase) ? PreviousPhase : Phase, CurrentBid));
+            if (SignOffPhasesWithout3NTNoAsk.Contains(Phase))
+                BidsPerPhase.Add((Phase, CurrentBid));
             if (zoom)
             {
-                if (Fase == Fase.Shape)
+                if (Phase == Phase.Shape)
                     IsZoomShape = true;
-                if (Fase == Fase.ScanningControls)
+                if (Phase == Phase.ScanningControls)
                     IsZoomControlScanning = true;
             }
             CurrentBid.description = description;
             return bidId;
         }
 
-        public void UpdateBiddingState(int bidIdFromRule, Fase nextFase, int bidId, int zoomOffset)
+        public void UpdateBiddingState(int bidIdFromRule, Phase nextPhase, int bidId, int zoomOffset)
         {
-            if (SignOffFases.Contains(Fase))
+            if (SignOffPhases.Contains(Phase))
             {
-                if (Fase == Fase.Pull3NTNoAsk)
+                if (Phase == Phase.Pull3NTNoAsk)
                 {
-                    RelayBidIdLastFase += bidIdFromRule + 1 - NextBidIdForRule;
-                    Fase = PreviousFase;
+                    RelayBidIdLastPhase += bidIdFromRule + 1 - NextBidIdForRule;
+                    Phase = PreviousPhase;
                     return;
                 }
-                Fase = PreviousFase;
+                Phase = PreviousPhase;
             }
 
-            if (nextFase != Fase)
+            if (nextPhase != Phase)
             {
                 // Specific for zoom. TODO Code is ugly, needs improvement
                 if (zoomOffset != 0)
                     zoomOffset--;
-                RelayBidIdLastFase = bidId + 1 - zoomOffset;
-                Fase = nextFase;
-                FaseOffset = 0;
+                RelayBidIdLastPhase = bidId + 1 - zoomOffset;
+                Phase = nextPhase;
+                PhaseOffset = 0;
                 NextBidIdForRule = zoomOffset;
             }
-            else if (fasesWithOffset[Fase])
+            else if (phasesWithOffset[Phase])
             {
-                FaseOffset++;
+                PhaseOffset++;
                 NextBidIdForRule = bidIdFromRule;
             }
             else
@@ -105,61 +105,61 @@ namespace BiddingLogic
 
         public void UpdateBiddingStateSignOff(int controlBidCount, Bid relayBid)
         {
-            PreviousFase = Fase;
+            PreviousPhase = Phase;
             if (relayBid.Suit == Suit.NoTrump)
             {
-                Fase = controlBidCount switch
+                Phase = controlBidCount switch
                 {
-                    0 => Fase.Pull3NTNoAsk,
-                    1 => Fase == Fase.Controls ? Fase.Pull3NTOneAskMin : Fase.Pull3NTOneAskMax,
-                    2 => Fase.Pull3NTTwoAsks,
+                    0 => Phase.Pull3NTNoAsk,
+                    1 => Phase == Phase.Controls ? Phase.Pull3NTOneAskMin : Phase.Pull3NTOneAskMax,
+                    2 => Phase.Pull3NTTwoAsks,
                     _ => throw new ArgumentOutOfRangeException(nameof(controlBidCount)),
                 };
             }
             else
             {
-                Fase = controlBidCount switch
+                Phase = controlBidCount switch
                 {
-                    0 => Fase.Pull4DiamondsNoAsk,
-                    1 => Fase == Fase.Controls ? Fase.Pull4DiamondsOneAskMin : Fase.Pull4DiamondsOneAskMax,
+                    0 => Phase.Pull4DiamondsNoAsk,
+                    1 => Phase == Phase.Controls ? Phase.Pull4DiamondsOneAskMin : Phase.Pull4DiamondsOneAskMax,
                     _ => throw new ArgumentOutOfRangeException(nameof(controlBidCount)),
                 };
             }
-            RelayBidIdLastFase = Bid.GetBidId(relayBid) - (Fase == Fase.Pull3NTNoAsk ? 0 : NextBidIdForRule) - FaseOffset + (relayBid == Bids.FourDiamondBid ? 1 : 0);
+            RelayBidIdLastPhase = Bid.GetBidId(relayBid) - (Phase == Phase.Pull3NTNoAsk ? 0 : NextBidIdForRule) - PhaseOffset + (relayBid == Bids.FourDiamondBid ? 1 : 0);
         }
 
-        public string GetBidsAsString(Fase fase)
+        public string GetBidsAsString(Phase fase)
         {
-            return string.Join("", BidsPerFase.Where(x => new[] { fase }.Contains(x.fase)).Select(x => x.bid));
+            return string.Join("", BidsPerPhase.Where(x => new[] { fase }.Contains(x.phase)).Select(x => x.bid));
         }
 
-        public IEnumerable<Bid> GetBids(params Fase[] fases)
+        public IEnumerable<Bid> GetBids(params Phase[] fases)
         {
-            return BidsPerFase.Where(x => fases.Contains(x.fase)).Select(x => x.bid);
+            return BidsPerPhase.Where(x => fases.Contains(x.phase)).Select(x => x.bid);
         }
 
         public Bid GetPullBid()
         {
-            return BidsPerFase.Where(x => SignOffFases.Contains(x.fase)).Select(x => x.bid).SingleOrDefault();
+            return BidsPerPhase.Where(x => SignOffPhases.Contains(x.phase)).Select(x => x.bid).SingleOrDefault();
         }
 
-        public Fase GetPullFase()
+        public Phase GetPullPhase()
         {
-            return BidsPerFase.Where(x => SignOffFases.Contains(x.fase)).Select(x => x.fase).SingleOrDefault();
+            return BidsPerPhase.Where(x => SignOffPhases.Contains(x.phase)).Select(x => x.phase).SingleOrDefault();
         }
 
-        public static Bid GetSignOffBid(Fase pullFase, Bid pullBid)
+        public static Bid GetSignOffBid(Phase pullPhase, Bid pullBid)
         {
-            return (pullFase switch
+            return (pullPhase switch
             {
-                Fase.Pull3NTNoAsk => pullBid,
-                Fase.Pull3NTOneAskMin => Bids.ThreeNTBid + 1,
-                Fase.Pull3NTOneAskMax => Bids.ThreeNTBid + 1,
-                Fase.Pull3NTTwoAsks => Bids.ThreeNTBid + 1,
-                Fase.Pull4DiamondsNoAsk => Bids.FourDiamondBid + 2,
-                Fase.Pull4DiamondsOneAskMin => Bids.FourDiamondBid + 2,
-                Fase.Pull4DiamondsOneAskMax => Bids.FourDiamondBid + 2,
-                _ => throw new InvalidEnumArgumentException(nameof(pullFase)),
+                Phase.Pull3NTNoAsk => pullBid,
+                Phase.Pull3NTOneAskMin => Bids.ThreeNTBid + 1,
+                Phase.Pull3NTOneAskMax => Bids.ThreeNTBid + 1,
+                Phase.Pull3NTTwoAsks => Bids.ThreeNTBid + 1,
+                Phase.Pull4DiamondsNoAsk => Bids.FourDiamondBid + 2,
+                Phase.Pull4DiamondsOneAskMin => Bids.FourDiamondBid + 2,
+                Phase.Pull4DiamondsOneAskMax => Bids.FourDiamondBid + 2,
+                _ => throw new InvalidEnumArgumentException(nameof(pullPhase)),
             });
         }
     }

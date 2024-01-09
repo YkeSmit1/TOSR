@@ -43,7 +43,7 @@
                             <TextBlock Grid.Column="2" Text="East" FontWeight="Bold" Padding="3"/>
                             <TextBlock Grid.Column="3" Text="South" FontWeight="Bold" Padding="3"/>
                         </Grid>
-                        <ItemsControl Grid.Row="1" ItemsSource="{Binding Auction.bids.Values}">
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding Auction.Bids.Values}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <ItemsControl ItemsSource="{Binding .}">
@@ -52,7 +52,7 @@
                                                 <StackPanel Orientation="Horizontal" Width="60">
                                                     <TextBlock Text="{Binding Value, Converter={StaticResource BidToRankStringTextConverter}}" Padding="3, 0, 0, 0"/>
                                                     <TextBlock Text="{Binding Value, Converter={StaticResource BidToSuitStringConverter}}" 
-                                                               Foreground="{Binding Value.suit, Converter={StaticResource SuitToColorConverter}}"/>
+                                                               Foreground="{Binding Value.Suit, Converter={StaticResource SuitToColorConverter}}"/>
                                                 </StackPanel>
                                             </DataTemplate>
 

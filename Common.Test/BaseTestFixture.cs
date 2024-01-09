@@ -9,11 +9,11 @@ namespace Common.Test
 {
     public class BaseTestFixture
     {
-        public readonly Dictionary<Fase, bool> fasesWithOffset;
+        public readonly Dictionary<Phase, bool> fasesWithOffset;
         public readonly ReverseDictionaries reverseDictionaries;
         public BaseTestFixture()
         {
-            fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
+            fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Phase, bool>>(File.ReadAllText("FasesWithOffset.json"));
             reverseDictionaries = new ReverseDictionaries(fasesWithOffset, new Progress<string>());
 
             BidManager.SetSystemParameters(UtilTosr.ReadResource("BiddingLogic.SystemParameters.json"));

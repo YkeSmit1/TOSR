@@ -45,7 +45,7 @@ namespace Wpf.Tosr
         private BidManager bidManager;
         private ReverseDictionaries reverseDictionaries;
 
-        private static readonly Dictionary<Fase, bool> FasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Fase, bool>>(File.ReadAllText("FasesWithOffset.json"));
+        private static readonly Dictionary<Phase, bool> PhasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Phase, bool>>(File.ReadAllText("FasesWithOffset.json"));
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly ManualResetEvent resetEvent = new(false);
         private Pbn pbn = new();
@@ -111,8 +111,8 @@ namespace Wpf.Tosr
             await Task.Run(() =>
             {
                 var progress = new Progress<string>(report => Dispatcher.Invoke(() => ToolStripStatusLabel1.Content = $"Generating dictionary {report}..."));
-                reverseDictionaries = new ReverseDictionaries(FasesWithOffset, progress);
-                bidManager = new BidManager(new BidGeneratorDescription(), FasesWithOffset, reverseDictionaries, true);
+                reverseDictionaries = new ReverseDictionaries(PhasesWithOffset, progress);
+                bidManager = new BidManager(new BidGeneratorDescription(), PhasesWithOffset, reverseDictionaries, true);
                 Dispatcher.Invoke(() => bidManager.Init(Auction));
                 resetEvent.Set();
             });
@@ -273,7 +273,7 @@ namespace Wpf.Tosr
         {
             resetEvent.WaitOne();
             PanelNorth.Visibility = Visibility.Hidden;
-            var batchBidding = new BatchBidding(reverseDictionaries, FasesWithOffset, ToolStripMenuItemUseSolver.IsChecked);
+            var batchBidding = new BatchBidding(reverseDictionaries, PhasesWithOffset, ToolStripMenuItemUseSolver.IsChecked);
             ToolStripStatusLabel1.Content = "Batch bidding hands...";
             cancelBatchBidding.Dispose();
             cancelBatchBidding = new CancellationTokenSource();
@@ -422,7 +422,7 @@ namespace Wpf.Tosr
                 LoadCurrentBoard();
 
                 resetEvent.WaitOne();
-                var batchBidding = new BatchBidding(reverseDictionaries, FasesWithOffset, true);
+                var batchBidding = new BatchBidding(reverseDictionaries, PhasesWithOffset, true);
                 var localPbn = batchBidding.Execute(new[] { pbn.Boards[boardIndex].Deal }, new Progress<int>(), "", CancellationToken.None);
                 Auction = localPbn.Item1.Boards.First().Auction ?? new Auction();
                 AuctionViewModel.UpdateAuction(Auction);
