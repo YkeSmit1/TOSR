@@ -75,7 +75,7 @@ namespace TosrIntegration.Test
     [Collection("Sequential")]
     public class TestRelayBid : IClassFixture<BaseTestFixture>
     {
-        private readonly Dictionary<Phase, bool> fasesWithOffset;
+        private readonly Dictionary<Phase, bool> phasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
         private readonly ITestOutputHelper output;
 
@@ -83,7 +83,7 @@ namespace TosrIntegration.Test
 
         public TestRelayBid(BaseTestFixture fixture, ITestOutputHelper output)
         {
-            fasesWithOffset = fixture.fasesWithOffset;
+            phasesWithOffset = fixture.phasesWithOffset;
             reverseDictionaries = fixture.reverseDictionaries;
             this.output = output;
         }
@@ -93,7 +93,7 @@ namespace TosrIntegration.Test
         public void TestAuctions3NT(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
             SetupTest.Setup(testName, Logger);
-            var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, false);
+            var bidManager = new BidManager(new BidGeneratorDescription(), phasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction(northHand, southHand);
             AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
         }
@@ -103,7 +103,7 @@ namespace TosrIntegration.Test
         public void TestAuctions3NTPull(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
             SetupTest.Setup(testName, Logger);
-            var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, false);
+            var bidManager = new BidManager(new BidGeneratorDescription(), phasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction(northHand, southHand);
             AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
             AssertMethods.AssertHand(bidManager.biddingInformation, auction, northHand, southHand, reverseDictionaries, bidManager.BiddingState);
@@ -114,7 +114,7 @@ namespace TosrIntegration.Test
         public void TestAuctions4Diamond(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
             SetupTest.Setup(testName, Logger);
-            var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, (_, _, _) => BidManager.RelayBidKind.fourDiamondEndSignal);
+            var bidManager = new BidManager(new BidGeneratorDescription(), phasesWithOffset, reverseDictionaries, (_, _, _) => BidManager.RelayBidKind.fourDiamondEndSignal);
             var auction = bidManager.GetAuction(northHand, southHand);
             AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
         }
@@ -124,7 +124,7 @@ namespace TosrIntegration.Test
         public void TestAuctions4DiamondPull(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth)
         {
             SetupTest.Setup(testName, Logger);
-            var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, (_, _, _) => BidManager.RelayBidKind.fourDiamondEndSignal);
+            var bidManager = new BidManager(new BidGeneratorDescription(), phasesWithOffset, reverseDictionaries, (_, _, _) => BidManager.RelayBidKind.fourDiamondEndSignal);
             var auction = bidManager.GetAuction(northHand, southHand);
             AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
             AssertMethods.AssertHand(bidManager.biddingInformation, auction, northHand, southHand, reverseDictionaries, bidManager.BiddingState);

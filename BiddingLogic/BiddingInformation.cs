@@ -121,12 +121,12 @@ namespace BiddingLogic
         /// <param name="auction">Generated auction </param>
         /// <param name="zoomOffset"></param>
         /// <param name="biddingState"></param>
-        /// <param name="fases">Which fases to get the offset from</param>
+        /// <param name="phases">Which phases to get the offset from</param>
         /// <returns></returns>
-        public static IEnumerable<Bid> GetAuctionForPhaseWithOffset(Auction auction, int zoomOffset, BiddingState biddingState, params Phase[] fases)
+        public static IEnumerable<Bid> GetAuctionForPhaseWithOffset(Auction auction, int zoomOffset, BiddingState biddingState, params Phase[] phases)
         {
             var lastBidShape = biddingState.GetBids(Phase.Shape).Last();
-            var bidsForPhases = biddingState.GetBids(fases);
+            var bidsForPhases = biddingState.GetBids(phases);
 
             return GetBidsForPhaseWithOffset(bidsForPhases, Bids.ThreeDiamondBid, lastBidShape, zoomOffset, GetOffsetRelayBid);
 
@@ -199,7 +199,7 @@ namespace BiddingLogic
             return bidsForPhasesResult;
         }
 
-        private static MinMax GetHcpFromAuction(PhaseDictionary faseAuctions, BiddingState biddingState)
+        private static MinMax GetHcpFromAuction(PhaseDictionary phaseAuctions, BiddingState biddingState)
         {
             var pullPhase = biddingState.GetPullPhase();
             var pullBid = biddingState.GetPullBid();
@@ -207,7 +207,7 @@ namespace BiddingLogic
             {
                 var sigOffBid = BiddingState.GetSignOffBid(pullPhase, pullBid);
                 // TODO handle case where sign-off bid is 4NT
-                if (faseAuctions[pullPhase].TryGetValue(sigOffBid.ToString(), out var hcpList))
+                if (phaseAuctions[pullPhase].TryGetValue(sigOffBid.ToString(), out var hcpList))
                     return new MinMax(hcpList.Min(), hcpList.Max());
             }
 

@@ -9,8 +9,8 @@ namespace BiddingLogic
 {
     public class BiddingState
     {
-        private static List<Phase> SignOffPhasesFor3NT { get; } = new() { Phase.Pull3NTNoAsk, Phase.Pull3NTOneAskMin, Phase.Pull3NTOneAskMax, Phase.Pull3NTTwoAsks };
-        public static List<Phase> SignOffPhasesFor4Di { get; } = new() { Phase.Pull4DiamondsNoAsk, Phase.Pull4DiamondsOneAskMin, Phase.Pull4DiamondsOneAskMax };
+        private static List<Phase> SignOffPhasesFor3NT { get; } = [Phase.Pull3NTNoAsk, Phase.Pull3NTOneAskMin, Phase.Pull3NTOneAskMax, Phase.Pull3NTTwoAsks];
+        public static List<Phase> SignOffPhasesFor4Di { get; } = [Phase.Pull4DiamondsNoAsk, Phase.Pull4DiamondsOneAskMin, Phase.Pull4DiamondsOneAskMax];
         public static List<Phase> SignOffPhases { get; } = SignOffPhasesFor3NT.Concat(SignOffPhasesFor4Di).ToList();
         private static List<Phase> SignOffPhasesWithout3NTNoAsk { get; } = SignOffPhasesFor4Di.Concat(new[] { Phase.Pull3NTOneAskMin, Phase.Pull3NTOneAskMax, Phase.Pull3NTTwoAsks }).ToList();
 
@@ -22,7 +22,7 @@ namespace BiddingLogic
 
         private readonly Dictionary<Phase, bool> phasesWithOffset;
         public Phase PreviousPhase { get; private set; }
-        public List<(Phase phase, Bid bid)> BidsPerPhase { get; } = new();
+        public List<(Phase phase, Bid bid)> BidsPerPhase { get; } = [];
         public bool IsZoomShape { get; private set; }
         public bool IsZoomControlScanning { get; private set; }
 
@@ -128,14 +128,14 @@ namespace BiddingLogic
             RelayBidIdLastPhase = Bid.GetBidId(relayBid) - (Phase == Phase.Pull3NTNoAsk ? 0 : NextBidIdForRule) - PhaseOffset + (relayBid == Bids.FourDiamondBid ? 1 : 0);
         }
 
-        public string GetBidsAsString(Phase fase)
+        public string GetBidsAsString(Phase phase)
         {
-            return string.Join("", BidsPerPhase.Where(x => new[] { fase }.Contains(x.phase)).Select(x => x.bid));
+            return string.Join("", BidsPerPhase.Where(x => new[] { phase }.Contains(x.phase)).Select(x => x.bid));
         }
 
-        public IEnumerable<Bid> GetBids(params Phase[] fases)
+        public IEnumerable<Bid> GetBids(params Phase[] phases)
         {
-            return BidsPerPhase.Where(x => fases.Contains(x.phase)).Select(x => x.bid);
+            return BidsPerPhase.Where(x => phases.Contains(x.phase)).Select(x => x.bid);
         }
 
         public Bid GetPullBid()

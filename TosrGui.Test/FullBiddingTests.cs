@@ -14,7 +14,7 @@ namespace TosrGui.Test
         public void ExecuteTest()
         {
             var bidGenerator = new Mock<IBidGenerator>();
-            var fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Phase, bool>>(File.ReadAllText("FasesWithOffset.json"));
+            var phasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Phase, bool>>(File.ReadAllText("FasesWithOffset.json"));
 
             // 1Sp
             bidGenerator.SetupSequence(x => x.GetBid(It.IsAny<BiddingState>(), It.IsAny<string>())).
@@ -31,7 +31,7 @@ namespace TosrGui.Test
                 // Pass
                 Returns(() => (0, Phase.ScanningControls, "", 0));
 
-            var bidManager = new BidManager(bidGenerator.Object, fasesWithOffset);
+            var bidManager = new BidManager(bidGenerator.Object, phasesWithOffset);
             var auction = bidManager.GetAuction("", "");
 
             Assert.Equal("1♣1NT2♥4♣5♦6♥", auction.GetBidsAsString(Player.North));

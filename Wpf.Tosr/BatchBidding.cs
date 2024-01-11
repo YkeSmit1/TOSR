@@ -88,9 +88,9 @@ namespace Wpf.Tosr
         private Dictionary<ExpectedContract, int> confidence;
         private readonly List<Bid> endContracts = new();
 
-        public BatchBidding(ReverseDictionaries reverseDictionaries, Dictionary<Phase, bool> fasesWithOffset, bool useSingleDummySolver)
+        public BatchBidding(ReverseDictionaries reverseDictionaries, Dictionary<Phase, bool> phasesWithOffset, bool useSingleDummySolver)
         {
-            bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, useSingleDummySolver);
+            bidManager = new BidManager(new BidGenerator(), phasesWithOffset, reverseDictionaries, useSingleDummySolver);
             this.useSingleDummySolver = useSingleDummySolver;
         }
 

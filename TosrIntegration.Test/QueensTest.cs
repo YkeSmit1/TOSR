@@ -36,14 +36,14 @@ namespace TosrIntegration.Test
     [Collection("Sequential")]
     public class QueensTest : IClassFixture<BaseTestFixture>
     {
-        private readonly Dictionary<Phase, bool> fasesWithOffset;
+        private readonly Dictionary<Phase, bool> phasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         public QueensTest(BaseTestFixture fixture)
         {
-            fasesWithOffset = fixture.fasesWithOffset;
+            phasesWithOffset = fixture.phasesWithOffset;
             reverseDictionaries = fixture.reverseDictionaries;
         }
 
@@ -57,7 +57,7 @@ namespace TosrIntegration.Test
             Logger.Info($"Executing testcase {testName}");
 
             _ = PInvoke.Setup("Tosr.db3");
-            var bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, true, false);
+            var bidManager = new BidManager(new BidGenerator(), phasesWithOffset, reverseDictionaries, true, false);
             var auction = bidManager.GetAuction(northHand, southHand);
             var actualBidsSouth = auction.GetBidsAsString(Player.South);
             Assert.Equal(expectedBidsSouth, actualBidsSouth);

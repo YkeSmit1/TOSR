@@ -24,7 +24,7 @@ namespace TosrIntegration.Test
         {
             var expectedSouthBids = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("expectedSouthBidsPerHand.json"));
             _ = PInvoke.Setup("Tosr.db3");
-            var bidManager = new BidManager(new BidGenerator(), Fixture.fasesWithOffset, Fixture.reverseDictionaries, false);
+            var bidManager = new BidManager(new BidGenerator(), Fixture.phasesWithOffset, Fixture.reverseDictionaries, false);
             Debug.Assert(expectedSouthBids != null, nameof(expectedSouthBids) + " != null");
             foreach (var (hand, expectedBids) in expectedSouthBids)
             {

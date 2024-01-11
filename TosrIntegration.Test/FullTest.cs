@@ -38,7 +38,7 @@ namespace TosrIntegration.Test
     [Collection("Sequential")]
     public class FullTest : IClassFixture<BaseTestFixture>
     {
-        private readonly Dictionary<Phase, bool> fasesWithOffset;
+        private readonly Dictionary<Phase, bool> phasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
 
         // ReSharper disable once NotAccessedField.Local
@@ -47,7 +47,7 @@ namespace TosrIntegration.Test
 
         public FullTest(BaseTestFixture fixture, ITestOutputHelper output)
         {
-            fasesWithOffset = fixture.fasesWithOffset;
+            phasesWithOffset = fixture.phasesWithOffset;
             reverseDictionaries = fixture.reverseDictionaries;
 
             this.output = output;
@@ -62,7 +62,7 @@ namespace TosrIntegration.Test
             Logger.Info($"Executing testcase {testName}");
 
             _ = PInvoke.Setup("Tosr.db3");
-            var bidManager = new BidManager(new BidGenerator(), fasesWithOffset, reverseDictionaries, false);
+            var bidManager = new BidManager(new BidGenerator(), phasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction(string.Empty, southHand);
             var actualBidsSouth = auction.GetBidsAsString(Player.South);
             Assert.Equal(expectedBidsSouth, actualBidsSouth);

@@ -80,12 +80,12 @@ namespace TosrIntegration.Test
         private readonly ITestOutputHelper output;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly Dictionary<Phase, bool> fasesWithOffset;
+        private readonly Dictionary<Phase, bool> phasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
 
         public ParametersTest(BaseTestFixture fixture, ITestOutputHelper output)
         {
-            fasesWithOffset = fixture.fasesWithOffset;
+            phasesWithOffset = fixture.phasesWithOffset;
             reverseDictionaries = fixture.reverseDictionaries;
             this.output = output;
         }
@@ -95,7 +95,7 @@ namespace TosrIntegration.Test
         public void TestAuctionsSystemParameters(string testName, string northHand, string southHand, string expectedBidsNorth, string expectedBidsSouth, string parameters)
         {
             SetupTest.Setup(testName, Logger);
-            var bidManager = new BidManager(new BidGeneratorDescription(), fasesWithOffset, reverseDictionaries, true);
+            var bidManager = new BidManager(new BidGeneratorDescription(), phasesWithOffset, reverseDictionaries, true);
             BidManager.SetSystemParameters(parameters);
             var auction = bidManager.GetAuction(northHand, southHand);
             AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);

@@ -226,27 +226,27 @@ namespace BiddingLogic
 
         private SignOffPhasesDictionary GenerateAuctionsForSignOffPhases(int nrOfShortages)
         {
-            Logger.Info("Generating dictionaries for sign-off fases");
+            Logger.Info("Generating dictionaries for sign-off phases");
             var signOffPhasesAuctions = new SignOffPhasesDictionary();
             var shuffleRestriction = new ShufflingDeal() { South = new South { Controls = new MinMax(2, 12) } };
-            foreach (var fase in BiddingState.SignOffPhases)
+            foreach (var phase in BiddingState.SignOffPhases)
             {
                 var dictionaryForPhase = new ControlsOnlyDictionary();
                 foreach (var hcp in Enumerable.Range(8, 15))
                 {
                     shuffleRestriction.South.Hcp = new MinMax(hcp, hcp);
                     var board = Util.GetBoardsTosr(shuffleRestriction.Execute().First());
-                    var bidFromRule = PInvoke.GetBidFromRule(fase, Phase.Controls, board[Player.South], 0, out _, out _);
+                    var bidFromRule = PInvoke.GetBidFromRule(phase, Phase.Controls, board[Player.South], 0, out _, out _);
                     if (bidFromRule != 0)
                     {
-                        var bidStr = BiddingState.GetSignOffBid(fase, Bids.ThreeNTBid + bidFromRule).ToString();
+                        var bidStr = BiddingState.GetSignOffBid(phase, Bids.ThreeNTBid + bidFromRule).ToString();
                         if (!dictionaryForPhase.ContainsKey(bidStr))
                             dictionaryForPhase.Add(bidStr, new List<int>());
                         if (!dictionaryForPhase[bidStr].Contains(hcp))
                             dictionaryForPhase[bidStr].Add(hcp);
                     }
                 }
-                signOffPhasesAuctions.Add(fase, dictionaryForPhase);
+                signOffPhasesAuctions.Add(phase, dictionaryForPhase);
             }
             return signOffPhasesAuctions;
         }

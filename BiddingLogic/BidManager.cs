@@ -96,7 +96,7 @@ namespace BiddingLogic
         }
 
         private readonly IBidGenerator bidGenerator;
-        private readonly Dictionary<Phase, bool> fasesWithOffset;
+        private readonly Dictionary<Phase, bool> phasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries;
         private readonly bool useSingleDummySolver;
         private readonly bool useSingleDummySolverDuringRelaying;
@@ -113,22 +113,22 @@ namespace BiddingLogic
         public BiddingState BiddingState { get; private set; }
 
         // Constructor used for test
-        public BidManager(IBidGenerator bidGenerator, Dictionary<Phase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, RelayBidKindFunc getRelayBidKindFunc) :
-            this(bidGenerator, fasesWithOffset)
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Phase, bool> phasesWithOffset, ReverseDictionaries reverseDictionaries, RelayBidKindFunc getRelayBidKindFunc) :
+            this(bidGenerator, phasesWithOffset)
         {
             this.reverseDictionaries = reverseDictionaries;
             this.getRelayBidKindFunc = getRelayBidKindFunc;
         }
 
         // Standard constructor
-        public BidManager(IBidGenerator bidGenerator, Dictionary<Phase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, bool useSingleDummySolver) :
-            this(bidGenerator, fasesWithOffset, reverseDictionaries, useSingleDummySolver, useSingleDummySolver)
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Phase, bool> phasesWithOffset, ReverseDictionaries reverseDictionaries, bool useSingleDummySolver) :
+            this(bidGenerator, phasesWithOffset, reverseDictionaries, useSingleDummySolver, useSingleDummySolver)
         {
         }
 
         // Standard constructor
-        public BidManager(IBidGenerator bidGenerator, Dictionary<Phase, bool> fasesWithOffset, ReverseDictionaries reverseDictionaries, bool useSingleDummySolver, bool useSingleDummySolverDuringRelaying) :
-            this(bidGenerator, fasesWithOffset)
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Phase, bool> phasesWithOffset, ReverseDictionaries reverseDictionaries, bool useSingleDummySolver, bool useSingleDummySolverDuringRelaying) :
+            this(bidGenerator, phasesWithOffset)
         {
             this.reverseDictionaries = reverseDictionaries;
             this.useSingleDummySolver = useSingleDummySolver;
@@ -138,17 +138,17 @@ namespace BiddingLogic
         }
 
         // Constructor used for generate reverse dictionaries
-        public BidManager(IBidGenerator bidGenerator, Dictionary<Phase, bool> fasesWithOffset)
+        public BidManager(IBidGenerator bidGenerator, Dictionary<Phase, bool> phasesWithOffset)
         {
             this.bidGenerator = bidGenerator;
-            this.fasesWithOffset = fasesWithOffset;
+            this.phasesWithOffset = phasesWithOffset;
             getRelayBidKindFunc = GetRelayBidKind;
-            BiddingState = new BiddingState(fasesWithOffset);
+            BiddingState = new BiddingState(phasesWithOffset);
         }
 
         public void Init(Auction auction)
         {
-            BiddingState = new BiddingState(fasesWithOffset);
+            BiddingState = new BiddingState(phasesWithOffset);
             biddingInformation = new BiddingInformation(reverseDictionaries, auction, BiddingState);
         }
 
@@ -389,7 +389,7 @@ namespace BiddingLogic
         {
             var declarers = Enum.GetValues(typeof(Suit)).Cast<Suit>().ToDictionary(suit => suit, auction.GetDeclarerOrNorth);
             var confidenceTricks = GetConfidenceTricks(northHand, southInformation, declarers);
-            var confidenceToBidSlam = (confidenceTricks.TryGetValue(12, out var smallSlamTricks) ? smallSlamTricks : 0.0) + (confidenceTricks.TryGetValue(13, out var grandSlamTricks) ? grandSlamTricks : 0.0);
+            var confidenceToBidSlam = (confidenceTricks.GetValueOrDefault(12, 0.0)) + (confidenceTricks.GetValueOrDefault(13, 0.0));
             var relayBidKind = systemParameters.requirementsForRelayBid.First(x => confidenceToBidSlam >= x.range.min && confidenceToBidSlam <= x.range.max).relayBidKind;
             LoggerBidding.Info($"RelayBidkind:{relayBidKind} confidence in GetRelayBid:{JsonConvert.SerializeObject(confidenceTricks)}");
             return relayBidKind;

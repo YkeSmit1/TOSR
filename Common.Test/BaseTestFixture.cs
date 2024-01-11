@@ -7,14 +7,15 @@ using Common.Tosr;
 
 namespace Common.Test
 {
-    public class BaseTestFixture
+    public abstract class BaseTestFixture
     {
-        public readonly Dictionary<Phase, bool> fasesWithOffset;
+        public readonly Dictionary<Phase, bool> phasesWithOffset;
         public readonly ReverseDictionaries reverseDictionaries;
-        public BaseTestFixture()
+
+        protected BaseTestFixture()
         {
-            fasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Phase, bool>>(File.ReadAllText("FasesWithOffset.json"));
-            reverseDictionaries = new ReverseDictionaries(fasesWithOffset, new Progress<string>());
+            phasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Phase, bool>>(File.ReadAllText("FasesWithOffset.json"));
+            reverseDictionaries = new ReverseDictionaries(phasesWithOffset, new Progress<string>());
 
             BidManager.SetSystemParameters(UtilTosr.ReadResource("BiddingLogic.SystemParameters.json"));
             BidManager.SetOptimizationParameters(UtilTosr.ReadResource("BiddingLogic.OptimizationParameters.json"));

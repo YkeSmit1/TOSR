@@ -17,7 +17,7 @@ namespace TosrGui.Test
         private readonly ShapeDictionary shapeAuctions;
         private readonly ControlsOnlyDictionary auctionsControlsOnly;
         private readonly ControlScanningDictionary auctionsControlsScanning;
-        private readonly Dictionary<Phase, bool> fasesWithOffset;
+        private readonly Dictionary<Phase, bool> phasesWithOffset;
 
         public ZoomTests()
         {
@@ -35,7 +35,7 @@ namespace TosrGui.Test
                 {"4♣", new List<int>{ 5 } }
             };
 
-            fasesWithOffset = new Dictionary<Phase, bool>
+            phasesWithOffset = new Dictionary<Phase, bool>
             {
                 { Phase.Shape, false },
                 { Phase.Controls, false},
@@ -54,7 +54,7 @@ namespace TosrGui.Test
             // Setup
             var auction = new Auction();
             var newBids = new List<Bid> { new(1, Suit.Hearts), new(3, Suit.Hearts) };
-            var biddingState = new BiddingState(fasesWithOffset);
+            var biddingState = new BiddingState(phasesWithOffset);
             foreach (var bid in newBids)
                 biddingState.BidsPerPhase.Add((Phase.Shape, bid));
             auction.SetBids(Player.South, newBids);
@@ -69,7 +69,7 @@ namespace TosrGui.Test
             // Setup
             var auction = new Auction();
             var newBids = new List<Bid> { new(1, Suit.Spades), new(3, Suit.Spades) };
-            var biddingState = new BiddingState(fasesWithOffset);
+            var biddingState = new BiddingState(phasesWithOffset);
             foreach (var bid in newBids)
                 biddingState.BidsPerPhase.Add((Phase.Shape, bid));
             auction.SetBids(Player.South, newBids);
@@ -84,7 +84,7 @@ namespace TosrGui.Test
             // Setup
             var auction = new Auction();
             var newBids = new List<Bid> { new(1, Suit.Hearts), new(3, Suit.Spades) };
-            var biddingState = new BiddingState(fasesWithOffset);
+            var biddingState = new BiddingState(phasesWithOffset);
             foreach (var bid in newBids)
                 biddingState.BidsPerPhase.Add((Phase.Shape, bid));
             auction.SetBids(Player.South, newBids);
@@ -117,7 +117,7 @@ namespace TosrGui.Test
                 Returns(() => (8, Phase.ScanningControls, "", 0));
 
             var reverseDictionaries = new ReverseDictionaries(shapeAuctions, auctionsControlsOnly, auctionsControlsScanning, null);
-            var bidManager = new BidManager(bidGenerator.Object, fasesWithOffset, reverseDictionaries, false);
+            var bidManager = new BidManager(bidGenerator.Object, phasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction("", "");
 
             Assert.Equal("1♠2♦3NT4♥5♦5♠6♦Pass", auction.GetBidsAsString(Player.South));

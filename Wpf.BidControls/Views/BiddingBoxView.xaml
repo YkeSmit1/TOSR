@@ -28,7 +28,7 @@
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{Binding Converter={StaticResource BidToRankStringConverter}}"/>
                     <TextBlock Text="{Binding Converter={StaticResource BidToSuitStringConverter}}" 
-                        Foreground="{Binding (common:Bid.suit), Converter={StaticResource SuitToColorConverter}}"/>
+                        Foreground="{Binding (common:Bid.Suit), Converter={StaticResource SuitToColorConverter}}"/>
                 </StackPanel>   
             </Button>
         </DataTemplate>
