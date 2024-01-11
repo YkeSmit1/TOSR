@@ -1,7 +1,10 @@
 #pragma once
 
+#define SQLITECPP_COMPILE_DLL
+
 #include "ISQLiteWrapper.h"
 #include "SQLiteCpp/SQLiteCpp.h"
+
 
 class SQLiteCppWrapper : public ISQLiteWrapper
 {
