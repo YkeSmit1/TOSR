@@ -29,7 +29,7 @@ jobs:
       run: nuget restore Tosr.sln
     - name: Restore from cache and install vcpkg
       # Download and build vcpkg, without installing any port. If content is cached already, it is a no-op.
-      uses: lukka/run-vcpkg@v10
+      uses: lukka/run-vcpkg@v11
     # Now that vcpkg is installed, it is being used to run with desired arguments.
     - name: Install SQLiteCpp using vcpg      
       run: |
@@ -47,4 +47,4 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: distribute
-        path: .\Tosr\bin\Release\net7.0-windows\
+        path: .\Tosr\bin\Release\net8.0-windows\
