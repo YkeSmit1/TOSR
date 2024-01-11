@@ -45,7 +45,7 @@ namespace Wpf.Tosr
         private BidManager bidManager;
         private ReverseDictionaries reverseDictionaries;
 
-        private static readonly Dictionary<Phase, bool> PhasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Phase, bool>>(File.ReadAllText("FasesWithOffset.json"));
+        private static readonly Dictionary<Phase, bool> PhasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Phase, bool>>(File.ReadAllText("phasesWithOffset.json"));
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly ManualResetEvent resetEvent = new(false);
         private Pbn pbn = new();

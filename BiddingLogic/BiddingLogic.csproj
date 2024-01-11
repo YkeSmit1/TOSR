@@ -3,7 +3,7 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="..\FasesWithOffset.json" Link="FasesWithOffset.json">
+    <Content Include="..\PhasesWithOffset.json" Link="PhasesWithOffset.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

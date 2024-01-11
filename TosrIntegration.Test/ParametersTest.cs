@@ -12,83 +12,80 @@ namespace TosrIntegration.Test
     {
         public static IEnumerable<object[]> TestCasesSystemParameters()
         {
-            string systemParameters1 = @"{
-              ""hcpRelayerToSignOffInNT"": {
-                ""0"": [ 16, 17, 18, 19, 20 ],
-                ""1"": [ 21, 22 ],
-                ""2"": [ 23, 24 ]
-              },
-              ""requirementsForRelayBid"": [
-                [
-                  [ -0.1, 100.1 ],
-                  ""gameBid""
-                ],
-                [
-                  [ -0.1, -0.1 ],
-                  ""fourDiamondEndSignal""
-                ],
-                [
-                  [ -0.1, -0.1 ],
-                  ""Relay""
-                ]
-              ],
-              ""requiredMaxHcpToBid4Diamond"": 17
-            }";
+            const string systemParameters1 = """
+                                             {
+                                                           "hcpRelayerToSignOffInNT": {
+                                                             "0": [ 16, 17, 18, 19, 20 ],
+                                                             "1": [ 21, 22 ],
+                                                             "2": [ 23, 24 ]
+                                                           },
+                                                           "requirementsForRelayBid": [
+                                                             [
+                                                               [ -0.1, 100.1 ],
+                                                               "gameBid"
+                                                             ],
+                                                             [
+                                                               [ -0.1, -0.1 ],
+                                                               "fourDiamondEndSignal"
+                                                             ],
+                                                             [
+                                                               [ -0.1, -0.1 ],
+                                                               "Relay"
+                                                             ]
+                                                           ],
+                                                           "requiredMaxHcpToBid4Diamond": 17
+                                                         }
+                                             """;
 
-            string systemParameters2 = @"{
-              ""hcpRelayerToSignOffInNT"": {
-                ""0"": [ 16, 17, 18, 19 ],
-                ""1"": [ 20, 21, 22 ],
-                ""2"": [ 23, 24 ]
-              },
-              ""requirementsForRelayBid"": [
-                [
-                  [ -0.1, -0.1 ],
-                  ""gameBid""
-                ],
-                [
-                  [ -0.1, 100.1 ],
-                  ""fourDiamondEndSignal""
-                ],
-                [
-                  [ -0.1, -0.1 ],
-                  ""Relay""
-                ]
-              ],
-              ""requiredMaxHcpToBid4Diamond"": 18
-            }";
+            string systemParameters2 = """
+                                       {
+                                                     "hcpRelayerToSignOffInNT": {
+                                                       "0": [ 16, 17, 18, 19 ],
+                                                       "1": [ 20, 21, 22 ],
+                                                       "2": [ 23, 24 ]
+                                                     },
+                                                     "requirementsForRelayBid": [
+                                                       [
+                                                         [ -0.1, -0.1 ],
+                                                         "gameBid"
+                                                       ],
+                                                       [
+                                                         [ -0.1, 100.1 ],
+                                                         "fourDiamondEndSignal"
+                                                       ],
+                                                       [
+                                                         [ -0.1, -0.1 ],
+                                                         "Relay"
+                                                       ]
+                                                     ],
+                                                     "requiredMaxHcpToBid4Diamond": 18
+                                                   }
+                                       """;
 
             // ♣♦♥♠
             // Test hcpRelayerToSignOffInNT
-            yield return new object[] { "TestNoAsk20HCP", "AK32,AK2,AQ2,432", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3NT", "1♠2♣2♥2NT3♦Pass", systemParameters1 };
-            yield return new object[] { "TestOneAsk20HCP", "AK32,AK2,AQ2,432", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥3NT", "1♠2♣2♥2NT3♦3♠Pass", systemParameters2 };
+            yield return ["TestNoAsk20HCP", "AK32,AK2,AQ2,432", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3NT", "1♠2♣2♥2NT3♦Pass", systemParameters1];
+            yield return ["TestOneAsk20HCP", "AK32,AK2,AQ2,432", "x,xxxx,KQxxx,Axx", "1♣1NT2♦2♠3♣3♥3NT", "1♠2♣2♥2NT3♦3♠Pass", systemParameters2];
 
             // Test requirementsForRelayBid
-            yield return new object[] { "TestBidGame", "AK32,AK2,AJ2,432", "xxxx,x,KQxxx,Kxx", "1♣1♠2♦2♠3♣3♥4♠", "1♥2♣2♥2NT3♦3♠Pass", systemParameters1 };
-            yield return new object[] { "TestBidEndSignal", "AK32,AK2,AJ2,432", "xxxx,x,KQxxx,Kxx", "1♣1♠2♦2♠3♣3♥4♦4♠", "1♥2♣2♥2NT3♦3♠4♥Pass", systemParameters2 };
+            yield return ["TestBidGame", "AK32,AK2,AJ2,432", "xxxx,x,KQxxx,Kxx", "1♣1♠2♦2♠3♣3♥4♠", "1♥2♣2♥2NT3♦3♠Pass", systemParameters1];
+            yield return ["TestBidEndSignal", "AK32,AK2,AJ2,432", "xxxx,x,KQxxx,Kxx", "1♣1♠2♦2♠3♣3♥4♦4♠", "1♥2♣2♥2NT3♦3♠4♥Pass", systemParameters2];
 
             // Test requiredMaxHcpToBid4Diamond
             // TODO fix this test
             //yield return new object[] { "TestRelay18HCP", "AK32,AK2,A32,432", "xxxx,,KQxxx,Kxxx", "1♣2♦2♠3♦4♣4♠", "2♣2♥3♣3♠4♦Pass", systemParameters1 };
-            yield return new object[] { "Test4Diamond18HCP", "AK32,AK2,A32,432", "xxxx,,KQxxx,Kxxx", "1♣2♦2♠3♦4♦4♠", "2♣2♥3♣3♠4♥Pass", systemParameters2 };
+            yield return ["Test4Diamond18HCP", "AK32,AK2,A32,432", "xxxx,,KQxxx,Kxxx", "1♣2♦2♠3♦4♦4♠", "2♣2♥3♣3♠4♥Pass", systemParameters2];
         }
     }
 
     [Collection("Sequential")]
-    public class ParametersTest : IClassFixture<BaseTestFixture>
+    public class ParametersTest(BaseTestFixture fixture, ITestOutputHelper output) : IClassFixture<BaseTestFixture>
     {
-        private readonly ITestOutputHelper output;
+        private readonly ITestOutputHelper output = output;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly Dictionary<Phase, bool> phasesWithOffset;
-        private readonly ReverseDictionaries reverseDictionaries;
-
-        public ParametersTest(BaseTestFixture fixture, ITestOutputHelper output)
-        {
-            phasesWithOffset = fixture.phasesWithOffset;
-            reverseDictionaries = fixture.reverseDictionaries;
-            this.output = output;
-        }
+        private readonly Dictionary<Phase, bool> phasesWithOffset = fixture.phasesWithOffset;
+        private readonly ReverseDictionaries reverseDictionaries = fixture.reverseDictionaries;
 
         [Theory]
         [MemberData(nameof(TestCaseProviderParameters.TestCasesSystemParameters), MemberType = typeof(TestCaseProviderParameters))]

@@ -70,8 +70,8 @@ class Rule
 public :
 	int id;
 	int bidId;
-	int faseId;
-	int nextFaseId;
+	int phaseId;
+	int nextPhaseId;
 
 	int minSpades;
 	int maxSpades;

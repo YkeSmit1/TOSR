@@ -17,7 +17,7 @@ namespace Common.Test
             Assert.Equal(expectedBidsNorth, actualBidsNorth);
         }
 
-        public static void AssertHand(BiddingInformation biddingInformation, Auction auction, string northHand, string southHand, ReverseDictionaries reverseDictionaries, BiddingState biddingState)
+        public static void AssertHand(BiddingInformation biddingInformation, Auction auction, string northHand, string southHand, BiddingState biddingState)
         {
             var constructedSouthHand = biddingInformation.ConstructSouthHand(northHand);
             Assert.Equal(UtilTosr.HandWithX(southHand), constructedSouthHand.First());

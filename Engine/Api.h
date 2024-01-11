@@ -1,6 +1,6 @@
 #pragma once
 
-enum class Fase
+enum class Phase
 {
     UnKnown,
     Shape,
@@ -18,8 +18,8 @@ enum class Fase
     BidGame,
 };
 
-extern "C" __declspec(dllexport) int GetBidFromRule(Fase fase, Fase previousFase, const char* hand, int lastBidId, Fase* newFase, int* zoomOffset);
-extern "C" __declspec(dllexport) int GetBidFromRuleEx(Fase fase, Fase previousFase, const char* hand, int lastBidId, Fase * newFase, char* description);
+extern "C" __declspec(dllexport) int GetBidFromRule(Phase phase, Phase previousPhase, const char* hand, int lastBidId, Phase* newPhase, int* zoomOffset);
+extern "C" __declspec(dllexport) int GetBidFromRuleEx(Phase phase, Phase previousPhase, const char* hand, int lastBidId, Phase * newPhase, char* description);
 extern "C" __declspec(dllexport) int Setup(const char* database);
 
 extern "C" __declspec(dllexport) void GetBid(int bidId, int& rank, int& suit);

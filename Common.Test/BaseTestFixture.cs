@@ -7,14 +7,15 @@ using Common.Tosr;
 
 namespace Common.Test
 {
-    public abstract class BaseTestFixture
+    // ReSharper disable once ClassNeverInstantiated.Global
+    public class BaseTestFixture
     {
         public readonly Dictionary<Phase, bool> phasesWithOffset;
         public readonly ReverseDictionaries reverseDictionaries;
 
-        protected BaseTestFixture()
+        public BaseTestFixture()
         {
-            phasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Phase, bool>>(File.ReadAllText("FasesWithOffset.json"));
+            phasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Phase, bool>>(File.ReadAllText("phasesWithOffset.json"));
             reverseDictionaries = new ReverseDictionaries(phasesWithOffset, new Progress<string>());
 
             BidManager.SetSystemParameters(UtilTosr.ReadResource("BiddingLogic.SystemParameters.json"));

@@ -14,39 +14,29 @@ namespace TosrGui.Test
 
     public class ZoomTests
     {
-        private readonly ShapeDictionary shapeAuctions;
-        private readonly ControlsOnlyDictionary auctionsControlsOnly;
-        private readonly ControlScanningDictionary auctionsControlsScanning;
-        private readonly Dictionary<Phase, bool> phasesWithOffset;
-
-        public ZoomTests()
+        // Setup
+        private readonly ShapeDictionary shapeAuctions = new()
         {
-            // Setup
-            shapeAuctions = new ShapeDictionary
-            {
-                {$"{new Bid(1, Suit.Spades)}{new Bid(3, Suit.Diamonds)}", (new List<string>{ "3424" }, false) },
-                {$"{new Bid(1, Suit.Spades)}{new Bid(2, Suit.Diamonds)}{new Bid(3, Suit.Hearts)}", (new List<string>{ "4234" }, true) },
-                {$"{new Bid(1, Suit.Spades)}{new Bid(3, Suit.Hearts)}", (new List<string>{ "4243" }, true) },
-                {$"{new Bid(1, Suit.Hearts)}{new Bid(3, Suit.Hearts)}", (new List<string>{ "6331" }, false) }
-            };
-
-            auctionsControlsOnly = new ControlsOnlyDictionary
-            {
-                {"4♣", new List<int>{ 5 } }
-            };
-
-            phasesWithOffset = new Dictionary<Phase, bool>
-            {
-                { Phase.Shape, false },
-                { Phase.Controls, false},
-                { Phase.ScanningControls, true},
-                { Phase.ScanningOther, true}
-            };
-            auctionsControlsScanning = new ControlScanningDictionary
-            {
-                {"4♣4♠5♥5NT6♥", (new List<string>{ "Kxxx,Ax,xxx,Axxx" }, false) }
-            };
-        }
+            {$"{new Bid(1, Suit.Spades)}{new Bid(3, Suit.Diamonds)}", (["3424"], false) },
+            {$"{new Bid(1, Suit.Spades)}{new Bid(2, Suit.Diamonds)}{new Bid(3, Suit.Hearts)}", (["4234"], true) },
+            {$"{new Bid(1, Suit.Spades)}{new Bid(3, Suit.Hearts)}", (["4243"], true) },
+            {$"{new Bid(1, Suit.Hearts)}{new Bid(3, Suit.Hearts)}", (["6331"], false) }
+        };
+        private readonly ControlsOnlyDictionary auctionsControlsOnly = new()
+        {
+            {"4♣", [5] }
+        };
+        private readonly ControlScanningDictionary auctionsControlsScanning = new()
+        {
+            {"4♣4♠5♥5NT6♥", (["Kxxx,Ax,xxx,Axxx"], false) }
+        };
+        private readonly Dictionary<Phase, bool> phasesWithOffset = new()
+        {
+            { Phase.Shape, false },
+            { Phase.Controls, false},
+            { Phase.ScanningControls, true},
+            { Phase.ScanningOther, true}
+        };
 
         [Fact()]
         public void GetShapeStrFromAuctionTest()
@@ -59,8 +49,11 @@ namespace TosrGui.Test
                 biddingState.BidsPerPhase.Add((Phase.Shape, bid));
             auction.SetBids(Player.South, newBids);
 
-            // Act and assert
-            Assert.Equal("6331", BiddingInformation.GetInformationFromBids(shapeAuctions, biddingState.GetBids(Phase.Shape)).information.First());
+            // Act
+            var actual = BiddingInformation.GetInformationFromBids(shapeAuctions, biddingState.GetBids(Phase.Shape)).information.First();
+
+            // Assert
+            Assert.Equal("6331", actual);
         }
 
         [Fact()]
@@ -74,8 +67,11 @@ namespace TosrGui.Test
                 biddingState.BidsPerPhase.Add((Phase.Shape, bid));
             auction.SetBids(Player.South, newBids);
 
-            // Act and assert
-            Assert.Equal("4243", BiddingInformation.GetInformationFromBids(shapeAuctions, biddingState.GetBids(Phase.Shape)).information.First());
+            // Act
+            var actual = BiddingInformation.GetInformationFromBids(shapeAuctions, biddingState.GetBids(Phase.Shape)).information.First();
+
+            // Assert
+            Assert.Equal("4243", actual);
         }
 
         [Fact()]

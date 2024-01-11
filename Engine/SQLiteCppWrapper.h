@@ -8,7 +8,7 @@
 
 class SQLiteCppWrapper : public ISQLiteWrapper
 {
-    constexpr static std::string_view shapeSql = R"(SELECT bidId, EndFase, Zoom, Id, IFNULL(Description, Distribution) FROM Rules 
+    constexpr static std::string_view shapeSql = R"(SELECT bidId, EndPhase, Zoom, Id, IFNULL(Description, Distribution) FROM Rules 
         WHERE (bidId > ?)
         AND ? BETWEEN MinSpades AND MaxSpades
         AND ? BETWEEN MinHearts AND MaxHearts
@@ -22,13 +22,13 @@ class SQLiteCppWrapper : public ISQLiteWrapper
         AND (Is65Reverse IS NULL or Is65Reverse = ?)
         ORDER BY bidId ASC)";
 
-    constexpr static std::string_view controlsSql = R"(SELECT RelBidId, EndFase, Id, Description FROM Controls 
+    constexpr static std::string_view controlsSql = R"(SELECT RelBidId, EndPhase, Id, Description FROM Controls 
         WHERE RelbidId > ?
         AND ? BETWEEN MinControls AND MaxControls
         AND ? BETWEEN MinHcp AND MaxHcp
         ORDER BY RelBidId ASC)";
 
-    constexpr static std::string_view scanningControlsSql = R"(SELECT RelBidId, EndFase, Zoom, Id, Description FROM ScanningControls
+    constexpr static std::string_view scanningControlsSql = R"(SELECT RelBidId, EndPhase, Zoom, Id, Description FROM ScanningControls
         WHERE RelbidId > ?
         AND (Controls1Suit = ? or Controls1Suit is null)
         AND (Controls2Suit = ? or Controls2Suit is null)
@@ -37,7 +37,7 @@ class SQLiteCppWrapper : public ISQLiteWrapper
         AND ((? BETWEEN MinShortages AND MaxShortages) OR (MinShortages IS NULL AND MaxShortages IS null))
         ORDER BY RelBidId ASC)";
 
-    constexpr static std::string_view scanningOtherSql = R"(SELECT RelBidId, EndFase, Id, Description FROM ScanningOther 
+    constexpr static std::string_view scanningOtherSql = R"(SELECT RelBidId, EndPhase, Id, Description FROM ScanningOther 
         WHERE RelbidId > ?
         AND (Queen1Suit = ? or Queen1Suit is null)
         AND (Queen2Suit = ? or Queen2Suit is null)
@@ -48,7 +48,7 @@ class SQLiteCppWrapper : public ISQLiteWrapper
 
 
     constexpr static std::string_view signOffsSql = R"(SELECT RelBidId, Zoom, Id, Description FROM SignOffs
-        WHERE Fase = ?
+        WHERE Phase = ?
         AND ((? BETWEEN MinHcp AND MaxHcp) OR (MinHcp is null AND MaxHcp is null))
         AND ((? BETWEEN MinQueens AND MaxQueens) OR (MinQueens is null AND MaxQueens is null)))";
 
@@ -63,14 +63,14 @@ public:
     SQLiteCppWrapper(const std::string& database);
 private:
     void GetBid(int bidId, int& rank, int& suit) final;
-    std::tuple<int, Fase, std::string, int> GetRule(const HandCharacteristic& hand, const Fase& fase, Fase previousFase, int lastBidId) final;
-    Fase GetNextFase(bool endfase, Fase fase) noexcept;
-    Fase NextFase(Fase previousFase) noexcept;
+    std::tuple<int, Phase, std::string, int> GetRule(const HandCharacteristic& hand, const Phase& phase, Phase previousPhase, int lastBidId) final;
+    Phase GetNextPhase(bool endphase, Phase phase) noexcept;
+    Phase NextPhase(Phase previousPhase) noexcept;
     std::tuple<int, bool, std::string, bool> GetRuleShape(const HandCharacteristic& hand, int lastBidId);
     std::tuple<int, bool, std::string> GetRuleControls(const HandCharacteristic& hand, int lastBidId);
     std::tuple<int, bool, std::string, bool> GetRuleScanningControls(const HandCharacteristic& hand, int lastBidId);
     std::tuple<int, bool, std::string> GetRuleScanningOther(const HandCharacteristic& hand, int lastBidId);
-    std::tuple<int, bool, std::string> GetRuleSignOff(const HandCharacteristic& hand, Fase fase);
+    std::tuple<int, bool, std::string> GetRuleSignOff(const HandCharacteristic& hand, Phase phase);
     void SetDatabase(const std::string& database) override;
 };
 

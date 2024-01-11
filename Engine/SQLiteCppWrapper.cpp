@@ -23,97 +23,97 @@ void SQLiteCppWrapper::GetBid(int bidId, int& rank, int& suit)
         suit = query.getColumn(1);
     }
 }
-std::tuple<int, Fase, std::string, int> SQLiteCppWrapper::GetRule(const HandCharacteristic& hand, const Fase& fase, Fase previousFase, int lastBidId)
+std::tuple<int, Phase, std::string, int> SQLiteCppWrapper::GetRule(const HandCharacteristic& hand, const Phase& phase, Phase previousPhase, int lastBidId)
 {
-    switch (fase)
+    switch (phase)
     {
-        case Fase::Shape:
+        case Phase::Shape:
         {
-            auto [bidId, endfase, str, zoom] = GetRuleShape(hand, lastBidId);
+            auto [bidId, endphase, str, zoom] = GetRuleShape(hand, lastBidId);
             if (zoom)
             {
-                auto [bidIdCtrls, endfaseCtrls, strCtrl] = GetRuleControls(hand, 0);
-                return std::make_tuple(bidId + bidIdCtrls - 1, GetNextFase(endfaseCtrls, NextFase(fase)), str + "\n" + strCtrl, bidIdCtrls);
+                auto [bidIdCtrls, endPhaseCtrls, strCtrl] = GetRuleControls(hand, 0);
+                return std::make_tuple(bidId + bidIdCtrls - 1, GetNextPhase(endPhaseCtrls, NextPhase(phase)), str + "\n" + strCtrl, bidIdCtrls);
             }
-            return std::make_tuple(bidId, GetNextFase(endfase, fase), str, 0);
+            return std::make_tuple(bidId, GetNextPhase(endphase, phase), str, 0);
         }
-        case Fase::Controls:
+        case Phase::Controls:
         {
-            auto [bidId, endfase, str] = GetRuleControls(hand, lastBidId);
-            return std::make_tuple(bidId, GetNextFase(endfase, fase), str, 0);
+            auto [bidId, endPhase, str] = GetRuleControls(hand, lastBidId);
+            return std::make_tuple(bidId, GetNextPhase(endPhase, phase), str, 0);
         }
-        case Fase::ScanningControls: 
+        case Phase::ScanningControls: 
         {
-            auto [bidId, endfase, str, zoom] = GetRuleScanningControls(hand, lastBidId);
+            auto [bidId, endPhase, str, zoom] = GetRuleScanningControls(hand, lastBidId);
             if (zoom)
             {
-                auto [bidIdCtrls, endfaseCtrls, strCtrl] = GetRuleScanningOther(hand, 0);
-                return std::make_tuple(bidId + bidIdCtrls - 1, GetNextFase(endfaseCtrls, NextFase(fase)), str + "\n" + strCtrl, bidIdCtrls);
+                auto [bidIdCtrls, endPhaseCtrls, strCtrl] = GetRuleScanningOther(hand, 0);
+                return std::make_tuple(bidId + bidIdCtrls - 1, GetNextPhase(endPhaseCtrls, NextPhase(phase)), str + "\n" + strCtrl, bidIdCtrls);
             }
 
-            return std::make_tuple(bidId, GetNextFase(endfase, fase), str, 0);
+            return std::make_tuple(bidId, GetNextPhase(endPhase, phase), str, 0);
         }
-        case Fase::ScanningOther:
+        case Phase::ScanningOther:
         {
-            auto [bidId, endfase, str] = GetRuleScanningOther(hand, lastBidId);
-            return std::make_tuple(bidId, GetNextFase(endfase, fase), str, 0);
+            auto [bidId, endPhase, str] = GetRuleScanningOther(hand, lastBidId);
+            return std::make_tuple(bidId, GetNextPhase(endPhase, phase), str, 0);
         }
-        case Fase::Pull3NTNoAsk:
-        case Fase::Pull3NTOneAskMin:
-        case Fase::Pull3NTOneAskMax:
-        case Fase::Pull3NTTwoAsks:
-        case Fase::Pull4DiamondsNoAsk:
-        case Fase::Pull4DiamondsOneAskMin:
-        case Fase::Pull4DiamondsOneAskMax:
+        case Phase::Pull3NTNoAsk:
+        case Phase::Pull3NTOneAskMin:
+        case Phase::Pull3NTOneAskMax:
+        case Phase::Pull3NTTwoAsks:
+        case Phase::Pull4DiamondsNoAsk:
+        case Phase::Pull4DiamondsOneAskMin:
+        case Phase::Pull4DiamondsOneAskMax:
         {
-            auto [bidId, zoom, str] = GetRuleSignOff(hand, fase);
+            auto [bidId, zoom, str] = GetRuleSignOff(hand, phase);
             if (zoom)
             {
-                switch (previousFase)
+                switch (previousPhase)
                 {
-                case Fase::Controls:
+                case Phase::Controls:
                 {
-                    auto [bidIdCtrls, endfaseCtrls, strCtrl] = GetRuleControls(hand, lastBidId);
-                    return std::make_tuple(bidId + bidIdCtrls - 1, GetNextFase(endfaseCtrls, previousFase), str + "\n" + strCtrl, 0);
+                    auto [bidIdCtrls, endPhaseCtrls, strCtrl] = GetRuleControls(hand, lastBidId);
+                    return std::make_tuple(bidId + bidIdCtrls - 1, GetNextPhase(endPhaseCtrls, previousPhase), str + "\n" + strCtrl, 0);
                 }
-                case Fase::ScanningControls:
+                case Phase::ScanningControls:
                 {
-                    auto [bidIdCtrlsScanning, endfaseCtrlsScanning, strCtrlScanning, zoom] = GetRuleScanningControls(hand, lastBidId);
+                    auto [bidIdCtrlsScanning, endPhaseCtrlsScanning, strCtrlScanning, zoom] = GetRuleScanningControls(hand, lastBidId);
                     if (zoom)
                     {
-                        auto [bidIdScanningOther, endfaseScanningOther, strScanningOther] = GetRuleScanningOther(hand, 0);
+                        auto [bidIdScanningOther, endPhaseScanningOther, strScanningOther] = GetRuleScanningOther(hand, 0);
                         return std::make_tuple(bidId + (bidIdCtrlsScanning - 1) + (bidIdScanningOther - 1), 
-                            GetNextFase(endfaseScanningOther, NextFase(previousFase)), str + "\n" + strCtrlScanning + "\n" + strScanningOther, bidIdScanningOther);
+                            GetNextPhase(endPhaseScanningOther, NextPhase(previousPhase)), str + "\n" + strCtrlScanning + "\n" + strScanningOther, bidIdScanningOther);
                     }
-                    return std::make_tuple(bidId + bidIdCtrlsScanning - 1, GetNextFase(endfaseCtrlsScanning, previousFase), str + "\n" + strCtrlScanning, 0);
+                    return std::make_tuple(bidId + bidIdCtrlsScanning - 1, GetNextPhase(endPhaseCtrlsScanning, previousPhase), str + "\n" + strCtrlScanning, 0);
                 }
-                case Fase::ScanningOther:
+                case Phase::ScanningOther:
                 {
-                    auto [bidIdScanningOther, endfaseScanningOther, strScanningOther] = GetRuleScanningOther(hand, lastBidId);
-                    return std::make_tuple(bidId + bidIdScanningOther - 1, GetNextFase(endfaseScanningOther, previousFase), str + "\n" + strScanningOther, 0);
+                    auto [bidIdScanningOther, endPhaseScanningOther, strScanningOther] = GetRuleScanningOther(hand, lastBidId);
+                    return std::make_tuple(bidId + bidIdScanningOther - 1, GetNextPhase(endPhaseScanningOther, previousPhase), str + "\n" + strScanningOther, 0);
                 }
 
                 default:
-                    throw std::invalid_argument(std::to_string((int)previousFase));
+                    throw std::invalid_argument(std::to_string((int)previousPhase));
                 }
             }
-            auto nextFase = bidId == 0 ? Fase::BidGame : previousFase;
-            return std::make_tuple(bidId, nextFase, str, 0);
+            auto nextPhase = bidId == 0 ? Phase::BidGame : previousPhase;
+            return std::make_tuple(bidId, nextPhase, str, 0);
         }
 
         default:
-            throw std::invalid_argument(std::to_string((int)fase));
+            throw std::invalid_argument(std::to_string((int)phase));
     }
 }
 
-Fase SQLiteCppWrapper::GetNextFase(bool endfase, Fase fase) noexcept
+Phase SQLiteCppWrapper::GetNextPhase(bool endphase, Phase phase) noexcept
 {
-    return endfase ? NextFase(fase) : fase;
+    return endphase ? NextPhase(phase) : phase;
 }
 
-Fase SQLiteCppWrapper::NextFase(Fase fase) noexcept
+Phase SQLiteCppWrapper::NextPhase(Phase phase) noexcept
 {
-    return (Fase)((int)fase + 1);
+    return (Phase)((int)phase + 1);
 }
 
 std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleShape(const HandCharacteristic& hand, int lastBidId)
@@ -139,14 +139,14 @@ std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleShape(const Ha
             throw std::runtime_error("No row found in rules table.");
 
         int bidId = queryShape->getColumn(0);
-        bool endfase = queryShape->getColumn(1).getInt();
+        bool endPhase = queryShape->getColumn(1).getInt();
         bool zoom = queryShape->getColumn(2).getInt();
         auto id = queryShape->getColumn(3).getInt();
         auto str = queryShape->getColumn(4).getString();
 
         DBOUT("Shape. Rule Id:" << id << '\n');
 
-        return std::make_tuple(bidId, endfase, str, zoom);
+        return std::make_tuple(bidId, endPhase, str, zoom);
     }
     catch (const std::exception& e)
     {
@@ -173,13 +173,13 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleControls(const HandC
         }
 
         int bidId = queryControls->getColumn(0);
-        bool endFase = queryControls->getColumn(1).getInt();
+        bool endPhase = queryControls->getColumn(1).getInt();
         auto id = queryControls->getColumn(2).getInt();
         auto str = queryControls->getColumn(3).getString();
 
         DBOUT("Controls. Rule Id:" << id << '\n');
 
-        return std::make_tuple(bidId, endFase, str);
+        return std::make_tuple(bidId, endPhase, str);
     }
     catch (const std::exception& e)
     {
@@ -207,14 +207,14 @@ std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleScanningContro
             throw std::runtime_error("No row found in scanning table.");
 
         int bidId = queryScanningControls->getColumn(0);
-        bool endFase = queryScanningControls->getColumn(1).getInt();
+        bool endPhase = queryScanningControls->getColumn(1).getInt();
         bool zoom = queryScanningControls->getColumn(2).getInt();
         auto id = queryScanningControls->getColumn(3).getInt();
         auto str = queryScanningControls->getColumn(4).getString();
 
         DBOUT("Scanning controls. Rule Id:" << id << '\n');
 
-        return std::make_tuple(bidId, endFase, str, zoom);
+        return std::make_tuple(bidId, endPhase, str, zoom);
     }
     catch (const std::exception& e)
     {
@@ -242,13 +242,13 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleScanningOther(const 
             throw std::runtime_error("No row found in scanning table.");
 
         int bidId = queryScanningOther->getColumn(0);
-        bool endFase = queryScanningOther->getColumn(1).getInt();
+        bool endPhase = queryScanningOther->getColumn(1).getInt();
         auto id = queryScanningOther->getColumn(2).getInt();
         auto str = queryScanningOther->getColumn(3).getString();
 
         DBOUT("Scanning other. Rule Id:" << id << '\n');
 
-        return std::make_tuple(bidId, endFase, str);
+        return std::make_tuple(bidId, endPhase, str);
     }
     catch (const std::exception& e)
     {
@@ -257,14 +257,14 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleScanningOther(const 
     }
 }
 
-std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleSignOff(const HandCharacteristic& hand, Fase fase)
+std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleSignOff(const HandCharacteristic& hand, Phase phase)
 {
     try
     {
         // Bind parameters
         querySignOffs->reset();
 
-        querySignOffs->bind(1, (int)fase);
+        querySignOffs->bind(1, (int)phase);
 
         querySignOffs->bind(2, hand.Hcp);
         querySignOffs->bind(3, hand.Queens);

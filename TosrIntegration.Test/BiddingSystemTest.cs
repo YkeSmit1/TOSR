@@ -10,14 +10,9 @@ using Common.Test;
 namespace TosrIntegration.Test
 {
     [Collection("Sequential")]
-    public class BiddingSystemTest : IClassFixture<BaseTestFixture>
+    public class BiddingSystemTest(BaseTestFixture fixture) : IClassFixture<BaseTestFixture>
     {
-        public BiddingSystemTest(BaseTestFixture fixture)
-        {
-            Fixture = fixture;
-        }
-
-        private BaseTestFixture Fixture { get; }
+        private BaseTestFixture Fixture { get; } = fixture;
 
         [Fact]
         public void ExecuteTest()

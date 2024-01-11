@@ -14,7 +14,7 @@ namespace TosrGui.Test
         public void ExecuteTest()
         {
             var bidGenerator = new Mock<IBidGenerator>();
-            var phasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Phase, bool>>(File.ReadAllText("FasesWithOffset.json"));
+            var phasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Phase, bool>>(File.ReadAllText("phasesWithOffset.json"));
 
             // 1Sp
             bidGenerator.SetupSequence(x => x.GetBid(It.IsAny<BiddingState>(), It.IsAny<string>())).

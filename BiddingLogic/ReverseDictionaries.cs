@@ -38,9 +38,9 @@ namespace BiddingLogic
 
         private readonly Dictionary<Phase, bool> phasesWithOffset;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        private static readonly int[] SuitLengthNoSingleton = { 4, 3, 3, 3 };
-        private static readonly int[] SuitLengthSingleton = { 5, 4, 3, 1 };
-        private static readonly int[] SuitLength2Singletons = { 6, 5, 1, 1 };
+        private static readonly int[] SuitLengthNoSingleton = [4, 3, 3, 3];
+        private static readonly int[] SuitLengthSingleton = [5, 4, 3, 1];
+        private static readonly int[] SuitLength2Singletons = [6, 5, 1, 1];
 
         public ReverseDictionaries(ShapeDictionary shapeAuctions, ControlsOnlyDictionary controlsOnlyAuctions,
             ControlScanningDictionary controlScanningAuctions, SignOffPhasesDictionary signOffPhasesAuctions)
@@ -84,7 +84,7 @@ namespace BiddingLogic
             var logger = LogManager.GetCurrentClassLogger();
 
             Dictionary<T, TU> auctions;
-            // Generate only if file does not exist or is older then one day
+            // Generate only if file does not exist or is older than one day
             if (File.Exists(fileName) && File.GetLastWriteTime(fileName) > DateTime.Now - TimeSpan.FromDays(1))
             {
                 auctions = JsonConvert.DeserializeObject<Dictionary<T, TU>>(File.ReadAllText(fileName));
@@ -116,21 +116,19 @@ namespace BiddingLogic
                             if (spades + hearts + diamonds + clubs == 13)
                             {
                                 var hand = new string('x', spades) + "," + new string('x', hearts) + "," + new string('x', diamonds) + "," + new string('x', clubs);
-                                // We need a hand with two controls. Otherwise engine cannot find a bid
+                                // We need a hand with two controls, otherwise engine cannot find a bid
                                 hand = regex.Replace(hand, "A", 1);
                                 var suitLengthSouth = hand.Split(',').Select(x => x.Length).ToList();
                                 var str = string.Join("", suitLengthSouth);
 
-                                if (!UtilTosr.IsFreakHand(suitLengthSouth))
-                                {
-                                    _ = bidManager.GetAuction(string.Empty, hand); // No north hand. Just for generating reverse dictionaries
-                                    var isZoom = bidManager.BiddingState.IsZoomShape;
-                                    var key = bidManager.BiddingState.GetBidsAsString(Phase.Shape);
-                                    if (auctions.ContainsKey(key))
-                                        auctions[key].pattern.Add(str);
-                                    else
-                                        auctions.Add(key, (new List<string> { str }, isZoom));
-                                }
+                                if (UtilTosr.IsFreakHand(suitLengthSouth)) continue;
+                                _ = bidManager.GetAuction(string.Empty, hand); // No north hand. Just for generating reverse dictionaries
+                                var isZoom = bidManager.BiddingState.IsZoomShape;
+                                var key = bidManager.BiddingState.GetBidsAsString(Phase.Shape);
+                                if (auctions.ContainsKey(key))
+                                    auctions[key].pattern.Add(str);
+                                else
+                                    auctions.Add(key, ([str], isZoom));
                             }
             return auctions;
         }
@@ -178,7 +176,7 @@ namespace BiddingLogic
                 var board = Util.GetBoardsTosr(shufflingDeal.Execute().First());
 
                 _ = bidManager.GetAuction(string.Empty, board[Player.South]); // No north hand. Just for generating reverse dictionaries
-                auctions.Add(bidManager.BiddingState.GetBidsAsString(Phase.Controls), new List<int> { control });
+                auctions.Add(bidManager.BiddingState.GetBidsAsString(Phase.Controls), [control]);
             }
         }
 
@@ -218,7 +216,7 @@ namespace BiddingLogic
                 var key = string.Join("", bidManager.BiddingState.GetBids(Phase.Controls, Phase.ScanningControls).
                     Select(bid => bid - (bidManager.BiddingState.GetBids(Phase.Shape).Last() - Bids.ThreeDiamondBid)));
                 if (!auctions.ContainsKey(key))
-                    auctions.Add(key, (new List<string>() { handToStore }, bidManager.BiddingState.IsZoomControlScanning));
+                    auctions.Add(key, ([handToStore], bidManager.BiddingState.IsZoomControlScanning));
                 else if (!auctions[key].controlsScanning.Contains(handToStore))
                     auctions[key].controlsScanning.Add(handToStore);
             }
@@ -329,7 +327,7 @@ namespace BiddingLogic
 
         private static Func<string, int[]> GetHcpGeneratorGeneral()
         {
-            return (hand) => Util.GetControlCount(hand) == 4 && Util.GetHcpCount(hand) < 12 ? (new[] { 0, 12 }) : (new[] { 0 });
+            return (hand) => Util.GetControlCount(hand) == 4 && Util.GetHcpCount(hand) < 12 ? ( [0, 12]) : [0];
         }
 
         private static string ConstructHand(int[] suitLength, params string[] suits)
