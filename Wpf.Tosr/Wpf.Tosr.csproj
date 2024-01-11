@@ -56,5 +56,6 @@
       <TosrIntegrationTestBuildDirectory>$(ProjectDir)..\TosrIntegration.Test\bin\$(Configuration)\net8.0</TosrIntegrationTestBuildDirectory>
     </PropertyGroup>
     <Copy SourceFiles="$(TosrBuildDirectory)\Engine.dll;$(TosrBuildDirectory)\sqlite3.dll" DestinationFolder="$(TosrIntegrationTestBuildDirectory)" />
+    <Copy SourceFiles="$(TosrBuildDirectory)\Engine.dll;$(TosrBuildDirectory)\SQLiteCpp.dll" DestinationFolder="$(TosrIntegrationTestBuildDirectory)" />
   </Target>
 </Project>
