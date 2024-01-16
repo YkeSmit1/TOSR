@@ -65,7 +65,7 @@ private:
     void GetBid(int bidId, int& rank, int& suit) final;
     std::tuple<int, Phase, std::string, int> GetRule(const HandCharacteristic& hand, const Phase& phase, Phase previousPhase, int lastBidId) final;
     static Phase GetNextPhase(bool endPhase, Phase phase) noexcept;
-    static Phase NextPhase(Phase previousPhase) noexcept;
+    static Phase NextPhase(Phase phase) noexcept;
     [[nodiscard]] std::tuple<int, bool, std::string, bool> GetRuleShape(const HandCharacteristic& hand, int lastBidId) const;
     [[nodiscard]] std::tuple<int, bool, std::string> GetRuleControls(const HandCharacteristic& hand, int lastBidId) const;
     [[nodiscard]] std::tuple<int, bool, std::string, bool> GetRuleScanningControls(const HandCharacteristic& hand, int lastBidId) const;
@@ -73,4 +73,3 @@ private:
     [[nodiscard]] std::tuple<int, bool, std::string> GetRuleSignOff(const HandCharacteristic& hand, Phase phase) const;
     void SetDatabase(const std::string& database) override;
 };
-
