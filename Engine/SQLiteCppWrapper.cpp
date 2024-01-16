@@ -147,7 +147,7 @@ std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleShape(const Ha
         auto id = queryShape->getColumn(3).getInt();
         auto str = queryShape->getColumn(4).getString();
 
-        DBOUT("Shape. Rule Id:" << id << '\n')
+        DBOUT("Shape. Rule Id:" << id << '\n');
 
         return std::make_tuple(bidId, endPhase, str, zoom);
     }
@@ -294,7 +294,7 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleSignOff(const HandCh
 
 void SQLiteCppWrapper::SetDatabase(const std::string& database)
 {
-    db.reset();
+    db.release();
     db = std::make_unique<SQLite::Database>(database);
 
     queryShape = std::make_unique<SQLite::Statement>(*db, shapeSql.data());
