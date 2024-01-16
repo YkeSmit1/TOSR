@@ -2,6 +2,7 @@
 using NLog;
 using System.Collections.Generic;
 using BiddingLogic;
+using JetBrains.Annotations;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -76,7 +77,7 @@ namespace TosrIntegration.Test
     {
         private readonly Dictionary<Phase, bool> phasesWithOffset = fixture.phasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries = fixture.reverseDictionaries;
-        private readonly ITestOutputHelper output = output;
+        [UsedImplicitly] private readonly ITestOutputHelper output = output;
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

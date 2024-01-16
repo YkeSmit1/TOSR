@@ -1,3 +1,6 @@
+// ReSharper disable CppLocalVariableMayBeConst
+// ReSharper disable CppCStyleCast
+// ReSharper disable CppParameterMayBeConst
 #include "pch.h"
 #include "Rule.h"
 #include "Utils.h"
@@ -23,57 +26,57 @@ void HandCharacteristic::Initialize(const std::string& hand)
         {2, suits[2].length()}, 
         {3, suits[3].length()}};
 
-    Spades = (int)suitLength.at(0);
-    Hearts = (int)suitLength.at(1);
-    Diamonds = (int)suitLength.at(2);
-    Clubs = (int)suitLength.at(3);
+    spades = (int)suitLength.at(0);
+    hearts = (int)suitLength.at(1);
+    diamonds = (int)suitLength.at(2);
+    clubs = (int)suitLength.at(3);
 
-    std::sort(suits.begin(), suits.end(), [] (const auto& l, const auto& r) noexcept {return l.length() > r.length();});
+    std::ranges::sort(suits, [] (const auto& l, const auto& r) noexcept {return l.length() > r.length();});
     distribution = std::to_string(suits[0].length()) + std::to_string(suits[1].length()) + 
         std::to_string(suits[2].length())  + std::to_string(suits[3].length());
     isBalanced = distribution == "4333" || distribution == "4432";
-    isThreeSuiter = CalcuateIsThreeSuiter(suitLength);
-    isReverse = !isBalanced && !isThreeSuiter && CalcuateIsReverse(suitLength);
-    is65Reverse = !isBalanced && !isThreeSuiter && Calcuate65IsReverse(suitLength);
+    isThreeSuiter = CalculateIsThreeSuiter(suitLength);
+    isReverse = !isBalanced && !isThreeSuiter && CalculateIsReverse(suitLength);
+    is65Reverse = !isBalanced && !isThreeSuiter && Calculate65IsReverse(suitLength);
     shortage = CalculateShortage(suitLength);
-    Controls = CalculateControls(hand);
+    controls = CalculateControls(hand);
     shortageString = ConvertShortage(shortage);
-    Hcp = CalculateHcp(hand);
-    ControlsSuit = CalculateControlsSuit(suits);
-    QueensSuit = CalculateQueensSuit(suits);
-    Queens = NumberOfCards(hand, 'Q');
-    Shortages = (int)std::count_if(suits.begin(), suits.end(), [](const auto& x) {return x.length() <= 1; });
+    hcp = CalculateHcp(hand);
+    controlsSuit = CalculateControlsSuit(suits);
+    queensSuit = CalculateQueensSuit(suits);
+    queens = NumberOfCards(hand, 'Q');
+    shortages = (int)std::ranges::count_if(suits, [](const auto& x) {return x.length() <= 1; });
 }
 
-bool HandCharacteristic::CalcuateIsReverse(const std::unordered_map<int, size_t>& suitLength)
+bool HandCharacteristic::CalculateIsReverse(const std::unordered_map<int, size_t>& suitLength)
 {
     std::unordered_map<int, size_t> longSuits;
-    std::copy_if(suitLength.begin(), suitLength.end(), std::inserter(longSuits, longSuits.begin()), [] (const auto &pair) {return pair.second > 3;});
+    std::ranges::copy_if(suitLength, std::inserter(longSuits, longSuits.begin()), [] (const auto &pair) {return pair.second > 3;});
     return longSuits.begin()->second == 4;
 }
 
-bool HandCharacteristic::Calcuate65IsReverse(const std::unordered_map<int, size_t>& suitLength)
+bool HandCharacteristic::Calculate65IsReverse(const std::unordered_map<int, size_t>& suitLength)
 {
     std::unordered_map<int, size_t> longSuits;
-    std::copy_if(suitLength.begin(), suitLength.end(), std::inserter(longSuits, longSuits.begin()), [] (const auto &pair) {return pair.second > 3;});
+    std::ranges::copy_if(suitLength, std::inserter(longSuits, longSuits.begin()), [] (const auto &pair) {return pair.second > 3;});
     return longSuits.begin()->second == 5;
 }
 
 Shortage HandCharacteristic::CalculateShortage(const std::unordered_map<int, size_t>& suitLength)
 {
     std::unordered_map<int, size_t> shortSuits;
-    std::copy_if(suitLength.begin(), suitLength.end(), std::inserter(shortSuits, shortSuits.begin()), [] (const auto &pair) {return pair.second < 4;});
-    auto minElement = std::min_element(shortSuits.begin(), shortSuits.end(), [] (const auto& l, const auto& r) {return l.second < r.second; });
+    std::ranges::copy_if(suitLength, std::inserter(shortSuits, shortSuits.begin()), [] (const auto &pair) {return pair.second < 4;});
+    auto minElement = std::ranges::min_element(shortSuits, [] (const auto& l, const auto& r) {return l.second < r.second; });
     // One suiters
     if (shortSuits.size() == 3)
     {
-        if (std::count_if(shortSuits.begin(), shortSuits.end(), [&minElement] (const auto& pair) {return pair.second == minElement->second; }) == 3)
+        if (std::ranges::count_if(shortSuits, [&minElement] (const auto& pair) {return pair.second == minElement->second; }) == 3)
         {
             return Shortage::EqualOne;
         }
-        if (std::count_if(shortSuits.begin(), shortSuits.end(), [&minElement] (const auto& pair) {return pair.second == minElement->second; }) == 2)
+        if (std::ranges::count_if(shortSuits, [&minElement] (const auto& pair) {return pair.second == minElement->second; }) == 2)
         {
-            auto maxElement = std::max_element(shortSuits.begin(), shortSuits.end(), [] (const auto& l, const auto& r) {return l.second < r.second; });
+            auto maxElement = std::ranges::max_element(shortSuits, [] (const auto& l, const auto& r) {return l.second < r.second; });
             if (maxElement == shortSuits.begin())
             {
                 return Shortage::EqualHighOne;
@@ -96,10 +99,10 @@ Shortage HandCharacteristic::CalculateShortage(const std::unordered_map<int, siz
         return Shortage::MiddleOne;
     }
     // Two suiters
-    const auto is55 = std::count_if(suitLength.begin(), suitLength.end(), [] (const auto& pair) {return pair.second >= 5;}) == 2;
+    const auto is55 = std::ranges::count_if(suitLength, [] (const auto& pair) {return pair.second >= 5;}) == 2;
     if (shortSuits.size() == 2)
     {
-        if (std::count_if(shortSuits.begin(), shortSuits.end(), [&minElement] (const auto& pair) {return pair.second == minElement->second; }) > 1)
+        if (std::ranges::count_if(shortSuits, [&minElement] (const auto& pair) {return pair.second == minElement->second; }) > 1)
         {
             return is55 ? Shortage::Equal55Two : Shortage::EqualTwo;
         }
@@ -117,9 +120,9 @@ int HandCharacteristic::CalculateControls(const std::string& hand)
     return NumberOfCards(hand, 'A') * 2 + NumberOfCards(hand, 'K');
 }
 
-bool HandCharacteristic::CalcuateIsThreeSuiter(const std::unordered_map<int, size_t>& suitLength)
+bool HandCharacteristic::CalculateIsThreeSuiter(const std::unordered_map<int, size_t>& suitLength)
 {
-    return std::count_if(suitLength.begin(), suitLength.end(), [] (const auto &pair) {return pair.second > 3;}) == 3;
+    return std::ranges::count_if(suitLength, [] (const auto &pair) {return pair.second > 3;}) == 3;
 }
 
 std::string HandCharacteristic::ConvertShortage(Shortage shortage)
@@ -155,25 +158,25 @@ int HandCharacteristic::CalculateHcp(const std::string& hand)
 
 int HandCharacteristic::NumberOfCards(const std::string& hand, char card)
 {
-    return (int)std::count_if(hand.begin(), hand.end(), [card](char c) {return c == card; });
+    return (int)std::ranges::count_if(hand, [card](char c) {return c == card; });
 }
 
-std::vector<int> HandCharacteristic::CalculateControlsSuit(const std::vector<std::string>& suits)
+std::vector<int> HandCharacteristic::CalculateControlsSuit(const std::vector<std::string>& suits) const
 {
     std::vector<int> controlsSuit;
-    std::transform(suits.begin(), suits.end(), std::back_inserter(controlsSuit),
-        [](const auto& suit) 
-        {
-            return NumberOfCards(suit, 'A') * 2 + NumberOfCards(suit, 'K');
-        });
+    std::ranges::transform(suits, std::back_inserter(controlsSuit),
+                           [](const auto& suit) 
+                           {
+                               return NumberOfCards(suit, 'A') * 2 + NumberOfCards(suit, 'K');
+                           });
 
     return controlsSuit;
 }
 
-std::vector<bool> HandCharacteristic::CalculateQueensSuit(const std::vector<std::string>& suits)
+std::vector<bool> HandCharacteristic::CalculateQueensSuit(const std::vector<std::string>& suits) const
 {
     std::vector<bool> queensSuit;
-    std::transform(suits.begin(), suits.end(), std::back_inserter(queensSuit), 
-        [](const auto& suit){ return NumberOfCards(suit, 'Q') == 1; });
+    std::ranges::transform(suits, std::back_inserter(queensSuit), 
+                           [](const auto& suit){ return NumberOfCards(suit, 'Q') == 1; });
     return queensSuit;
 }

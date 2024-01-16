@@ -1,15 +1,16 @@
+// ReSharper disable CppCStyleCast
+// ReSharper disable CppParameterMayBeConst
 #include "pch.h"
 #include "SQLiteCppWrapper.h"
 #include <iostream>
 #include "Rule.h"
-#include <algorithm>
 #include <vector>
 #include "Utils.h"
 #include "Api.h"
 
 SQLiteCppWrapper::SQLiteCppWrapper(const std::string& database)
 {
-    SetDatabase(database);
+    SQLiteCppWrapper::SetDatabase(database);
 }
 
 void SQLiteCppWrapper::GetBid(int bidId, int& rank, int& suit)
@@ -29,13 +30,13 @@ std::tuple<int, Phase, std::string, int> SQLiteCppWrapper::GetRule(const HandCha
     {
         case Phase::Shape:
         {
-            auto [bidId, endphase, str, zoom] = GetRuleShape(hand, lastBidId);
+            auto [bidId, endPhase, str, zoom] = GetRuleShape(hand, lastBidId);
             if (zoom)
             {
                 auto [bidIdCtrls, endPhaseCtrls, strCtrl] = GetRuleControls(hand, 0);
                 return std::make_tuple(bidId + bidIdCtrls - 1, GetNextPhase(endPhaseCtrls, NextPhase(phase)), str + "\n" + strCtrl, bidIdCtrls);
             }
-            return std::make_tuple(bidId, GetNextPhase(endphase, phase), str, 0);
+            return std::make_tuple(bidId, GetNextPhase(endPhase, phase), str, 0);
         }
         case Phase::Controls:
         {
@@ -106,9 +107,9 @@ std::tuple<int, Phase, std::string, int> SQLiteCppWrapper::GetRule(const HandCha
     }
 }
 
-Phase SQLiteCppWrapper::GetNextPhase(bool endphase, Phase phase) noexcept
+Phase SQLiteCppWrapper::GetNextPhase(bool endPhase, Phase phase) noexcept
 {
-    return endphase ? NextPhase(phase) : phase;
+    return endPhase ? NextPhase(phase) : phase;
 }
 
 Phase SQLiteCppWrapper::NextPhase(Phase phase) noexcept
@@ -116,17 +117,17 @@ Phase SQLiteCppWrapper::NextPhase(Phase phase) noexcept
     return (Phase)((int)phase + 1);
 }
 
-std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleShape(const HandCharacteristic& hand, int lastBidId)
+std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleShape(const HandCharacteristic& hand, int lastBidId) const
 {
     try
     {
         // Bind parameters
         queryShape->reset();
         queryShape->bind(1, lastBidId);
-        queryShape->bind(2, hand.Spades);
-        queryShape->bind(3, hand.Hearts);
-        queryShape->bind(4, hand.Diamonds);
-        queryShape->bind(5, hand.Clubs);
+        queryShape->bind(2, hand.spades);
+        queryShape->bind(3, hand.hearts);
+        queryShape->bind(4, hand.diamonds);
+        queryShape->bind(5, hand.clubs);
 
         queryShape->bindNoCopy(6, hand.distribution);
         queryShape->bind(7, hand.isBalanced);
@@ -155,7 +156,7 @@ std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleShape(const Ha
     }
 }
 
-std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleControls(const HandCharacteristic& hand, int lastBidId)
+std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleControls(const HandCharacteristic& hand, int lastBidId) const
 {
     try
     {
@@ -163,8 +164,8 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleControls(const HandC
         queryControls->reset();
 
         queryControls->bind(1, lastBidId);
-        queryControls->bind(2, hand.Controls);
-        queryControls->bind(3, hand.Hcp);
+        queryControls->bind(2, hand.controls);
+        queryControls->bind(3, hand.hcp);
 
         if (!queryControls->executeStep())
         {
@@ -177,7 +178,7 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleControls(const HandC
         auto id = queryControls->getColumn(2).getInt();
         auto str = queryControls->getColumn(3).getString();
 
-        DBOUT("Controls. Rule Id:" << id << '\n');
+        DBOUT("Controls. Rule Id:" << id << '\n')
 
         return std::make_tuple(bidId, endPhase, str);
     }
@@ -188,7 +189,7 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleControls(const HandC
     }
 }
 
-std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleScanningControls(const HandCharacteristic& hand, int lastBidId)
+std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleScanningControls(const HandCharacteristic& hand, int lastBidId) const
 {
     try
     {
@@ -197,11 +198,11 @@ std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleScanningContro
 
         queryScanningControls->bind(1, lastBidId);
 
-        queryScanningControls->bind(2, hand.ControlsSuit[0]);
-        queryScanningControls->bind(3, hand.ControlsSuit[1]);
-        queryScanningControls->bind(4, hand.ControlsSuit[2]);
-        queryScanningControls->bind(5, hand.ControlsSuit[3]);
-        queryScanningControls->bind(6, hand.Shortages);
+        queryScanningControls->bind(2, hand.controlsSuit[0]);
+        queryScanningControls->bind(3, hand.controlsSuit[1]);
+        queryScanningControls->bind(4, hand.controlsSuit[2]);
+        queryScanningControls->bind(5, hand.controlsSuit[3]);
+        queryScanningControls->bind(6, hand.shortages);
 
         if (!queryScanningControls->executeStep())
             throw std::runtime_error("No row found in scanning table.");
@@ -212,7 +213,7 @@ std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleScanningContro
         auto id = queryScanningControls->getColumn(3).getInt();
         auto str = queryScanningControls->getColumn(4).getString();
 
-        DBOUT("Scanning controls. Rule Id:" << id << '\n');
+        DBOUT("Scanning controls. Rule Id:" << id << '\n')
 
         return std::make_tuple(bidId, endPhase, str, zoom);
     }
@@ -223,7 +224,7 @@ std::tuple<int, bool, std::string, bool> SQLiteCppWrapper::GetRuleScanningContro
     }
 }
 
-std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleScanningOther(const HandCharacteristic& hand, int lastBidId)
+std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleScanningOther(const HandCharacteristic& hand, int lastBidId) const
 {
     try
     {
@@ -232,11 +233,11 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleScanningOther(const 
 
         queryScanningOther->bind(1, lastBidId);
 
-        queryScanningOther->bind(2, hand.QueensSuit[0]);
-        queryScanningOther->bind(3, hand.QueensSuit[1]);
-        queryScanningOther->bind(4, hand.QueensSuit[2]);
-        queryScanningOther->bind(5, hand.QueensSuit[3]);
-        queryScanningOther->bind(6, hand.Shortages);
+        queryScanningOther->bind(2, hand.queensSuit[0]);
+        queryScanningOther->bind(3, hand.queensSuit[1]);
+        queryScanningOther->bind(4, hand.queensSuit[2]);
+        queryScanningOther->bind(5, hand.queensSuit[3]);
+        queryScanningOther->bind(6, hand.shortages);
 
         if (!queryScanningOther->executeStep())
             throw std::runtime_error("No row found in scanning table.");
@@ -246,7 +247,7 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleScanningOther(const 
         auto id = queryScanningOther->getColumn(2).getInt();
         auto str = queryScanningOther->getColumn(3).getString();
 
-        DBOUT("Scanning other. Rule Id:" << id << '\n');
+        DBOUT("Scanning other. Rule Id:" << id << '\n')
 
         return std::make_tuple(bidId, endPhase, str);
     }
@@ -257,7 +258,7 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleScanningOther(const 
     }
 }
 
-std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleSignOff(const HandCharacteristic& hand, Phase phase)
+std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleSignOff(const HandCharacteristic& hand, Phase phase) const
 {
     try
     {
@@ -266,8 +267,8 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleSignOff(const HandCh
 
         querySignOffs->bind(1, (int)phase);
 
-        querySignOffs->bind(2, hand.Hcp);
-        querySignOffs->bind(3, hand.Queens);
+        querySignOffs->bind(2, hand.hcp);
+        querySignOffs->bind(3, hand.queens);
 
         if (!querySignOffs->executeStep())
             throw std::runtime_error("No row found in SignOff table.");
@@ -277,7 +278,7 @@ std::tuple<int, bool, std::string> SQLiteCppWrapper::GetRuleSignOff(const HandCh
         auto id = querySignOffs->getColumn(2).getInt();
         auto str = querySignOffs->getColumn(3).getString();
 
-        DBOUT("SignOff. Rule Id:" << id << '\n');
+        DBOUT("SignOff. Rule Id:" << id << '\n')
 
         return std::make_tuple(bidId, zoom, str);
     }

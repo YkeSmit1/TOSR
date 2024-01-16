@@ -13,17 +13,17 @@
 class Utils
 {
 public:
-    template<typename chartype>
-    static std::vector<std::basic_string<chartype>> Split(const std::basic_string<chartype>& str, const chartype& delimeter);
+    template<typename CharType>
+    static std::vector<std::basic_string<CharType>> Split(const std::basic_string<CharType>& str, const CharType& delimiter);
 };
 
-template<typename chartype>
-std::vector<std::basic_string<chartype>> Utils::Split(const std::basic_string<chartype>& str, const chartype& delimeter)
+template<typename CharType>
+std::vector<std::basic_string<CharType>> Utils::Split(const std::basic_string<CharType>& str, const CharType& delimiter)
 {
-    std::vector<std::basic_string<chartype>> subStrings;
-    std::basic_stringstream<chartype> stringStream(str);
-    std::basic_string<chartype> item;
-    while (getline(stringStream, item, delimeter))
+    std::vector<std::basic_string<CharType>> subStrings;
+    std::basic_stringstream<CharType> stringStream(str);
+    std::basic_string<CharType> item;
+    while (getline(stringStream, item, delimiter))
     {
         subStrings.push_back(move(item));
     }

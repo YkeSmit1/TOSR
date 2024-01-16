@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <unordered_map>
-#include <array>
 #include <vector>
 
 enum class Shortage
@@ -28,13 +27,13 @@ struct HandCharacteristic
 {
 	std::string hand {};
 	
-	int Spades = 0;
-	int Hearts = 0;
-	int Diamonds = 0;
-	int Clubs = 0;
+	int spades = 0;
+	int hearts = 0;
+	int diamonds = 0;
+	int clubs = 0;
 
 	std::string distribution;
-	int Controls = 0;
+	int controls = 0;
 	bool isBalanced = false;
 	bool isReverse = false;
 	bool is65Reverse = false;
@@ -42,23 +41,23 @@ struct HandCharacteristic
 	Shortage shortage = Shortage::Unknown;
 	std::string shortageString;
 
-	std::vector<int> ControlsSuit;
-	std::vector<bool> QueensSuit;
+	std::vector<int> controlsSuit;
+	std::vector<bool> queensSuit;
 
-	int Hcp = 0;
-	int Queens = 0;
-	int Shortages = 0;
+	int hcp = 0;
+	int queens = 0;
+	int shortages = 0;
 
-	static bool CalcuateIsReverse(const std::unordered_map<int, size_t>& suitLength);
-	static bool Calcuate65IsReverse(const std::unordered_map<int, size_t>& suitLength);
+	static bool CalculateIsReverse(const std::unordered_map<int, size_t>& suitLength);
+	static bool Calculate65IsReverse(const std::unordered_map<int, size_t>& suitLength);
 	static Shortage CalculateShortage(const std::unordered_map<int, size_t>& suitLength);
 	static int CalculateControls(const std::string& hand);
-	static bool CalcuateIsThreeSuiter(const std::unordered_map<int, size_t>& suitLength);
+	static bool CalculateIsThreeSuiter(const std::unordered_map<int, size_t>& suitLength);
 	static std::string ConvertShortage(Shortage shortage);
 	static int CalculateHcp(const std::string& hand);
 	static int NumberOfCards(const std::string& hand, char card);
-	std::vector<int> CalculateControlsSuit(const std::vector<std::string>& suits);
-	std::vector<bool> CalculateQueensSuit(const std::vector<std::string>& suits);
+	std::vector<int> CalculateControlsSuit(const std::vector<std::string>& suits) const;
+	std::vector<bool> CalculateQueensSuit(const std::vector<std::string>& suits) const;
 	void Initialize(const std::string& hand);
 	explicit HandCharacteristic(const std::string& hand);
 	HandCharacteristic() = default;

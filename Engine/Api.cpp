@@ -1,9 +1,9 @@
+// ReSharper disable CppLocalVariableMayBeConst
+// ReSharper disable CppParameterMayBeConst
 #include "pch.h"
 #include "Api.h"
 
 #include <string>
-#include <iostream>
-#include <sstream>
 #include "Rule.h"
 #include <unordered_map>
 #include "SQLiteCppWrapper.h"
@@ -31,9 +31,9 @@ int GetBidFromRuleInternal(Phase phase, Phase previousPhase, const char* hand, i
 {
     auto handCharacteristic = GetHandCharacteristic(hand);
 
-    auto [bidId, lNewphase, descr, lZoomOffset] = GetSqliteWrapper()->GetRule(handCharacteristic, phase, previousPhase, lastBidId);
-    description = descr;
-    *newPhase = lNewphase;
+    auto [bidId, lNewPhase, lDescription, lZoomOffset] = GetSqliteWrapper()->GetRule(handCharacteristic, phase, previousPhase, lastBidId);
+    description = lDescription;
+    *newPhase = lNewPhase;
     zoomOffset = lZoomOffset;
 
     return bidId;
@@ -50,11 +50,11 @@ int GetBidFromRule(Phase phase, Phase previousPhase, const char* hand, int lastB
 
 int GetBidFromRuleEx(Phase phase, Phase previousPhase, const char* hand, int lastBidId, Phase* newPhase, char* description)
 {
-    std::string descr;
+    std::string lDescription;
     int dummy;
-    const auto bidId = GetBidFromRuleInternal(phase, previousPhase, hand, lastBidId, newPhase, descr, dummy);
-    strncpy(description , descr.c_str(), descr.size());
-    description[descr.size()] = '\0';
+    const auto bidId = GetBidFromRuleInternal(phase, previousPhase, hand, lastBidId, newPhase, lDescription, dummy);
+    strncpy(description , lDescription.c_str(), lDescription.size());
+    description[lDescription.size()] = '\0';
     return bidId;
 }
 

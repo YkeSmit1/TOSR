@@ -8,6 +8,7 @@ using NLog;
 using System.Linq;
 using Common.Test;
 using Common.Tosr;
+using JetBrains.Annotations;
 
 namespace TosrIntegration.Test
 {
@@ -41,8 +42,7 @@ namespace TosrIntegration.Test
         private readonly Dictionary<Phase, bool> phasesWithOffset = fixture.phasesWithOffset;
         private readonly ReverseDictionaries reverseDictionaries = fixture.reverseDictionaries;
 
-        // ReSharper disable once NotAccessedField.Local
-        private readonly ITestOutputHelper output = output;
+        [UsedImplicitly] private readonly ITestOutputHelper output = output;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         [Theory]

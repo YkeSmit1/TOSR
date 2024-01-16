@@ -2,6 +2,7 @@
 using NLog;
 using System.Collections.Generic;
 using BiddingLogic;
+using JetBrains.Annotations;
 using Xunit;
 using Xunit.Abstractions;
 // ReSharper disable NotAccessedField.Local
@@ -81,7 +82,7 @@ namespace TosrIntegration.Test
     [Collection("Sequential")]
     public class ParametersTest(BaseTestFixture fixture, ITestOutputHelper output) : IClassFixture<BaseTestFixture>
     {
-        private readonly ITestOutputHelper output = output;
+        [UsedImplicitly] private readonly ITestOutputHelper output = output;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly Dictionary<Phase, bool> phasesWithOffset = fixture.phasesWithOffset;
