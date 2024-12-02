@@ -18,6 +18,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Common.BridgeClasses" Version="1.0.7" />
-    <PackageReference Include="NLog" Version="4.7.15" />
+    <PackageReference Include="NLog" Version="5.3.4" />
   </ItemGroup>
 </Project>

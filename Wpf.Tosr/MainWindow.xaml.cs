@@ -1,7 +1,6 @@
 ﻿using BiddingLogic;
 using Common;
 using Microsoft.Win32;
-using MvvmHelpers.Commands;
 using Newtonsoft.Json;
 using NLog;
 using Solver;
@@ -16,6 +15,7 @@ using System.Windows.Input;
 using Common.Tosr;
 using Wpf.BidControls.ViewModels;
 using Path = System.IO.Path;
+using CommunityToolkit.Mvvm.Input;
 
 namespace Wpf.Tosr
 {
@@ -27,7 +27,7 @@ namespace Wpf.Tosr
         public MainWindow()
         {
             InitializeComponent();
-            BiddingBoxViewModel.DoBid = new Command(ClickBiddingBoxButton, ButtonCanExecute);
+            BiddingBoxViewModel.DoBid = new RelayCommand<Bid>(ClickBiddingBoxButton, ButtonCanExecute);
         }
 
         // ViewModels
@@ -171,7 +171,7 @@ namespace Wpf.Tosr
             resetEvent.WaitOne();
             AuctionViewModel.UpdateAuction(Auction);
             bidManager.SouthBid(Auction, deal[Player.South]);
-            BiddingBoxViewModel.DoBid.RaiseCanExecuteChanged();
+            BiddingBoxViewModel.DoBid.NotifyCanExecuteChanged();
 
             if (bid != bidManager.BiddingState.CurrentBid)
             {
@@ -200,7 +200,7 @@ namespace Wpf.Tosr
             auction.AddBid(Bid.PassBid);
 
             AuctionViewModel.UpdateAuction(auction);
-            BiddingBoxViewModel.DoBid.RaiseCanExecuteChanged();
+            BiddingBoxViewModel.DoBid.NotifyCanExecuteChanged();
 
             if (auction.IsEndOfBidding())
             {
@@ -235,7 +235,7 @@ namespace Wpf.Tosr
             Auction.AddBid(Bid.PassBid);
             Auction.AddBid(new Bid(1, Suit.Clubs));
             Auction.AddBid(Bid.PassBid);
-            BiddingBoxViewModel.DoBid.RaiseCanExecuteChanged();
+            BiddingBoxViewModel.DoBid.NotifyCanExecuteChanged();
             AuctionViewModel.UpdateAuction(Auction);
             BiddingBoxView.IsEnabled = true;
         }
@@ -258,7 +258,7 @@ namespace Wpf.Tosr
             {
                 resetEvent.WaitOne();
                 Auction = bidManager.GetAuction(deal[Player.North], deal[Player.South]);
-                BiddingBoxViewModel.DoBid.RaiseCanExecuteChanged();
+                BiddingBoxViewModel.DoBid.NotifyCanExecuteChanged();
                 AuctionViewModel.UpdateAuction(Auction);
                 BiddingBoxView.IsEnabled = true;
                 PanelNorth.Visibility = Visibility.Visible;

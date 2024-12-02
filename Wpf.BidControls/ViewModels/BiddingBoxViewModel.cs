@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using Common;
+using CommunityToolkit.Mvvm.Input;
 using MvvmHelpers;
 using MvvmHelpers.Commands;
 
@@ -12,7 +13,7 @@ namespace Wpf.BidControls.ViewModels
         public ObservableCollection<Grouping<int, Bid>> SuitBids { get; }
         public ObservableCollection<Bid> NonSuitBids { get; }
 
-        public Command DoBid { get; set; }
+        public RelayCommand<Bid> DoBid { get; set; }
 
         public BiddingBoxViewModel()
         {
