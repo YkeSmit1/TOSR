@@ -2,25 +2,26 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using Common;
+using CommunityToolkit.Mvvm.Collections;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MvvmHelpers;
-using MvvmHelpers.Commands;
+using MoreLinq;
 
 namespace Wpf.BidControls.ViewModels
 {
     public class BiddingBoxViewModel : ObservableObject
     {
-        public ObservableCollection<Grouping<int, Bid>> SuitBids { get; }
+        public ObservableGroupedCollection<int, Bid> SuitBids { get; }
         public ObservableCollection<Bid> NonSuitBids { get; }
 
         public RelayCommand<Bid> DoBid { get; set; }
 
         public BiddingBoxViewModel()
         {
-            SuitBids = new ObservableCollection<Grouping<int, Bid>>(Enumerable.Range(1, 7)
-                .Select(level => new Grouping<int, Bid>(level, Enum.GetValues(typeof(Suit)).Cast<Suit>()
-                .Select(suit => new Bid(level, suit)))));
-            NonSuitBids = new ObservableCollection<Bid> { Bid.PassBid, Bid.Dbl, Bid.Rdbl };
+            var collection = Enumerable.Range(1, 7)
+                .Cartesian(Enum.GetValues<Suit>(), (level, suit) => new Bid(level, suit)).GroupBy(x => x.Rank, x => x);
+            SuitBids = new ObservableGroupedCollection<int, Bid>(collection);
+            NonSuitBids = [Bid.PassBid, Bid.Dbl, Bid.Rdbl];
         }
     }
 }

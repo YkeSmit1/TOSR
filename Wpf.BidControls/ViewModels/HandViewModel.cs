@@ -2,14 +2,14 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using Common;
-using MvvmHelpers;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Wpf.BidControls.ViewModels
 {
     public class HandViewModel : ObservableObject
     {
-        public ObservableCollection<Card> Cards { get; } = new();
-        public CardImageSettings CardImageSettings { get; set; }
+        public ObservableCollection<Card> Cards { get; } = [];
+        public CardImageSettings CardImageSettings { get; private set; }
         public HandViewModel()
         {
             ShowHand("AQJ4,K32,843,QT9", true, "default");

@@ -1,5 +1,5 @@
 ﻿using Common;
-using MvvmHelpers;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Wpf.BidControls.ViewModels
 {
