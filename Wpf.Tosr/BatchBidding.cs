@@ -5,12 +5,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Newtonsoft.Json;
 using NLog;
 using Common;
 using Solver;
 using System.Threading;
 using System.ComponentModel;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using BiddingLogic;
 using System.Windows;
 using Common.Tosr;
@@ -59,20 +60,21 @@ namespace Wpf.Tosr
             GrandSlam,
         }
 
+        // TODO fix json serialization with complex types
         private class Statistics
         {
-            public int handsBid;
-            // ReSharper disable once NotAccessedField.Local
-            public int handsNotBidBecauseOfFreakhand;
-            // ReSharper disable once NotAccessedField.Local
-            public int handsNotBidBecauseOfError;
-            public readonly SortedDictionary<Bid, int> contracts = new();
-            public readonly SortedDictionary<ConstructedSouthHandOutcome, int> outcomes = new();
-            public readonly SortedDictionary<Player, int> dealers = new();
-            public readonly SortedDictionary<int, int> bidsNonShape = new();
-            public readonly SortedDictionary<(CorrectnessContractBreakdown, (ConstructedSouthHandOutcome, PullType)), int> contractCorrectnessBreakdownOutcome = new();
-            public readonly SortedDictionary<CorrectnessContract, int> contractCorrectness = new();
-            public readonly SortedDictionary<CorrectnessContractBreakdown, int> contractCorrectnessBreakdown = new();
+            public int HandsBid;
+            public int HandsNotBidBecauseOfFreakhand;
+            public int HandsNotBidBecauseOfError;
+            [JsonIgnore]
+            public readonly SortedDictionary<Bid, int> Contracts = new();
+            public readonly SortedDictionary<ConstructedSouthHandOutcome, int> Outcomes = new();
+            public readonly SortedDictionary<Player, int> Dealers = new();
+            public readonly SortedDictionary<int, int> BidsNonShape = new();
+            [JsonIgnore]
+            public readonly SortedDictionary<(CorrectnessContractBreakdown, (ConstructedSouthHandOutcome, PullType)), int> ContractCorrectnessBreakdownOutcome = new();
+            public readonly SortedDictionary<CorrectnessContract, int> ContractCorrectness = new();
+            public readonly SortedDictionary<CorrectnessContractBreakdown, int> ContractCorrectnessBreakdown = new();
 
         }
 
@@ -86,7 +88,8 @@ namespace Wpf.Tosr
         private CorrectnessContractBreakdown correctnessContractBreakdown;
         private CorrectnessContract correctnessContract;
         private Dictionary<ExpectedContract, int> confidence;
-        private readonly List<Bid> endContracts = new();
+        private readonly List<Bid> endContracts = [];
+        private readonly JsonSerializerOptions jsonSerializerOptions = UtilTosr.CreateJsonSettings();
 
         public BatchBidding(ReverseDictionaries reverseDictionaries, Dictionary<Phase, bool> phasesWithOffset, bool useSingleDummySolver)
         {
@@ -118,43 +121,43 @@ namespace Wpf.Tosr
                     if (UtilTosr.IsFreakHand(board[Player.South].Split(',').Select(x => x.Length)))
                     {
                         Logger.Debug($"Hand {board[Player.South]} is a freak hand. Will not be bid");
-                        statistics.handsNotBidBecauseOfFreakhand++;
+                        statistics.HandsNotBidBecauseOfFreakhand++;
                         continue;
                     }
 
-                    statistics.handsBid++;
+                    statistics.HandsBid++;
                     var auction = bidManager.GetAuction(board[Player.North], board[Player.South]);
-                    AddHandAndAuction(board, auction, statistics.handsBid, bidManager.BiddingState);
+                    AddHandAndAuction(board, auction, statistics.HandsBid, bidManager.BiddingState);
                     pbn.Boards.Add(new BoardDto
                     {
                         Deal = board,
                         Auction = auction,
-                        BoardNumber = statistics.handsBid,
+                        BoardNumber = statistics.HandsBid,
                         Event = "TOSR Batchbidding",
                         Date = DateTime.Now,
                         Declarer = auction.GetDeclarerOrNorth(auction.currentContract.Suit),
                         Dealer = Player.West,
                         Vulnerable = "None",
-                        Description = $"{correctnessContract}: {correctnessContractBreakdown}{JsonConvert.SerializeObject(confidence)}"
+                        Description = $"{correctnessContract}: {correctnessContractBreakdown}{JsonSerializer.Serialize(confidence)}"
                     });
-                    if (statistics.handsBid % 100 == 0)
-                        progress.Report(statistics.handsBid);
+                    if (statistics.HandsBid % 100 == 0)
+                        progress.Report(statistics.HandsBid);
                     if (token.IsCancellationRequested)
                     {
-                        MessageBox.Show($"Batch bidding canceled after board {statistics.handsBid}", "Batch bidding");
+                        MessageBox.Show($"Batch bidding canceled after board {statistics.HandsBid}", "Batch bidding");
                         break;
                     }
                 }
                 catch (Exception exception)
                 {
-                    statistics.handsNotBidBecauseOfError++;
-                    Logger.Warn(exception, $"Error:{exception.Message}. Board:{statistics.handsBid}. North hand:{board[Player.North]}. South hand:{board[Player.South]}. Controls:{Util.GetControlCount(board[Player.South])}. " +
+                    statistics.HandsNotBidBecauseOfError++;
+                    Logger.Warn(exception, $"Error:{exception.Message}. Board:{statistics.HandsBid}. North hand:{board[Player.North]}. South hand:{board[Player.South]}. Controls:{Util.GetControlCount(board[Player.South])}. " +
                         $"HCP: {Util.GetHcpCount(board[Player.South])}. Projected AK as 4333: {UtilTosr.GetHandWithOnlyControlsAs4333(board[Player.South], "AK")}");
-                    stringBuilder.AppendLine($"{exception.Message}. Board:{statistics.handsBid}");
+                    stringBuilder.AppendLine($"{exception.Message}. Board:{statistics.HandsBid}");
                     pbn.Boards.Add(new BoardDto
                     {
                         Deal = board,
-                        BoardNumber = statistics.handsBid,
+                        BoardNumber = statistics.HandsBid,
                         Event = "TOSR Batchbidding with error",
                         Date = DateTime.Now,
                         Dealer = Player.West,
@@ -162,7 +165,7 @@ namespace Wpf.Tosr
                     });
                 }
             }
-            progress.Report(statistics.handsBid);
+            progress.Report(statistics.HandsBid);
             stringBuilder.AppendLine(@$"Seconds elapsed: {stopwatch.Elapsed.TotalSeconds.ToString(CultureInfo.InvariantCulture)}");
             stringBuilder.AppendLine(@"Duplicate auctions are written to ""HandPerAuction.txt""");
             stringBuilder.AppendLine(@"Statistics are written to ""Statistics.txt""");
@@ -189,20 +192,20 @@ namespace Wpf.Tosr
 
             var longestSuit = Util.GetLongestSuit(board[Player.North], board[Player.South]);
             var dealer = auction.GetDeclarer(3 - longestSuit.Item1);
-            statistics.dealers.AddOrUpdateDictionary(dealer);
+            statistics.Dealers.AddOrUpdateDictionary(dealer);
             var contract = auction.currentContract > new Bid(7, Suit.NoTrump) ? new Bid(7, Suit.NoTrump) : auction.currentContract;
-            statistics.contracts.AddOrUpdateDictionary(contract);
+            statistics.Contracts.AddOrUpdateDictionary(contract);
             if (!auction.responderHasSignedOff)
-                statistics.bidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Last(bid => bid.bidType == BidType.bid) - biddingState.GetBids(Phase.Shape).Last());
-            statistics.outcomes.AddOrUpdateDictionary(bidManager.constructedSouthHandOutcome);
+                statistics.BidsNonShape.AddOrUpdateDictionary(auction.GetBids(Player.South).Last(bid => bid.bidType == BidType.bid) - biddingState.GetBids(Phase.Shape).Last());
+            statistics.Outcomes.AddOrUpdateDictionary(bidManager.ConstructedSouthHandOutcome);
             correctnessContractBreakdown = CheckContract(contract, board, dealer == Player.UnKnown ? Player.North : dealer);
             var pullType = biddingState.GetPullBid() != default ? PullType.HasPulled : PullType.NoPull;
-            statistics.contractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, (bidManager.constructedSouthHandOutcome, pullType)));
+            statistics.ContractCorrectnessBreakdownOutcome.AddOrUpdateDictionary((correctnessContractBreakdown, (bidManager.ConstructedSouthHandOutcome, pullType)));
             correctnessContract = GetCorrectness(correctnessContractBreakdown);
-            statistics.contractCorrectnessBreakdown.AddOrUpdateDictionary(correctnessContractBreakdown);
-            statistics.contractCorrectness.AddOrUpdateDictionary(correctnessContract);
+            statistics.ContractCorrectnessBreakdown.AddOrUpdateDictionary(correctnessContractBreakdown);
+            statistics.ContractCorrectness.AddOrUpdateDictionary(correctnessContract);
             if (correctnessContract is CorrectnessContract.InCorrect or CorrectnessContract.NoFit)
-                inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.constructedSouthHandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
+                inCorrectContracts.AppendLine($"({correctnessContractBreakdown}, {bidManager.ConstructedSouthHandOutcome}) Board:{boardNumber} Contract:{auction.currentContract}" +
                     $" Auction:{auction.GetPrettyAuction("|")} NorthHand: {board[Player.North]} SouthHand: {board[Player.South]}");
             endContracts.Add(auction.currentContract);
         }
@@ -233,8 +236,8 @@ namespace Wpf.Tosr
         {
             Logger.Info("Save auctions");
             var multiHandPerAuction = handPerAuction.Where(x => x.Value.Count > 1).ToDictionary(x => x.Key, x => x.Value);
-            File.WriteAllText("txt\\HandPerAuction.txt", JsonConvert.SerializeObject(multiHandPerAuction, Formatting.Indented));
-            File.WriteAllText("txt\\Statistics.txt", JsonConvert.SerializeObject(statistics, Formatting.Indented));
+            File.WriteAllText("txt\\HandPerAuction.txt", JsonSerializer.Serialize(multiHandPerAuction, jsonSerializerOptions));
+            File.WriteAllText("txt\\Statistics.txt", JsonSerializer.Serialize(statistics, jsonSerializerOptions));
             File.WriteAllText("txt\\ExpectedSouthHands.txt", expectedSouthHands.ToString());
             var list = new List<string>(inCorrectContracts.ToString().Split('\n'));
             list.Sort();

@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using BiddingLogic;
 using Common.Tosr;
 
@@ -15,7 +15,7 @@ namespace Common.Test
 
         public BaseTestFixture()
         {
-            phasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Phase, bool>>(File.ReadAllText("phasesWithOffset.json"));
+            phasesWithOffset = JsonSerializer.Deserialize<Dictionary<Phase, bool>>(File.ReadAllText("phasesWithOffset.json"));
             reverseDictionaries = new ReverseDictionaries(phasesWithOffset, new Progress<string>());
 
             BidManager.SetSystemParameters(UtilTosr.ReadResource("BiddingLogic.SystemParameters.json"));

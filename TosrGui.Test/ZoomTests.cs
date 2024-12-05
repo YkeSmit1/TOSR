@@ -123,7 +123,7 @@ namespace TosrGui.Test
             Assert.Equal("", bidManager.BiddingState.GetBidsAsString(Phase.Controls));
             Assert.Equal("4♥5♦5♠6♦", bidManager.BiddingState.GetBidsAsString(Phase.ScanningControls));
 
-            var southHand = bidManager.biddingInformation.ConstructSouthHand("Axxx,Kxx,Kxx,Kxx");
+            var southHand = bidManager.BiddingInformation.ConstructSouthHand("Axxx,Kxx,Kxx,Kxx");
             Assert.Equal("Kxxx,Ax,xxx,Axxx", southHand.First());
         }
     }

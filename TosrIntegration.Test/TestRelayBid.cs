@@ -99,7 +99,7 @@ namespace TosrIntegration.Test
             var bidManager = new BidManager(new BidGeneratorDescription(), phasesWithOffset, reverseDictionaries, false);
             var auction = bidManager.GetAuction(northHand, southHand);
             AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
-            AssertMethods.AssertHand(bidManager.biddingInformation, auction, northHand, southHand, bidManager.BiddingState);
+            AssertMethods.AssertHand(bidManager.BiddingInformation, auction, northHand, southHand, bidManager.BiddingState);
         }
 
         [Theory]
@@ -120,7 +120,7 @@ namespace TosrIntegration.Test
             var bidManager = new BidManager(new BidGeneratorDescription(), phasesWithOffset, reverseDictionaries, (_, _, _) => BidManager.RelayBidKind.fourDiamondEndSignal);
             var auction = bidManager.GetAuction(northHand, southHand);
             AssertMethods.AssertAuction(expectedBidsNorth, expectedBidsSouth, auction);
-            AssertMethods.AssertHand(bidManager.biddingInformation, auction, northHand, southHand, bidManager.BiddingState);
+            AssertMethods.AssertHand(bidManager.BiddingInformation, auction, northHand, southHand, bidManager.BiddingState);
         }
     }
 }

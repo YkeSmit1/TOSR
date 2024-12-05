@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Text.Unicode;
 
 namespace Common.Tosr
 {
@@ -91,6 +94,20 @@ namespace Common.Tosr
         public static string HandWithX(string hand)
         {
             return Regex.Replace(hand, "[QJT98765432]", "x");
+        }
+
+        public static JsonSerializerOptions CreateJsonSettings()
+        {
+            var encoderSettings = new TextEncoderSettings();
+            encoderSettings.AllowRange(UnicodeRanges.All);
+            
+            var jsonSerializerOptions = new JsonSerializerOptions
+            {
+                Encoder = JavaScriptEncoder.Create(encoderSettings),
+                WriteIndented = true,
+                IncludeFields = true
+            };
+            return jsonSerializerOptions;
         }
     }
 }

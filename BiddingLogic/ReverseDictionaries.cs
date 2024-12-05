@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.IO;
 using NLog;
-using Newtonsoft.Json;
 using System.Collections.Immutable;
+using System.Text.Json;
 using Solver;
 using Common;
 using Common.Tosr;
@@ -41,6 +41,7 @@ namespace BiddingLogic
         private static readonly int[] SuitLengthNoSingleton = [4, 3, 3, 3];
         private static readonly int[] SuitLengthSingleton = [5, 4, 3, 1];
         private static readonly int[] SuitLength2Singletons = [6, 5, 1, 1];
+        private JsonSerializerOptions jsonSerializerOptions = UtilTosr.CreateJsonSettings();
 
         public ReverseDictionaries(ShapeDictionary shapeAuctions, ControlsOnlyDictionary controlsOnlyAuctions,
             ControlScanningDictionary controlScanningAuctions, SignOffPhasesDictionary signOffPhasesAuctions)
@@ -79,7 +80,7 @@ namespace BiddingLogic
             progress.Report("done");
         }
 
-        private static Dictionary<T, TU> LoadAuctions<T, TU>(string fileName, Func<int, Dictionary<T, TU>> generateAuctions, int nrOfShortage)
+        private Dictionary<T, TU> LoadAuctions<T, TU>(string fileName, Func<int, Dictionary<T, TU>> generateAuctions, int nrOfShortage)
         {
             var logger = LogManager.GetCurrentClassLogger();
 
@@ -87,7 +88,7 @@ namespace BiddingLogic
             // Generate only if file does not exist or is older than one day
             if (File.Exists(fileName) && File.GetLastWriteTime(fileName) > DateTime.Now - TimeSpan.FromDays(1))
             {
-                auctions = JsonConvert.DeserializeObject<Dictionary<T, TU>>(File.ReadAllText(fileName));
+                auctions = JsonSerializer.Deserialize<Dictionary<T, TU>>(File.ReadAllText(fileName), jsonSerializerOptions);
             }
             else
             {
@@ -97,7 +98,7 @@ namespace BiddingLogic
                 var path = Path.GetDirectoryName(fileName);
                 if (!string.IsNullOrWhiteSpace(path))
                     Directory.CreateDirectory(path);
-                File.WriteAllText(fileName!, JsonConvert.SerializeObject(sortedAuctions, Formatting.Indented));
+                File.WriteAllText(fileName!, JsonSerializer.Serialize(sortedAuctions, jsonSerializerOptions));
             }
             return auctions;
         }

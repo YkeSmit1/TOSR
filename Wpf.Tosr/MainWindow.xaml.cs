@@ -1,13 +1,13 @@
 ﻿using BiddingLogic;
 using Common;
 using Microsoft.Win32;
-using Newtonsoft.Json;
 using NLog;
 using Solver;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -45,7 +45,7 @@ namespace Wpf.Tosr
         private BidManager bidManager;
         private ReverseDictionaries reverseDictionaries;
 
-        private static readonly Dictionary<Phase, bool> PhasesWithOffset = JsonConvert.DeserializeObject<Dictionary<Phase, bool>>(File.ReadAllText("phasesWithOffset.json"));
+        private static readonly Dictionary<Phase, bool> PhasesWithOffset = JsonSerializer.Deserialize<Dictionary<Phase, bool>>(File.ReadAllText("phasesWithOffset.json"));
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly ManualResetEvent resetEvent = new(false);
         private Pbn pbn = new();

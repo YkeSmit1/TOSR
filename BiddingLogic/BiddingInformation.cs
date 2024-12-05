@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Common;
 using Common.Tosr;
-using Newtonsoft.Json;
 using NLog;
 using Solver;
 
@@ -71,7 +71,7 @@ namespace BiddingLogic
                 southInformation.Queens = GetQueensFromAuction(auction, biddingState);
             }
 
-            LoggerBidding.Info($"SouthInformation. {JsonConvert.SerializeObject(southInformation)}");
+            LoggerBidding.Info($"SouthInformation. {JsonSerializer.Serialize(southInformation)}");
             return southInformation;
         }
 
